@@ -1,4 +1,5 @@
 #include "DCar.hpp"
+#include "Window.hpp"
 
 void DCar::accelerate(float value)
 {
@@ -39,8 +40,8 @@ void DCar::update()
 	}
 }
 
-void DCar::draw(sf::RenderWindow& renderWindow)
+void DCar::draw()
 {
-	renderWindow.draw(m_convexShape);
-	renderWindow.draw(m_circleShape);
+	Window::getRenderWindow().draw(m_convexShape);
+	Window::getRenderWindow().draw(m_circleShape);
 }

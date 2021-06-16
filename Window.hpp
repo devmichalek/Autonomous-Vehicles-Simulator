@@ -53,9 +53,14 @@ public:
 		return sf::Mouse::getPosition(m_renderWindow);
 	}
 
-	inline static sf::Vector2i getWindowPosition()
+	inline static sf::Vector2i getPosition()
 	{
 		return m_renderWindow.getPosition();
+	}
+
+	inline static sf::Vector2u getSize()
+	{
+		return m_renderWindow.getSize();
 	}
 
 	inline static void close()
@@ -84,14 +89,9 @@ public:
 		return m_event;
 	}
 
-	inline static sf::RenderWindow& getWindow()
+	inline static sf::RenderWindow& getRenderWindow()
 	{
 		return m_renderWindow;
-	}
-
-	inline static sf::Vector2u getSize()
-	{
-		return m_renderWindow.getSize();
 	}
 
 	inline static double getElapsedTime()
