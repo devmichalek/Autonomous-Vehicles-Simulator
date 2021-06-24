@@ -2,13 +2,13 @@
 #include <vector>
 #include "SAbstract.hpp"
 
-class Engine final
+class CEngine final
 {
 	std::vector<State::Abstract*> m_states;
 
 public:
-	explicit Engine();
-	~Engine();
+	explicit CEngine();
+	~CEngine();
 	void load();
 	void loop();
 };

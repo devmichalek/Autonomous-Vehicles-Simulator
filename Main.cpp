@@ -1,8 +1,8 @@
-#include "Core/Engine.hpp"
+#include "CEngine.hpp"
 
 int main()
 {
-    Engine engine;
+    CEngine engine;
     engine.load();
     engine.loop();
     return 0;
