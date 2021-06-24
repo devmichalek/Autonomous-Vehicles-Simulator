@@ -57,10 +57,10 @@ class ArtificialNeuralNetwork
 					neuron += (neuronWeights[weightNr] * m_neuronLayers[layerNr - 1][weightNr]);
 				
 				// Add bias
-				neuron += m_biasVector[layerNr];
+				neuron += m_biasVector[layerNr - 1];
 
 				// Call activation function
-				neuron = m_activationFunctions[layerNr](neuron);
+				neuron = m_activationFunctions[layerNr - 1](neuron);
 			}
 		}
 	}
@@ -68,23 +68,29 @@ class ArtificialNeuralNetwork
 public:
 	ArtificialNeuralNetwork(size_t const inputLayerSize, size_t const outputLayerSize, std::vector<size_t> hiddenLayerSizes)
 	{
-		m_neuronLayers.resize(1 + 1 + hiddenLayerSizes.size());
-		m_weightLayers.resize(1 + hiddenLayerSizes.size());
-		m_biasVector.resize(1 + 1 + hiddenLayerSizes.size(), 0);
-		m_activationFunctions.resize(1 + 1 + hiddenLayerSizes.size(), ActivationFunction::stub);
-		auto neuronLayersSize = m_neuronLayers.size();
-		m_neuronLayers.front().resize(inputLayerSize, 0); // Input layer
-		m_neuronLayers.back().resize(outputLayerSize, 0); // Output layer
-		for (size_t i = 1; i < neuronLayersSize - 1; ++i)
-		{
+		const size_t layersCount = 1 + 1 + hiddenLayerSizes.size();
+		m_neuronLayers.resize(layersCount);
+		m_weightLayers.resize(layersCount - 1);
+		m_biasVector.resize(layersCount - 1, 0);
+		m_activationFunctions.resize(layersCount - 1, ActivationFunction::stub);
+
+		// Set up input layer
+		m_neuronLayers.front().resize(inputLayerSize, 0);
+
+		// Set up hidden layers
+		for (size_t i = 1; i < layersCount - 1; ++i)
 			m_neuronLayers[i].resize(hiddenLayerSizes[i - 1], 0);
-			m_weightLayers[i - 1].resize(hiddenLayerSizes[i - 1]);
-			for (auto& neuronWeights : m_weightLayers[i - 1])
-				neuronWeights.resize(m_neuronLayers[i - 1].size());
+
+		// Set up output layer
+		m_neuronLayers.back().resize(outputLayerSize, 0);
+
+		// Set up weights for neurons
+		for (size_t i = 0; i < layersCount - 1; ++i)
+		{
+			m_weightLayers[i].resize(hiddenLayerSizes[i]);
+			for (auto& neuronWeights : m_weightLayers[i])
+				neuronWeights.resize(m_neuronLayers[i].size(), 0);
 		}
-		m_weightLayers.back().resize(outputLayerSize);
-		for (auto& neuronWeights : m_weightLayers.back())
-			neuronWeights.resize(hiddenLayerSizes.back());
 	}
 
 	void setBiasVector(BiasVector biasVector)
