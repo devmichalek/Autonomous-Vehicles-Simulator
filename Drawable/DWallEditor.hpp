@@ -2,5 +2,7 @@
 
 class DWallEditor
 {
+public:
 
+	void randomize();
 };

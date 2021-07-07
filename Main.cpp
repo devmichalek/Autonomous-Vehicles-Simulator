@@ -1,9 +1,11 @@
 #include "CEngine.hpp"
+#include "TEngine.hpp"
 
 int main()
 {
-    CEngine engine;
-    engine.load();
-    engine.loop();
+    TEngine tengine;
+    CEngine cengine;
+    cengine.load();
+    cengine.loop();
     return 0;
 }
