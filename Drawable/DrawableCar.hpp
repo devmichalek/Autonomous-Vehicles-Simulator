@@ -7,7 +7,7 @@
 
 using CarPoints = std::array<sf::Vector2i, 4>;
 
-class DCar
+class DrawableCar
 {
 	float m_angle;
 	float m_speed;
@@ -18,7 +18,7 @@ class DCar
 
 public:
 
-	DCar(sf::Vector2f size, sf::Vector2f position = sf::Vector2f(0, 0)) : m_size(size), m_center(position)
+	DrawableCar(sf::Vector2f size, sf::Vector2f position = sf::Vector2f(0, 0)) : m_size(size), m_center(position)
 	{
 		m_angle = 0;
 		m_speed = 0;
@@ -28,7 +28,7 @@ public:
 		update();
 	}
 
-	virtual ~DCar()
+	virtual ~DrawableCar()
 	{
 	}
 

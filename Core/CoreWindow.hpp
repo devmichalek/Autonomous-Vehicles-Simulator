@@ -1,9 +1,9 @@
 #pragma once
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
-class CEngine;
+class CoreEngine;
 
-class CWindow final
+class CoreWindow final
 {
 	inline static const float m_screenRatio = 0.5625f;
 	inline static bool m_open = false;
@@ -13,7 +13,7 @@ class CWindow final
 	inline static sf::Event m_event;
 	inline static sf::Color m_backgroundColor = sf::Color::Black;
 
-	CWindow()
+	CoreWindow()
 	{
 		// Find correct window size
 		float m_screenWidth = sf::VideoMode::getDesktopMode().width / 1.2f;
@@ -27,21 +27,21 @@ class CWindow final
 		m_open = true;
 	}
 
-	friend CEngine;
+	friend CoreEngine;
 	inline static void restartClock()
 	{
 		m_elapsedTime = static_cast<double>(m_clock.restart().asMicroseconds()) / 1000000;
 	}
 
 public:
-	static CWindow& getInstance()
+	static CoreWindow& getInstance()
 	{
-		static CWindow instance;
+		static CoreWindow instance;
 		return instance;
 	}
 
-	CWindow(CWindow const&) = delete;
-	void operator=(CWindow const&) = delete;
+	CoreWindow(CoreWindow const&) = delete;
+	void operator=(CoreWindow const&) = delete;
 
 	inline static bool isOpen()
 	{

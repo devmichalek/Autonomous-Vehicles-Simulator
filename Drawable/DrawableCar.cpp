@@ -1,21 +1,21 @@
-#include "DCar.hpp"
-#include "CWindow.hpp"
+#include "DrawableCar.hpp"
+#include "CoreWindow.hpp"
 
-void DCar::accelerate(float value)
+void DrawableCar::accelerate(float value)
 {
 	m_speed += value;
 	if (m_speed > 1.0)
 		m_speed = 1.0;
 }
 
-void DCar::brake(float value)
+void DrawableCar::brake(float value)
 {
 	m_speed -= value;
 	if (m_speed < 0)
 		m_speed = 0;
 }
 
-void DCar::update()
+void DrawableCar::update()
 {
 	float cosResult = static_cast<float>(cos(m_angle * M_PI / 180));
 	float sinResult = static_cast<float>(sin(m_angle * M_PI / 180));
@@ -40,8 +40,8 @@ void DCar::update()
 	}
 }
 
-void DCar::draw()
+void DrawableCar::draw()
 {
-	CWindow::getRenderWindow().draw(m_convexShape);
-	CWindow::getRenderWindow().draw(m_circleShape);
+	CoreWindow::getRenderWindow().draw(m_convexShape);
+	CoreWindow::getRenderWindow().draw(m_circleShape);
 }

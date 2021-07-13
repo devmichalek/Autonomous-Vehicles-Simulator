@@ -3,8 +3,8 @@
 #include <array>
 #include <functional>
 #include <SFML/Graphics/RectangleShape.hpp>
-#include "CWindow.hpp"
-#include "DCar.hpp"
+#include "CoreWindow.hpp"
+#include "DrawableCar.hpp"
 
 class DWallManager
 {
@@ -49,8 +49,8 @@ public:
 
 	inline bool intersect(std::vector<CarPoints>& carPointsVector)
 	{
-		auto windowSize = CWindow::getSize();
-		auto windowPosition = CWindow::getPosition();
+		auto windowSize = CoreWindow::getSize();
+		auto windowPosition = CoreWindow::getPosition();
 		size_t x = windowPosition.x / m_blockSize.x;
 		size_t y = windowPosition.y / m_blockSize.y;
 		size_t endX = x + (windowSize.x / m_blockSize.x);

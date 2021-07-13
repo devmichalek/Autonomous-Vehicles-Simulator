@@ -1,11 +1,11 @@
-#include "CEngine.hpp"
-#include "CWindow.hpp"
+#include "CoreEngine.hpp"
+#include "CoreWindow.hpp"
 #include "SMenu.hpp"
 #include "SEditor.hpp"
 #include "STraining.hpp"
 #include "STest.hpp"
 
-CEngine::CEngine()
+CoreEngine::CoreEngine()
 {
 	using namespace State;
 	m_states.push_back(new Menu());
@@ -15,21 +15,21 @@ CEngine::CEngine()
 	m_states.shrink_to_fit();
 }
 
-CEngine::~CEngine()
+CoreEngine::~CoreEngine()
 {
 	for (const auto& i : m_states)
 		delete i;
 }
 
-void CEngine::load()
+void CoreEngine::load()
 {
 	for (const auto& i : m_states)
 		i->load();
 }
 
-void CEngine::loop()
+void CoreEngine::loop()
 {
-	CWindow& window = CWindow::getInstance();
+	CoreWindow& window = CoreWindow::getInstance();
 	while (window.isOpen())
 	{
 		// Clear
