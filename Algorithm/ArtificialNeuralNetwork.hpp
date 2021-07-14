@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <functional>
+#include <math.h>
 
 using Neuron = double;
 using NeuronLayer = std::vector<Neuron>;
@@ -16,11 +17,11 @@ namespace ActivationFunction
 {
 	using Activation = std::function<Neuron(Neuron)>;
 	using ActivationVector = std::vector<Activation>;
-	Activation stub = [](Neuron input) { return input; };
-	Activation sigmoid = [](Neuron input) { return input; };
-	Activation relu = [](Neuron input) { return input; };
-	Activation leakyrelu = [](Neuron input) { return input; };
-	Activation tanh = [](Neuron input) { return input; };
+	inline Activation stub = [](Neuron input) { return input; };
+	inline Activation fastsigmoid = [](Neuron input) { return input / (1 + std::fabs(input)); };
+	inline Activation relu = [](Neuron input) { return input < 0 ? 0 : input; };
+	inline Activation leakyrelu = [](Neuron input) { return input >= 0 ? input : input * 0.1; };
+	inline Activation tanh = [](Neuron input) { return tanh(input); };
 }
 
 class ArtificialNeuralNetwork

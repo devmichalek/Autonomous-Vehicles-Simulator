@@ -155,7 +155,7 @@ namespace TestGeneticAlgorithm
 					size_t difference = std::abs(geneticAlgorithm.getChromosome(j)[k] - expectedChromosome[k]);
 					difference = size_t(std::pow(difference, 2));
 					long long value = long long(numOfCombinations) - difference;
-					points[j] += unsigned(value < 0 ? 0 : value);
+					points[j] += FitnessPoint(value < 0 ? 0 : value);
 				}
 			}
 		}
@@ -167,57 +167,129 @@ namespace TestGeneticAlgorithm
 		printTestStatistics<char>(numOfGenerations, expectedResults, bestResults, expectedChromosome, bestChromosome);
 	}
 
-	//void testFloatingPoints(const size_t chromosomeLength,
-	//						const size_t populationSize,
-	//						const size_t numOfGenerations,
-	//						double crossoverProbability,
-	//						double mutationProbability,
-	//						const double expectedResults)
-	//{
-	//	std::cout << "\tTest parameters:\n";
-	//	std::cout << "\t\tChromosome length: " << chromosomeLength << std::endl;
-	//	std::cout << "\t\tPupulation size: " << populationSize << std::endl;
-	//	std::cout << "\t\tNumber of generations: " << numOfGenerations << std::endl;
+	void testFloatingPoints(const size_t chromosomeLength,
+							const size_t populationSize,
+							const size_t numOfGenerations,
+							double crossoverProbability,
+							double mutationProbability,
+							unsigned precision,
+							std::pair<float, float> range,
+							bool decreaseMutationOverGenerations,
+							const double expectedResults)
+	{
+		std::cout << "\tTest parameters:\n";
+		std::cout << "\t\tChromosome length: " << chromosomeLength << std::endl;
+		std::cout << "\t\tPupulation size: " << populationSize << std::endl;
+		std::cout << "\t\tNumber of generations: " << numOfGenerations << std::endl;
+		std::cout << "\t\tCrossover probability: " << crossoverProbability << std::endl;
+		std::cout << "\t\tMutation probability: " << mutationProbability << std::endl;
+		std::cout << "\t\tDecrease mutation over generations: " << decreaseMutationOverGenerations << std::endl;
 
-	//	// Set up points vector
-	//	FitnessPoints points(populationSize);
+		// Set up points vector
+		FitnessPoints points(populationSize);
 
-	//	// Initialize
-	//	GeneticAlgorithm<float> geneticAlgorithm(geneticFunctions, chromosomeLength, populationSize);
+		// Initialize
+		GeneticAlgorithmFloat geneticAlgorithm(numOfGenerations, chromosomeLength, populationSize, crossoverProbability, mutationProbability, decreaseMutationOverGenerations, precision, range);
 
-	//	// Set up goal, all genes set to 1.0
-	//	Chromosome<float> expectedChromosome(chromosomeLength);
-	//	for (size_t i = 0; i < chromosomeLength; ++i)
-	//		expectedChromosome[i] = 5.0;
+		// Set up goal, all genes set to 1.0
+		float delta = std::fabs(range.second - range.first);
+		float goalGeneData = range.second;
+		float goalGeneOffset = delta / chromosomeLength;
+		Chromosome<float> expectedChromosome(chromosomeLength);
+		for (size_t i = 0; i < chromosomeLength; ++i)
+		{
+			goalGeneData -= goalGeneOffset;
+			expectedChromosome[i] = goalGeneData;
+		}
 
-	//	// Run environment
-	//	{
-	//		// Set up timer
-	//		TestTimer testTimer;
+		// Run environment
+		TestTimer testTimer;
+		while (geneticAlgorithm.iterate(points))
+		{
+			for (size_t j = 0; j < populationSize; ++j)
+			{
+				// Calculate fitness
+				points[j] = 0;
+				for (size_t k = 0; k < chromosomeLength; ++k)
+				{
+					float difference = std::abs(geneticAlgorithm.getChromosome(j)[k] - expectedChromosome[k]);
+					long long longDifference = difference * precision;
+					longDifference = long long(std::pow(longDifference, 1.15));
+					long long value = long long(delta * precision) - longDifference;
+					points[j] += FitnessPoint(value < 0 ? 0 : value);
+				}
+			}
+		}
+		testTimer.stop();
 
-	//		for (size_t i = 0; i < numOfGenerations; ++i)
-	//		{
-	//			for (size_t j = 0; j < populationSize; ++j)
-	//			{
-	//				// Calculate fitness
-	//				points[j] = 0;
-	//				for (size_t k = 0; k < chromosomeLength; ++k)
-	//				{
-	//					/*size_t difference = std::abs(geneticAlgorithm[j][k] - expectedChromosome[k]);
-	//					difference = std::pow(difference, 2);
-	//					long long value = long long(numOfCombinations) - difference;
-	//					points[j] += size_t(value < 0 ? 0 : value);*/
-	//				}
-	//			}
+		size_t bestResultsIndex = std::distance(points.begin(), std::max_element(points.begin(), points.end()));
+		double bestResults = double(points[bestResultsIndex]) / chromosomeLength / (delta * precision);
+		auto bestChromosome = geneticAlgorithm.getChromosome(bestResultsIndex);
+		printTestStatistics<float>(numOfGenerations, expectedResults, bestResults, expectedChromosome, bestChromosome);
+	}
 
-	//			geneticAlgorithm.regenerate(points);
-	//		}
-	//	}
+	void testNeurons(const size_t chromosomeLength,
+					 const size_t populationSize,
+					 const size_t numOfGenerations,
+					 double crossoverProbability,
+					 double mutationProbability,
+					 unsigned precision,
+					 std::pair<float, float> range,
+					 bool decreaseMutationOverGenerations,
+					 bool singlePointCrossover,
+					 const double expectedResults)
+	{
+		std::cout << "\tTest parameters:\n";
+		std::cout << "\t\tChromosome length: " << chromosomeLength << std::endl;
+		std::cout << "\t\tPupulation size: " << populationSize << std::endl;
+		std::cout << "\t\tNumber of generations: " << numOfGenerations << std::endl;
+		std::cout << "\t\tCrossover probability: " << crossoverProbability << std::endl;
+		std::cout << "\t\tMutation probability: " << mutationProbability << std::endl;
+		std::cout << "\t\tDecrease mutation over generations: " << decreaseMutationOverGenerations << std::endl;
+		std::cout << "\t\tSingle point crossover: " << singlePointCrossover << std::endl;
 
-	//	size_t bestResultsIndex = std::distance(points.begin(), std::max_element(points.begin(), points.end()));
-	//	double bestResults = double(points[bestResultsIndex]) / chromosomeLength;
-	//	printTestStatistics<float>(numOfGenerations, expectedResults, bestResults, expectedChromosome, geneticAlgorithm[bestResultsIndex]);
-	//}
+		// Set up points vector
+		FitnessPoints points(populationSize);
+
+		// Initialize
+		GeneticAlgorithmNeuron geneticAlgorithm(numOfGenerations, chromosomeLength, populationSize, crossoverProbability, mutationProbability, decreaseMutationOverGenerations, singlePointCrossover, precision, range);
+
+		// Set up goal, all genes set to 1.0
+		Neuron delta = std::fabs(range.second - range.first);
+		Neuron goalGeneData = range.second;
+		Neuron goalGeneOffset = delta / chromosomeLength;
+		Chromosome<Neuron> expectedChromosome(chromosomeLength);
+		for (size_t i = 0; i < chromosomeLength; ++i)
+		{
+			goalGeneData -= goalGeneOffset;
+			expectedChromosome[i] = goalGeneData;
+		}
+
+		// Run environment
+		TestTimer testTimer;
+		while (geneticAlgorithm.iterate(points))
+		{
+			for (size_t j = 0; j < populationSize; ++j)
+			{
+				// Calculate fitness
+				points[j] = 0;
+				for (size_t k = 0; k < chromosomeLength; ++k)
+				{
+					Neuron difference = std::fabs(geneticAlgorithm.getChromosome(j)[k] - expectedChromosome[k]);
+					long long longDifference = difference * precision;
+					longDifference = long long(std::pow(longDifference, 1.2));
+					long long value = long long(delta * precision) - longDifference;
+					points[j] += FitnessPoint(value < 0 ? 0 : value);
+				}
+			}
+		}
+		testTimer.stop();
+
+		size_t bestResultsIndex = std::distance(points.begin(), std::max_element(points.begin(), points.end()));
+		double bestResults = double(points[bestResultsIndex]) / chromosomeLength / (delta * precision);
+		auto bestChromosome = geneticAlgorithm.getChromosome(bestResultsIndex);
+		printTestStatistics<Neuron>(numOfGenerations, expectedResults, bestResults, expectedChromosome, bestChromosome);
+	}
 
 	void testIntegers()
 	{
@@ -229,13 +301,15 @@ namespace TestGeneticAlgorithm
 		std::cout << "Test title: TestGeneticAlgorithm\n";
 
 		const bool runTestGroupBooleans = false;
-		const bool runTestGroupCharacters = true;
-		const bool runTestGroupFloatingPoints = true;
+		const bool runTestGroupCharacters = false;
+		const bool runTestGroupFloatingPoints = false;
+		const bool runTestGroupNeurons = true;
+		const bool runTestGroupIntegers = true;
 
 		if (runTestGroupBooleans)
 		{
 			std::cout << "Test group name: testBooleans\n";
-			testBooleans(255, 64, 30, 0.45, 0.1, 0.75);
+			testBooleans(255, 64, 30, 0.45, 0.1, 0.74);
 			testBooleans(200, 50, 30, 0.5, 0.05, 0.83);
 			testBooleans(128, 32, 40, 0.6, 0.03, 0.94);
 			testBooleans(64, 64, 64, 0.6, 0.03, 1.0);
@@ -262,10 +336,25 @@ namespace TestGeneticAlgorithm
 		if (runTestGroupFloatingPoints)
 		{
 			std::cout << "Test group name: testFloatingPoints\n";
-			//testFloatingPoints();
+			testFloatingPoints(1, 16, 32, 0.5, 0.5, 100, std::pair(-1.0f, 1.0f), false, 0.99);
+			testFloatingPoints(4, 64, 64, 0.5, 0.4, 100, std::pair(-1.0f, 1.0f), true, 0.96);
+			testFloatingPoints(8, 64, 64, 0.5, 0.8, 1000, std::pair(-10.0f, 10.0f), true, 0.98);
+			testFloatingPoints(32, 64, 128, 0.6, 0.05, 100, std::pair(-1.0f, 1.0f), false, 0.99);
+			testFloatingPoints(64, 64, 128, 0.65, 0.04, 100, std::pair(-1.0f, 1.0f), false, 0.95);
+			testFloatingPoints(128, 128, 256, 0.55, 0.06, 100, std::pair(-1.0f, 1.0f), false, 0.92);
+			testFloatingPoints(256, 128, 256, 0.5, 0.06, 100, std::pair(-5.0f, 5.0f), false, 0.8);
 		}
 
-		std::cout << "Test group name: testIntegers\n";
-		testIntegers();
+		if (runTestGroupNeurons)
+		{
+			std::cout << "Test group name: testNeurons\n";
+			testNeurons(1, 16, 32, 0.5, 0.5, 1000, std::pair(-1.0, 1.0), false, false, 0.99);
+		}
+
+		if (runTestGroupIntegers)
+		{
+			std::cout << "Test group name: testIntegers\n";
+			testIntegers();
+		}
 	}
 };
