@@ -275,9 +275,9 @@ namespace TestGeneticAlgorithm
 				points[j] = 0;
 				for (size_t k = 0; k < chromosomeLength; ++k)
 				{
-					Neuron difference = std::fabs(geneticAlgorithm.getChromosome(j)[k] - expectedChromosome[k]);
+					auto data = geneticAlgorithm.getChromosome(j)[k];
+					Neuron difference = std::fabs(data - expectedChromosome[k]);
 					long long longDifference = difference * precision;
-					longDifference = long long(std::pow(longDifference, 1.2));
 					long long value = long long(delta * precision) - longDifference;
 					points[j] += FitnessPoint(value < 0 ? 0 : value);
 				}
@@ -286,7 +286,7 @@ namespace TestGeneticAlgorithm
 		testTimer.stop();
 
 		size_t bestResultsIndex = std::distance(points.begin(), std::max_element(points.begin(), points.end()));
-		double bestResults = double(points[bestResultsIndex]) / chromosomeLength / (delta * precision);
+		double bestResults = (double(points[bestResultsIndex]) / chromosomeLength) / (delta * precision);
 		auto bestChromosome = geneticAlgorithm.getChromosome(bestResultsIndex);
 		printTestStatistics<Neuron>(numOfGenerations, expectedResults, bestResults, expectedChromosome, bestChromosome);
 	}
@@ -303,7 +303,7 @@ namespace TestGeneticAlgorithm
 		const bool runTestGroupBooleans = false;
 		const bool runTestGroupCharacters = false;
 		const bool runTestGroupFloatingPoints = false;
-		const bool runTestGroupNeurons = true;
+		const bool runTestGroupNeurons = false;
 		const bool runTestGroupIntegers = true;
 
 		if (runTestGroupBooleans)
@@ -348,7 +348,17 @@ namespace TestGeneticAlgorithm
 		if (runTestGroupNeurons)
 		{
 			std::cout << "Test group name: testNeurons\n";
-			testNeurons(1, 16, 32, 0.5, 0.5, 1000, std::pair(-1.0, 1.0), false, false, 0.99);
+			testNeurons(1, 16, 32, 0.5, 0.05, 1000, std::pair(-1.0, 1.0), false, false, 0.97);
+			testNeurons(2, 16, 32, 0.5, 0.05, 1000, std::pair(-1.0, 1.0), false, false, 0.97);
+			testNeurons(4, 32, 32, 0.5, 0.05, 1000, std::pair(-1.0, 1.0), false, false, 0.97);
+			testNeurons(8, 32, 64, 0.5, 0.06, 1000, std::pair(-1.0, 1.0), false, true, 0.97);
+			testNeurons(16, 64, 64, 0.5, 0.06, 1000, std::pair(-1.0, 1.0), false, true, 0.97);
+			testNeurons(32, 64, 64, 0.5, 0.06, 1000, std::pair(-1.0, 1.0), false, true, 0.97);
+			testNeurons(64, 128, 128, 0.5, 0.06, 1000, std::pair(-1.0, 1.0), false, true, 0.97);
+			testNeurons(128, 128, 128, 0.5, 0.06, 1000, std::pair(-1.0, 1.0), false, true, 0.93);
+			testNeurons(256, 128, 128, 0.5, 0.06, 1000, std::pair(-1.0, 1.0), false, true, 0.85);
+			testNeurons(512, 256, 256, 0.5, 0.06, 1000, std::pair(-1.0, 1.0), false, false, 0.85); // 1.5min
+			testNeurons(1024, 256, 512, 0.5, 0.06, 1000, std::pair(-5.0, 5.0), false, false, 0.8); // 6min
 		}
 
 		if (runTestGroupIntegers)

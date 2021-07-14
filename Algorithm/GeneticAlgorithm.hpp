@@ -162,19 +162,19 @@ public:
 
 	bool iterate(FitnessPoints& points)
 	{
-		select(points);
-
-		size_t repeatCount = m_populationSize - m_parentsCount;
-		for (size_t i = 0; i < repeatCount; ++i)
-			crossover();
-		m_population.shrink_to_fit();
-
 		++m_currentIteration;
 		if (m_currentIteration > m_maxNumberOfGenerations)
 		{
 			m_currentIteration = 0;
 			return false;
 		}
+
+		select(points);
+
+		size_t repeatCount = m_populationSize - m_parentsCount;
+		for (size_t i = 0; i < repeatCount; ++i)
+			crossover();
+		m_population.shrink_to_fit();
 
 		return true;
 	}
@@ -404,6 +404,13 @@ std::ostream& operator<<(std::ostream& os, const Chromosome<Type>& rhs)
 		os << std::fixed << std::setprecision(2) << rhs.m_genes[0].m_data;
 		for (auto i = 1; i < rhsSize; ++i)
 			os << ", " << std::fixed << std::setprecision(2) << rhs.m_genes[i].m_data;
+	}
+	else if constexpr (std::is_same<Type, double>::value)
+	{
+		auto rhsSize = rhs.m_genes.size();
+		os << std::fixed << std::setprecision(4) << rhs.m_genes[0].m_data;
+		for (auto i = 1; i < rhsSize; ++i)
+			os << ", " << std::fixed << std::setprecision(4) << rhs.m_genes[i].m_data;
 	}
 	else
 	{
