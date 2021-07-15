@@ -5,7 +5,7 @@
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 
-using CarPoints = std::array<sf::Vector2i, 4>;
+using CarPoints = std::array<sf::Vector2f, 4>;
 
 class DrawableCar
 {
@@ -60,10 +60,10 @@ public:
 	inline CarPoints getPoints()
 	{
 		return {
-			static_cast<sf::Vector2i>(m_convexShape.getPoint(0)),
-			static_cast<sf::Vector2i>(m_convexShape.getPoint(1)),
-			static_cast<sf::Vector2i>(m_convexShape.getPoint(2)),
-			static_cast<sf::Vector2i>(m_convexShape.getPoint(3))
+			m_convexShape.getPoint(0),
+			m_convexShape.getPoint(1),
+			m_convexShape.getPoint(2),
+			m_convexShape.getPoint(3)
 		};
 	}
 };

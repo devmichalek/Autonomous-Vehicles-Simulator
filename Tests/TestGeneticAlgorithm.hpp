@@ -213,7 +213,7 @@ namespace TestGeneticAlgorithm
 				for (size_t k = 0; k < chromosomeLength; ++k)
 				{
 					float difference = std::abs(geneticAlgorithm.getChromosome(j)[k] - expectedChromosome[k]);
-					long long longDifference = difference * precision;
+					long long longDifference = long long(difference * precision);
 					longDifference = long long(std::pow(longDifference, 1.15));
 					long long value = long long(delta * precision) - longDifference;
 					points[j] += FitnessPoint(value < 0 ? 0 : value);
@@ -234,7 +234,7 @@ namespace TestGeneticAlgorithm
 					 double crossoverProbability,
 					 double mutationProbability,
 					 unsigned precision,
-					 std::pair<float, float> range,
+					 std::pair<Neuron, Neuron> range,
 					 bool decreaseMutationOverGenerations,
 					 bool singlePointCrossover,
 					 const double expectedResults)
@@ -277,7 +277,7 @@ namespace TestGeneticAlgorithm
 				{
 					auto data = geneticAlgorithm.getChromosome(j)[k];
 					Neuron difference = std::fabs(data - expectedChromosome[k]);
-					long long longDifference = difference * precision;
+					long long longDifference = long long(difference * precision);
 					long long value = long long(delta * precision) - longDifference;
 					points[j] += FitnessPoint(value < 0 ? 0 : value);
 				}
@@ -304,7 +304,7 @@ namespace TestGeneticAlgorithm
 		const bool runTestGroupCharacters = false;
 		const bool runTestGroupFloatingPoints = false;
 		const bool runTestGroupNeurons = false;
-		const bool runTestGroupIntegers = true;
+		const bool runTestGroupIntegers = false;
 
 		if (runTestGroupBooleans)
 		{

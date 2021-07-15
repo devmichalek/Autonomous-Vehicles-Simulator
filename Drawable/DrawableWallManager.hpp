@@ -6,20 +6,22 @@
 #include "CoreWindow.hpp"
 #include "DrawableCar.hpp"
 
-class DWallManager
+using Segment = std::array<sf::Vector2f, 2>;
+using SegmentVector = std::vector<Segment>;
+using Line = std::array<sf::Vertex, 2>;
+
+class DrawableWallManager
 {
-	sf::RectangleShape m_rectangleShape;
+	Line m_line;
 	inline static const sf::Vector2i m_blockSize = sf::Vector2i(64, 64);
-	using Segment = std::array<sf::Vector2i, 2>;
-	using SegmentVector = std::vector<Segment>;
 	std::vector<std::vector<SegmentVector*>> m_canvas;
 
-	inline bool ccw(sf::Vector2i a, sf::Vector2i b, sf::Vector2i c)
+	inline bool ccw(sf::Vector2f a, sf::Vector2f b, sf::Vector2f c)
 	{
 		return (c.y - a.y) * (b.x - a.x) > (b.y - a.y) * (c.x - a.x);
 	}
 
-	inline bool intersect(sf::Vector2i a, sf::Vector2i b, sf::Vector2i c, sf::Vector2i d)
+	inline bool intersect(sf::Vector2f a, sf::Vector2f b, sf::Vector2f c, sf::Vector2f d)
 	{
 		return ccw(a, c, d) != ccw(b, c, d) && ccw(a, b, c) != ccw(a, b, d);
 	}
@@ -44,8 +46,8 @@ class DWallManager
 	}
 
 public:
-	DWallManager();
-	~DWallManager();
+	DrawableWallManager();
+	~DrawableWallManager();
 
 	inline bool intersect(std::vector<CarPoints>& carPointsVector)
 	{

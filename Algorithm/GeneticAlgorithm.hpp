@@ -216,7 +216,6 @@ public:
 
 class GeneticAlgorithmCharacter : public GeneticAlgorithm<char>
 {
-	double m_mutationProbability;
 	bool m_decreaseMutationOverGenerations;
 	std::string m_alphabet;
 	std::uniform_int_distribution<std::mt19937::result_type> m_alphabetDistribution;

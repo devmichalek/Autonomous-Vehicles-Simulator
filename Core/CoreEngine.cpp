@@ -1,17 +1,16 @@
 #include "CoreEngine.hpp"
 #include "CoreWindow.hpp"
-#include "SMenu.hpp"
-#include "SEditor.hpp"
-#include "STraining.hpp"
-#include "STest.hpp"
+#include "StateMenu.hpp"
+#include "StateEditor.hpp"
+#include "StateTraining.hpp"
+#include "StateTesting.hpp"
 
 CoreEngine::CoreEngine()
 {
-	using namespace State;
-	m_states.push_back(new Menu());
-	m_states.push_back(new Editor());
-	m_states.push_back(new Training());
-	m_states.push_back(new Test());
+	m_states.push_back(new StateMenu());
+	m_states.push_back(new StateEditor());
+	m_states.push_back(new StateTraining());
+	m_states.push_back(new StateTesting());
 	m_states.shrink_to_fit();
 }
 
@@ -46,7 +45,7 @@ void CoreEngine::loop()
 		window.restartClock();
 		
 		// Draw
-		m_states[State::Abstract::type()]->draw();
+		m_states[StateAbstract::type()]->draw();
 
 		// Display
 		window.display();
