@@ -11,6 +11,16 @@ StateTraining::~StateTraining()
 
 }
 
+void StateTraining::capture()
+{
+
+}
+
+void StateTraining::update()
+{
+
+}
+
 void StateTraining::load()
 {
 

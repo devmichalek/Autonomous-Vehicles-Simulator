@@ -11,6 +11,16 @@ StateMenu::~StateMenu()
 
 }
 
+void StateMenu::capture()
+{
+
+}
+
+void StateMenu::update()
+{
+
+}
+
 void StateMenu::load()
 {
 

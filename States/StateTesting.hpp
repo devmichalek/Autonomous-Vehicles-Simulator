@@ -10,6 +10,10 @@ public:
 
 	~StateTesting();
 
+	void capture();
+
+	void update();
+
 	void load();
 
 	void draw();

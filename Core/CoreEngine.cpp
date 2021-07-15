@@ -22,6 +22,7 @@ CoreEngine::~CoreEngine()
 
 void CoreEngine::load()
 {
+	CoreWindow::getInstance(); // Create window
 	for (const auto& i : m_states)
 		i->load();
 }
@@ -39,10 +40,16 @@ void CoreEngine::loop()
 		{
 			if (window.getEvent().type == sf::Event::Closed)
 				window.close();
+
+			// Capture events
+			m_states[StateAbstract::type()]->capture();
 		}
 
 		// Restart clock
 		window.restartClock();
+
+		// Mechanics
+		m_states[StateAbstract::type()]->update();
 		
 		// Draw
 		m_states[StateAbstract::type()]->draw();

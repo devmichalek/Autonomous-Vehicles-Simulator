@@ -11,6 +11,16 @@ StateTesting::~StateTesting()
 
 }
 
+void StateTesting::capture()
+{
+
+}
+
+void StateTesting::update()
+{
+
+}
+
 void StateTesting::load()
 {
 

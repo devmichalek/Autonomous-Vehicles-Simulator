@@ -35,6 +35,8 @@ public:
 		return static_cast<size_t>(COUNT);
 	}
 
+	virtual void capture() = 0;
+	virtual void update() = 0;
 	virtual void load() = 0;
 	virtual void draw() = 0;
 };

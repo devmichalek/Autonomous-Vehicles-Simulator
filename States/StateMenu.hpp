@@ -10,6 +10,10 @@ public:
 
 	~StateMenu();
 
+	void capture();
+
+	void update();
+
 	void load();
 
 	void draw();
