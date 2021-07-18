@@ -9,6 +9,7 @@ class CoreWindow final
 	inline static bool m_open = false;
 	inline static double m_elapsedTime = 0;
 	inline static sf::RenderWindow m_renderWindow;
+	inline static sf::View m_view;
 	inline static sf::Clock m_clock;
 	inline static sf::Event m_event;
 	inline static sf::Color m_backgroundColor = sf::Color::Black;
@@ -25,6 +26,9 @@ class CoreWindow final
 		if (icon.loadFromFile(""))
 			m_renderWindow.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
 		m_open = true;
+		m_view.setSize(sf::Vector2f(m_screenWidth, m_screenHeight));
+		m_view.setCenter(sf::Vector2f(m_screenWidth / 2, m_screenHeight / 2));
+		m_renderWindow.setView(m_view);
 	}
 
 	friend CoreEngine;
@@ -92,6 +96,17 @@ public:
 	inline static sf::RenderWindow& getRenderWindow()
 	{
 		return m_renderWindow;
+	}
+
+	inline static sf::View& getView()
+	{
+		return m_view;
+	}
+
+	inline static sf::Vector2f getViewOffset()
+	{
+		auto& size = m_view.getSize();
+		return m_view.getCenter() - sf::Vector2f(size.x / 2, size.y / 2);
 	}
 
 	inline static double getElapsedTime()
