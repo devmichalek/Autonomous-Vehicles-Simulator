@@ -1,0 +1,3 @@
+
+How to check if point is inside rectangle described in four points:
+https://martin-thoma.com/how-to-check-if-a-point-is-inside-a-rectangle/

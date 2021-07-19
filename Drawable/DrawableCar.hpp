@@ -4,12 +4,15 @@
 #include <SFML/Graphics/ConvexShape.hpp>
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
+#include "CoreWindow.hpp"
+#include "DrawableMath.hpp"
 
 using CarPoints = std::array<sf::Vector2f, 4>;
 
 class DrawableCar
 {
-	float m_angle;
+	double m_angle;
+	const double m_constRotation;
 	float m_speed;
 	sf::Vector2f m_size;
 	sf::Vector2f m_center;
@@ -17,13 +20,15 @@ class DrawableCar
 	sf::CircleShape m_circleShape;
 
 public:
-
-	DrawableCar(sf::Vector2f size, sf::Vector2f position = sf::Vector2f(0, 0)) : m_size(size), m_center(position)
+	DrawableCar(sf::Vector2f center = sf::Vector2f(0.0f, 0.0f)) :
+		m_constRotation(100.0), m_center(center)
 	{
 		m_angle = 0;
 		m_speed = 0;
+		auto windowSize = CoreWindow::getSize();
+		m_size = sf::Vector2f(windowSize.x / 30.0f, windowSize.y / 10.0f);
 		m_convexShape.setPointCount(4);
-		m_circleShape.setRadius(m_size.x / 20);
+		m_circleShape.setRadius(m_size.x / 20.0f);
 		m_circleShape.setFillColor(sf::Color::Red);
 		update();
 	}
@@ -38,11 +43,19 @@ public:
 		m_convexShape.setFillColor(color);
 	}
 
-	// Rotate car by specified value (-1; 1)
-	void rotate(float rotationRatio)
+	// Sets center position
+	inline void setCenter(const sf::Vector2f center)
 	{
-		m_angle += rotationRatio * 0.072f;
+		m_center = center;
 	}
+
+	inline sf::Vector2f getCenter()
+	{
+		return m_center;
+	}
+
+	// Rotate car by specified value (-1; 1)
+	void rotate(double rotationRatio);
 
 	// Accelerate by specified value (0; 1)
 	void accelerate(float value);
@@ -56,6 +69,16 @@ public:
 	// Draws car
 	void draw();
 
+	inline float getArea() const
+	{
+		return m_size.x * m_size.y;
+	}
+
+	inline double getAngle() const
+	{
+		return m_angle;
+	}
+
 	// Returns car described in four points
 	inline CarPoints getPoints()
 	{
@@ -65,5 +88,23 @@ public:
 			m_convexShape.getPoint(2),
 			m_convexShape.getPoint(3)
 		};
+	}
+
+	inline bool intersect(sf::Vector2f P)
+	{
+		CarPoints points = getPoints();
+		sf::Vector2f& A = points[0];
+		sf::Vector2f& B = points[1];
+		sf::Vector2f& C = points[2];
+		sf::Vector2f& D = points[3];
+
+		float ABP = calculateTriangleArea(A, B, P);
+		float BCP = calculateTriangleArea(B, C, P);
+		float CDP = calculateTriangleArea(C, D, P);
+		float DAP = calculateTriangleArea(D, A, P);
+
+		float area = ABP + BCP + CDP + DAP;
+		float correctArea = getArea() + 1;
+		return area <= correctArea;
 	}
 };

@@ -7,6 +7,7 @@
 
 CoreEngine::CoreEngine()
 {
+	CoreWindow::getInstance(); // Create window
 	m_states.push_back(new StateMenu());
 	m_states.push_back(new StateEditor());
 	m_states.push_back(new StateTraining());
@@ -22,7 +23,6 @@ CoreEngine::~CoreEngine()
 
 void CoreEngine::load()
 {
-	CoreWindow::getInstance(); // Create window
 	for (const auto& i : m_states)
 		i->load();
 }

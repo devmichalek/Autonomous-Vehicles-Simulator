@@ -1,6 +1,11 @@
 #include "DrawableCar.hpp"
 #include "CoreWindow.hpp"
 
+void DrawableCar::rotate(double rotationRatio)
+{
+	m_angle += rotationRatio * m_constRotation * CoreWindow::getElapsedTime();
+}
+
 void DrawableCar::accelerate(float value)
 {
 	m_speed += value;

@@ -16,3 +16,8 @@ inline bool intersect(sf::Vector2f a, sf::Vector2f b, sf::Vector2f c, sf::Vector
 {
 	return ccw(a, c, d) != ccw(b, c, d) && ccw(a, b, c) != ccw(a, b, d);
 }
+
+inline float calculateTriangleArea(sf::Vector2f& A, sf::Vector2f& B, sf::Vector2f& C)
+{
+	return std::fabs((B.x * A.y - A.x * B.y) + (C.x * B.y - B.x * C.y) + (A.x * C.y - C.x * A.y)) / 2;
+}
