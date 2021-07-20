@@ -1,6 +1,7 @@
 #pragma once
 #include <limits>
 #include <string>
+#include <map>
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/Text.hpp>
 #include "StateAbstract.hpp"
@@ -15,25 +16,39 @@ class StateEditor : public StateAbstract
 		WALL,
 		CAR
 	} m_activeMode;
+	std::map<ActiveMode, std::string> m_activeModeMap;
 
-	enum class WallMode
+	enum class WallSubmode
 	{
 		INSERT,
 		GLUED_INSERT,
 		REMOVE
-	} m_wallMode;
+	} m_wallSubmode;
+	std::map<WallSubmode, std::string> m_wallSubmodeMap;
 
-	enum class CarMode
+	enum class CarSubmode
 	{
 		INSERT,
 		REMOVE
-	} m_carMode;
+	} m_carSubmode;
+	std::map<CarSubmode, std::string> m_carSubmodeMap;
+
+	enum class SaveStatus
+	{
+		UP_TO_DATE,
+		OUT_OF_DATE,
+		ERROR_NO_WALLS_POSITIONED,
+		ERROR_NO_CAR_POSITIONED,
+		ERROR_NO_FINISH_LINE_POSITIONED,
+		ERROR_CANNOT_OPEN_FILE
+	} m_saveStatus;
+	std::map<SaveStatus, std::tuple<std::string, std::string, sf::Color>> m_saveStatusMap;
 
 	Line m_line;
-	SegmentVector m_segments;
-	bool m_insertSegment;
-	bool m_removeSegment;
-	sf::Vector2f m_segmentBeggining;
+	SegmentVector m_walls;
+	bool m_insertWall;
+	bool m_removeWall;
+	sf::Vector2f m_wallBeggining;
 
 	float m_movement;
 	const float m_movementConst;
@@ -43,26 +58,21 @@ class StateEditor : public StateAbstract
 	bool m_drawCar;
 	DrawableCar m_drawableCar;
 
-	enum class SaveError
-	{
-		SUCCESS,
-		NO_WALLS,
-		NO_CAR,
-		CANNOT_OPEN_FILE
-	};
-
-	bool m_saved;
 	bool m_saveKeysPressed;
+	float m_saveStatusAlpha;
+	const float m_saveStatusAlphaConst;
+	const float m_saveStatusAlphaMax;
+	const float m_saveStatusAlphaMin;
 
 	sf::Font m_font;
-	sf::Text m_wallModeText;
-	sf::Text m_wallModeActiveText;
-	sf::Text m_wallModeHelpText;
-	sf::Text m_carModeText;
-	sf::Text m_carModeActiveText;
-	sf::Text m_carModeHelpText;
-	sf::Text m_segmentsCountText;
-	sf::Text m_segmentsCountActiveText;
+	sf::Text m_wallSubmodeText;
+	sf::Text m_wallSubmodeActiveText;
+	sf::Text m_wallSubmodeHelpText;
+	sf::Text m_carSubmodeText;
+	sf::Text m_carSubmodeActiveText;
+	sf::Text m_carSubmodeHelpText;
+	sf::Text m_wallCountText;
+	sf::Text m_wallCountActiveText;
 	sf::Text m_carAngleText;
 	sf::Text m_carAngleActiveText;
 	sf::Text m_carAngleHelpText;
@@ -79,135 +89,40 @@ class StateEditor : public StateAbstract
 	sf::Text m_saveText;
 	sf::Text m_saveActiveText;
 	sf::Text m_saveHelpText;
-	sf::Text m_saveErrorText;
+	sf::Text m_saveStatusText;
 
-	inline std::string getWallModeString()
-	{
-		switch (m_wallMode)
-		{
-			case WallMode::INSERT:
-				return "Insert mode";
-			case WallMode::GLUED_INSERT:
-				return "Glued insert mode";
-			case WallMode::REMOVE:
-				return "Remove mode";
-		}
-
-		return "Unknown mode";
-	}
-
-	inline std::string getCarModeString()
-	{
-		switch (m_carMode)
-		{
-		case CarMode::INSERT:
-			return "Insert mode";
-		case CarMode::REMOVE:
-			return "Remove mode";
-		}
-
-		return "Unknown mode";
-	}
-
-	inline std::string getActiveModeString()
-	{
-		switch (m_activeMode)
-		{
-			case ActiveMode::CAR:
-				return "Car mode";
-			case ActiveMode::WALL:
-				return "Wall mode";
-		}
-
-		return "Unknown mode";
-	}
-
-	inline std::string getSegmentsCountString()
-	{
-		return std::to_string(m_segments.size());
-	}
-
-	inline std::string getCarAngleString()
-	{
-		long long angle = static_cast<long long>(m_drawableCar.getAngle());
-		angle %= 360;
-		if (angle < 0)
-			angle += 360;
-		return std::to_string(angle);
-	}
-
-	inline std::string getMovementString()
-	{
-		long movement = long(m_movement);
-		return std::to_string(movement);
-	}
-
-	inline std::string getViewOffsetXString()
-	{
-		sf::Vector2f viewOffset = CoreWindow::getViewOffset();
-		return std::to_string(int(viewOffset.x));
-	}
-
-	inline std::string getViewOffsetYString()
-	{
-		sf::Vector2f viewOffset = CoreWindow::getViewOffset();
-		return std::to_string(int(viewOffset.y));
-	}
-
-	inline void updateSaveActiveText(bool saved)
-	{
-		m_saved = saved;
-		if (m_saved)
-		{
-			m_saveActiveText.setFillColor(sf::Color::Green);
-			m_saveActiveText.setString("Saved");
-		}
-		else
-		{
-			m_saveActiveText.setFillColor(sf::Color::Red);
-			m_saveActiveText.setString("Not saved");
-		}
-	}
-
-	inline void updateSaveErrorText(SaveError error = SaveError::SUCCESS)
-	{
-		m_saveErrorText.setFillColor(sf::Color::Red);
-		switch (error)
-		{
-			case SaveError::SUCCESS:
-				m_saveErrorText.setFillColor(sf::Color(0, 0, 0, 0));
-				break;
-			case SaveError::NO_WALLS:
-				m_saveErrorText.setString("Error: No walls specified!");
-				break;
-			case SaveError::NO_CAR:
-				m_saveErrorText.setString("Error: Car is not positioned!");
-				break;
-			case SaveError::CANNOT_OPEN_FILE:
-				m_saveErrorText.setString("Error: Cannot open file!");
-				break;
-		}
-	}
-
+	void setWallCountActiveText();
+	void setCarAngleActiveText();
+	void setMovementActiveText();
+	void setViewOffsetXActiveText();
+	void setViewOffsetYActiveText();
+	void setUpToDate();
+	void setOutOfDate();
 	void updateTextsPosition();
-
 	void save();
 
 public:
 	StateEditor(StateEditor&) = delete;
 
-	StateEditor() : m_movementConst(200.0f), m_movementMax(1800.0f), m_movementMin(1.0f)
+	StateEditor() :
+		m_movementConst(200.0f),
+		m_movementMax(1800.0f),
+		m_movementMin(1.0f),
+		m_saveStatusAlphaConst(75.0f),
+		m_saveStatusAlphaMax(255.0f),
+		m_saveStatusAlphaMin(0.0f)
 	{
 		m_activeMode = ActiveMode::WALL;
-		m_wallMode = WallMode::INSERT;
-		m_carMode = CarMode::INSERT;
-		m_segments.reserve(1024);
-		m_insertSegment = false;
-		m_removeSegment = false;
+		m_wallSubmode = WallSubmode::INSERT;
+		m_carSubmode = CarSubmode::INSERT;
+		m_saveStatus = SaveStatus::OUT_OF_DATE;
+		m_walls.reserve(1024);
+		m_insertWall = false;
+		m_removeWall = false;
 		m_movement = m_movementConst * 3;
 		m_drawCar = false;
-		m_saved = false;
 		m_saveKeysPressed = false;
+		m_saveStatusAlpha = m_saveStatusAlphaMin;
 	}
 
 	~StateEditor()
