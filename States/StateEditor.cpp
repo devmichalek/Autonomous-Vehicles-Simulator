@@ -542,8 +542,7 @@ void StateEditor::draw()
 	if (m_drawCar)
 		m_drawableCar.draw();
 
-	m_line[0].color = sf::Color::White;
-	m_line[1].color = sf::Color::White;
+	
 	for (const auto& i : m_walls)
 	{
 		m_line[0].position = i[0];

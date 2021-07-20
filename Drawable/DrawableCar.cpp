@@ -3,7 +3,7 @@
 
 void DrawableCar::rotate(double rotationRatio)
 {
-	m_angle += rotationRatio * m_constRotation * CoreWindow::getElapsedTime();
+	m_angle += rotationRatio * m_rotationConst * CoreWindow::getElapsedTime();
 }
 
 void DrawableCar::accelerate(float value)
@@ -28,9 +28,6 @@ void DrawableCar::update()
 	m_center.x += m_speed / 10 * cosResult;
 	m_center.y += m_speed / 10 * sinResult;
 
-	auto circleRadius = m_circleShape.getRadius();
-	m_circleShape.setPosition(m_center - sf::Vector2f(circleRadius, circleRadius));
-
 	m_convexShape.setPoint(0, sf::Vector2f(-m_size.x / 2, -m_size.y / 2));
 	m_convexShape.setPoint(1, sf::Vector2f(m_size.x / 2, -m_size.y / 2));
 	m_convexShape.setPoint(2, sf::Vector2f(m_size.x / 2, m_size.y / 2));
@@ -43,10 +40,31 @@ void DrawableCar::update()
 		float rotatedY = point.x * sinResult + point.y * cosResult;
 		m_convexShape.setPoint(i, sf::Vector2f(rotatedX + m_center.x, rotatedY + m_center.y));
 	}
+
+	m_beams[LEFT_SENSOR][0] = midpoint(m_convexShape.getPoint(3), m_convexShape.getPoint(0));
+	m_beams[LEFT_FRONT_SENSOR][0] = m_convexShape.getPoint(0);
+	m_beams[FRONT_SENSOR][0] = midpoint(m_convexShape.getPoint(0), m_convexShape.getPoint(1));
+	m_beams[RIGHT_FRONT_SENSOR][0] = m_convexShape.getPoint(1);
+	m_beams[RIGHT_SENSOR][0] = midpoint(m_convexShape.getPoint(1), m_convexShape.getPoint(2));
+
+	for (size_t i = 0; i < 5; ++i)
+	{
+		float cosBeam = static_cast<float>(cos((m_angle + m_beamAngles[i]) * M_PI / 180));
+		float sinBeam = static_cast<float>(sin((m_angle + m_beamAngles[i]) * M_PI / 180));
+		m_beams[i][1].x = (m_beams[i][0].x + m_beamReach * cosBeam);
+		m_beams[i][1].y = (m_beams[i][0].y + m_beamReach * sinBeam);
+	}
 }
 
 void DrawableCar::draw()
 {
 	CoreWindow::getRenderWindow().draw(m_convexShape);
-	CoreWindow::getRenderWindow().draw(m_circleShape);
+	for (const auto& position : m_beams)
+	{
+		m_line[0].position = position[0];
+		m_line[1].position = position[1];
+		CoreWindow::getRenderWindow().draw(m_line.data(), 2, sf::Lines);
+		m_circleShape.setPosition(position[0] - m_circleShapeSize);
+		CoreWindow::getRenderWindow().draw(m_circleShape);
+	}
 }

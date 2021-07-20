@@ -12,24 +12,43 @@ using CarPoints = std::array<sf::Vector2f, 4>;
 class DrawableCar
 {
 	double m_angle;
-	const double m_constRotation;
+	inline static const double m_rotationConst = 100.0;
 	float m_speed;
 	sf::Vector2f m_size;
 	sf::Vector2f m_center;
 	sf::ConvexShape m_convexShape;
+	sf::Vector2f m_circleShapeSize;
 	sf::CircleShape m_circleShape;
+	
+	enum
+	{
+		LEFT_SENSOR,
+		LEFT_FRONT_SENSOR,
+		FRONT_SENSOR,
+		RIGHT_FRONT_SENSOR,
+		RIGHT_SENSOR,
+	};
+	std::array<Segment, 5> m_beams;
+	std::array<double, 5> m_beamAngles;
+	Line m_line;
+	float m_beamReach;
 
 public:
 	DrawableCar(sf::Vector2f center = sf::Vector2f(0.0f, 0.0f)) :
-		m_constRotation(100.0), m_center(center)
+		m_angle(0.0), m_center(center), m_speed(0.0), m_beamAngles({ 180.0, 225.0, 270.0, 315.0, 0.0})
 	{
-		m_angle = 0;
-		m_speed = 0;
 		auto windowSize = CoreWindow::getSize();
-		m_size = sf::Vector2f(windowSize.x / 30.0f, windowSize.y / 10.0f);
+		const float widthFactor = 30.0f;
+		const float heightFactor = 10.0f;
+		m_size = sf::Vector2f(windowSize.x / widthFactor, windowSize.y / heightFactor);
 		m_convexShape.setPointCount(4);
-		m_circleShape.setRadius(m_size.x / 20.0f);
+		const float factor = 20.0f;
+		m_circleShapeSize = sf::Vector2f(m_size.x / factor, m_size.x / factor);
+		m_circleShape.setRadius(m_circleShapeSize.x);
 		m_circleShape.setFillColor(sf::Color::Red);
+		m_line[0].color = sf::Color(255, 255, 255, 128);
+		m_line[1].color = sf::Color(255, 255, 255, 32);
+		m_beamReach = float(windowSize.y) * 0.75f;
 		update();
 	}
 

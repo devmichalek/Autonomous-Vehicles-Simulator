@@ -116,6 +116,8 @@ public:
 		m_wallSubmode = WallSubmode::INSERT;
 		m_carSubmode = CarSubmode::INSERT;
 		m_saveStatus = SaveStatus::OUT_OF_DATE;
+		m_line[0].color = sf::Color::White;
+		m_line[1].color = sf::Color::White;
 		m_walls.reserve(1024);
 		m_insertWall = false;
 		m_removeWall = false;

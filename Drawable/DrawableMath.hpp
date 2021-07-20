@@ -21,3 +21,8 @@ inline float calculateTriangleArea(sf::Vector2f& A, sf::Vector2f& B, sf::Vector2
 {
 	return std::fabs((B.x * A.y - A.x * B.y) + (C.x * B.y - B.x * C.y) + (A.x * C.y - C.x * A.y)) / 2;
 }
+
+inline sf::Vector2f midpoint(sf::Vector2f a, sf::Vector2f b)
+{
+	return sf::Vector2f((a.x + b.x) / 2.0f, (a.y + b.y) / 2.0f);
+}
