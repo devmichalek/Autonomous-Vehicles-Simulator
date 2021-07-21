@@ -1,20 +1,16 @@
 #pragma once
-#include <limits>
-#include <string>
-#include <map>
-#include <SFML/Graphics/Font.hpp>
-#include <SFML/Graphics/Text.hpp>
 #include "StateAbstract.hpp"
-#include "DrawableMath.hpp"
-#include "CoreWindow.hpp"
 #include "DrawableCar.hpp"
+#include "DrawableFinishLine.hpp"
+#include <SFML/Graphics/Text.hpp>
 
 class StateEditor : public StateAbstract
 {
 	enum class ActiveMode
 	{
 		WALL,
-		CAR
+		CAR,
+		FINISH_LINE
 	} m_activeMode;
 	std::map<ActiveMode, std::string> m_activeModeMap;
 
@@ -32,6 +28,12 @@ class StateEditor : public StateAbstract
 		REMOVE
 	} m_carSubmode;
 	std::map<CarSubmode, std::string> m_carSubmodeMap;
+
+	enum class FinishLineSubmode
+	{
+		INSERT
+	} m_finishLineSubmode;
+	std::map<FinishLineSubmode, std::string> m_finishLineSubmodeMap;
 
 	enum class SaveStatus
 	{
@@ -58,6 +60,11 @@ class StateEditor : public StateAbstract
 	bool m_drawCar;
 	DrawableCar m_drawableCar;
 
+	bool m_drawFinishLine;
+	bool m_insertFinishLine;
+	sf::Vector2f m_finishLineBeggining;
+	DrawableFinishLine m_drawableFinishLine;
+
 	bool m_saveKeysPressed;
 	float m_saveStatusAlpha;
 	const float m_saveStatusAlphaConst;
@@ -71,6 +78,9 @@ class StateEditor : public StateAbstract
 	sf::Text m_carSubmodeText;
 	sf::Text m_carSubmodeActiveText;
 	sf::Text m_carSubmodeHelpText;
+	sf::Text m_finishLineSubmodeText;
+	sf::Text m_finishLineSubmodeActiveText;
+	sf::Text m_finishLineSubmodeHelpText;
 	sf::Text m_wallCountText;
 	sf::Text m_wallCountActiveText;
 	sf::Text m_carAngleText;
@@ -115,6 +125,7 @@ public:
 		m_activeMode = ActiveMode::WALL;
 		m_wallSubmode = WallSubmode::INSERT;
 		m_carSubmode = CarSubmode::INSERT;
+		m_finishLineSubmode = FinishLineSubmode::INSERT;
 		m_saveStatus = SaveStatus::OUT_OF_DATE;
 		m_line[0].color = sf::Color::White;
 		m_line[1].color = sf::Color::White;
@@ -123,6 +134,8 @@ public:
 		m_removeWall = false;
 		m_movement = m_movementConst * 3;
 		m_drawCar = false;
+		m_drawFinishLine = false;
+		m_insertFinishLine = false;
 		m_saveKeysPressed = false;
 		m_saveStatusAlpha = m_saveStatusAlphaMin;
 	}

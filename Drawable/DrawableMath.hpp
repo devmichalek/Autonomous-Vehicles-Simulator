@@ -6,6 +6,7 @@
 using Segment = std::array<sf::Vector2f, 2>;
 using SegmentVector = std::vector<Segment>;
 using Line = std::array<sf::Vertex, 2>;
+using RectanglePoints = std::array<sf::Vector2f, 4>;
 
 inline bool ccw(sf::Vector2f a, sf::Vector2f b, sf::Vector2f c)
 {

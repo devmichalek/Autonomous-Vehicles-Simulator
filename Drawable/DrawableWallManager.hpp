@@ -12,7 +12,7 @@ class DrawableWallManager
 
 	// Check if segment intersects with car segments
 	// This function does not work with collinear points!
-	inline bool intersect(Segment& segment, CarPoints& carPoints)
+	inline bool intersect(Segment& segment, RectanglePoints& carPoints)
 	{
 		if (::intersect(segment[0], segment[1], carPoints[0], carPoints[1]))
 			return true;
@@ -33,7 +33,7 @@ public:
 	DrawableWallManager();
 	~DrawableWallManager();
 
-	inline bool intersect(std::vector<CarPoints>& carPointsVector)
+	inline bool intersect(std::vector<RectanglePoints>& carPointsVector)
 	{
 		auto windowSize = CoreWindow::getSize();
 		auto windowPosition = CoreWindow::getPosition();
@@ -66,6 +66,4 @@ public:
 
 	// Load map from file system
 	void load(const char* path);
-
-
 };

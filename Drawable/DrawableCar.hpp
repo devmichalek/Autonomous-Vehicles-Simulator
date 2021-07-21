@@ -7,8 +7,6 @@
 #include "CoreWindow.hpp"
 #include "DrawableMath.hpp"
 
-using CarPoints = std::array<sf::Vector2f, 4>;
-
 class DrawableCar
 {
 	double m_angle;
@@ -34,8 +32,8 @@ class DrawableCar
 	float m_beamReach;
 
 public:
-	DrawableCar(sf::Vector2f center = sf::Vector2f(0.0f, 0.0f)) :
-		m_angle(0.0), m_center(center), m_speed(0.0), m_beamAngles({ 180.0, 225.0, 270.0, 315.0, 0.0})
+	DrawableCar(double angle = 0.0, sf::Vector2f center = sf::Vector2f(0.0f, 0.0f)) :
+		m_angle(angle), m_center(center), m_speed(0.0), m_beamAngles({ 180.0, 225.0, 270.0, 315.0, 0.0})
 	{
 		auto windowSize = CoreWindow::getSize();
 		const float widthFactor = 30.0f;
@@ -46,8 +44,8 @@ public:
 		m_circleShapeSize = sf::Vector2f(m_size.x / factor, m_size.x / factor);
 		m_circleShape.setRadius(m_circleShapeSize.x);
 		m_circleShape.setFillColor(sf::Color::Red);
-		m_line[0].color = sf::Color(255, 255, 255, 128);
-		m_line[1].color = sf::Color(255, 255, 255, 32);
+		m_line[0].color = sf::Color(255, 255, 255, 144);
+		m_line[1].color = sf::Color(255, 255, 255, 0);
 		m_beamReach = float(windowSize.y) * 0.75f;
 		update();
 	}
@@ -99,7 +97,7 @@ public:
 	}
 
 	// Returns car described in four points
-	inline CarPoints getPoints()
+	inline RectanglePoints getPoints()
 	{
 		return {
 			m_convexShape.getPoint(0),
@@ -111,7 +109,7 @@ public:
 
 	inline bool intersect(sf::Vector2f P)
 	{
-		CarPoints points = getPoints();
+		RectanglePoints points = getPoints();
 		sf::Vector2f& A = points[0];
 		sf::Vector2f& B = points[1];
 		sf::Vector2f& C = points[2];
