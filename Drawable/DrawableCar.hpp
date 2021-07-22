@@ -10,8 +10,9 @@
 class DrawableCar
 {
 	double m_angle;
-	inline static const double m_rotationConst = 100.0;
-	float m_speed;
+	inline static const double m_rotationConst = 150.0;
+	double m_speed;
+	inline static const double m_speedConst = 300.0;
 	sf::Vector2f m_size;
 	sf::Vector2f m_center;
 	sf::ConvexShape m_convexShape;
@@ -33,12 +34,12 @@ class DrawableCar
 
 public:
 	DrawableCar(double angle = 0.0, sf::Vector2f center = sf::Vector2f(0.0f, 0.0f)) :
-		m_angle(angle), m_center(center), m_speed(0.0), m_beamAngles({ 180.0, 225.0, 270.0, 315.0, 0.0})
+		m_angle(angle), m_center(center), m_speed(0.0), m_beamAngles({ 270.0, 315.0, 0.0, 45.0, 90.0})
 	{
 		auto windowSize = CoreWindow::getSize();
 		const float widthFactor = 30.0f;
 		const float heightFactor = 10.0f;
-		m_size = sf::Vector2f(windowSize.x / widthFactor, windowSize.y / heightFactor);
+		m_size = sf::Vector2f(windowSize.y / heightFactor, windowSize.x / widthFactor);
 		m_convexShape.setPointCount(4);
 		const float factor = 20.0f;
 		m_circleShapeSize = sf::Vector2f(m_size.x / factor, m_size.x / factor);
@@ -75,10 +76,10 @@ public:
 	void rotate(double rotationRatio);
 
 	// Accelerate by specified value (0; 1)
-	void accelerate(float value);
+	void accelerate(double value);
 
 	// Brake by specified value (0; 1)
-	void brake(float value);
+	void brake(double value);
 	
 	// Update car rotation and position
 	void update();
@@ -125,3 +126,5 @@ public:
 		return area <= correctArea;
 	}
 };
+
+using DrawableCarFactory = std::vector<std::pair<DrawableCar*, bool>>;

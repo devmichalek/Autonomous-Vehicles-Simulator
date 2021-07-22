@@ -11,7 +11,7 @@ class StateAbstract
 		COUNT
 	};
 
-	inline static Type m_type = EDITOR;
+	inline static Type m_type = TESTING;
 
 public:
 
@@ -35,8 +35,13 @@ public:
 		return static_cast<size_t>(COUNT);
 	}
 
-	virtual void capture() = 0;
+	virtual void capture()
+	{
+	}
+
 	virtual void update() = 0;
+
 	virtual void load() = 0;
+
 	virtual void draw() = 0;
 };

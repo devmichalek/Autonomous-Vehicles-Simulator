@@ -7,12 +7,11 @@
 class DrawableWallManager
 {
 	Line m_line;
-	inline static const sf::Vector2i m_blockSize = sf::Vector2i(64, 64);
-	std::vector<std::vector<SegmentVector*>> m_canvas;
+	SegmentVector m_segments;
 
 	// Check if segment intersects with car segments
 	// This function does not work with collinear points!
-	inline bool intersect(Segment& segment, RectanglePoints& carPoints)
+	inline bool intersect(Segment& segment, RectanglePoints carPoints)
 	{
 		if (::intersect(segment[0], segment[1], carPoints[0], carPoints[1]))
 			return true;
@@ -30,40 +29,39 @@ class DrawableWallManager
 	}
 
 public:
-	DrawableWallManager();
-	~DrawableWallManager();
-
-	inline bool intersect(std::vector<RectanglePoints>& carPointsVector)
+	DrawableWallManager(SegmentVector&& segments)
 	{
-		auto windowSize = CoreWindow::getSize();
-		auto windowPosition = CoreWindow::getPosition();
-		size_t x = windowPosition.x / m_blockSize.x;
-		size_t y = windowPosition.y / m_blockSize.y;
-		size_t endX = x + (windowSize.x / m_blockSize.x);
-		size_t endY = y + (windowSize.y / m_blockSize.y);
+		m_segments = std::move(segments);
+	}
 
-		for (; x <= endX; ++x)
+	~DrawableWallManager()
+	{
+	}
+
+	inline void intersect(DrawableCarFactory& cars)
+	{
+		for (auto & segment : m_segments)
 		{
-			for (; y <= endY; ++y)
+			for (auto& car : cars)
 			{
-				auto segments = m_canvas[x][y];
-				if (!segments)
+				if (!car.second)
 					continue;
 
-				for (auto & segment : *segments)
+				if (intersect(segment, car.first->getPoints()))
 				{
-					for (auto& carPoints : carPointsVector)
-					{
-						if (intersect(segment, carPoints))
-						{
 
-						}
-					}
 				}
 			}
 		}
 	}
 
-	// Load map from file system
-	void load(const char* path);
+	inline void draw()
+	{
+		for (const auto& i : m_segments)
+		{
+			m_line[0].position = i[0];
+			m_line[1].position = i[1];
+			CoreWindow::getRenderWindow().draw(m_line.data(), 2, sf::Lines);
+		}
+	}
 };

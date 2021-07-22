@@ -617,7 +617,7 @@ void StateEditor::load()
 		m_carAngleHelpText.setString("| Keys: [Z] [X]");
 		m_activeModeText.setString("Active mode:");
 		m_activeModeActiveText.setString(m_activeModeMap[m_activeMode]);
-		m_activeModeHelpText.setString("| Keys: [F1] [F2]");
+		m_activeModeHelpText.setString("| Keys: [F1] [F2] [F3]");
 		m_movementText.setString("Movement:");
 		setMovementActiveText();
 		m_movementHelpText.setString("| Keys: [+] [-]");
