@@ -2,7 +2,7 @@
 #include "DrawableCar.hpp"
 #include "DrawableFinishLine.hpp"
 
-class DrawableWallManager;
+class DrawableManager;
 class DrawableCar;
 class DrawableFinishLine;
 
@@ -49,9 +49,7 @@ public:
 
 	void clear();
 
-	DrawableWallManager* getDrawableWallManager();
+	DrawableManager* getDrawableIntersectionManager();
 
 	DrawableCar* getDrawableCar();
-
-	DrawableFinishLine* getFinishLine();
 };

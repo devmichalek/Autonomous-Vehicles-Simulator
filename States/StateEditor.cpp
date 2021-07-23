@@ -375,13 +375,13 @@ void StateEditor::update()
 				}
 				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z))
 				{
-					m_drawableCar.rotate(-1);
+					m_drawableCar.rotate(0.0);
 					m_drawableCar.update();
 					setCarAngleActiveText();
 				}
 				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::X))
 				{
-					m_drawableCar.rotate(1);
+					m_drawableCar.rotate(1.0);
 					m_drawableCar.update();
 					setCarAngleActiveText();
 				}

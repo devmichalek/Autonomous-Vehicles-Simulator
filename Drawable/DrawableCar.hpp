@@ -12,12 +12,15 @@ class DrawableCar
 	double m_angle;
 	inline static const double m_rotationConst = 150.0;
 	double m_speed;
+	inline static const double m_maxSpeedConst = 1.2;
+	inline static const double m_minSpeedConst = 0.05;
 	inline static const double m_speedConst = 300.0;
 	sf::Vector2f m_size;
 	sf::Vector2f m_center;
 	sf::ConvexShape m_convexShape;
 	sf::Vector2f m_circleShapeSize;
 	sf::CircleShape m_circleShape;
+	CarPoints m_points;
 	
 	enum
 	{
@@ -27,10 +30,24 @@ class DrawableCar
 		RIGHT_FRONT_SENSOR,
 		RIGHT_SENSOR,
 	};
-	std::array<Segment, 5> m_beams;
+	CarBeams m_beams;
 	std::array<double, 5> m_beamAngles;
 	Line m_line;
 	float m_beamReach;
+
+	friend class DrawableManager;
+
+	// Returns car described in four points
+	inline CarPoints& getPoints()
+	{
+		return m_points;
+	}
+
+	// Returns sensor beams
+	inline CarBeams& getBeams()
+	{
+		return m_beams;
+	}
 
 public:
 	DrawableCar(double angle = 0.0, sf::Vector2f center = sf::Vector2f(0.0f, 0.0f)) :
@@ -41,12 +58,11 @@ public:
 		const float heightFactor = 10.0f;
 		m_size = sf::Vector2f(windowSize.y / heightFactor, windowSize.x / widthFactor);
 		m_convexShape.setPointCount(4);
-		const float factor = 20.0f;
-		m_circleShapeSize = sf::Vector2f(m_size.x / factor, m_size.x / factor);
+		m_circleShapeSize = sf::Vector2f(m_size.x / widthFactor, m_size.x / widthFactor);
 		m_circleShape.setRadius(m_circleShapeSize.x);
 		m_circleShape.setFillColor(sf::Color::Red);
 		m_line[0].color = sf::Color(255, 255, 255, 144);
-		m_line[1].color = sf::Color(255, 255, 255, 0);
+		m_line[1].color = sf::Color(255, 255, 255, 32);
 		m_beamReach = float(windowSize.y) * 0.75f;
 		update();
 	}
@@ -72,7 +88,7 @@ public:
 		return m_center;
 	}
 
-	// Rotate car by specified value (-1; 1)
+	// Rotate car by specified value (0; 1)
 	void rotate(double rotationRatio);
 
 	// Accelerate by specified value (0; 1)
@@ -97,20 +113,9 @@ public:
 		return m_angle;
 	}
 
-	// Returns car described in four points
-	inline RectanglePoints getPoints()
-	{
-		return {
-			m_convexShape.getPoint(0),
-			m_convexShape.getPoint(1),
-			m_convexShape.getPoint(2),
-			m_convexShape.getPoint(3)
-		};
-	}
-
 	inline bool intersect(sf::Vector2f P)
 	{
-		RectanglePoints points = getPoints();
+		CarPoints points = getPoints();
 		sf::Vector2f& A = points[0];
 		sf::Vector2f& B = points[1];
 		sf::Vector2f& C = points[2];

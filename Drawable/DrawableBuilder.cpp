@@ -1,5 +1,5 @@
 #include "DrawableBuilder.hpp"
-#include "DrawableWallManager.hpp"
+#include "DrawableManager.hpp"
 #include "DrawableFinishLine.hpp"
 #include <fstream>
 
@@ -27,12 +27,12 @@ bool DrawableBuilder::getSegmentFromString(std::string line, Segment& result)
 			break;
 		std::string substr = line.substr(0, position);
 		line.erase(0, position + 1);
-		float coordinate = std::atof(substr.c_str());
+		float coordinate = static_cast<float>(std::atof(substr.c_str()));
 		data.push_back(coordinate);
 	}
 	if (data.size() != 3)
 		return false;
-	float coordinate = std::atof(line.c_str());
+	float coordinate = static_cast<float>(std::atof(line.c_str()));
 	data.push_back(coordinate);
 	result[0].x = data[0];
 	result[0].y = data[1];
@@ -136,12 +136,15 @@ void DrawableBuilder::clear()
 	m_finishLine = false;
 }
 
-DrawableWallManager* DrawableBuilder::getDrawableWallManager()
+DrawableManager* DrawableBuilder::getDrawableIntersectionManager()
 {
+	if(!m_finishLine)
+		return nullptr;
+
 	if (m_walls.empty())
 		return nullptr;
 
-	DrawableWallManager* result = new DrawableWallManager(std::move(m_walls));
+	DrawableManager* result = new DrawableManager(std::move(m_walls), std::move(m_finishLineSegment));
 	return result;
 }
 
@@ -151,16 +154,5 @@ DrawableCar* DrawableBuilder::getDrawableCar()
 		return nullptr;
 
 	DrawableCar* result = new DrawableCar(m_carAngle, m_carCenter);
-	return result;
-}
-
-DrawableFinishLine* DrawableBuilder::getFinishLine()
-{
-	if (!m_finishLine)
-		return nullptr;
-
-	DrawableFinishLine* result = new DrawableFinishLine();
-	result->setStartPoint(m_finishLineSegment[0]);
-	result->setEndPoint(m_finishLineSegment[1]);
 	return result;
 }

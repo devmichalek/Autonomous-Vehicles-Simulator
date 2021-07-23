@@ -1,13 +1,12 @@
 #pragma once
 #include "StateAbstract.hpp"
-#include "DrawableWallManager.hpp"
+#include "DrawableManager.hpp"
 #include "DrawableFinishLine.hpp"
 
 class StateTesting : public StateAbstract
 {
-	DrawableWallManager* m_wallManager;
+	DrawableManager* m_manager;
 	DrawableCar* m_car;
-	DrawableFinishLine* m_finishLine;
 	DrawableCarFactory m_carFactory;
 
 public:

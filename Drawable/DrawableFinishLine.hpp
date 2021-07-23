@@ -37,6 +37,12 @@ public:
 		return m_line[1].position;
 	}
 
+	inline void setPoints(Segment segment)
+	{
+		setStartPoint(segment[0]);
+		setEndPoint(segment[1]);
+	}
+
 	inline void draw()
 	{
 		CoreWindow::getRenderWindow().draw(m_line.data(), 2, sf::Lines);
