@@ -17,7 +17,7 @@ bool DrawableBuilder::getPointFromString(std::string line, sf::Vector2f& result)
 	return true;
 }
 
-bool DrawableBuilder::getSegmentFromString(std::string line, Segment& result)
+bool DrawableBuilder::getWallFromString(std::string line, Wall& result)
 {
 	std::vector<float> data;
 	while (data.size() != 3)
@@ -43,25 +43,31 @@ bool DrawableBuilder::getSegmentFromString(std::string line, Segment& result)
 
 void DrawableBuilder::addCar(double angle, sf::Vector2f center)
 {
-	m_car = true;
+	m_carSpecified = true;
 	m_carCenter = center;
 	m_carAngle = angle;
 }
 
-void DrawableBuilder::addWall(Segment segment)
+void DrawableBuilder::addWall(Wall wall)
 {
-	m_walls.push_back(segment);
+	m_wallSpecified = true;
+	m_walls.push_back(wall);
 }
 
-void DrawableBuilder::addFinishLine(Segment segment)
+void DrawableBuilder::addFinishLine(Wall wall)
 {
-	m_finishLine = true;
-	m_finishLineSegment = segment;
+	m_finishLineSpecified = true;
+	m_finishLineSegment = wall;
 }
 
-bool DrawableBuilder::load()
+bool DrawableBuilder::load(const char* filename)
 {
-	std::ifstream output(m_inputFilename);
+	clear();
+
+	if (!filename)
+		return false;
+
+	std::ifstream output(filename);
 	if (!output.is_open())
 		return false;
 
@@ -80,16 +86,16 @@ bool DrawableBuilder::load()
 	line.erase(0, m_carCenterString.size());
 	if (!getPointFromString(line, m_carCenter))
 		return false;
-	m_car = true;
+	m_carSpecified = true;
 
 	// Get finish line coordinates
 	std::getline(output, line);
 	if (line.find(m_finishLineString) != 0)
 		return false;
 	line.erase(0, m_finishLineString.size());
-	if (!getSegmentFromString(line, m_finishLineSegment))
+	if (!getWallFromString(line, m_finishLineSegment))
 		return false;
-	m_finishLine = true;
+	m_finishLineSpecified = true;
 
 	// Get walls
 	while (std::getline(output, line))
@@ -97,51 +103,62 @@ bool DrawableBuilder::load()
 		if (line.find(m_wallString) != 0)
 			return false;
 		line.erase(0, m_wallString.size());
-		Segment segment;
-		if (!getSegmentFromString(line, segment))
+		Wall wall;
+		if (!getWallFromString(line, wall))
 			return false;
-		m_walls.push_back(segment);
+		m_walls.push_back(wall);
 	}
+	m_wallSpecified = true;
 
 	return true;
 }
 
-bool DrawableBuilder::save()
+bool DrawableBuilder::save(const char* filename)
 {
-	if (m_walls.empty())
+	if (!filename)
 		return false;
 
-	if (!m_car)
+	if (!m_wallSpecified)
 		return false;
 
-	if (!m_finishLine)
+	if (!m_carSpecified)
 		return false;
 
-	std::ofstream output(m_outputFilename);
+	if (!m_finishLineSpecified)
+		return false;
+
+	std::ofstream output(filename);
 	if (!output.is_open())
 		return false;
 
+	// Save car
 	output << m_carAngleString << m_carAngle << std::endl;
 	output << m_carCenterString << m_carCenter.x << " " << m_carCenter.y << std::endl;
+	
+	// Save finish line
 	output << m_finishLineString << m_finishLineSegment[0].x << " " << m_finishLineSegment[0].y << " " << m_finishLineSegment[1].x << " " << m_finishLineSegment[1].y << std::endl;
+	
+	// Save walls
 	for (auto& i : m_walls)
 		output << m_wallString << i[0].x << " " << i[0].y << " " << i[1].x << " " << i[1].y << std::endl;
 
+	clear();
 	return true;
 }
 
 void DrawableBuilder::clear()
 {
-	m_car = false;
-	m_finishLine = false;
+	m_wallSpecified = false;
+	m_carSpecified = false;
+	m_finishLineSpecified = false;
 }
 
-DrawableManager* DrawableBuilder::getDrawableIntersectionManager()
+DrawableManager* DrawableBuilder::getDrawableManager()
 {
-	if(!m_finishLine)
+	if(!m_finishLineSpecified)
 		return nullptr;
 
-	if (m_walls.empty())
+	if (!m_wallSpecified)
 		return nullptr;
 
 	DrawableManager* result = new DrawableManager(std::move(m_walls), std::move(m_finishLineSegment));
@@ -150,9 +167,11 @@ DrawableManager* DrawableBuilder::getDrawableIntersectionManager()
 
 DrawableCar* DrawableBuilder::getDrawableCar()
 {
-	if (!m_car)
+	if (!m_carSpecified)
 		return nullptr;
 
-	DrawableCar* result = new DrawableCar(m_carAngle, m_carCenter);
+	DrawableCar* result = new DrawableCar;
+	result->setAngle(m_carAngle);
+	result->setCenter(m_carCenter);
 	return result;
 }

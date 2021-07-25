@@ -8,33 +8,14 @@
 class DrawableManager
 {
 	Line m_line;
-	SegmentVector m_segments;
+	WallVector m_walls;
 	DrawableFinishLine m_finishLine;
 
-	// Check if segment intersects with car segments
-	// This function does not work with collinear points!
-	inline bool intersect(Segment& segment, CarPoints& carPoints)
-	{
-		if (::intersect(segment[0], segment[1], carPoints[0], carPoints[1]))
-			return true;
-
-		if (::intersect(segment[0], segment[1], carPoints[1], carPoints[2]))
-			return true;
-
-		if (::intersect(segment[0], segment[1], carPoints[2], carPoints[3]))
-			return true;
-
-		if (::intersect(segment[0], segment[1], carPoints[3], carPoints[0]))
-			return true;
-
-		return false;
-	}
-
 public:
-	DrawableManager(SegmentVector&& segments, Segment&& finishLine)
+	DrawableManager(WallVector&& walls, Wall&& finishLine)
 	{
-		m_segments = std::move(segments);
-		m_finishLine.setPoints(finishLine);
+		m_walls = std::move(walls);
+		m_finishLine.set(finishLine);
 	}
 
 	~DrawableManager()
@@ -43,29 +24,24 @@ public:
 
 	inline void intersect(DrawableCarFactory& cars)
 	{
-		sf::Vector2f intersectionPoint;
-		for (auto & segment : m_segments)
+		for (auto& car : cars)
 		{
-			for (auto& car : cars)
-			{
-				if (!car.second)
-					continue;
+			if (!car.second)
+				continue;
 
-				if (intersect(segment, car.first->getPoints()))
+			if (Intersect(m_finishLine.m_wall, car.first->m_points))
+			{
+
+			}
+
+			for (auto & wall : m_walls)
+			{
+				if (Intersect(wall, car.first->m_points))
 				{
 					car.second = false;
 				}
 				else
-				{
-					auto& beams = car.first->getBeams();
-					for (auto& beam : beams)
-					{
-						if (::intersect(segment, beam, intersectionPoint))
-						{
-							beam[1] = intersectionPoint;
-						}
-					}
-				}
+					car.first->detect(wall);
 			}
 		}
 	}
@@ -73,7 +49,7 @@ public:
 	inline void draw()
 	{
 		m_finishLine.draw();
-		for (const auto& i : m_segments)
+		for (const auto& i : m_walls)
 		{
 			m_line[0].position = i[0];
 			m_line[1].position = i[1];

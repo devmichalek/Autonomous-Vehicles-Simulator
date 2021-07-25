@@ -47,7 +47,7 @@ class StateEditor : public StateAbstract
 	std::map<SaveStatus, std::tuple<std::string, std::string, sf::Color>> m_saveStatusMap;
 
 	Line m_line;
-	SegmentVector m_walls;
+	WallVector m_walls;
 	bool m_insertWall;
 	bool m_removeWall;
 	sf::Vector2f m_wallBeggining;

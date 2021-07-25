@@ -136,8 +136,8 @@ void StateEditor::save()
 			builder.addCar(m_drawableCar.getAngle(), m_drawableCar.getCenter());
 			for (auto& i : m_walls)
 				builder.addWall(i);
-			Segment segment = { m_drawableFinishLine.getStartPoint(), m_drawableFinishLine.getEndPoint() };
-			builder.addFinishLine(segment);
+			Wall wall = { m_drawableFinishLine.getStartPoint(), m_drawableFinishLine.getEndPoint() };
+			builder.addFinishLine(wall);
 
 			if (!builder.save())
 			{
@@ -177,10 +177,10 @@ void StateEditor::capture()
 					{
 						if (m_insertWall)
 						{
-							Segment newSegment;
-							newSegment[0] = m_wallBeggining;
-							newSegment[1] = correctPosition;
-							m_walls.push_back(newSegment);
+							Wall newWall;
+							newWall[0] = m_wallBeggining;
+							newWall[1] = correctPosition;
+							m_walls.push_back(newWall);
 							setWallCountActiveText();
 							setOutOfDate();
 						}
@@ -194,10 +194,10 @@ void StateEditor::capture()
 					{
 						if (m_insertWall)
 						{
-							Segment newSegment;
-							newSegment[0] = m_wallBeggining;
-							newSegment[1] = correctPosition;
-							m_walls.push_back(newSegment);
+							Wall newWall;
+							newWall[0] = m_wallBeggining;
+							newWall[1] = correctPosition;
+							m_walls.push_back(newWall);
 							setWallCountActiveText();
 							setOutOfDate();
 						}
@@ -214,7 +214,7 @@ void StateEditor::capture()
 							size_t size = m_walls.size();
 							for (size_t i = 0; i < size; ++i)
 							{
-								if (intersect(m_wallBeggining, correctPosition, m_walls[i][0], m_walls[i][1]))
+								if (Intersect(m_walls[i], m_wallBeggining, correctPosition))
 								{
 									setOutOfDate();
 									m_walls.erase(m_walls.begin() + i);
@@ -247,7 +247,7 @@ void StateEditor::capture()
 					}
 					case CarSubmode::REMOVE:
 					{
-						if (m_drawableCar.intersect(correctPosition))
+						if (m_drawableCar.inside(correctPosition))
 						{
 							m_drawCar = false;
 							setOutOfDate();

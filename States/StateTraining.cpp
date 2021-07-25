@@ -11,11 +11,6 @@ StateTraining::~StateTraining()
 
 }
 
-void StateTraining::capture()
-{
-
-}
-
 void StateTraining::update()
 {
 

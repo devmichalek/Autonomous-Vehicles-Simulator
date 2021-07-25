@@ -2,16 +2,7 @@
 #include <vector>
 #include <functional>
 #include <math.h>
-
-using Neuron = double;
-using NeuronLayer = std::vector<Neuron>;
-using NeuronLayers = std::vector<NeuronLayer>;
-using Weight = double;
-using NeuronWeights = std::vector<Weight>;
-using WeightLayer = std::vector<NeuronWeights>;
-using WeightLayers = std::vector<WeightLayer>;
-using Bias = double;
-using BiasVector = std::vector<Bias>;
+#include "Neural.hpp"
 
 namespace ActivationFunction
 {
@@ -65,6 +56,8 @@ class ArtificialNeuralNetwork
 			}
 		}
 	}
+
+	friend class GeneticAlgorithmNeuron;
 
 public:
 	ArtificialNeuralNetwork(size_t const inputLayerSize, size_t const outputLayerSize, std::vector<size_t> hiddenLayerSizes)

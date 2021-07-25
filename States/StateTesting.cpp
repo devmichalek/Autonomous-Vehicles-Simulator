@@ -53,7 +53,7 @@ void StateTesting::load()
 	DrawableBuilder builder;
 	if (builder.load())
 	{
-		m_manager = builder.getDrawableIntersectionManager();
+		m_manager = builder.getDrawableManager();
 		m_car = builder.getDrawableCar();
 		m_carFactory.push_back(std::pair(m_car, true));
 	}

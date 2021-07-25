@@ -9,61 +9,65 @@
 
 class DrawableCar
 {
+	// Car attributes
 	double m_angle;
-	inline static const double m_rotationConst = 150.0;
 	double m_speed;
+	inline static const double m_rotationConst = 150.0;
 	inline static const double m_maxSpeedConst = 1.2;
 	inline static const double m_minSpeedConst = 0.05;
 	inline static const double m_speedConst = 300.0;
+
+	// Car data
+	sf::ConvexShape m_carShape;
 	sf::Vector2f m_size;
 	sf::Vector2f m_center;
-	sf::ConvexShape m_convexShape;
-	sf::Vector2f m_circleShapeSize;
-	sf::CircleShape m_circleShape;
 	CarPoints m_points;
-	
-	enum
-	{
-		LEFT_SENSOR,
-		LEFT_FRONT_SENSOR,
-		FRONT_SENSOR,
-		RIGHT_FRONT_SENSOR,
-		RIGHT_SENSOR,
-	};
-	CarBeams m_beams;
-	std::array<double, 5> m_beamAngles;
-	Line m_line;
-	float m_beamReach;
-
 	friend class DrawableManager;
 
-	// Returns car described in four points
-	inline CarPoints& getPoints()
-	{
-		return m_points;
-	}
+	// Beam data
+	Line m_beamShape;
+	const double m_beamReach;
+	CarBeams m_beams;
+	CarBeamAngles m_beamAngles;
 
-	// Returns sensor beams
-	inline CarBeams& getBeams()
+	// Sensor data
+	sf::CircleShape m_sensorShape;
+	sf::Vector2f m_sensorSize;
+	CarSensors m_sensors;
+	inline static const Neuron m_sensorMaxValue = 1.0;
+
+	// Update sensors and its beams
+	inline void detect(Wall& wall)
 	{
-		return m_beams;
+		sf::Vector2f ipoint; // Intersection point
+		for (size_t i = 0; i < CAR_NUMBER_OF_SENSORS; ++i)
+		{
+			if (GetIntersectionPoint(wall, m_beams[i], ipoint))
+			{
+				m_beams[i][1] = ipoint;
+				m_sensors[i] = GetWallLength(m_beams[i]) / m_beamReach;
+			}
+		}
 	}
 
 public:
-	DrawableCar(double angle = 0.0, sf::Vector2f center = sf::Vector2f(0.0f, 0.0f)) :
-		m_angle(angle), m_center(center), m_speed(0.0), m_beamAngles({ 270.0, 315.0, 0.0, 45.0, 90.0})
+	DrawableCar() :
+		m_angle(0.0),
+		m_speed(0.0),
+		m_center(0.0f, 0.0f),
+		m_beamReach(double(CoreWindow::getSize().y) * 0.75),
+		m_beamAngles({270.0, 315.0, 0.0, 45.0, 90.0})
 	{
 		auto windowSize = CoreWindow::getSize();
 		const float widthFactor = 30.0f;
 		const float heightFactor = 10.0f;
 		m_size = sf::Vector2f(windowSize.y / heightFactor, windowSize.x / widthFactor);
-		m_convexShape.setPointCount(4);
-		m_circleShapeSize = sf::Vector2f(m_size.x / widthFactor, m_size.x / widthFactor);
-		m_circleShape.setRadius(m_circleShapeSize.x);
-		m_circleShape.setFillColor(sf::Color::Red);
-		m_line[0].color = sf::Color(255, 255, 255, 144);
-		m_line[1].color = sf::Color(255, 255, 255, 32);
-		m_beamReach = float(windowSize.y) * 0.75f;
+		m_carShape.setPointCount(CAR_NUMBER_OF_POINTS);
+		m_sensorSize = sf::Vector2f(m_size.x / widthFactor, m_size.x / widthFactor);
+		m_sensorShape.setRadius(m_sensorSize.x);
+		m_sensorShape.setFillColor(sf::Color::Red);
+		m_beamShape[0].color = sf::Color(255, 255, 255, 144);
+		m_beamShape[1].color = sf::Color(255, 255, 255, 32);
 		update();
 	}
 
@@ -71,65 +75,33 @@ public:
 	{
 	}
 
-	// Sets color
-	inline void setColor(const sf::Color color)
-	{
-		m_convexShape.setFillColor(color);
-	}
-
 	// Sets center position
-	inline void setCenter(const sf::Vector2f center)
-	{
-		m_center = center;
-	}
+	void setCenter(const sf::Vector2f center);
 
-	inline sf::Vector2f getCenter()
-	{
-		return m_center;
-	}
+	// Returns car center
+	sf::Vector2f getCenter();
+
+	// Sets car angle
+	void setAngle(double angle);
+
+	// Returns car angle
+	double getAngle() const;
+
+	// Returns true if given point is inside car rectangle
+	bool inside(sf::Vector2f point);
 
 	// Rotate car by specified value (0; 1)
-	void rotate(double rotationRatio);
+	void rotate(Neuron value);
 
 	// Accelerate by specified value (0; 1)
-	void accelerate(double value);
+	void accelerate(Neuron value);
 
 	// Brake by specified value (0; 1)
-	void brake(double value);
+	void brake(Neuron value);
 	
 	// Update car rotation and position
 	void update();
 
 	// Draws car
 	void draw();
-
-	inline float getArea() const
-	{
-		return m_size.x * m_size.y;
-	}
-
-	inline double getAngle() const
-	{
-		return m_angle;
-	}
-
-	inline bool intersect(sf::Vector2f P)
-	{
-		CarPoints points = getPoints();
-		sf::Vector2f& A = points[0];
-		sf::Vector2f& B = points[1];
-		sf::Vector2f& C = points[2];
-		sf::Vector2f& D = points[3];
-
-		float ABP = calculateTriangleArea(A, B, P);
-		float BCP = calculateTriangleArea(B, C, P);
-		float CDP = calculateTriangleArea(C, D, P);
-		float DAP = calculateTriangleArea(D, A, P);
-
-		float area = ABP + BCP + CDP + DAP;
-		float correctArea = getArea() + 1;
-		return area <= correctArea;
-	}
 };
-
-using DrawableCarFactory = std::vector<std::pair<DrawableCar*, bool>>;
