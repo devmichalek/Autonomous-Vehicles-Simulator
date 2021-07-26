@@ -8,20 +8,19 @@ class StateEditor : public StateAbstract
 {
 	enum class ActiveMode
 	{
-		WALL,
+		EDGE,
 		CAR,
 		FINISH_LINE,
 		CHECKPOINT,
 	} m_activeMode;
 	std::map<ActiveMode, std::string> m_activeModeMap;
 
-	enum class WallSubmode
+	enum class EdgeSubmode
 	{
-		INSERT,
 		GLUED_INSERT,
 		REMOVE
-	} m_wallSubmode;
-	std::map<WallSubmode, std::string> m_wallSubmodeMap;
+	} m_edgeSubmode;
+	std::map<EdgeSubmode, std::string> m_edgeSubmodeMap;
 
 	enum class CarSubmode
 	{
@@ -47,7 +46,7 @@ class StateEditor : public StateAbstract
 	{
 		UP_TO_DATE,
 		OUT_OF_DATE,
-		ERROR_NO_WALLS_POSITIONED,
+		ERROR_NO_EDGES_POSITIONED,
 		ERROR_NO_CAR_POSITIONED,
 		ERROR_NO_FINISH_LINE_POSITIONED,
 		ERROR_CANNOT_OPEN_FILE
@@ -55,10 +54,10 @@ class StateEditor : public StateAbstract
 	std::map<SaveStatus, std::tuple<std::string, std::string, sf::Color>> m_saveStatusMap;
 
 	Line m_line;
-	WallVector m_walls;
-	bool m_insertWall;
-	bool m_removeWall;
-	sf::Vector2f m_wallBeggining;
+	EdgeVector m_edges;
+	bool m_insertEdge;
+	bool m_removeEdge;
+	sf::Vector2f m_edgeBeggining;
 
 	float m_movement;
 	const float m_movementConst;
@@ -73,7 +72,7 @@ class StateEditor : public StateAbstract
 	sf::Vector2f m_finishLineBeggining;
 	DrawableFinishLine m_drawableFinishLine;
 
-	WallVector m_checkpoints;
+	EdgeVector m_checkpoints;
 	bool m_insertCheckpoint;
 	bool m_removeCheckpoint;
 	sf::Vector2f m_checkpointBeggining;
@@ -87,9 +86,9 @@ class StateEditor : public StateAbstract
 	const float m_saveStatusAlphaMin;
 
 	sf::Font m_font;
-	sf::Text m_wallSubmodeText;
-	sf::Text m_wallSubmodeActiveText;
-	sf::Text m_wallSubmodeHelpText;
+	sf::Text m_edgeSubmodeText;
+	sf::Text m_edgeSubmodeActiveText;
+	sf::Text m_edgeSubmodeHelpText;
 	sf::Text m_carSubmodeText;
 	sf::Text m_carSubmodeActiveText;
 	sf::Text m_carSubmodeHelpText;
@@ -99,8 +98,8 @@ class StateEditor : public StateAbstract
 	sf::Text m_checkpointSubmodeText;
 	sf::Text m_checkpointSubmodeActiveText;
 	sf::Text m_checkpointSubmodeHelpText;
-	sf::Text m_wallCountText;
-	sf::Text m_wallCountActiveText;
+	sf::Text m_edgeCountText;
+	sf::Text m_edgeCountActiveText;
 	sf::Text m_carAngleText;
 	sf::Text m_carAngleActiveText;
 	sf::Text m_carAngleHelpText;
@@ -119,7 +118,7 @@ class StateEditor : public StateAbstract
 	sf::Text m_saveHelpText;
 	sf::Text m_saveStatusText;
 
-	void setWallCountActiveText();
+	void setEdgeCountActiveText();
 	void setCarAngleActiveText();
 	void setMovementActiveText();
 	void setViewOffsetXActiveText();
@@ -141,17 +140,17 @@ public:
 		m_saveStatusAlphaMax(255.0f),
 		m_saveStatusAlphaMin(0.0f)
 	{
-		m_activeMode = ActiveMode::WALL;
-		m_wallSubmode = WallSubmode::INSERT;
+		m_activeMode = ActiveMode::EDGE;
+		m_edgeSubmode = EdgeSubmode::GLUED_INSERT;
 		m_carSubmode = CarSubmode::INSERT;
 		m_finishLineSubmode = FinishLineSubmode::INSERT;
 		m_checkpointSubmode = CheckpointSubmode::GLUED_INSERT;
 		m_saveStatus = SaveStatus::OUT_OF_DATE;
 		m_line[0].color = sf::Color::White;
 		m_line[1].color = sf::Color::White;
-		m_walls.reserve(1024);
-		m_insertWall = false;
-		m_removeWall = false;
+		m_edges.reserve(1024);
+		m_insertEdge = false;
+		m_removeEdge = false;
 		m_movement = m_movementConst * 3;
 		m_drawCar = false;
 		m_drawFinishLine = false;

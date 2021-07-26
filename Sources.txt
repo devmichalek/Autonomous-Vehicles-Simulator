@@ -3,3 +3,27 @@ https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segm
 
 How to check if point is inside rectangle described in four points:
 https://martin-thoma.com/how-to-check-if-a-point-is-inside-a-rectangle/
+
+How to calculate angle between two points
+https://stackoverflow.com/questions/2339487/calculate-angle-of-2-points/2339510
+
+Determining end coordinates of line with the specified length and angle
+https://math.stackexchange.com/questions/39390/determining-end-coordinates-of-line-with-the-specified-length-and-angle
+
+Radians to degrees
+https://www.rapidtables.com/convert/number/radians-to-degrees.html?x=-1.09
+
+Reverse iteration possible implementations
+https://stackoverflow.com/questions/3623263/reverse-iteration-with-an-unsigned-loop-variable
+
+How can I check if two segments intersect?
+https://stackoverflow.com/questions/3838329/how-can-i-check-if-two-segments-intersect
+
+Line Segment Intersection Algorithm
+https://bryceboe.com/2006/10/23/line-segment-intersection-algorithm/
+
+How to calculate corner positions/marks of a rotated/tilted rectangle?
+https://gamedev.stackexchange.com/questions/86755/how-to-calculate-corner-positions-marks-of-a-rotated-tilted-rectangle
+
+Genetic algorithms - exercises
+http://www.jakubw.pl/com/bib/1996_Alg_genetyczne_cwiczenia.pdf

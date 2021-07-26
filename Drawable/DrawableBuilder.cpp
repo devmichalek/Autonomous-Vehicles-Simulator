@@ -17,7 +17,7 @@ bool DrawableBuilder::getPointFromString(std::string line, sf::Vector2f& result)
 	return true;
 }
 
-bool DrawableBuilder::getWallFromString(std::string line, Wall& result)
+bool DrawableBuilder::getEdgeFromString(std::string line, Edge& result)
 {
 	std::vector<float> data;
 	while (data.size() != 3)
@@ -41,9 +41,82 @@ bool DrawableBuilder::getWallFromString(std::string line, Wall& result)
 	return true;
 }
 
-void DrawableBuilder::generateCheckpoints()
+std::vector<size_t> DrawableBuilder::getEdgeSequences()
 {
+	Edge edge = m_edges.front();
+	std::vector<size_t> result;
+	for (size_t i = 1; i < m_edges.size(); ++i)
+	{
+		if (m_edges[i - 1][1] == m_edges[i][0])
+		{
+			// If the end of the previous edge is the beggining of the current edge
+			// It meanse there is no gap
+			if (edge[0] == m_edges[i][1])
+			{
+				result.push_back(i + 1);
+				if (i + 1 >= m_edges.size())
+					break;
+				edge = m_edges[i + 1];
+				++i;
+			}
+		}
+	}
 
+	return result;
+}
+
+bool DrawableBuilder::isOverlappingEdgeSequence(size_t iMin, size_t iMax, size_t jMin, size_t jMax)
+{
+	for (size_t i = iMin; i < iMax; ++i)
+	{
+		for (size_t j = jMin; j < jMax; ++j)
+		{
+			if (Intersect(m_edges[i], m_edges[j]))
+				return true;
+		}
+	}
+
+	return false;
+}
+
+void DrawableBuilder::generateCheckpoints(size_t max)
+{
+	// For all edges from the edge sequence
+	const float checkpointLength = float(CoreWindow::getSize().x);
+	const float checkpointGap = float((CoreWindow::getSize().x / 30.0f) / 3);
+	for (size_t i = 0; i < m_edges.size(); ++i)
+	{
+		auto edgeLength = Distance(m_edges[i]) - 1;
+		auto p1 = m_edges[i][0];
+		auto p2 = m_edges[i][1];
+		float angle = atan2(p1.y - p2.y, p1.x - p2.x);
+		angle = static_cast<float>(angle * 180.0 / M_PI);
+
+		const float checkpointAngle = angle + (i < max ? 90 : -90); // 90 degrees
+		size_t checkpointCount = static_cast<size_t>(edgeLength / checkpointGap) + 1;
+
+		for (float gap = 0; checkpointCount-- > 0; gap -= checkpointGap)
+		{
+			sf::Vector2f startPoint = GetEndPoint(p1, angle, gap);
+			startPoint = GetEndPoint(startPoint, checkpointAngle, 1.0);
+			sf::Vector2f endPoint = GetEndPoint(startPoint, checkpointAngle, checkpointLength);
+			addCheckpoint({ startPoint, endPoint });
+		}
+	}
+
+	// Check if particular checkpoint does not intersect with a edge
+	// If there is intersection then shorten the checkpoint
+	sf::Vector2f intersectionPoint;
+	for (auto &i : m_checkpoints)
+	{
+		for (auto &j : m_edges)
+		{
+			if (GetIntersectionPoint(i, j, intersectionPoint))
+			{
+				i[1] = intersectionPoint;
+			}
+		}
+	}
 }
 
 void DrawableBuilder::addCar(double angle, sf::Vector2f center)
@@ -53,21 +126,21 @@ void DrawableBuilder::addCar(double angle, sf::Vector2f center)
 	m_carAngle = angle;
 }
 
-void DrawableBuilder::addWall(Wall wall)
+void DrawableBuilder::addEdge(Edge edge)
 {
-	m_wallSpecified = true;
-	m_walls.push_back(wall);
+	m_edgeSpecified = true;
+	m_edges.push_back(edge);
 }
 
-void DrawableBuilder::addFinishLine(Wall wall)
+void DrawableBuilder::addFinishLine(Edge edge)
 {
 	m_finishLineSpecified = true;
-	m_finishLineSegment = wall;
+	m_finishLineSegment = edge;
 }
 
-void DrawableBuilder::addCheckpoint(Wall wall)
+void DrawableBuilder::addCheckpoint(Edge edge)
 {
-	m_checkpoints.push_back(wall);
+	m_checkpoints.push_back(edge);
 }
 
 bool DrawableBuilder::load(const char* filename)
@@ -103,16 +176,16 @@ bool DrawableBuilder::load(const char* filename)
 	if (line.find(m_finishLineString) != 0)
 		return false;
 	line.erase(0, m_finishLineString.size());
-	if (!getWallFromString(line, m_finishLineSegment))
+	if (!getEdgeFromString(line, m_finishLineSegment))
 		return false;
 	m_finishLineSpecified = true;
 
-	// Get walls
-	Wall wall;
+	// Get edges
+	Edge edge;
 	bool checkpointSpecified = false;
 	while (std::getline(output, line))
 	{
-		if (line.find(m_wallString) != 0)
+		if (line.find(m_edgeString) != 0)
 		{
 			if (line.find(m_checkpointString) != 0)
 				return false;
@@ -121,25 +194,33 @@ bool DrawableBuilder::load(const char* filename)
 			do
 			{
 				line.erase(0, m_checkpointString.size());
-				if (!getWallFromString(line, wall))
+				if (!getEdgeFromString(line, edge))
 					return false;
-				m_checkpoints.push_back(wall);
+				m_checkpoints.push_back(edge);
 			} while (std::getline(output, line));
 
 			checkpointSpecified = true;
 			break;
 		}
 
-		line.erase(0, m_wallString.size());
-		if (!getWallFromString(line, wall))
+		line.erase(0, m_edgeString.size());
+		if (!getEdgeFromString(line, edge))
 			return false;
-		m_walls.push_back(wall);
+		m_edges.push_back(edge);
 	}
-	m_wallSpecified = true;
+	m_edgeSpecified = true;
 
 	if (!checkpointSpecified)
 	{
-		generateCheckpoints();
+		auto lengths = getEdgeSequences();
+		if (lengths.size() != 2)
+			return false;
+
+		auto i = lengths.front();
+		if (isOverlappingEdgeSequence(0, i, i, m_edges.size()))
+			return false;
+
+		generateCheckpoints(i);
 	}
 
 	return true;
@@ -150,7 +231,7 @@ bool DrawableBuilder::save(const char* filename)
 	if (!filename)
 		return false;
 
-	if (!m_wallSpecified)
+	if (!m_edgeSpecified)
 		return false;
 
 	if (!m_carSpecified)
@@ -170,9 +251,9 @@ bool DrawableBuilder::save(const char* filename)
 	// Save finish line
 	output << m_finishLineString << m_finishLineSegment[0].x << " " << m_finishLineSegment[0].y << " " << m_finishLineSegment[1].x << " " << m_finishLineSegment[1].y << std::endl;
 	
-	// Save walls
-	for (auto& i : m_walls)
-		output << m_wallString << i[0].x << " " << i[0].y << " " << i[1].x << " " << i[1].y << std::endl;
+	// Save edges
+	for (auto& i : m_edges)
+		output << m_edgeString << i[0].x << " " << i[0].y << " " << i[1].x << " " << i[1].y << std::endl;
 
 	// Save optional checkpoints
 	for (auto& i : m_checkpoints)
@@ -184,7 +265,7 @@ bool DrawableBuilder::save(const char* filename)
 
 void DrawableBuilder::clear()
 {
-	m_wallSpecified = false;
+	m_edgeSpecified = false;
 	m_carSpecified = false;
 	m_finishLineSpecified = false;
 }
@@ -194,10 +275,10 @@ DrawableManager* DrawableBuilder::getDrawableManager()
 	if(!m_finishLineSpecified)
 		return nullptr;
 
-	if (!m_wallSpecified)
+	if (!m_edgeSpecified)
 		return nullptr;
 
-	DrawableManager* result = new DrawableManager(std::move(m_walls), std::move(m_finishLineSegment));
+	DrawableManager* result = new DrawableManager(std::move(m_edges), std::move(m_finishLineSegment), std::move(m_checkpoints));
 	return result;
 }
 

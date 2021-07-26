@@ -4,15 +4,15 @@
 #include <SFML/Graphics/RectangleShape.hpp>
 #include "Neural.hpp"
 
-const unsigned WALL_NUMBER_OF_POINTS = 2;
+const unsigned EDGE_NUMBER_OF_POINTS = 2;
 const unsigned CAR_NUMBER_OF_POINTS = 4;
 const unsigned CAR_NUMBER_OF_SENSORS = 5;
 
-using Wall = std::array<sf::Vector2f, WALL_NUMBER_OF_POINTS>;
-using WallVector = std::vector<Wall>;
-using Line = std::array<sf::Vertex, WALL_NUMBER_OF_POINTS>;
+using Edge = std::array<sf::Vector2f, EDGE_NUMBER_OF_POINTS>;
+using EdgeVector = std::vector<Edge>;
+using Line = std::array<sf::Vertex, EDGE_NUMBER_OF_POINTS>;
 using CarPoints = std::array<sf::Vector2f, CAR_NUMBER_OF_POINTS>;
-using CarBeams = std::array<Wall, CAR_NUMBER_OF_SENSORS>;
+using CarBeams = std::array<Edge, CAR_NUMBER_OF_SENSORS>;
 using CarBeamAngles = std::array<double, CAR_NUMBER_OF_SENSORS>;
 using CarSensors = std::array<Neuron, CAR_NUMBER_OF_SENSORS>;
 class DrawableCar;
@@ -23,26 +23,32 @@ inline bool Ccw(sf::Vector2f a, sf::Vector2f b, sf::Vector2f c)
 	return (c.y - a.y) * (b.x - a.x) > (b.y - a.y) * (c.x - a.x);
 }
 
-// Returns true if there is intersection between wall and wall described in two points
-inline bool Intersect(Wall& s, sf::Vector2f& x, sf::Vector2f& y)
+// Returns true if there is intersection between edge and edge described in two points
+inline bool Intersect(Edge& s, sf::Vector2f& x, sf::Vector2f& y)
 {
     return Ccw(s[0], x, y) != Ccw(s[1], x, y) && Ccw(s[0], s[1], x) != Ccw(s[0], s[1], y);
 }
 
-// Check if wall intersects with car
-// This function does not work with collinear points!
-inline bool Intersect(Wall& wall, CarPoints& carPoints)
+// Returns true if there is intersection between two edges
+inline bool Intersect(Edge& a, Edge& b)
 {
-    if (Intersect(wall, carPoints[0], carPoints[1]))
+    return Intersect(a, b[0], b[1]);
+}
+
+// Check if edge intersects with car
+// This function does not work with collinear points!
+inline bool Intersect(Edge& edge, CarPoints& carPoints)
+{
+    if (Intersect(edge, carPoints[0], carPoints[1]))
         return true;
 
-    if (Intersect(wall, carPoints[1], carPoints[2]))
+    if (Intersect(edge, carPoints[1], carPoints[2]))
         return true;
 
-    if (Intersect(wall, carPoints[2], carPoints[3]))
+    if (Intersect(edge, carPoints[2], carPoints[3]))
         return true;
 
-    if (Intersect(wall, carPoints[3], carPoints[0]))
+    if (Intersect(edge, carPoints[3], carPoints[0]))
         return true;
 
     return false;
@@ -77,8 +83,16 @@ inline sf::Vector2f GetMidpoint(sf::Vector2f a, sf::Vector2f b)
 	return sf::Vector2f((a.x + b.x) / 2.0f, (a.y + b.y) / 2.0f);
 }
 
-// Checks if there is intersection point between two walls
-inline bool GetIntersectionPoint(Wall& a, Wall& b, sf::Vector2f& result)
+// Calculates end point
+inline sf::Vector2f GetEndPoint(sf::Vector2f point, double angle, float length)
+{
+    float x = point.x + length * float(cos(angle * M_PI / 180));
+    float y = point.y + length * float(sin(angle * M_PI / 180));
+    return sf::Vector2f(x, y);
+}
+
+// Checks if there is intersection point between two edges
+inline bool GetIntersectionPoint(Edge& a, Edge& b, sf::Vector2f& result)
 {
     float s1_x, s1_y, s2_x, s2_y;
     s1_x = a[1].x - a[0].x;
@@ -101,8 +115,8 @@ inline bool GetIntersectionPoint(Wall& a, Wall& b, sf::Vector2f& result)
     return false;
 }
 
-// Calculates length of a wall
-inline double GetWallLength(Wall& wall)
+// Calculates length of a edge
+inline double Distance(Edge& edge)
 {
-    return std::sqrt(std::pow(wall[0].x - wall[1].x, 2) + std::pow(wall[0].y - wall[1].y, 2));
+    return std::sqrt(std::pow(edge[0].x - edge[1].x, 2) + std::pow(edge[0].y - edge[1].y, 2));
 }

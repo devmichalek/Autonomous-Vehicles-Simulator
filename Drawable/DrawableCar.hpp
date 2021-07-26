@@ -37,15 +37,15 @@ class DrawableCar
 	inline static const Neuron m_sensorMaxValue = 1.0;
 
 	// Update sensors and its beams
-	inline void detect(Wall& wall)
+	inline void detect(Edge& edge)
 	{
 		sf::Vector2f ipoint; // Intersection point
 		for (size_t i = 0; i < CAR_NUMBER_OF_SENSORS; ++i)
 		{
-			if (GetIntersectionPoint(wall, m_beams[i], ipoint))
+			if (GetIntersectionPoint(edge, m_beams[i], ipoint))
 			{
 				m_beams[i][1] = ipoint;
-				m_sensors[i] = GetWallLength(m_beams[i]) / m_beamReach;
+				m_sensors[i] = Distance(m_beams[i]) / m_beamReach;
 			}
 		}
 	}

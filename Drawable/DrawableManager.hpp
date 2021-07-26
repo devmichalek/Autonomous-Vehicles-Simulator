@@ -7,15 +7,22 @@
 
 class DrawableManager
 {
-	Line m_line;
-	WallVector m_walls;
+	Line m_edgeLine;
+	Line m_checkpointLine;
+	EdgeVector m_edges;
+	EdgeVector m_checkpoints;
 	DrawableFinishLine m_finishLine;
 
 public:
-	DrawableManager(WallVector&& walls, Wall&& finishLine)
+	DrawableManager(EdgeVector&& edges, Edge&& finishLine, EdgeVector&& checkpoints)
 	{
-		m_walls = std::move(walls);
+		m_edgeLine[0].color = sf::Color::White;
+		m_edgeLine[1].color = m_edgeLine[0].color;
+		m_checkpointLine[0].color = sf::Color(0, 255, 0, 64);
+		m_checkpointLine[1].color = m_checkpointLine[0].color;
+		m_edges = std::move(edges);
 		m_finishLine.set(finishLine);
+		m_checkpoints = std::move(checkpoints);
 	}
 
 	~DrawableManager()
@@ -29,19 +36,19 @@ public:
 			if (!car.second)
 				continue;
 
-			if (Intersect(m_finishLine.m_wall, car.first->m_points))
+			if (Intersect(m_finishLine.m_edge, car.first->m_points))
 			{
 
 			}
 
-			for (auto & wall : m_walls)
+			for (auto & edge : m_edges)
 			{
-				if (Intersect(wall, car.first->m_points))
+				if (Intersect(edge, car.first->m_points))
 				{
 					car.second = false;
 				}
 				else
-					car.first->detect(wall);
+					car.first->detect(edge);
 			}
 		}
 	}
@@ -49,11 +56,18 @@ public:
 	inline void draw()
 	{
 		m_finishLine.draw();
-		for (const auto& i : m_walls)
+		for (const auto& i : m_edges)
 		{
-			m_line[0].position = i[0];
-			m_line[1].position = i[1];
-			CoreWindow::getRenderWindow().draw(m_line.data(), 2, sf::Lines);
+			m_edgeLine[0].position = i[0];
+			m_edgeLine[1].position = i[1];
+			CoreWindow::getRenderWindow().draw(m_edgeLine.data(), 2, sf::Lines);
+		}
+
+		for (const auto& i : m_checkpoints)
+		{
+			m_checkpointLine[0].position = i[0];
+			m_checkpointLine[1].position = i[1];
+			CoreWindow::getRenderWindow().draw(m_checkpointLine.data(), 2, sf::Lines);
 		}
 	}
 };

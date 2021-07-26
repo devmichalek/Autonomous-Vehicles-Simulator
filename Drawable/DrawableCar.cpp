@@ -85,10 +85,10 @@ void DrawableCar::update()
 	for (unsigned i = 0; i < CAR_NUMBER_OF_SENSORS; ++i)
 	{
 		m_sensors[i] = m_sensorMaxValue;
-		float cosBeam = static_cast<float>(cos((m_angle + m_beamAngles[i]) * M_PI / 180));
-		float sinBeam = static_cast<float>(sin((m_angle + m_beamAngles[i]) * M_PI / 180));
-		m_beams[i][1].x = (m_beams[i][0].x + m_beamReach * cosBeam);
-		m_beams[i][1].y = (m_beams[i][0].y + m_beamReach * sinBeam);
+		auto cosBeam = cos((m_angle + m_beamAngles[i]) * M_PI / 180);
+		auto sinBeam = sin((m_angle + m_beamAngles[i]) * M_PI / 180);
+		m_beams[i][1].x = static_cast<float>(m_beams[i][0].x + m_beamReach * cosBeam);
+		m_beams[i][1].y = static_cast<float>(m_beams[i][0].y + m_beamReach * sinBeam);
 	}
 }
 

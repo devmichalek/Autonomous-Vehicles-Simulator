@@ -5,7 +5,7 @@
 class DrawableFinishLine
 {
 	Line m_line;
-	Wall m_wall;
+	Edge m_edge;
 	friend class DrawableManager;
 
 public:
@@ -21,33 +21,33 @@ public:
 
 	inline void setStartPoint(sf::Vector2f point)
 	{
-		m_wall[0] = point;
+		m_edge[0] = point;
 	}
 
 	inline sf::Vector2f getStartPoint()
 	{
-		return m_wall[0];
+		return m_edge[0];
 	}
 
 	inline void setEndPoint(sf::Vector2f point)
 	{
-		m_wall[1] = point;
+		m_edge[1] = point;
 	}
 
 	inline sf::Vector2f getEndPoint()
 	{
-		return m_wall[1];
+		return m_edge[1];
 	}
 
-	inline void set(Wall wall)
+	inline void set(Edge edge)
 	{
-		m_wall = wall;
+		m_edge = edge;
 	}
 
 	inline void draw()
 	{
-		m_line[0].position = m_wall[0];
-		m_line[1].position = m_wall[1];
+		m_line[0].position = m_edge[0];
+		m_line[1].position = m_edge[1];
 		CoreWindow::getRenderWindow().draw(m_line.data(), 2, sf::Lines);
 	}
 };
