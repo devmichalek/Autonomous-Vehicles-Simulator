@@ -41,6 +41,11 @@ bool DrawableBuilder::getWallFromString(std::string line, Wall& result)
 	return true;
 }
 
+void DrawableBuilder::generateCheckpoints()
+{
+
+}
+
 void DrawableBuilder::addCar(double angle, sf::Vector2f center)
 {
 	m_carSpecified = true;
@@ -58,6 +63,11 @@ void DrawableBuilder::addFinishLine(Wall wall)
 {
 	m_finishLineSpecified = true;
 	m_finishLineSegment = wall;
+}
+
+void DrawableBuilder::addCheckpoint(Wall wall)
+{
+	m_checkpoints.push_back(wall);
 }
 
 bool DrawableBuilder::load(const char* filename)
@@ -98,17 +108,39 @@ bool DrawableBuilder::load(const char* filename)
 	m_finishLineSpecified = true;
 
 	// Get walls
+	Wall wall;
+	bool checkpointSpecified = false;
 	while (std::getline(output, line))
 	{
 		if (line.find(m_wallString) != 0)
-			return false;
+		{
+			if (line.find(m_checkpointString) != 0)
+				return false;
+
+			// Get checkpoints
+			do
+			{
+				line.erase(0, m_checkpointString.size());
+				if (!getWallFromString(line, wall))
+					return false;
+				m_checkpoints.push_back(wall);
+			} while (std::getline(output, line));
+
+			checkpointSpecified = true;
+			break;
+		}
+
 		line.erase(0, m_wallString.size());
-		Wall wall;
 		if (!getWallFromString(line, wall))
 			return false;
 		m_walls.push_back(wall);
 	}
 	m_wallSpecified = true;
+
+	if (!checkpointSpecified)
+	{
+		generateCheckpoints();
+	}
 
 	return true;
 }
@@ -141,6 +173,10 @@ bool DrawableBuilder::save(const char* filename)
 	// Save walls
 	for (auto& i : m_walls)
 		output << m_wallString << i[0].x << " " << i[0].y << " " << i[1].x << " " << i[1].y << std::endl;
+
+	// Save optional checkpoints
+	for (auto& i : m_checkpoints)
+		output << m_checkpointString << i[0].x << " " << i[0].y << " " << i[1].x << " " << i[1].y << std::endl;
 
 	clear();
 	return true;

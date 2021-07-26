@@ -4,7 +4,7 @@
 #include <SFML/Graphics/RectangleShape.hpp>
 #include "Neural.hpp"
 
-const unsigned WALL_NUMBER_OF_POINTS = 4;
+const unsigned WALL_NUMBER_OF_POINTS = 2;
 const unsigned CAR_NUMBER_OF_POINTS = 4;
 const unsigned CAR_NUMBER_OF_SENSORS = 5;
 

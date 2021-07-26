@@ -10,7 +10,8 @@ class StateEditor : public StateAbstract
 	{
 		WALL,
 		CAR,
-		FINISH_LINE
+		FINISH_LINE,
+		CHECKPOINT,
 	} m_activeMode;
 	std::map<ActiveMode, std::string> m_activeModeMap;
 
@@ -34,6 +35,13 @@ class StateEditor : public StateAbstract
 		INSERT
 	} m_finishLineSubmode;
 	std::map<FinishLineSubmode, std::string> m_finishLineSubmodeMap;
+
+	enum class CheckpointSubmode
+	{
+		GLUED_INSERT,
+		REMOVE
+	} m_checkpointSubmode;
+	std::map<CheckpointSubmode, std::string> m_checkpointSubmodeMap;
 
 	enum class SaveStatus
 	{
@@ -65,7 +73,14 @@ class StateEditor : public StateAbstract
 	sf::Vector2f m_finishLineBeggining;
 	DrawableFinishLine m_drawableFinishLine;
 
+	WallVector m_checkpoints;
+	bool m_insertCheckpoint;
+	bool m_removeCheckpoint;
+	sf::Vector2f m_checkpointBeggining;
+
+	bool m_spaceKeyPressed;
 	bool m_saveKeysPressed;
+
 	float m_saveStatusAlpha;
 	const float m_saveStatusAlphaConst;
 	const float m_saveStatusAlphaMax;
@@ -81,6 +96,9 @@ class StateEditor : public StateAbstract
 	sf::Text m_finishLineSubmodeText;
 	sf::Text m_finishLineSubmodeActiveText;
 	sf::Text m_finishLineSubmodeHelpText;
+	sf::Text m_checkpointSubmodeText;
+	sf::Text m_checkpointSubmodeActiveText;
+	sf::Text m_checkpointSubmodeHelpText;
 	sf::Text m_wallCountText;
 	sf::Text m_wallCountActiveText;
 	sf::Text m_carAngleText;
@@ -110,6 +128,7 @@ class StateEditor : public StateAbstract
 	void setOutOfDate();
 	void updateTextsPosition();
 	void save();
+	void setActiveMode(ActiveMode);
 
 public:
 	StateEditor(StateEditor&) = delete;
@@ -126,6 +145,7 @@ public:
 		m_wallSubmode = WallSubmode::INSERT;
 		m_carSubmode = CarSubmode::INSERT;
 		m_finishLineSubmode = FinishLineSubmode::INSERT;
+		m_checkpointSubmode = CheckpointSubmode::GLUED_INSERT;
 		m_saveStatus = SaveStatus::OUT_OF_DATE;
 		m_line[0].color = sf::Color::White;
 		m_line[1].color = sf::Color::White;
@@ -136,6 +156,9 @@ public:
 		m_drawCar = false;
 		m_drawFinishLine = false;
 		m_insertFinishLine = false;
+		m_insertCheckpoint = false;
+		m_removeCheckpoint = false;
+		m_spaceKeyPressed = false;
 		m_saveKeysPressed = false;
 		m_saveStatusAlpha = m_saveStatusAlphaMin;
 	}

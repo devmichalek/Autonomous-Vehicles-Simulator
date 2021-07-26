@@ -93,7 +93,7 @@ public:
 			m_biasVector = biasVector;
 	}
 
-	void setWeightLayers(WeightLayers)
+	void setWeightLayers(std::vector<Neuron> data)
 	{
 
 	}

@@ -57,6 +57,9 @@ void StateEditor::updateTextsPosition()
 	m_wallSubmodeText.setPosition(sf::Vector2f(textX, textY));
 	m_wallSubmodeActiveText.setPosition(sf::Vector2f(activeTextX, textY));
 	m_wallSubmodeHelpText.setPosition(sf::Vector2f(helpTextX, textY));
+	m_checkpointSubmodeText.setPosition(sf::Vector2f(textX, textY));
+	m_checkpointSubmodeActiveText.setPosition(sf::Vector2f(activeTextX, textY));
+	m_checkpointSubmodeHelpText.setPosition(sf::Vector2f(helpTextX, textY));
 
 	textY -= h;
 	m_wallCountText.setPosition(sf::Vector2f(textX, textY));
@@ -78,7 +81,7 @@ void StateEditor::updateTextsPosition()
 
 	textY = viewOffset.y + float(CoreWindow::getSize().y) / 256;
 	activeTextX = viewOffset.x + float(CoreWindow::getSize().x) / 14;
-	helpTextX = viewOffset.x + float(CoreWindow::getSize().x) / 7;
+	helpTextX = viewOffset.x + float(CoreWindow::getSize().x) / 6.8;
 	m_activeModeText.setPosition(sf::Vector2f(textX, textY));
 	m_activeModeActiveText.setPosition(sf::Vector2f(activeTextX, textY));
 	m_activeModeHelpText.setPosition(sf::Vector2f(helpTextX, textY));
@@ -139,6 +142,9 @@ void StateEditor::save()
 			Wall wall = { m_drawableFinishLine.getStartPoint(), m_drawableFinishLine.getEndPoint() };
 			builder.addFinishLine(wall);
 
+			for (auto& i : m_checkpoints)
+				builder.addCheckpoint(i);
+
 			if (!builder.save())
 			{
 				result = SaveStatus::ERROR_CANNOT_OPEN_FILE;
@@ -157,10 +163,43 @@ void StateEditor::save()
 	m_saveStatusText.setFillColor(std::get<2>(m_saveStatusMap[m_saveStatus]));
 }
 
+void StateEditor::setActiveMode(ActiveMode activeMode)
+{
+	if (m_activeMode != activeMode)
+	{
+		switch (m_activeMode)
+		{
+			case ActiveMode::WALL:
+				m_wallSubmode = WallSubmode::INSERT;
+				m_insertWall = false;
+				m_removeWall = false;
+				m_wallSubmodeActiveText.setString(m_wallSubmodeMap[m_wallSubmode]);
+				break;
+			case ActiveMode::CAR:
+				m_carSubmode = CarSubmode::INSERT;
+				break;
+			case ActiveMode::FINISH_LINE:
+				m_finishLineSubmode = FinishLineSubmode::INSERT;
+				break;
+			case ActiveMode::CHECKPOINT:
+				m_checkpointSubmode = CheckpointSubmode::GLUED_INSERT;
+				m_insertCheckpoint = false;
+				m_removeCheckpoint = false;
+				m_checkpointSubmodeActiveText.setString(m_checkpointSubmodeMap[m_checkpointSubmode]);
+				break;
+		}
+
+		m_activeMode = activeMode;
+		m_activeModeActiveText.setString(m_activeModeMap[m_activeMode]);
+	}
+}
+
 void StateEditor::capture()
 {
-	if (CoreWindow::getEvent().type == sf::Event::MouseButtonPressed)
+	if ((CoreWindow::getEvent().type == sf::Event::MouseButtonPressed ||
+		(CoreWindow::getEvent().type == sf::Event::KeyPressed && CoreWindow::getEvent().key.code == sf::Keyboard::Space)) && !m_spaceKeyPressed)
 	{
+		m_spaceKeyPressed = true;
 		sf::Vector2i mousePosition = CoreWindow::getMousePosition();
 		sf::Vector2f viewOffset = CoreWindow::getViewOffset();
 		sf::Vector2f correctPosition;
@@ -288,8 +327,57 @@ void StateEditor::capture()
 
 				break;
 			}
+			case ActiveMode::CHECKPOINT:
+			{
+				switch (m_checkpointSubmode)
+				{
+					case CheckpointSubmode::GLUED_INSERT:
+					{
+						if (m_insertCheckpoint)
+						{
+							Wall newWall;
+							newWall[0] = m_checkpoints.empty() ? m_checkpointBeggining : m_checkpoints.back()[1];
+							newWall[1] = correctPosition;
+							m_checkpoints.push_back(newWall);
+							setOutOfDate();
+						}
+						else
+							m_insertCheckpoint = true;
+
+						m_checkpointBeggining = correctPosition;
+						break;
+					}
+					case CheckpointSubmode::REMOVE:
+					{
+						if (m_removeCheckpoint)
+						{
+							size_t size = m_checkpoints.size();
+							size_t lastIndex = size;
+							for (size_t i = size - 1; i < size; --i)
+							{
+								if (Intersect(m_checkpoints[i], m_checkpointBeggining, correctPosition))
+									lastIndex = i;
+							}
+
+							setOutOfDate();
+							m_checkpoints.erase(m_checkpoints.begin() + lastIndex, m_checkpoints.begin() + size);
+						}
+						else
+							m_checkpointBeggining = correctPosition;
+
+						m_removeCheckpoint = !m_removeCheckpoint;
+						break;
+					}
+				}
+				break;
+			}
+			default:
+				break;
 		}
 	}
+	else if (CoreWindow::getEvent().type == sf::Event::MouseButtonReleased ||
+			 (CoreWindow::getEvent().type == sf::Event::KeyReleased && CoreWindow::getEvent().key.code == sf::Keyboard::Space))
+		m_spaceKeyPressed = false;
 }
 
 void StateEditor::update()
@@ -299,23 +387,11 @@ void StateEditor::update()
 		case ActiveMode::WALL:
 		{
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::F2))
-			{
-				m_wallSubmode = WallSubmode::INSERT;
-				m_insertWall = false;
-				m_removeWall = false;
-				m_wallSubmodeActiveText.setString(m_wallSubmodeMap[m_wallSubmode]);
-				m_activeMode = ActiveMode::CAR;
-				m_activeModeActiveText.setString(m_activeModeMap[m_activeMode]);
-			}
+				setActiveMode(ActiveMode::CAR);
 			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::F3))
-			{
-				m_wallSubmode = WallSubmode::INSERT;
-				m_insertWall = false;
-				m_removeWall = false;
-				m_wallSubmodeActiveText.setString(m_wallSubmodeMap[m_wallSubmode]);
-				m_activeMode = ActiveMode::FINISH_LINE;
-				m_activeModeActiveText.setString(m_activeModeMap[m_activeMode]);
-			}
+				setActiveMode(ActiveMode::FINISH_LINE);
+			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::F4))
+				setActiveMode(ActiveMode::CHECKPOINT);
 			else
 			{
 				WallSubmode mode = m_wallSubmode;
@@ -349,17 +425,11 @@ void StateEditor::update()
 		case ActiveMode::CAR:
 		{
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::F1))
-			{
-				m_carSubmode = CarSubmode::INSERT;
-				m_activeMode = ActiveMode::WALL;
-				m_activeModeActiveText.setString(m_activeModeMap[m_activeMode]);
-			}
+				setActiveMode(ActiveMode::WALL);
 			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::F3))
-			{
-				m_carSubmode = CarSubmode::INSERT;
-				m_activeMode = ActiveMode::FINISH_LINE;
-				m_activeModeActiveText.setString(m_activeModeMap[m_activeMode]);
-			}
+				setActiveMode(ActiveMode::FINISH_LINE);
+			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::F4))
+				setActiveMode(ActiveMode::CHECKPOINT);
 			else
 			{
 				CarSubmode mode = m_carSubmode;
@@ -398,17 +468,11 @@ void StateEditor::update()
 		case ActiveMode::FINISH_LINE:
 		{
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::F1))
-			{
-				m_finishLineSubmode = FinishLineSubmode::INSERT;
-				m_activeMode = ActiveMode::WALL;
-				m_activeModeActiveText.setString(m_activeModeMap[m_activeMode]);
-			}
+				setActiveMode(ActiveMode::WALL);
 			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::F2))
-			{
-				m_finishLineSubmode = FinishLineSubmode::INSERT;
-				m_activeMode = ActiveMode::CAR;
-				m_activeModeActiveText.setString(m_activeModeMap[m_activeMode]);
-			}
+				setActiveMode(ActiveMode::CAR);
+			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::F4))
+				setActiveMode(ActiveMode::CHECKPOINT);
 			else
 			{
 				FinishLineSubmode mode = m_finishLineSubmode;
@@ -422,6 +486,39 @@ void StateEditor::update()
 				{
 					m_finishLineSubmode = mode;
 					m_finishLineSubmodeActiveText.setString(m_finishLineSubmodeMap[m_finishLineSubmode]);
+				}
+			}
+
+			break;
+		}
+		case ActiveMode::CHECKPOINT:
+		{
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::F1))
+				setActiveMode(ActiveMode::WALL);
+			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::F2))
+				setActiveMode(ActiveMode::CAR);
+			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::F3))
+				setActiveMode(ActiveMode::FINISH_LINE);
+			else
+			{
+				CheckpointSubmode mode = m_checkpointSubmode;
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1) ||
+					sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad1))
+				{
+					mode = CheckpointSubmode::GLUED_INSERT;
+				}
+				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2) ||
+					sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad2))
+				{
+					mode = CheckpointSubmode::REMOVE;
+				}
+
+				if (m_checkpointSubmode != mode)
+				{
+					m_checkpointSubmode = mode;
+					m_insertCheckpoint = false;
+					m_removeCheckpoint = false;
+					m_checkpointSubmodeActiveText.setString(m_checkpointSubmodeMap[m_checkpointSubmode]);
 				}
 			}
 
@@ -511,6 +608,7 @@ void StateEditor::load()
 	m_activeModeMap[ActiveMode::WALL] = "Wall mode";
 	m_activeModeMap[ActiveMode::CAR] = "Car mode";
 	m_activeModeMap[ActiveMode::FINISH_LINE] = "Finish line mode";
+	m_activeModeMap[ActiveMode::CHECKPOINT] = "Checkpoint mode";
 
 	m_wallSubmodeMap[WallSubmode::INSERT] = "Insert mode";
 	m_wallSubmodeMap[WallSubmode::GLUED_INSERT] = "Glued insert mode";
@@ -520,6 +618,9 @@ void StateEditor::load()
 	m_carSubmodeMap[CarSubmode::REMOVE] = "Remove mode";
 
 	m_finishLineSubmodeMap[FinishLineSubmode::INSERT] = "Insert mode";
+
+	m_checkpointSubmodeMap[CheckpointSubmode::GLUED_INSERT] = "Glued insert mode";
+	m_checkpointSubmodeMap[CheckpointSubmode::REMOVE] = "Remove mode";
 
 	m_saveStatusMap[SaveStatus::UP_TO_DATE] = std::tuple("Success: Changes were saved", "Up to date", sf::Color::Green);
 	m_saveStatusMap[SaveStatus::OUT_OF_DATE] = std::tuple("Warning: Changes not saved", "Out of date", sf::Color(0, 0, 0, 0));
@@ -539,6 +640,9 @@ void StateEditor::load()
 		m_finishLineSubmodeText.setFont(m_font);
 		m_finishLineSubmodeActiveText.setFont(m_font);
 		m_finishLineSubmodeHelpText.setFont(m_font);
+		m_checkpointSubmodeText.setFont(m_font);
+		m_checkpointSubmodeActiveText.setFont(m_font);
+		m_checkpointSubmodeHelpText.setFont(m_font);
 		m_wallCountText.setFont(m_font);
 		m_wallCountActiveText.setFont(m_font);
 		m_carAngleText.setFont(m_font);
@@ -563,6 +667,7 @@ void StateEditor::load()
 		m_wallSubmodeActiveText.setFillColor(activeColor);
 		m_carSubmodeActiveText.setFillColor(activeColor);
 		m_finishLineSubmodeActiveText.setFillColor(activeColor);
+		m_checkpointSubmodeActiveText.setFillColor(activeColor);
 		m_wallCountActiveText.setFillColor(activeColor);
 		m_carAngleActiveText.setFillColor(activeColor);
 		m_activeModeActiveText.setFillColor(activeColor);
@@ -581,6 +686,9 @@ void StateEditor::load()
 		m_finishLineSubmodeText.setCharacterSize(characterSize);
 		m_finishLineSubmodeActiveText.setCharacterSize(characterSize);
 		m_finishLineSubmodeHelpText.setCharacterSize(characterSize);
+		m_checkpointSubmodeText.setCharacterSize(characterSize);
+		m_checkpointSubmodeActiveText.setCharacterSize(characterSize);
+		m_checkpointSubmodeHelpText.setCharacterSize(characterSize);
 		m_wallCountText.setCharacterSize(characterSize);
 		m_wallCountActiveText.setCharacterSize(characterSize);
 		m_carAngleText.setCharacterSize(characterSize);
@@ -610,6 +718,9 @@ void StateEditor::load()
 		m_finishLineSubmodeText.setString("Current mode:");
 		m_finishLineSubmodeActiveText.setString(m_finishLineSubmodeMap[m_finishLineSubmode]);
 		m_finishLineSubmodeHelpText.setString("| Keys: [1]");
+		m_checkpointSubmodeText.setString("Current mode:");
+		m_checkpointSubmodeActiveText.setString(m_checkpointSubmodeMap[m_checkpointSubmode]);
+		m_checkpointSubmodeHelpText.setString("| Keys: [1] [2]");
 		m_wallCountText.setString("Wall count:");
 		setWallCountActiveText();
 		m_carAngleText.setString("Car angle:");
@@ -617,7 +728,7 @@ void StateEditor::load()
 		m_carAngleHelpText.setString("| Keys: [Z] [X]");
 		m_activeModeText.setString("Active mode:");
 		m_activeModeActiveText.setString(m_activeModeMap[m_activeMode]);
-		m_activeModeHelpText.setString("| Keys: [F1] [F2] [F3]");
+		m_activeModeHelpText.setString("| Keys: [F1] [F2] [F3] [F4]");
 		m_movementText.setString("Movement:");
 		setMovementActiveText();
 		m_movementHelpText.setString("| Keys: [+] [-]");
@@ -643,8 +754,17 @@ void StateEditor::draw()
 		m_drawableFinishLine.draw();
 
 	m_line[0].color = sf::Color::White;
-	m_line[1].color = sf::Color::White;
+	m_line[1].color = m_line[0].color;
 	for (const auto& i : m_walls)
+	{
+		m_line[0].position = i[0];
+		m_line[1].position = i[1];
+		CoreWindow::getRenderWindow().draw(m_line.data(), 2, sf::Lines);
+	}
+
+	m_line[0].color = sf::Color(0, 255, 0, 128);
+	m_line[1].color = m_line[0].color;
+	for (const auto& i : m_checkpoints)
 	{
 		m_line[0].position = i[0];
 		m_line[1].position = i[1];
@@ -662,6 +782,8 @@ void StateEditor::draw()
 				m_line[1].position.x = static_cast<float>(mousePosition.x);
 				m_line[1].position.y = static_cast<float>(mousePosition.y);
 				m_line[1].position += CoreWindow::getViewOffset();
+				m_line[0].color = sf::Color::White;
+				m_line[1].color = m_line[0].color;
 				CoreWindow::getRenderWindow().draw(m_line.data(), 2, sf::Lines);
 			}
 			else if (m_removeWall)
@@ -672,7 +794,7 @@ void StateEditor::draw()
 				m_line[1].position.y = static_cast<float>(mousePosition.y);
 				m_line[1].position += CoreWindow::getViewOffset();
 				m_line[0].color = sf::Color::Red;
-				m_line[1].color = sf::Color::Red;
+				m_line[1].color = m_line[0].color;
 				CoreWindow::getRenderWindow().draw(m_line.data(), 2, sf::Lines);
 			}
 
@@ -710,6 +832,36 @@ void StateEditor::draw()
 			CoreWindow::getRenderWindow().draw(m_finishLineSubmodeText);
 			CoreWindow::getRenderWindow().draw(m_finishLineSubmodeActiveText);
 			CoreWindow::getRenderWindow().draw(m_finishLineSubmodeHelpText);
+			break;
+		}
+		case ActiveMode::CHECKPOINT:
+		{
+			if (m_insertCheckpoint)
+			{
+				sf::Vector2i mousePosition = CoreWindow::getMousePosition();
+				m_line[0].position = m_checkpoints.empty() ? m_checkpointBeggining : m_checkpoints.back()[1];
+				m_line[1].position.x = static_cast<float>(mousePosition.x);
+				m_line[1].position.y = static_cast<float>(mousePosition.y);
+				m_line[1].position += CoreWindow::getViewOffset();
+				m_line[0].color = sf::Color(0, 255, 0, 128);
+				m_line[1].color = m_line[0].color;
+				CoreWindow::getRenderWindow().draw(m_line.data(), 2, sf::Lines);
+			}
+			else if (m_removeCheckpoint)
+			{
+				sf::Vector2i mousePosition = CoreWindow::getMousePosition();
+				m_line[0].position = m_checkpointBeggining;
+				m_line[1].position.x = static_cast<float>(mousePosition.x);
+				m_line[1].position.y = static_cast<float>(mousePosition.y);
+				m_line[1].position += CoreWindow::getViewOffset();
+				m_line[0].color = sf::Color::Red;
+				m_line[1].color = sf::Color::Red;
+				CoreWindow::getRenderWindow().draw(m_line.data(), 2, sf::Lines);
+			}
+
+			CoreWindow::getRenderWindow().draw(m_checkpointSubmodeText);
+			CoreWindow::getRenderWindow().draw(m_checkpointSubmodeActiveText);
+			CoreWindow::getRenderWindow().draw(m_checkpointSubmodeHelpText);
 			break;
 		}
 		default:
