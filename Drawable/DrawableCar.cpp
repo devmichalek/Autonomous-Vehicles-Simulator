@@ -1,6 +1,16 @@
 #include "DrawableCar.hpp"
 #include "CoreWindow.hpp"
 
+void DrawableCar::setLeaderColor()
+{
+	m_carShape.setFillColor(sf::Color(244, 160, 0, 255));
+}
+
+void DrawableCar::setFollowerColor()
+{
+	m_carShape.setFillColor(sf::Color::White);
+}
+
 void DrawableCar::setCenter(const sf::Vector2f center)
 {
 	m_center = center;

@@ -1,6 +1,7 @@
 #pragma once
 #include "StateTesting.hpp"
 #include "DrawableBuilder.hpp"
+#include <iostream>
 
 StateTesting::StateTesting()
 {
@@ -19,6 +20,8 @@ void StateTesting::update()
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
 	{
 		m_carFactory.front().second = true;
+		m_manager->calculateFitness(m_carFactory.front(), m_fitnessPoints.front());
+		std::cout << m_fitnessPoints.front() << std::endl;
 	}
 
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
@@ -56,17 +59,20 @@ void StateTesting::load()
 		m_manager = builder.getDrawableManager();
 		m_car = builder.getDrawableCar();
 		m_carFactory.push_back(std::pair(m_car, true));
+		m_fitnessPoints.push_back(0);
 	}
 }
 
 void StateTesting::draw()
 {
-	for (auto& i : m_carFactory)
+	for (auto& car : m_carFactory)
 	{
-		if (!i.second)
+		if (!car.second)
 			continue;
-		i.first->draw();
+		car.first->draw();
 	}
 
-	m_manager->draw();
+	m_manager->drawFinishLine();
+	m_manager->drawEdges();
+	m_manager->drawCheckpoints();
 }

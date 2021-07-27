@@ -5,9 +5,7 @@
 #include <cassert>
 #include <iomanip>
 #include "ArtificialNeuralNetwork.hpp"
-
-using FitnessPoint = unsigned;
-using FitnessPoints = std::vector<FitnessPoint>;
+#include "Genetic.hpp"
 
 template <class Type>
 struct Gene
@@ -370,6 +368,14 @@ public:
 				j[i] = geneData;
 			}
 		}
+	}
+
+	Neuron* getIndividual(size_t identity)
+	{
+		if (identity >= m_populationSize)
+			return nullptr;
+
+		return reinterpret_cast<Neuron*>(&m_population[identity][0]);
 	}
 };
 

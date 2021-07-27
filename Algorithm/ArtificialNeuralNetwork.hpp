@@ -1,32 +1,20 @@
 #pragma once
 #include <vector>
-#include <functional>
 #include <math.h>
 #include "Neural.hpp"
-
-namespace ActivationFunction
-{
-	using Activation = std::function<Neuron(Neuron)>;
-	using ActivationVector = std::vector<Activation>;
-	inline Activation stub = [](Neuron input) { return input; };
-	inline Activation fastsigmoid = [](Neuron input) { return input / (1 + std::fabs(input)); };
-	inline Activation relu = [](Neuron input) { return input < 0 ? 0 : input; };
-	inline Activation leakyrelu = [](Neuron input) { return input >= 0 ? input : input * 0.1; };
-	inline Activation tanh = [](Neuron input) { return tanh(input); };
-}
 
 class ArtificialNeuralNetwork
 {
 	NeuronLayers m_neuronLayers;
 	WeightLayers m_weightLayers;
 	BiasVector m_biasVector; // Bias per neuron layer
-	ActivationFunction::ActivationVector m_activationFunctions;
+	ActivationVector m_activationFunctions;
 
 	inline void calculateInternal()
 	{
 		// For each neuron layer
 		size_t layersNum = m_neuronLayers.size();
-		for (size_t layerNr = 1; layerNr <= layersNum; ++layerNr)
+		for (size_t layerNr = 1; layerNr < layersNum; ++layerNr)
 		{
 			// Get proper weight layer
 			WeightLayer& weightLayer = m_weightLayers[layerNr - 1];
@@ -57,8 +45,6 @@ class ArtificialNeuralNetwork
 		}
 	}
 
-	friend class GeneticAlgorithmNeuron;
-
 public:
 	ArtificialNeuralNetwork(size_t const inputLayerSize, size_t const outputLayerSize, std::vector<size_t> hiddenLayerSizes)
 	{
@@ -66,7 +52,7 @@ public:
 		m_neuronLayers.resize(layersCount);
 		m_weightLayers.resize(layersCount - 1);
 		m_biasVector.resize(layersCount - 1, 0);
-		m_activationFunctions.resize(layersCount - 1, ActivationFunction::stub);
+		m_activationFunctions.resize(layersCount - 1, activationStub);
 
 		// Set up input layer
 		m_neuronLayers.front().resize(inputLayerSize, 0);
@@ -79,12 +65,17 @@ public:
 		m_neuronLayers.back().resize(outputLayerSize, 0);
 
 		// Set up weights for neurons
-		for (size_t i = 0; i < layersCount - 1; ++i)
+		for (size_t i = 1; i < layersCount - 1; ++i)
 		{
-			m_weightLayers[i].resize(hiddenLayerSizes[i]);
-			for (auto& neuronWeights : m_weightLayers[i])
-				neuronWeights.resize(m_neuronLayers[i].size(), 0);
+			m_weightLayers[i - 1].resize(hiddenLayerSizes[i - 1]);
+			size_t connectionsCount = m_neuronLayers[i - 1].size();
+			for (auto& neuronWeights : m_weightLayers[i - 1])
+				neuronWeights.resize(connectionsCount, 0);
 		}
+		m_weightLayers.back().resize(outputLayerSize);
+		size_t connectionsCount = m_neuronLayers[layersCount - 2].size();
+		for (auto& neuronWeights : m_weightLayers.back())
+			neuronWeights.resize(connectionsCount, 0);
 	}
 
 	void setBiasVector(BiasVector biasVector)
@@ -93,14 +84,39 @@ public:
 			m_biasVector = biasVector;
 	}
 
-	void setWeightLayers(std::vector<Neuron> data)
+	void setActivationVector(ActivationVector activationVector)
 	{
-
+		if (m_activationFunctions.size() == activationVector.size())
+			m_activationFunctions = activationVector;
 	}
 
-	void calculate(NeuronLayer inputLayer)
+	size_t getDataUnitsCount()
+	{
+		size_t result = 0;
+		for (auto& i : m_weightLayers)
+			result += i.size() * i.front().size();
+		return result;
+	}
+
+	void setData(Neuron* data)
+	{
+		size_t index = 0;
+		for (auto& weightLayer : m_weightLayers)
+		{
+			for (auto& weights : weightLayer)
+			{
+				for (auto& weight : weights)
+				{
+					weight = data[index++];
+				}
+			}
+		}
+	}
+
+	NeuronLayer calculate(NeuronLayer inputLayer)
 	{
 		m_neuronLayers.front() = inputLayer;
 		calculateInternal();
+		return m_neuronLayers.back();
 	}
 };

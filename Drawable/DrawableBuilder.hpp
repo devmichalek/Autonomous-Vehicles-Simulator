@@ -18,13 +18,13 @@ class DrawableBuilder
 	bool m_finishLineSpecified;
 	Edge m_finishLineSegment;
 
-	EdgeVector m_checkpoints;
+	EdgeVector m_innerCheckpoints;
+	EdgeVector m_outerCheckpoints;
 
 	static inline const std::string m_carAngleString = "Car angle: ";
 	static inline const std::string m_carCenterString = "Car center: ";
 	static inline const std::string m_finishLineString = "Finish line position: ";
 	static inline const std::string m_edgeString = "Edge: ";
-	static inline const std::string m_checkpointString = "Checkpoint: ";
 
 	bool getPointFromString(std::string line, sf::Vector2f& result);
 
@@ -34,7 +34,7 @@ class DrawableBuilder
 
 	bool isOverlappingEdgeSequence(size_t iMin, size_t iMax, size_t jMin, size_t jMax);
 
-	void generateCheckpoints(size_t max);
+	void generateCheckpoints(size_t iMin, size_t iMax, size_t jMin, size_t jMax);
 
 public:
 	DrawableBuilder()
@@ -51,8 +51,6 @@ public:
 	void addEdge(Edge edge);
 
 	void addFinishLine(Edge edge);
-
-	void addCheckpoint(Edge edge);
 
 	// Load map from file
 	bool load(const char* filename = "input.txt");

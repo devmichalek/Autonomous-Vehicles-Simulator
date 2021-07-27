@@ -3,10 +3,12 @@
 #include <array>
 #include <SFML/Graphics/RectangleShape.hpp>
 #include "Neural.hpp"
+#include "Genetic.hpp"
 
-const unsigned EDGE_NUMBER_OF_POINTS = 2;
-const unsigned CAR_NUMBER_OF_POINTS = 4;
-const unsigned CAR_NUMBER_OF_SENSORS = 5;
+const size_t EDGE_NUMBER_OF_POINTS = 2;
+const size_t CAR_NUMBER_OF_POINTS = 4;
+const size_t CAR_NUMBER_OF_SENSORS = 5;
+const size_t CAR_NUMBER_OF_INPUTS = 3;
 
 using Edge = std::array<sf::Vector2f, EDGE_NUMBER_OF_POINTS>;
 using EdgeVector = std::vector<Edge>;
@@ -14,7 +16,6 @@ using Line = std::array<sf::Vertex, EDGE_NUMBER_OF_POINTS>;
 using CarPoints = std::array<sf::Vector2f, CAR_NUMBER_OF_POINTS>;
 using CarBeams = std::array<Edge, CAR_NUMBER_OF_SENSORS>;
 using CarBeamAngles = std::array<double, CAR_NUMBER_OF_SENSORS>;
-using CarSensors = std::array<Neuron, CAR_NUMBER_OF_SENSORS>;
 class DrawableCar;
 using DrawableCarFactory = std::vector<std::pair<DrawableCar*, bool>>;
 
@@ -115,8 +116,20 @@ inline bool GetIntersectionPoint(Edge& a, Edge& b, sf::Vector2f& result)
     return false;
 }
 
+// Calculate angle between two points
+inline double Angle(sf::Vector2f a, sf::Vector2f b)
+{
+    return atan2(a.y - b.y, a.x - b.x) * 180.0 / M_PI;
+}
+
+// Calculates distance between two points
+inline double Distance(sf::Vector2f a, sf::Vector2f b)
+{
+    return std::sqrt(std::pow(a.x - b.x, 2) + std::pow(a.y - b.y, 2));
+}
+
 // Calculates length of a edge
 inline double Distance(Edge& edge)
 {
-    return std::sqrt(std::pow(edge[0].x - edge[1].x, 2) + std::pow(edge[0].y - edge[1].y, 2));
+    return Distance(edge[0], edge[1]);
 }

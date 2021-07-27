@@ -13,8 +13,8 @@ class DrawableCar
 	double m_angle;
 	double m_speed;
 	inline static const double m_rotationConst = 150.0;
-	inline static const double m_maxSpeedConst = 1.2;
-	inline static const double m_minSpeedConst = 0.05;
+	inline static const double m_maxSpeedConst = 1.4;
+	inline static const double m_minSpeedConst = 0;
 	inline static const double m_speedConst = 300.0;
 
 	// Car data
@@ -33,7 +33,7 @@ class DrawableCar
 	// Sensor data
 	sf::CircleShape m_sensorShape;
 	sf::Vector2f m_sensorSize;
-	CarSensors m_sensors;
+	NeuronLayer m_sensors;
 	inline static const Neuron m_sensorMaxValue = 1.0;
 
 	// Update sensors and its beams
@@ -68,12 +68,19 @@ public:
 		m_sensorShape.setFillColor(sf::Color::Red);
 		m_beamShape[0].color = sf::Color(255, 255, 255, 144);
 		m_beamShape[1].color = sf::Color(255, 255, 255, 32);
+		m_sensors.resize(CAR_NUMBER_OF_SENSORS);
 		update();
 	}
 
 	virtual ~DrawableCar()
 	{
 	}
+
+	// Set this car as a leading one
+	void setLeaderColor();
+
+	// Set this car as a following one
+	void setFollowerColor();
 
 	// Sets center position
 	void setCenter(const sf::Vector2f center);
@@ -104,4 +111,18 @@ public:
 
 	// Draws car
 	void draw();
+
+	// Output sensors data
+	NeuronLayer processOutput()
+	{
+		return m_sensors;
+	}
+
+	// Input data
+	void processInput(NeuronLayer& layer)
+	{
+		accelerate(layer[0]);
+		rotate(layer[1]);
+		brake(layer[2]);
+	}
 };

@@ -79,20 +79,20 @@ bool DrawableBuilder::isOverlappingEdgeSequence(size_t iMin, size_t iMax, size_t
 	return false;
 }
 
-void DrawableBuilder::generateCheckpoints(size_t max)
+void DrawableBuilder::generateCheckpoints(size_t iMin, size_t iMax, size_t jMin, size_t jMax)
 {
-	// For all edges from the edge sequence
 	const float checkpointLength = float(CoreWindow::getSize().x);
 	const float checkpointGap = float((CoreWindow::getSize().x / 30.0f) / 3);
-	for (size_t i = 0; i < m_edges.size(); ++i)
+
+	// For all inner edges from the edge sequence
+	for (size_t i = iMin; i < iMax; ++i)
 	{
 		auto edgeLength = Distance(m_edges[i]) - 1;
 		auto p1 = m_edges[i][0];
 		auto p2 = m_edges[i][1];
-		float angle = atan2(p1.y - p2.y, p1.x - p2.x);
-		angle = static_cast<float>(angle * 180.0 / M_PI);
+		float angle = (float)Angle(p1, p2);
 
-		const float checkpointAngle = angle + (i < max ? 90 : -90); // 90 degrees
+		const float checkpointAngle = angle + 90; // 90 degrees
 		size_t checkpointCount = static_cast<size_t>(edgeLength / checkpointGap) + 1;
 
 		for (float gap = 0; checkpointCount-- > 0; gap -= checkpointGap)
@@ -100,14 +100,34 @@ void DrawableBuilder::generateCheckpoints(size_t max)
 			sf::Vector2f startPoint = GetEndPoint(p1, angle, gap);
 			startPoint = GetEndPoint(startPoint, checkpointAngle, 1.0);
 			sf::Vector2f endPoint = GetEndPoint(startPoint, checkpointAngle, checkpointLength);
-			addCheckpoint({ startPoint, endPoint });
+			m_innerCheckpoints.push_back({ startPoint, endPoint });
 		}
 	}
 
-	// Check if particular checkpoint does not intersect with a edge
+	// For all outer edges from the edge sequence
+	for (size_t i = jMin; i < jMax; ++i)
+	{
+		auto edgeLength = Distance(m_edges[i]) - 1;
+		auto p1 = m_edges[i][0];
+		auto p2 = m_edges[i][1];
+		float angle = (float)Angle(p1, p2);
+
+		const float checkpointAngle = angle - 90; // 90 degrees
+		size_t checkpointCount = static_cast<size_t>(edgeLength / checkpointGap) + 1;
+
+		for (float gap = 0; checkpointCount-- > 0; gap -= checkpointGap)
+		{
+			sf::Vector2f startPoint = GetEndPoint(p1, angle, gap);
+			startPoint = GetEndPoint(startPoint, checkpointAngle, 1.0);
+			sf::Vector2f endPoint = GetEndPoint(startPoint, checkpointAngle, checkpointLength);
+			m_outerCheckpoints.push_back({ startPoint, endPoint });
+		}
+	}
+
+	// Check if particular inner checkpoint does not intersect with a edge
 	// If there is intersection then shorten the checkpoint
 	sf::Vector2f intersectionPoint;
-	for (auto &i : m_checkpoints)
+	for (auto &i : m_innerCheckpoints)
 	{
 		for (auto &j : m_edges)
 		{
@@ -115,6 +135,29 @@ void DrawableBuilder::generateCheckpoints(size_t max)
 			{
 				i[1] = intersectionPoint;
 			}
+		}
+
+		if (GetIntersectionPoint(i, m_finishLineSegment, intersectionPoint))
+		{
+			i[1] = intersectionPoint;
+		}
+	}
+
+	// Check if particular outer checkpoint does not intersect with a edge
+	// If there is intersection then shorten the checkpoint
+	for (auto& i : m_outerCheckpoints)
+	{
+		for (auto& j : m_edges)
+		{
+			if (GetIntersectionPoint(i, j, intersectionPoint))
+			{
+				i[1] = intersectionPoint;
+			}
+		}
+
+		if (GetIntersectionPoint(i, m_finishLineSegment, intersectionPoint))
+		{
+			i[1] = intersectionPoint;
 		}
 	}
 }
@@ -136,11 +179,6 @@ void DrawableBuilder::addFinishLine(Edge edge)
 {
 	m_finishLineSpecified = true;
 	m_finishLineSegment = edge;
-}
-
-void DrawableBuilder::addCheckpoint(Edge edge)
-{
-	m_checkpoints.push_back(edge);
 }
 
 bool DrawableBuilder::load(const char* filename)
@@ -186,22 +224,7 @@ bool DrawableBuilder::load(const char* filename)
 	while (std::getline(output, line))
 	{
 		if (line.find(m_edgeString) != 0)
-		{
-			if (line.find(m_checkpointString) != 0)
-				return false;
-
-			// Get checkpoints
-			do
-			{
-				line.erase(0, m_checkpointString.size());
-				if (!getEdgeFromString(line, edge))
-					return false;
-				m_checkpoints.push_back(edge);
-			} while (std::getline(output, line));
-
-			checkpointSpecified = true;
-			break;
-		}
+			return false;
 
 		line.erase(0, m_edgeString.size());
 		if (!getEdgeFromString(line, edge))
@@ -220,7 +243,7 @@ bool DrawableBuilder::load(const char* filename)
 		if (isOverlappingEdgeSequence(0, i, i, m_edges.size()))
 			return false;
 
-		generateCheckpoints(i);
+		generateCheckpoints(0, i, i, m_edges.size());
 	}
 
 	return true;
@@ -255,10 +278,6 @@ bool DrawableBuilder::save(const char* filename)
 	for (auto& i : m_edges)
 		output << m_edgeString << i[0].x << " " << i[0].y << " " << i[1].x << " " << i[1].y << std::endl;
 
-	// Save optional checkpoints
-	for (auto& i : m_checkpoints)
-		output << m_checkpointString << i[0].x << " " << i[0].y << " " << i[1].x << " " << i[1].y << std::endl;
-
 	clear();
 	return true;
 }
@@ -278,7 +297,10 @@ DrawableManager* DrawableBuilder::getDrawableManager()
 	if (!m_edgeSpecified)
 		return nullptr;
 
-	DrawableManager* result = new DrawableManager(std::move(m_edges), std::move(m_finishLineSegment), std::move(m_checkpoints));
+	DrawableManager* result = new DrawableManager(std::move(m_edges),
+												  std::move(m_finishLineSegment),
+												  std::move(m_innerCheckpoints),
+												  std::move(m_outerCheckpoints));
 	return result;
 }
 

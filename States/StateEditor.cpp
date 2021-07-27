@@ -57,9 +57,6 @@ void StateEditor::updateTextsPosition()
 	m_edgeSubmodeText.setPosition(sf::Vector2f(textX, textY));
 	m_edgeSubmodeActiveText.setPosition(sf::Vector2f(activeTextX, textY));
 	m_edgeSubmodeHelpText.setPosition(sf::Vector2f(helpTextX, textY));
-	m_checkpointSubmodeText.setPosition(sf::Vector2f(textX, textY));
-	m_checkpointSubmodeActiveText.setPosition(sf::Vector2f(activeTextX, textY));
-	m_checkpointSubmodeHelpText.setPosition(sf::Vector2f(helpTextX, textY));
 
 	textY -= h;
 	m_edgeCountText.setPosition(sf::Vector2f(textX, textY));
@@ -142,9 +139,6 @@ void StateEditor::save()
 			Edge edge = { m_drawableFinishLine.getStartPoint(), m_drawableFinishLine.getEndPoint() };
 			builder.addFinishLine(edge);
 
-			for (auto& i : m_checkpoints)
-				builder.addCheckpoint(i);
-
 			if (!builder.save())
 			{
 				result = SaveStatus::ERROR_CANNOT_OPEN_FILE;
@@ -180,12 +174,6 @@ void StateEditor::setActiveMode(ActiveMode activeMode)
 				break;
 			case ActiveMode::FINISH_LINE:
 				m_finishLineSubmode = FinishLineSubmode::INSERT;
-				break;
-			case ActiveMode::CHECKPOINT:
-				m_checkpointSubmode = CheckpointSubmode::GLUED_INSERT;
-				m_insertCheckpoint = false;
-				m_removeCheckpoint = false;
-				m_checkpointSubmodeActiveText.setString(m_checkpointSubmodeMap[m_checkpointSubmode]);
 				break;
 		}
 
@@ -324,50 +312,6 @@ void StateEditor::capture()
 
 				break;
 			}
-			case ActiveMode::CHECKPOINT:
-			{
-				switch (m_checkpointSubmode)
-				{
-					case CheckpointSubmode::GLUED_INSERT:
-					{
-						if (m_insertCheckpoint)
-						{
-							Edge newEdge;
-							newEdge[0] = m_checkpoints.empty() ? m_checkpointBeggining : m_checkpoints.back()[1];
-							newEdge[1] = correctPosition;
-							m_checkpoints.push_back(newEdge);
-							setOutOfDate();
-						}
-						else
-							m_insertCheckpoint = true;
-
-						m_checkpointBeggining = correctPosition;
-						break;
-					}
-					case CheckpointSubmode::REMOVE:
-					{
-						if (m_removeCheckpoint)
-						{
-							size_t size = m_checkpoints.size();
-							size_t lastIndex = size;
-							for (size_t i = size - 1; i < size; --i)
-							{
-								if (Intersect(m_checkpoints[i], m_checkpointBeggining, correctPosition))
-									lastIndex = i;
-							}
-
-							setOutOfDate();
-							m_checkpoints.erase(m_checkpoints.begin() + lastIndex, m_checkpoints.begin() + size);
-						}
-						else
-							m_checkpointBeggining = correctPosition;
-
-						m_removeCheckpoint = !m_removeCheckpoint;
-						break;
-					}
-				}
-				break;
-			}
 			default:
 				break;
 		}
@@ -387,8 +331,6 @@ void StateEditor::update()
 				setActiveMode(ActiveMode::CAR);
 			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::F3))
 				setActiveMode(ActiveMode::FINISH_LINE);
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::F4))
-				setActiveMode(ActiveMode::CHECKPOINT);
 			else
 			{
 				EdgeSubmode mode = m_edgeSubmode;
@@ -420,8 +362,6 @@ void StateEditor::update()
 				setActiveMode(ActiveMode::EDGE);
 			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::F3))
 				setActiveMode(ActiveMode::FINISH_LINE);
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::F4))
-				setActiveMode(ActiveMode::CHECKPOINT);
 			else
 			{
 				CarSubmode mode = m_carSubmode;
@@ -463,8 +403,6 @@ void StateEditor::update()
 				setActiveMode(ActiveMode::EDGE);
 			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::F2))
 				setActiveMode(ActiveMode::CAR);
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::F4))
-				setActiveMode(ActiveMode::CHECKPOINT);
 			else
 			{
 				FinishLineSubmode mode = m_finishLineSubmode;
@@ -478,39 +416,6 @@ void StateEditor::update()
 				{
 					m_finishLineSubmode = mode;
 					m_finishLineSubmodeActiveText.setString(m_finishLineSubmodeMap[m_finishLineSubmode]);
-				}
-			}
-
-			break;
-		}
-		case ActiveMode::CHECKPOINT:
-		{
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::F1))
-				setActiveMode(ActiveMode::EDGE);
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::F2))
-				setActiveMode(ActiveMode::CAR);
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::F3))
-				setActiveMode(ActiveMode::FINISH_LINE);
-			else
-			{
-				CheckpointSubmode mode = m_checkpointSubmode;
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1) ||
-					sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad1))
-				{
-					mode = CheckpointSubmode::GLUED_INSERT;
-				}
-				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2) ||
-					sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad2))
-				{
-					mode = CheckpointSubmode::REMOVE;
-				}
-
-				if (m_checkpointSubmode != mode)
-				{
-					m_checkpointSubmode = mode;
-					m_insertCheckpoint = false;
-					m_removeCheckpoint = false;
-					m_checkpointSubmodeActiveText.setString(m_checkpointSubmodeMap[m_checkpointSubmode]);
 				}
 			}
 
@@ -600,7 +505,6 @@ void StateEditor::load()
 	m_activeModeMap[ActiveMode::EDGE] = "Edge mode";
 	m_activeModeMap[ActiveMode::CAR] = "Car mode";
 	m_activeModeMap[ActiveMode::FINISH_LINE] = "Finish line mode";
-	m_activeModeMap[ActiveMode::CHECKPOINT] = "Checkpoint mode";
 
 	m_edgeSubmodeMap[EdgeSubmode::GLUED_INSERT] = "Glued insert mode";
 	m_edgeSubmodeMap[EdgeSubmode::REMOVE] = "Remove mode";
@@ -610,9 +514,6 @@ void StateEditor::load()
 
 	m_finishLineSubmodeMap[FinishLineSubmode::INSERT] = "Insert mode";
 
-	m_checkpointSubmodeMap[CheckpointSubmode::GLUED_INSERT] = "Glued insert mode";
-	m_checkpointSubmodeMap[CheckpointSubmode::REMOVE] = "Remove mode";
-
 	m_saveStatusMap[SaveStatus::UP_TO_DATE] = std::tuple("Success: Changes were saved", "Up to date", sf::Color::Green);
 	m_saveStatusMap[SaveStatus::OUT_OF_DATE] = std::tuple("Warning: Changes not saved", "Out of date", sf::Color(0, 0, 0, 0));
 	m_saveStatusMap[SaveStatus::ERROR_NO_EDGES_POSITIONED] = std::tuple("Error: No edges positioned!", "Out of date", sf::Color::Red);
@@ -620,7 +521,7 @@ void StateEditor::load()
 	m_saveStatusMap[SaveStatus::ERROR_NO_FINISH_LINE_POSITIONED] = std::tuple("Error: Finish line is not positioned!", "Out of date", sf::Color::Red);
 	m_saveStatusMap[SaveStatus::ERROR_CANNOT_OPEN_FILE] = std::tuple("Error: Cannot open file!", "Out of date", sf::Color::Red);
 
-	if (m_font.loadFromFile("consola.ttf"))
+	if (m_font.loadFromFile("Data/consola.ttf"))
 	{
 		m_edgeSubmodeText.setFont(m_font);
 		m_edgeSubmodeActiveText.setFont(m_font);
@@ -631,9 +532,6 @@ void StateEditor::load()
 		m_finishLineSubmodeText.setFont(m_font);
 		m_finishLineSubmodeActiveText.setFont(m_font);
 		m_finishLineSubmodeHelpText.setFont(m_font);
-		m_checkpointSubmodeText.setFont(m_font);
-		m_checkpointSubmodeActiveText.setFont(m_font);
-		m_checkpointSubmodeHelpText.setFont(m_font);
 		m_edgeCountText.setFont(m_font);
 		m_edgeCountActiveText.setFont(m_font);
 		m_carAngleText.setFont(m_font);
@@ -658,7 +556,6 @@ void StateEditor::load()
 		m_edgeSubmodeActiveText.setFillColor(activeColor);
 		m_carSubmodeActiveText.setFillColor(activeColor);
 		m_finishLineSubmodeActiveText.setFillColor(activeColor);
-		m_checkpointSubmodeActiveText.setFillColor(activeColor);
 		m_edgeCountActiveText.setFillColor(activeColor);
 		m_carAngleActiveText.setFillColor(activeColor);
 		m_activeModeActiveText.setFillColor(activeColor);
@@ -677,9 +574,6 @@ void StateEditor::load()
 		m_finishLineSubmodeText.setCharacterSize(characterSize);
 		m_finishLineSubmodeActiveText.setCharacterSize(characterSize);
 		m_finishLineSubmodeHelpText.setCharacterSize(characterSize);
-		m_checkpointSubmodeText.setCharacterSize(characterSize);
-		m_checkpointSubmodeActiveText.setCharacterSize(characterSize);
-		m_checkpointSubmodeHelpText.setCharacterSize(characterSize);
 		m_edgeCountText.setCharacterSize(characterSize);
 		m_edgeCountActiveText.setCharacterSize(characterSize);
 		m_carAngleText.setCharacterSize(characterSize);
@@ -709,9 +603,6 @@ void StateEditor::load()
 		m_finishLineSubmodeText.setString("Current mode:");
 		m_finishLineSubmodeActiveText.setString(m_finishLineSubmodeMap[m_finishLineSubmode]);
 		m_finishLineSubmodeHelpText.setString("| Keys: [1]");
-		m_checkpointSubmodeText.setString("Current mode:");
-		m_checkpointSubmodeActiveText.setString(m_checkpointSubmodeMap[m_checkpointSubmode]);
-		m_checkpointSubmodeHelpText.setString("| Keys: [1] [2]");
 		m_edgeCountText.setString("Edge count:");
 		setEdgeCountActiveText();
 		m_carAngleText.setString("Car angle:");
@@ -719,7 +610,7 @@ void StateEditor::load()
 		m_carAngleHelpText.setString("| Keys: [Z] [X]");
 		m_activeModeText.setString("Active mode:");
 		m_activeModeActiveText.setString(m_activeModeMap[m_activeMode]);
-		m_activeModeHelpText.setString("| Keys: [F1] [F2] [F3] [F4]");
+		m_activeModeHelpText.setString("| Keys: [F1] [F2] [F3]");
 		m_movementText.setString("Movement:");
 		setMovementActiveText();
 		m_movementHelpText.setString("| Keys: [+] [-]");
@@ -747,15 +638,6 @@ void StateEditor::draw()
 	m_line[0].color = sf::Color::White;
 	m_line[1].color = m_line[0].color;
 	for (const auto& i : m_edges)
-	{
-		m_line[0].position = i[0];
-		m_line[1].position = i[1];
-		CoreWindow::getRenderWindow().draw(m_line.data(), 2, sf::Lines);
-	}
-
-	m_line[0].color = sf::Color(0, 255, 0, 128);
-	m_line[1].color = m_line[0].color;
-	for (const auto& i : m_checkpoints)
 	{
 		m_line[0].position = i[0];
 		m_line[1].position = i[1];
@@ -823,36 +705,6 @@ void StateEditor::draw()
 			CoreWindow::getRenderWindow().draw(m_finishLineSubmodeText);
 			CoreWindow::getRenderWindow().draw(m_finishLineSubmodeActiveText);
 			CoreWindow::getRenderWindow().draw(m_finishLineSubmodeHelpText);
-			break;
-		}
-		case ActiveMode::CHECKPOINT:
-		{
-			if (m_insertCheckpoint)
-			{
-				sf::Vector2i mousePosition = CoreWindow::getMousePosition();
-				m_line[0].position = m_checkpoints.empty() ? m_checkpointBeggining : m_checkpoints.back()[1];
-				m_line[1].position.x = static_cast<float>(mousePosition.x);
-				m_line[1].position.y = static_cast<float>(mousePosition.y);
-				m_line[1].position += CoreWindow::getViewOffset();
-				m_line[0].color = sf::Color(0, 255, 0, 128);
-				m_line[1].color = m_line[0].color;
-				CoreWindow::getRenderWindow().draw(m_line.data(), 2, sf::Lines);
-			}
-			else if (m_removeCheckpoint)
-			{
-				sf::Vector2i mousePosition = CoreWindow::getMousePosition();
-				m_line[0].position = m_checkpointBeggining;
-				m_line[1].position.x = static_cast<float>(mousePosition.x);
-				m_line[1].position.y = static_cast<float>(mousePosition.y);
-				m_line[1].position += CoreWindow::getViewOffset();
-				m_line[0].color = sf::Color::Red;
-				m_line[1].color = sf::Color::Red;
-				CoreWindow::getRenderWindow().draw(m_line.data(), 2, sf::Lines);
-			}
-
-			CoreWindow::getRenderWindow().draw(m_checkpointSubmodeText);
-			CoreWindow::getRenderWindow().draw(m_checkpointSubmodeActiveText);
-			CoreWindow::getRenderWindow().draw(m_checkpointSubmodeHelpText);
 			break;
 		}
 		default:
