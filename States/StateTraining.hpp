@@ -3,7 +3,8 @@
 #include "GeneticAlgorithm.hpp"
 #include "DrawableManager.hpp"
 #include "DrawableBuilder.hpp"
-#include <SFML/Graphics/Text.hpp>
+#include "DrawableDoubleText.hpp"
+#include "CycleTimer.hpp"
 
 class StateTraining : public StateAbstract
 {
@@ -12,36 +13,35 @@ class StateTraining : public StateAbstract
 	DrawableBuilder m_builder;
 	DrawableManager* m_manager;
 	DrawableCarFactory m_carFactory;
-	FitnessPoints m_fitnessPoints;
-	FitnessPoints m_previousFitnessPoints;
+	FitnessVector m_fitnessVector;
+	FitnessVector m_previousFitnessVector;
 	const double m_meanFitnessConst = 0.02;
 
 	const size_t m_populationSize = 10;
 	const size_t m_numberOfGenerations = 30;
 	size_t m_generationNumber;
 
-	// Wave
 	std::vector<double> m_carTimers;
-	const double m_waveTimerConst = 4.0;
-	double m_waveTimer;
+	CycleTimer m_waveTimer;
+	CycleTimer m_viewTimer;
 	
-	// View
-	const double m_viewTimerConst = 0.1; // Update view every 0.1 of a second
-	double m_viewTimer;
 	sf::Vector2f m_viewCenter;
-	const float m_viewMovementConst = 500.0f; // Update view every 0.25 of a second
+	const double m_viewMovementConst = 500.0;
 
-	// Texts
-	sf::Font m_font;
-	sf::Text m_generationText;
-	sf::Text m_generationActiveText;
-
-	void updateTextPositions();
+	DrawableDoubleText m_populationText;
+	DrawableDoubleText m_generationText;
 
 public:
 	StateTraining(StateTraining&) = delete;
 
-	StateTraining();
+	StateTraining() :
+		m_waveTimer(0.0, 4.0),
+		m_viewTimer(1.0, 0.1)
+	{
+		m_evolution = nullptr;
+		m_manager = nullptr;
+		m_generationNumber = 1;
+	}
 
 	~StateTraining();
 

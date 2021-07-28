@@ -34,40 +34,40 @@ public:
 	{
 	}
 
-	inline FitnessPoint getMaxFitness()
+	inline Fitness getMaxFitness()
 	{
-		return (m_innerCheckpoints.size() + m_outerCheckpoints.size()) / 2;
+		return Fitness(m_innerCheckpoints.size() + m_outerCheckpoints.size()) / 2;
 	}
 
-	inline void calculateFitness(std::pair<DrawableCar*, bool>& car, FitnessPoint& fitnessPoint)
+	inline void calculateFitness(std::pair<DrawableCar*, bool>& car, Fitness& fitness)
 	{
 		if (Intersect(m_finishLine.m_edge, car.first->m_points))
 		{
-			fitnessPoint = FitnessPoint(-1);
+			fitness = Fitness(-1);
 		}
 		else
 		{
-			FitnessPoint innerFitness = 0;
+			Fitness innerFitness = 0;
 			for (size_t i = 0; i < m_innerCheckpoints.size(); ++i)
 			{
 				if (Intersect(m_innerCheckpoints[i], car.first->m_points))
 				{
-					innerFitness = FitnessPoint(i - 1);
+					innerFitness = Fitness(i - 1);
 				}
 			}
 
-			FitnessPoint outerFitness = 0;
+			Fitness outerFitness = 0;
 			for (size_t i = 0; i < m_outerCheckpoints.size(); ++i)
 			{
 				if (Intersect(m_outerCheckpoints[i], car.first->m_points))
 				{
-					outerFitness = FitnessPoint(i - 1);
+					outerFitness = Fitness(i - 1);
 				}
 			}
 
 			if (innerFitness && outerFitness)
 			{
-				fitnessPoint = (innerFitness + outerFitness) / 2;
+				fitness = (innerFitness + outerFitness) / 2;
 			}
 			else
 			{
@@ -77,18 +77,18 @@ public:
 					percentage = double(innerFitness) / m_innerCheckpoints.size();
 				else
 					percentage = double(outerFitness) / m_outerCheckpoints.size();
-				fitnessPoint = FitnessPoint(percentage * max);
+				fitness = Fitness(percentage * max);
 			}
 		}
 	}
 
-	inline void calculateFitness(DrawableCarFactory& cars, FitnessPoints& fitnessPoints, std::vector<double>& timers)
+	inline void calculateFitness(DrawableCarFactory& cars, FitnessVector& fitnessVector, std::vector<double>& timers)
 	{
 		auto max = getMaxFitness();
 		for (size_t i = 0; i < cars.size(); ++i)
 		{
-			calculateFitness(cars[i], fitnessPoints[i]);
-			fitnessPoints[i] += max / timers[i];
+			calculateFitness(cars[i], fitnessVector[i]);
+			fitnessVector[i] += static_cast<Fitness>(double(max) / timers[i]);
 		}
 	}
 

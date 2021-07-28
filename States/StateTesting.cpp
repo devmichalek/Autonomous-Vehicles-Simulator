@@ -20,8 +20,8 @@ void StateTesting::update()
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
 	{
 		m_carFactory.front().second = true;
-		m_manager->calculateFitness(m_carFactory.front(), m_fitnessPoints.front());
-		std::cout << m_fitnessPoints.front() << std::endl;
+		m_manager->calculateFitness(m_carFactory.front(), m_fitnessVector.front());
+		std::cout << m_fitnessVector.front() << std::endl;
 	}
 
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
@@ -59,7 +59,7 @@ void StateTesting::load()
 		m_manager = builder.getDrawableManager();
 		m_car = builder.getDrawableCar();
 		m_carFactory.push_back(std::pair(m_car, true));
-		m_fitnessPoints.push_back(0);
+		m_fitnessVector.push_back(0);
 	}
 }
 

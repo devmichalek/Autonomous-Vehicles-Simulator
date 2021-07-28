@@ -1,4 +1,4 @@
 #pragma once
 
-using FitnessPoint = unsigned;
-using FitnessPoints = std::vector<FitnessPoint>;
+using Fitness = unsigned;
+using FitnessVector = std::vector<Fitness>;

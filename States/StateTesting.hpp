@@ -8,7 +8,7 @@ class StateTesting : public StateAbstract
 	DrawableManager* m_manager;
 	DrawableCar* m_car;
 	DrawableCarFactory m_carFactory;
-	FitnessPoints m_fitnessPoints;
+	FitnessVector m_fitnessVector;
 
 public:
 	StateTesting(StateTesting&) = delete;

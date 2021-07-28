@@ -4,10 +4,12 @@
 #include "StateEditor.hpp"
 #include "StateTraining.hpp"
 #include "StateTesting.hpp"
+#include "FontContext.hpp"
 
 CoreEngine::CoreEngine()
 {
-	CoreWindow::getInstance(); // Create window
+	CoreWindow::initialize();
+	FontContext::initialize();
 	m_states.push_back(new StateMenu());
 	m_states.push_back(new StateEditor());
 	m_states.push_back(new StateTraining());

@@ -44,6 +44,11 @@ public:
 		return instance;
 	}
 
+	static void initialize()
+	{
+		getInstance();
+	}
+
 	CoreWindow(CoreWindow const&) = delete;
 	void operator=(CoreWindow const&) = delete;
 
@@ -109,7 +114,7 @@ public:
 		return m_view.getCenter() - sf::Vector2f(size.x / 2, size.y / 2);
 	}
 
-	inline static double getElapsedTime()
+	inline static double& getElapsedTime()
 	{
 		return m_elapsedTime;
 	}

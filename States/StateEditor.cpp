@@ -1,161 +1,8 @@
 #include "StateEditor.hpp"
 #include "CoreWindow.hpp"
 #include "DrawableBuilder.hpp"
-
-void StateEditor::setEdgeCountActiveText()
-{
-	m_edgeCountActiveText.setString(std::to_string(m_edges.size()));
-}
-
-void StateEditor::setCarAngleActiveText()
-{
-	long long angle = static_cast<long long>(m_drawableCar.getAngle());
-	angle %= 360;
-	if (angle < 0)
-		angle += 360;
-	m_carAngleActiveText.setString(std::to_string(angle));
-}
-
-void StateEditor::setMovementActiveText()
-{
-	m_movementActiveText.setString(std::to_string(long(m_movement)));
-}
-
-void StateEditor::setViewOffsetXActiveText()
-{
-	sf::Vector2f viewOffset = CoreWindow::getViewOffset();
-	m_viewOffsetXActiveText.setString(std::to_string(int(viewOffset.x)));
-}
-
-void StateEditor::setViewOffsetYActiveText()
-{
-	sf::Vector2f viewOffset = CoreWindow::getViewOffset();
-	m_viewOffsetYActiveText.setString(std::to_string(int(viewOffset.y)));
-}
-
-void StateEditor::setUpToDate()
-{
-	m_saveStatus = SaveStatus::UP_TO_DATE;
-	m_saveActiveText.setString(std::get<1>(m_saveStatusMap[m_saveStatus]));
-}
-
-void StateEditor::setOutOfDate()
-{
-	m_saveStatus = SaveStatus::OUT_OF_DATE;
-	m_saveActiveText.setString(std::get<1>(m_saveStatusMap[m_saveStatus]));
-}
-
-void StateEditor::updateTextsPosition()
-{
-	sf::Vector2f viewOffset = CoreWindow::getViewOffset();
-
-	float textX = viewOffset.x + float(CoreWindow::getSize().x) / 256;
-	float h = float(CoreWindow::getSize().x) / 88;
-	float textY = viewOffset.y + float(CoreWindow::getSize().y) - h;
-	float activeTextX = viewOffset.x + float(CoreWindow::getSize().x) / 16;
-	float helpTextX = viewOffset.x + float(CoreWindow::getSize().x) / 7.0f;
-	m_edgeSubmodeText.setPosition(sf::Vector2f(textX, textY));
-	m_edgeSubmodeActiveText.setPosition(sf::Vector2f(activeTextX, textY));
-	m_edgeSubmodeHelpText.setPosition(sf::Vector2f(helpTextX, textY));
-
-	textY -= h;
-	m_edgeCountText.setPosition(sf::Vector2f(textX, textY));
-	m_edgeCountActiveText.setPosition(sf::Vector2f(activeTextX, textY));
-	
-	textY = viewOffset.y + float(CoreWindow::getSize().y) - h;
-	helpTextX = viewOffset.x + float(CoreWindow::getSize().x) / 8.5f;
-	m_carSubmodeText.setPosition(sf::Vector2f(textX, textY));
-	m_carSubmodeActiveText.setPosition(sf::Vector2f(activeTextX, textY));
-	m_carSubmodeHelpText.setPosition(sf::Vector2f(helpTextX, textY));
-	m_finishLineSubmodeText.setPosition(sf::Vector2f(textX, textY));
-	m_finishLineSubmodeActiveText.setPosition(sf::Vector2f(activeTextX, textY));
-	m_finishLineSubmodeHelpText.setPosition(sf::Vector2f(helpTextX, textY));
-
-	textY -= h;
-	m_carAngleText.setPosition(sf::Vector2f(textX, textY));
-	m_carAngleActiveText.setPosition(sf::Vector2f(activeTextX, textY));
-	m_carAngleHelpText.setPosition(sf::Vector2f(helpTextX, textY));
-
-	textY = viewOffset.y + float(CoreWindow::getSize().y) / 256;
-	activeTextX = viewOffset.x + float(CoreWindow::getSize().x) / 14;
-	helpTextX = viewOffset.x + float(CoreWindow::getSize().x) / 6.8f;
-	m_activeModeText.setPosition(sf::Vector2f(textX, textY));
-	m_activeModeActiveText.setPosition(sf::Vector2f(activeTextX, textY));
-	m_activeModeHelpText.setPosition(sf::Vector2f(helpTextX, textY));
-
-	textY += h;
-	m_movementText.setPosition(sf::Vector2f(textX, textY));
-	m_movementActiveText.setPosition(sf::Vector2f(activeTextX, textY));
-	m_movementHelpText.setPosition(sf::Vector2f(helpTextX, textY));
-
-	textY += h;
-	m_viewOffsetXText.setPosition(sf::Vector2f(textX, textY));
-	m_viewOffsetXActiveText.setPosition(sf::Vector2f(activeTextX, textY));
-
-	textY += h;
-	m_viewOffsetYText.setPosition(sf::Vector2f(textX, textY));
-	m_viewOffsetYActiveText.setPosition(sf::Vector2f(activeTextX, textY));
-
-	textY += h;
-	m_saveText.setPosition(sf::Vector2f(textX, textY));
-	m_saveActiveText.setPosition(sf::Vector2f(activeTextX, textY));
-	m_saveHelpText.setPosition(sf::Vector2f(helpTextX, textY));
-	float errorTextX = helpTextX + float(CoreWindow::getSize().x) / 10;
-	m_saveStatusText.setPosition(sf::Vector2f(errorTextX, textY));
-}
-
-void StateEditor::save()
-{
-	SaveStatus result = SaveStatus::OUT_OF_DATE;
-	switch (m_saveStatus)
-	{
-		case SaveStatus::UP_TO_DATE:
-			result = SaveStatus::UP_TO_DATE;
-			break;
-		default:
-		{
-			if (m_edges.empty())
-			{
-				result = SaveStatus::ERROR_NO_EDGES_POSITIONED;
-				break;
-			}
-
-			if (!m_drawCar)
-			{
-				result = SaveStatus::ERROR_NO_CAR_POSITIONED;
-				break;
-			}
-
-			if (!m_drawFinishLine)
-			{
-				result = SaveStatus::ERROR_NO_FINISH_LINE_POSITIONED;
-				break;
-			}
-
-			DrawableBuilder builder;
-			builder.addCar(m_drawableCar.getAngle(), m_drawableCar.getCenter());
-			for (auto& i : m_edges)
-				builder.addEdge(i);
-			Edge edge = { m_drawableFinishLine.getStartPoint(), m_drawableFinishLine.getEndPoint() };
-			builder.addFinishLine(edge);
-
-			if (!builder.save())
-			{
-				result = SaveStatus::ERROR_CANNOT_OPEN_FILE;
-				break;
-			}
-
-			result = SaveStatus::UP_TO_DATE;
-			break;
-		}
-	}
-
-	m_saveStatus = result;
-	m_saveStatusAlpha = m_saveStatusAlphaMax;
-	m_saveActiveText.setString(std::get<1>(m_saveStatusMap[m_saveStatus]));
-	m_saveStatusText.setString(std::get<0>(m_saveStatusMap[m_saveStatus]));
-	m_saveStatusText.setFillColor(std::get<2>(m_saveStatusMap[m_saveStatus]));
-}
+#include "TypeObserver.hpp"
+#include "FunctionObserver.hpp"
 
 void StateEditor::setActiveMode(ActiveMode activeMode)
 {
@@ -167,18 +14,20 @@ void StateEditor::setActiveMode(ActiveMode activeMode)
 				m_edgeSubmode = EdgeSubmode::GLUED_INSERT;
 				m_insertEdge = false;
 				m_removeEdge = false;
-				m_edgeSubmodeActiveText.setString(m_edgeSubmodeMap[m_edgeSubmode]);
+				m_edgeSubmodeText.setVariableText(m_edgeSubmodeMap[m_edgeSubmode]);
 				break;
 			case ActiveMode::CAR:
 				m_carSubmode = CarSubmode::INSERT;
+				m_carSubmodeText.setVariableText(m_carSubmodeMap[m_carSubmode]);
 				break;
 			case ActiveMode::FINISH_LINE:
 				m_finishLineSubmode = FinishLineSubmode::INSERT;
+				m_finishLineSubmodeText.setVariableText(m_finishLineSubmodeMap[m_finishLineSubmode]);
 				break;
 		}
 
 		m_activeMode = activeMode;
-		m_activeModeActiveText.setString(m_activeModeMap[m_activeMode]);
+		m_activeModeText.setVariableText(m_activeModeMap[m_activeMode]);
 	}
 }
 
@@ -222,8 +71,8 @@ void StateEditor::capture()
 							newEdge[0] = m_edgeBeggining;
 							newEdge[1] = correctPosition;
 							m_edges.push_back(newEdge);
-							setEdgeCountActiveText();
-							setOutOfDate();
+							m_numberOfEdges = m_edges.size();
+							m_saveStatus = SaveStatus::OUT_OF_DATE;
 						}
 						else
 							m_insertEdge = true;
@@ -240,13 +89,13 @@ void StateEditor::capture()
 							{
 								if (Intersect(m_edges[i], m_edgeBeggining, correctPosition))
 								{
-									setOutOfDate();
+									m_saveStatus = SaveStatus::OUT_OF_DATE;
 									m_edges.erase(m_edges.begin() + i);
 									--size;
 									--i;
 								}
 							}
-							setEdgeCountActiveText();
+							m_numberOfEdges = m_edges.size();
 						}
 						else
 							m_edgeBeggining = correctPosition;
@@ -266,7 +115,7 @@ void StateEditor::capture()
 						m_drawCar = true;
 						m_drawableCar.setCenter(correctPosition);
 						m_drawableCar.update();
-						setOutOfDate();
+						m_saveStatus = SaveStatus::OUT_OF_DATE;
 						break;
 					}
 					case CarSubmode::REMOVE:
@@ -274,7 +123,7 @@ void StateEditor::capture()
 						if (m_drawableCar.inside(correctPosition))
 						{
 							m_drawCar = false;
-							setOutOfDate();
+							m_saveStatus = SaveStatus::OUT_OF_DATE;
 						}
 						break;
 					}
@@ -295,7 +144,7 @@ void StateEditor::capture()
 							m_drawableFinishLine.setStartPoint(m_finishLineBeggining);
 							m_drawableFinishLine.setEndPoint(correctPosition);
 							m_drawFinishLine = true;
-							setOutOfDate();
+							m_saveStatus = SaveStatus::OUT_OF_DATE;
 						}
 						else
 						{
@@ -350,7 +199,7 @@ void StateEditor::update()
 					m_edgeSubmode = mode;
 					m_insertEdge = false;
 					m_removeEdge = false;
-					m_edgeSubmodeActiveText.setString(m_edgeSubmodeMap[m_edgeSubmode]);
+					m_edgeSubmodeText.setVariableText(m_edgeSubmodeMap[m_edgeSubmode]);
 				}
 			}
 
@@ -379,19 +228,17 @@ void StateEditor::update()
 				{
 					m_drawableCar.rotate(0.0);
 					m_drawableCar.update();
-					setCarAngleActiveText();
 				}
 				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::X))
 				{
 					m_drawableCar.rotate(1.0);
 					m_drawableCar.update();
-					setCarAngleActiveText();
 				}
 
 				if (m_carSubmode != mode)
 				{
 					m_carSubmode = mode;
-					m_carSubmodeActiveText.setString(m_carSubmodeMap[m_carSubmode]);
+					m_carSubmodeText.setVariableText(m_carSubmodeMap[m_carSubmode]);
 				}
 			}
 
@@ -415,7 +262,7 @@ void StateEditor::update()
 				if (m_finishLineSubmode != mode)
 				{
 					m_finishLineSubmode = mode;
-					m_finishLineSubmodeActiveText.setString(m_finishLineSubmodeMap[m_finishLineSubmode]);
+					m_finishLineSubmodeText.setVariableText(m_finishLineSubmodeMap[m_finishLineSubmode]);
 				}
 			}
 
@@ -428,51 +275,37 @@ void StateEditor::update()
 	float elapsedTime = float(CoreWindow::getElapsedTime());
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Add))
 	{
-		m_movement += elapsedTime * m_movementConst;
-		if (m_movement > m_movementMax)
-			m_movement = m_movementMax;
-		setMovementActiveText();
+		m_movementTimer.increment();
 	}
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Subtract))
 	{
-		m_movement -= elapsedTime * m_movementConst;
-		if (m_movement < m_movementMin)
-			m_movement = m_movementMin;
-		setMovementActiveText();
+		m_movementTimer.decrement();
 	}
 	
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
 	{
 		auto& view = CoreWindow::getView();
-		view.move(sf::Vector2f(-m_movement * elapsedTime, 0));
+		view.move(sf::Vector2f(static_cast<float>(-m_movementTimer.value() * elapsedTime), 0));
 		CoreWindow::getRenderWindow().setView(view);
-		setViewOffsetXActiveText();
-		updateTextsPosition();
 	}
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
 	{
 		auto& view = CoreWindow::getView();
-		view.move(sf::Vector2f(m_movement * elapsedTime, 0));
+		view.move(sf::Vector2f(static_cast<float>(m_movementTimer.value() * elapsedTime), 0));
 		CoreWindow::getRenderWindow().setView(view);
-		setViewOffsetXActiveText();
-		updateTextsPosition();
 	}
 
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
 	{
 		auto& view = CoreWindow::getView();
-		view.move(sf::Vector2f(0, -m_movement * elapsedTime));
+		view.move(sf::Vector2f(0, static_cast<float>(-m_movementTimer.value() * elapsedTime)));
 		CoreWindow::getRenderWindow().setView(view);
-		setViewOffsetYActiveText();
-		updateTextsPosition();
 	}
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
 	{
 		auto& view = CoreWindow::getView();
-		view.move(sf::Vector2f(0, m_movement * elapsedTime));
+		view.move(sf::Vector2f(0, static_cast<float>(m_movementTimer.value() * elapsedTime)));
 		CoreWindow::getRenderWindow().setView(view);
-		setViewOffsetYActiveText();
-		updateTextsPosition();
 	}
 
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) ||
@@ -483,7 +316,55 @@ void StateEditor::update()
 			if (!m_saveKeysPressed)
 			{
 				m_saveKeysPressed = true;
-				save();
+				SaveStatus result = SaveStatus::OUT_OF_DATE;
+				switch (m_saveStatus)
+				{
+					case SaveStatus::UP_TO_DATE:
+						result = SaveStatus::UP_TO_DATE;
+						break;
+					default:
+					{
+						if (m_edges.empty())
+						{
+							result = SaveStatus::ERROR_NO_EDGES_POSITIONED;
+							break;
+						}
+
+						if (!m_drawCar)
+						{
+							result = SaveStatus::ERROR_NO_CAR_POSITIONED;
+							break;
+						}
+
+						if (!m_drawFinishLine)
+						{
+							result = SaveStatus::ERROR_NO_FINISH_LINE_POSITIONED;
+							break;
+						}
+
+						DrawableBuilder builder;
+						builder.addCar(m_drawableCar.getAngle(), m_drawableCar.getCenter());
+						for (auto& i : m_edges)
+							builder.addEdge(i);
+						Edge edge = { m_drawableFinishLine.getStartPoint(), m_drawableFinishLine.getEndPoint() };
+						builder.addFinishLine(edge);
+
+						if (!builder.save())
+						{
+							result = SaveStatus::ERROR_CANNOT_OPEN_FILE;
+							break;
+						}
+
+						result = SaveStatus::UP_TO_DATE;
+						break;
+					}
+				}
+
+				m_saveStatus = result;
+				m_saveText.showStatusText();
+				m_saveText.setVariableText(std::get<1>(m_saveStatusMap[m_saveStatus]));
+				m_saveText.setStatusText(std::get<0>(m_saveStatusMap[m_saveStatus]));
+				m_saveText.setStatusTextColor(std::get<2>(m_saveStatusMap[m_saveStatus]));
 			}
 		}
 		else
@@ -492,12 +373,16 @@ void StateEditor::update()
 	else
 		m_saveKeysPressed = false;
 
-	sf::Color color = m_saveStatusText.getFillColor();
-	m_saveStatusAlpha -= m_saveStatusAlphaConst * elapsedTime;
-	if (m_saveStatusAlpha < m_saveStatusAlphaMin)
-		m_saveStatusAlpha = m_saveStatusAlphaMin;
-	color.a = static_cast<sf::Uint8>(m_saveStatusAlpha);
-	m_saveStatusText.setFillColor(color);
+	m_activeModeText.update();
+	m_viewOffsetXText.update();
+	m_viewOffsetYText.update();
+	m_movementText.update();
+	m_saveText.update();
+	m_edgeSubmodeText.update();
+	m_edgeCountText.update();
+	m_carSubmodeText.update();
+	m_carAngleText.update();
+	m_finishLineSubmodeText.update();
 }
 
 void StateEditor::load()
@@ -521,110 +406,56 @@ void StateEditor::load()
 	m_saveStatusMap[SaveStatus::ERROR_NO_FINISH_LINE_POSITIONED] = std::tuple("Error: Finish line is not positioned!", "Out of date", sf::Color::Red);
 	m_saveStatusMap[SaveStatus::ERROR_CANNOT_OPEN_FILE] = std::tuple("Error: Cannot open file!", "Out of date", sf::Color::Red);
 
-	if (m_font.loadFromFile("Data/consola.ttf"))
-	{
-		m_edgeSubmodeText.setFont(m_font);
-		m_edgeSubmodeActiveText.setFont(m_font);
-		m_edgeSubmodeHelpText.setFont(m_font);
-		m_carSubmodeText.setFont(m_font);
-		m_carSubmodeActiveText.setFont(m_font);
-		m_carSubmodeHelpText.setFont(m_font);
-		m_finishLineSubmodeText.setFont(m_font);
-		m_finishLineSubmodeActiveText.setFont(m_font);
-		m_finishLineSubmodeHelpText.setFont(m_font);
-		m_edgeCountText.setFont(m_font);
-		m_edgeCountActiveText.setFont(m_font);
-		m_carAngleText.setFont(m_font);
-		m_carAngleActiveText.setFont(m_font);
-		m_carAngleHelpText.setFont(m_font);
-		m_activeModeText.setFont(m_font);
-		m_activeModeActiveText.setFont(m_font);
-		m_activeModeHelpText.setFont(m_font);
-		m_movementText.setFont(m_font);
-		m_movementActiveText.setFont(m_font);
-		m_movementHelpText.setFont(m_font);
-		m_viewOffsetXText.setFont(m_font);
-		m_viewOffsetXActiveText.setFont(m_font);
-		m_viewOffsetYText.setFont(m_font);
-		m_viewOffsetYActiveText.setFont(m_font);
-		m_saveText.setFont(m_font);
-		m_saveActiveText.setFont(m_font);
-		m_saveHelpText.setFont(m_font);
-		m_saveStatusText.setFont(m_font);
+	// Set consistent texts
+	m_activeModeText.setConsistentText("Active mode:");
+	m_movementText.setConsistentText("Movement:");
+	m_viewOffsetXText.setConsistentText("View offset x:");
+	m_viewOffsetYText.setConsistentText("View offset y:");
+	m_saveText.setConsistentText("Save status:");
+	m_edgeSubmodeText.setConsistentText("Current mode:");
+	m_edgeCountText.setConsistentText("Edge count:");
+	m_carSubmodeText.setConsistentText("Current mode:");
+	m_carAngleText.setConsistentText("Car angle:");
+	m_finishLineSubmodeText.setConsistentText("Current mode:");
 
-		auto activeColor = sf::Color(0xC0, 0xC0, 0xC0, 0xFF);
-		m_edgeSubmodeActiveText.setFillColor(activeColor);
-		m_carSubmodeActiveText.setFillColor(activeColor);
-		m_finishLineSubmodeActiveText.setFillColor(activeColor);
-		m_edgeCountActiveText.setFillColor(activeColor);
-		m_carAngleActiveText.setFillColor(activeColor);
-		m_activeModeActiveText.setFillColor(activeColor);
-		m_movementActiveText.setFillColor(activeColor);
-		m_viewOffsetXActiveText.setFillColor(activeColor);
-		m_viewOffsetYActiveText.setFillColor(activeColor);
-		m_saveActiveText.setFillColor(activeColor);
+	// Set variable texts
+	m_textFunctions.reserve(16U);
+	m_activeModeText.setVariableText(m_activeModeMap[m_activeMode]);
+	m_movementText.setObserver(new TypeObserver<double, int>(m_movementTimer.value(), 0.05));
+	m_textFunctions.push_back([&] { return std::to_string(int(CoreWindow::getViewOffset().x)); });
+	m_viewOffsetXText.setObserver(new FunctionObserver<std::string>(m_textFunctions.back(), 0.05));
+	m_textFunctions.push_back([&] { return std::to_string(int(CoreWindow::getViewOffset().y)); });
+	m_viewOffsetYText.setObserver(new FunctionObserver<std::string>(m_textFunctions.back(), 0.05));
+	m_textFunctions.push_back([&] { return std::get<1>(m_saveStatusMap[m_saveStatus]); });
+	m_saveText.setObserver(new FunctionObserver<std::string>(m_textFunctions.back(), 0.5));
+	m_edgeSubmodeText.setVariableText(m_edgeSubmodeMap[m_edgeSubmode]);
+	m_edgeCountText.setObserver(new TypeObserver(m_numberOfEdges));
+	m_carSubmodeText.setVariableText(m_carSubmodeMap[m_carSubmode]);
+	m_textFunctions.push_back([&] { long long angle = static_cast<long long>(m_drawableCar.getAngle()) % 360;
+									return std::to_string(angle < 0 ? (angle + 360) : angle); } );
+	m_carAngleText.setObserver(new FunctionObserver<std::string>(m_textFunctions.back(), 0.2));
+	m_finishLineSubmodeText.setVariableText(m_finishLineSubmodeMap[m_finishLineSubmode]);
 
-		unsigned int characterSize = CoreWindow::getSize().x / 116;
-		m_edgeSubmodeText.setCharacterSize(characterSize);
-		m_edgeSubmodeActiveText.setCharacterSize(characterSize);
-		m_edgeSubmodeHelpText.setCharacterSize(characterSize);
-		m_carSubmodeText.setCharacterSize(characterSize);
-		m_carSubmodeActiveText.setCharacterSize(characterSize);
-		m_carSubmodeHelpText.setCharacterSize(characterSize);
-		m_finishLineSubmodeText.setCharacterSize(characterSize);
-		m_finishLineSubmodeActiveText.setCharacterSize(characterSize);
-		m_finishLineSubmodeHelpText.setCharacterSize(characterSize);
-		m_edgeCountText.setCharacterSize(characterSize);
-		m_edgeCountActiveText.setCharacterSize(characterSize);
-		m_carAngleText.setCharacterSize(characterSize);
-		m_carAngleActiveText.setCharacterSize(characterSize);
-		m_carAngleHelpText.setCharacterSize(characterSize);
-		m_activeModeText.setCharacterSize(characterSize);
-		m_activeModeActiveText.setCharacterSize(characterSize);
-		m_activeModeHelpText.setCharacterSize(characterSize);
-		m_movementText.setCharacterSize(characterSize);
-		m_movementActiveText.setCharacterSize(characterSize);
-		m_movementHelpText.setCharacterSize(characterSize);
-		m_viewOffsetXText.setCharacterSize(characterSize);
-		m_viewOffsetXActiveText.setCharacterSize(characterSize);
-		m_viewOffsetYText.setCharacterSize(characterSize);
-		m_viewOffsetYActiveText.setCharacterSize(characterSize);
-		m_saveText.setCharacterSize(characterSize);
-		m_saveActiveText.setCharacterSize(characterSize);
-		m_saveHelpText.setCharacterSize(characterSize);
-		m_saveStatusText.setCharacterSize(characterSize);
-
-		m_edgeSubmodeText.setString("Current mode:");
-		m_edgeSubmodeActiveText.setString(m_edgeSubmodeMap[m_edgeSubmode]);
-		m_edgeSubmodeHelpText.setString("| Keys: [1] [2]");
-		m_carSubmodeText.setString("Current mode:");
-		m_carSubmodeActiveText.setString(m_carSubmodeMap[m_carSubmode]);
-		m_carSubmodeHelpText.setString("| Keys: [1] [2]");
-		m_finishLineSubmodeText.setString("Current mode:");
-		m_finishLineSubmodeActiveText.setString(m_finishLineSubmodeMap[m_finishLineSubmode]);
-		m_finishLineSubmodeHelpText.setString("| Keys: [1]");
-		m_edgeCountText.setString("Edge count:");
-		setEdgeCountActiveText();
-		m_carAngleText.setString("Car angle:");
-		setCarAngleActiveText();
-		m_carAngleHelpText.setString("| Keys: [Z] [X]");
-		m_activeModeText.setString("Active mode:");
-		m_activeModeActiveText.setString(m_activeModeMap[m_activeMode]);
-		m_activeModeHelpText.setString("| Keys: [F1] [F2] [F3]");
-		m_movementText.setString("Movement:");
-		setMovementActiveText();
-		m_movementHelpText.setString("| Keys: [+] [-]");
-		m_viewOffsetXText.setString("View offset x:");
-		setViewOffsetXActiveText();
-		m_viewOffsetYText.setString("View offset y:");
-		setViewOffsetYActiveText();
-		m_saveText.setString("Save status:");
-		m_saveHelpText.setString("| Keys: [Ctrl] + [S]");
-
-		updateTextsPosition();
-	}
-
-	setOutOfDate();
+	// Set information texts
+	m_activeModeText.setInformationText("| Keys: [F1] [F2] [F3]");
+	m_movementText.setInformationText("| Keys: [+] [-]");
+	m_saveText.setInformationText("| Keys: [Ctrl] + [S]");
+	m_edgeSubmodeText.setInformationText("| Keys: [1] [2]");
+	m_carSubmodeText.setInformationText("| Keys: [1] [2]");
+	m_carAngleText.setInformationText("| Keys: [Z] [X]");
+	m_finishLineSubmodeText.setInformationText("| Keys: [1]");
+	
+	// Set positions
+	m_activeModeText.setPosition(0.0039, 0.07, 0.15, 0.022 * 0);
+	m_movementText.setPosition(0.0039, 0.07, 0.15, 0.022 * 1);
+	m_viewOffsetXText.setPosition(0.0039, 0.07, 0.022 * 2);
+	m_viewOffsetYText.setPosition(0.0039, 0.07, 0.022 * 3);
+	m_saveText.setPosition(0.0039, 0.07, 0.15, 0.25, 0.022 * 4);
+	m_edgeSubmodeText.setPosition(0.0039, 0.07, 0.15, 1 - (0.022 * 1));
+	m_edgeCountText.setPosition(0.0039, 0.07, 1 - (0.022 * 2));
+	m_carSubmodeText.setPosition(0.0039, 0.07, 0.15, 1 - (0.022 * 1));
+	m_carAngleText.setPosition(0.0039, 0.07, 0.15, 1 - (0.022 * 2));
+	m_finishLineSubmodeText.setPosition(0.0039, 0.07, 0.15, 1 - (0.022 * 1));
 }
 
 void StateEditor::draw()
@@ -671,21 +502,14 @@ void StateEditor::draw()
 				CoreWindow::getRenderWindow().draw(m_line.data(), 2, sf::Lines);
 			}
 
-			CoreWindow::getRenderWindow().draw(m_edgeSubmodeText);
-			CoreWindow::getRenderWindow().draw(m_edgeSubmodeActiveText);
-			CoreWindow::getRenderWindow().draw(m_edgeSubmodeHelpText);
-			CoreWindow::getRenderWindow().draw(m_edgeCountText);
-			CoreWindow::getRenderWindow().draw(m_edgeCountActiveText);
+			m_edgeSubmodeText.draw();
+			m_edgeCountText.draw();
 			break;
 		}
 		case ActiveMode::CAR:
 		{
-			CoreWindow::getRenderWindow().draw(m_carSubmodeText);
-			CoreWindow::getRenderWindow().draw(m_carSubmodeActiveText);
-			CoreWindow::getRenderWindow().draw(m_carSubmodeHelpText);
-			CoreWindow::getRenderWindow().draw(m_carAngleText);
-			CoreWindow::getRenderWindow().draw(m_carAngleActiveText);
-			CoreWindow::getRenderWindow().draw(m_carAngleHelpText);
+			m_carSubmodeText.draw();
+			m_carAngleText.draw();
 			break;
 		}
 		case ActiveMode::FINISH_LINE:
@@ -702,27 +526,16 @@ void StateEditor::draw()
 				m_drawableFinishLine.draw();
 			}
 			
-			CoreWindow::getRenderWindow().draw(m_finishLineSubmodeText);
-			CoreWindow::getRenderWindow().draw(m_finishLineSubmodeActiveText);
-			CoreWindow::getRenderWindow().draw(m_finishLineSubmodeHelpText);
+			m_finishLineSubmodeText.draw();
 			break;
 		}
 		default:
 			break;
 	}
 
-	CoreWindow::getRenderWindow().draw(m_activeModeText);
-	CoreWindow::getRenderWindow().draw(m_activeModeActiveText);
-	CoreWindow::getRenderWindow().draw(m_activeModeHelpText);
-	CoreWindow::getRenderWindow().draw(m_movementText);
-	CoreWindow::getRenderWindow().draw(m_movementActiveText);
-	CoreWindow::getRenderWindow().draw(m_movementHelpText);
-	CoreWindow::getRenderWindow().draw(m_viewOffsetXText);
-	CoreWindow::getRenderWindow().draw(m_viewOffsetXActiveText);
-	CoreWindow::getRenderWindow().draw(m_viewOffsetYText);
-	CoreWindow::getRenderWindow().draw(m_viewOffsetYActiveText);
-	CoreWindow::getRenderWindow().draw(m_saveText);
-	CoreWindow::getRenderWindow().draw(m_saveActiveText);
-	CoreWindow::getRenderWindow().draw(m_saveHelpText);
-	CoreWindow::getRenderWindow().draw(m_saveStatusText);
+	m_activeModeText.draw();
+	m_movementText.draw();
+	m_viewOffsetXText.draw();
+	m_viewOffsetYText.draw();
+	m_saveText.draw();
 }

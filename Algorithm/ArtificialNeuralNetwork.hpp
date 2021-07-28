@@ -26,15 +26,15 @@ class ArtificialNeuralNetwork
 			for (size_t neuronNr = 0; neuronNr < neuronsNum; ++neuronNr)
 			{
 				// Get proper neuron weights, get proper neuron and reset it
-				NeuronWeights& neuronWeights = weightLayer[neuronNr];
+				Weights& weights = weightLayer[neuronNr];
 				Neuron& neuron = m_neuronLayers[layerNr][neuronNr];
 				neuron = 0;
 
 				// Calculate neuron value
 				// neuron = activation(w1*a1 + w2*a2 + ... + wn*an + bias)
-				size_t neuronWeightsCount = neuronWeights.size();
-				for (size_t weightNr = 0; weightNr < neuronWeightsCount; ++weightNr)
-					neuron += (neuronWeights[weightNr] * m_neuronLayers[layerNr - 1][weightNr]);
+				size_t numberOfWeights = weights.size();
+				for (size_t weightNr = 0; weightNr < numberOfWeights; ++weightNr)
+					neuron += (weights[weightNr] * m_neuronLayers[layerNr - 1][weightNr]);
 				
 				// Add bias
 				neuron += m_biasVector[layerNr - 1];
@@ -69,13 +69,13 @@ public:
 		{
 			m_weightLayers[i - 1].resize(hiddenLayerSizes[i - 1]);
 			size_t connectionsCount = m_neuronLayers[i - 1].size();
-			for (auto& neuronWeights : m_weightLayers[i - 1])
-				neuronWeights.resize(connectionsCount, 0);
+			for (auto& weights : m_weightLayers[i - 1])
+				weights.resize(connectionsCount, 0);
 		}
 		m_weightLayers.back().resize(outputLayerSize);
 		size_t connectionsCount = m_neuronLayers[layersCount - 2].size();
-		for (auto& neuronWeights : m_weightLayers.back())
-			neuronWeights.resize(connectionsCount, 0);
+		for (auto& weights : m_weightLayers.back())
+			weights.resize(connectionsCount, 0);
 	}
 
 	void setBiasVector(BiasVector biasVector)

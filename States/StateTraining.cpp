@@ -1,24 +1,6 @@
 #pragma once
 #include "StateTraining.hpp"
-
-void StateTraining::updateTextPositions()
-{
-	sf::Vector2f viewOffset = CoreWindow::getViewOffset();
-	float textW = float(CoreWindow::getSize().x) / 256;
-	float textX = viewOffset.x + textW;
-	float textY = viewOffset.y + textW;
-	m_generationText.setPosition(textX, textY);
-	m_generationActiveText.setPosition(textX + float(CoreWindow::getSize().x) / 18, textY);
-}
-
-StateTraining::StateTraining()
-{
-	m_evolution = nullptr;
-	m_manager = nullptr;
-	m_generationNumber = 0;
-	m_waveTimer = 0;
-	m_viewTimer = m_viewTimerConst + 1;
-}
+#include "TypeObserver.hpp"
 
 StateTraining::~StateTraining()
 {
@@ -45,13 +27,13 @@ void StateTraining::update()
 
 	if (!activity)
 	{
-		m_manager->calculateFitness(m_carFactory, m_fitnessPoints, m_carTimers);
-		if (!m_evolution->iterate(m_fitnessPoints))
+		m_manager->calculateFitness(m_carFactory, m_fitnessVector, m_carTimers);
+		if (!m_evolution->iterate(m_fitnessVector))
 		{
 			// Finish
 
 		}
-		m_generationActiveText.setString(std::to_string(++m_generationNumber));
+		++m_generationNumber;
 
 		for (size_t i = 0; i < m_brains.size(); ++i)
 			m_brains[i].setData(m_evolution->getIndividual(i));
@@ -61,53 +43,48 @@ void StateTraining::update()
 			delete m_carFactory[i].first;
 			m_carFactory[i].first = m_builder.getDrawableCar();
 			m_carFactory[i].second = true;
-			m_fitnessPoints[i] = 0;
-			m_previousFitnessPoints[i] = 0;
+			m_fitnessVector[i] = 0;
+			m_previousFitnessVector[i] = 0;
 			m_carTimers[i] = 0;
 		}
 	}
 	else
 	{
 		double elapsedTime = CoreWindow::getElapsedTime();
-		m_viewTimer += elapsedTime;
-		m_waveTimer += elapsedTime;
 		for (auto &timer : m_carTimers)
 			timer += elapsedTime;
 
-		if (m_viewTimer > m_viewTimerConst)
+		if (m_viewTimer.increment())
 		{
-			m_viewTimer = 0;
 			for (size_t i = 0; i < m_carFactory.size(); ++i)
 			{
-				m_fitnessPoints[i] = 0;
+				m_fitnessVector[i] = 0;
 				if (!m_carFactory[i].second)
 					continue;
-				m_manager->calculateFitness(m_carFactory[i], m_fitnessPoints[i]);
+				m_manager->calculateFitness(m_carFactory[i], m_fitnessVector[i]);
 				m_carFactory[i].first->setFollowerColor();
 			}
 
-			auto iterator = std::max_element(m_fitnessPoints.begin(), m_fitnessPoints.end());
-			auto index = std::distance(m_fitnessPoints.begin(), iterator);
+			auto iterator = std::max_element(m_fitnessVector.begin(), m_fitnessVector.end());
+			auto index = std::distance(m_fitnessVector.begin(), iterator);
 			m_viewCenter = m_carFactory[index].first->getCenter();
 			m_carFactory[index].first->setLeaderColor();
 		}
 
-		if (m_waveTimer > m_waveTimerConst)
+		if (m_waveTimer.increment())
 		{
-			m_waveTimer = 0;
-
 			// Check if car has made improvement
 			// If car has made improvement then it is not punished
 			for (size_t i = 0; i < m_carFactory.size(); ++i)
 			{
 				if (!m_carFactory[i].second)
 					continue;
-				m_manager->calculateFitness(m_carFactory[i], m_fitnessPoints[i]);
-				FitnessPoint requiredFitness = m_previousFitnessPoints[i];
-				requiredFitness += (m_manager->getMaxFitness() * m_meanFitnessConst);
-				if (requiredFitness > m_fitnessPoints[i])
+				m_manager->calculateFitness(m_carFactory[i], m_fitnessVector[i]);
+				Fitness requiredFitness = m_previousFitnessVector[i];
+				requiredFitness += static_cast<Fitness>(double(m_manager->getMaxFitness()) * m_meanFitnessConst);
+				if (requiredFitness > m_fitnessVector[i])
 					m_carFactory[i].second = false;
-				m_previousFitnessPoints[i] = requiredFitness;
+				m_previousFitnessVector[i] = requiredFitness;
 			}
 		}
 	}
@@ -119,28 +96,19 @@ void StateTraining::update()
 	auto newCenter = GetEndPoint(currentViewCenter, angle, -distance / m_viewMovementConst);
 	view.setCenter(newCenter);
 	CoreWindow::getRenderWindow().setView(view);
-	updateTextPositions();
+
+	m_populationText.update();
+	m_generationText.update();
 }
 
 void StateTraining::load()
 {
-	if (m_font.loadFromFile("Data/consola.ttf"))
-	{
-		m_generationText.setFont(m_font);
-		m_generationActiveText.setFont(m_font);
-
-		auto activeColor = sf::Color(0xC0, 0xC0, 0xC0, 0xFF);
-		m_generationActiveText.setFillColor(activeColor);
-
-		unsigned int characterSize = CoreWindow::getSize().x / 116;
-		m_generationText.setCharacterSize(characterSize);
-		m_generationActiveText.setCharacterSize(characterSize);
-
-		m_generationText.setString("Generation:");
-		m_generationActiveText.setString(std::to_string(m_generationNumber));
-
-		updateTextPositions();
-	}
+	m_populationText.setConsistentText("Population size:");
+	m_generationText.setConsistentText("Generation:");
+	m_populationText.setPosition(0.0039, 0.078, 0.005);
+	m_generationText.setPosition(0.0039, 0.055, 0.023);
+	m_populationText.setVariableText(std::to_string(m_populationSize));
+	m_generationText.setObserver(new TypeObserver(m_generationNumber, 0.2, "", "/" + std::to_string(m_numberOfGenerations)));
 
 	if (m_builder.load())
 	{
@@ -151,8 +119,8 @@ void StateTraining::load()
 			DrawableCar* car = m_builder.getDrawableCar();
 			m_carFactory.push_back(std::pair(car, true));
 		}
-		m_fitnessPoints.resize(m_populationSize, 0);
-		m_previousFitnessPoints.resize(m_populationSize, 0);
+		m_fitnessVector.resize(m_populationSize, 0);
+		m_previousFitnessVector.resize(m_populationSize, 0);
 		m_carTimers.resize(m_populationSize, 0);
 
 		std::vector<size_t> hiddenLayersSizes = { 5, 4 };
@@ -194,6 +162,6 @@ void StateTraining::draw()
 	m_manager->drawFinishLine();
 	m_manager->drawEdges();
 
-	CoreWindow::getRenderWindow().draw(m_generationText);
-	CoreWindow::getRenderWindow().draw(m_generationActiveText);
+	m_populationText.draw();
+	m_generationText.draw();
 }

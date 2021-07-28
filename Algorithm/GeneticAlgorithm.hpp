@@ -112,7 +112,7 @@ protected:
 		m_population.push_back(newChromosome);
 	}
 
-	virtual void select(FitnessPoints& points) // Select parents
+	virtual void select(FitnessVector& points) // Select parents
 	{
 		std::vector<Chromosome<Type>> newPopulation;
 		for (size_t i = 0; i < m_parentsCount; ++i)
@@ -158,7 +158,7 @@ public:
 		return Chromosome<Type>(m_chromosomeLength); // Error
 	}
 
-	bool iterate(FitnessPoints& points)
+	bool iterate(FitnessVector& points)
 	{
 		++m_currentIteration;
 		if (m_currentIteration > m_maxNumberOfGenerations)

@@ -81,8 +81,8 @@ namespace TestGeneticAlgorithm
 		std::cout << "\t\tCrossover probability: " << crossoverProbability << std::endl;
 		std::cout << "\t\tMutation probability: " << mutationProbability << std::endl;
 
-		// Set up points vector
-		FitnessPoints points(populationSize);
+		// Set up fitness vector
+		FitnessVector fitnessVector(populationSize);
 
 		// Initialize
 		GeneticAlgorithmBoolean geneticAlgorithm(numOfGenerations, chromosomeLength, populationSize, crossoverProbability, mutationProbability);
@@ -97,18 +97,18 @@ namespace TestGeneticAlgorithm
 			for (size_t j = 0; j < populationSize; ++j)
 			{
 				// Calculate fitness
-				points[j] = 0;
+				fitnessVector[j] = 0;
 				for (size_t k = 0; k < chromosomeLength; ++k)
 				{
 					if (geneticAlgorithm.getChromosome(j)[k] == expectedChromosome[k])
-						++points[j];
+						++fitnessVector[j];
 				}
 			}
-		} while (geneticAlgorithm.iterate(points));
+		} while (geneticAlgorithm.iterate(fitnessVector));
 		testTimer.stop();
 
-		size_t bestResultsIndex = std::distance(points.begin(), std::max_element(points.begin(), points.end()));
-		double bestResults = double(points[bestResultsIndex]) / chromosomeLength;
+		size_t bestResultsIndex = std::distance(fitnessVector.begin(), std::max_element(fitnessVector.begin(), fitnessVector.end()));
+		double bestResults = double(fitnessVector[bestResultsIndex]) / chromosomeLength;
 		auto bestChromosome = geneticAlgorithm.getChromosome(bestResultsIndex);
 		printTestStatistics<bool>(numOfGenerations, expectedResults, bestResults, expectedChromosome, bestChromosome);
 	}
@@ -130,8 +130,8 @@ namespace TestGeneticAlgorithm
 		std::cout << "\t\tMutation probability: " << mutationProbability << std::endl;
 		std::cout << "\t\tDecrease mutation over generations: " << decreaseMutationOverGenerations << std::endl;
 
-		// Set up points vector
-		FitnessPoints points(populationSize);
+		// Set up fitness vector
+		FitnessVector fitnessVector(populationSize);
 
 		// Initialize
 		GeneticAlgorithmCharacter geneticAlgorithm(numOfGenerations, chromosomeLength, populationSize, crossoverProbability, mutationProbability, alphabet, decreaseMutationOverGenerations);
@@ -144,25 +144,25 @@ namespace TestGeneticAlgorithm
 
 		// Run environment
 		TestTimer testTimer;
-		while (geneticAlgorithm.iterate(points))
+		while (geneticAlgorithm.iterate(fitnessVector))
 		{
 			for (size_t j = 0; j < populationSize; ++j)
 			{
 				// Calculate fitness
-				points[j] = 0;
+				fitnessVector[j] = 0;
 				for (size_t k = 0; k < chromosomeLength; ++k)
 				{
 					size_t difference = std::abs(geneticAlgorithm.getChromosome(j)[k] - expectedChromosome[k]);
 					difference = size_t(std::pow(difference, 2));
 					long long value = long long(numOfCombinations) - difference;
-					points[j] += FitnessPoint(value < 0 ? 0 : value);
+					fitnessVector[j] += Fitness(value < 0 ? 0 : value);
 				}
 			}
 		}
 		testTimer.stop();
 
-		size_t bestResultsIndex = std::distance(points.begin(), std::max_element(points.begin(), points.end()));
-		double bestResults = double(points[bestResultsIndex]) / chromosomeLength / numOfCombinations;
+		size_t bestResultsIndex = std::distance(fitnessVector.begin(), std::max_element(fitnessVector.begin(), fitnessVector.end()));
+		double bestResults = double(fitnessVector[bestResultsIndex]) / chromosomeLength / numOfCombinations;
 		auto bestChromosome = geneticAlgorithm.getChromosome(bestResultsIndex);
 		printTestStatistics<char>(numOfGenerations, expectedResults, bestResults, expectedChromosome, bestChromosome);
 	}
@@ -185,8 +185,8 @@ namespace TestGeneticAlgorithm
 		std::cout << "\t\tMutation probability: " << mutationProbability << std::endl;
 		std::cout << "\t\tDecrease mutation over generations: " << decreaseMutationOverGenerations << std::endl;
 
-		// Set up points vector
-		FitnessPoints points(populationSize);
+		// Set up fitness vector
+		FitnessVector fitnessVector(populationSize);
 
 		// Initialize
 		GeneticAlgorithmFloat geneticAlgorithm(numOfGenerations, chromosomeLength, populationSize, crossoverProbability, mutationProbability, decreaseMutationOverGenerations, precision, range);
@@ -204,26 +204,26 @@ namespace TestGeneticAlgorithm
 
 		// Run environment
 		TestTimer testTimer;
-		while (geneticAlgorithm.iterate(points))
+		while (geneticAlgorithm.iterate(fitnessVector))
 		{
 			for (size_t j = 0; j < populationSize; ++j)
 			{
 				// Calculate fitness
-				points[j] = 0;
+				fitnessVector[j] = 0;
 				for (size_t k = 0; k < chromosomeLength; ++k)
 				{
 					float difference = std::abs(geneticAlgorithm.getChromosome(j)[k] - expectedChromosome[k]);
 					long long longDifference = long long(difference * precision);
 					longDifference = long long(std::pow(longDifference, 1.15));
 					long long value = long long(delta * precision) - longDifference;
-					points[j] += FitnessPoint(value < 0 ? 0 : value);
+					fitnessVector[j] += Fitness(value < 0 ? 0 : value);
 				}
 			}
 		}
 		testTimer.stop();
 
-		size_t bestResultsIndex = std::distance(points.begin(), std::max_element(points.begin(), points.end()));
-		double bestResults = double(points[bestResultsIndex]) / chromosomeLength / (delta * precision);
+		size_t bestResultsIndex = std::distance(fitnessVector.begin(), std::max_element(fitnessVector.begin(), fitnessVector.end()));
+		double bestResults = double(fitnessVector[bestResultsIndex]) / chromosomeLength / (delta * precision);
 		auto bestChromosome = geneticAlgorithm.getChromosome(bestResultsIndex);
 		printTestStatistics<float>(numOfGenerations, expectedResults, bestResults, expectedChromosome, bestChromosome);
 	}
@@ -248,8 +248,8 @@ namespace TestGeneticAlgorithm
 		std::cout << "\t\tDecrease mutation over generations: " << decreaseMutationOverGenerations << std::endl;
 		std::cout << "\t\tSingle point crossover: " << singlePointCrossover << std::endl;
 
-		// Set up points vector
-		FitnessPoints points(populationSize);
+		// Set up fitness vector
+		FitnessVector fitnessVector(populationSize);
 
 		// Initialize
 		GeneticAlgorithmNeuron geneticAlgorithm(numOfGenerations, chromosomeLength, populationSize, crossoverProbability, mutationProbability, decreaseMutationOverGenerations, singlePointCrossover, precision, range);
@@ -267,26 +267,26 @@ namespace TestGeneticAlgorithm
 
 		// Run environment
 		TestTimer testTimer;
-		while (geneticAlgorithm.iterate(points))
+		while (geneticAlgorithm.iterate(fitnessVector))
 		{
 			for (size_t j = 0; j < populationSize; ++j)
 			{
 				// Calculate fitness
-				points[j] = 0;
+				fitnessVector[j] = 0;
 				for (size_t k = 0; k < chromosomeLength; ++k)
 				{
 					auto data = geneticAlgorithm.getChromosome(j)[k];
 					Neuron difference = std::fabs(data - expectedChromosome[k]);
 					long long longDifference = long long(difference * precision);
 					long long value = long long(delta * precision) - longDifference;
-					points[j] += FitnessPoint(value < 0 ? 0 : value);
+					fitnessVector[j] += Fitness(value < 0 ? 0 : value);
 				}
 			}
 		}
 		testTimer.stop();
 
-		size_t bestResultsIndex = std::distance(points.begin(), std::max_element(points.begin(), points.end()));
-		double bestResults = (double(points[bestResultsIndex]) / chromosomeLength) / (delta * precision);
+		size_t bestResultsIndex = std::distance(fitnessVector.begin(), std::max_element(fitnessVector.begin(), fitnessVector.end()));
+		double bestResults = (double(fitnessVector[bestResultsIndex]) / chromosomeLength) / (delta * precision);
 		auto bestChromosome = geneticAlgorithm.getChromosome(bestResultsIndex);
 		printTestStatistics<Neuron>(numOfGenerations, expectedResults, bestResults, expectedChromosome, bestChromosome);
 	}
