@@ -23,9 +23,11 @@ DrawableCheckpointMapRA::DrawableCheckpointMapRA(const EdgeVector& edges, const 
 			sf::Vector2f startPoint = GetEndPoint(p1, angle, gap);
 			startPoint = GetEndPoint(startPoint, checkpointAngle, 1.0);
 			sf::Vector2f endPoint = GetEndPoint(startPoint, checkpointAngle, checkpointLength);
-			m_innerCheckpoints.push_back({ startPoint, endPoint });
+			m_checkpoints.push_back({ startPoint, endPoint });
 		}
 	}
+
+	m_innerMax = m_checkpoints.size();
 
 	// For all outer edges from the edge sequence
 	for (size_t i = pivot; i < edges.size(); ++i)
@@ -43,44 +45,44 @@ DrawableCheckpointMapRA::DrawableCheckpointMapRA(const EdgeVector& edges, const 
 			sf::Vector2f startPoint = GetEndPoint(p1, angle, gap);
 			startPoint = GetEndPoint(startPoint, checkpointAngle, 1.0);
 			sf::Vector2f endPoint = GetEndPoint(startPoint, checkpointAngle, checkpointLength);
-			m_outerCheckpoints.push_back({ startPoint, endPoint });
+			m_checkpoints.push_back({ startPoint, endPoint });
 		}
 	}
 
 	// Check if particular inner checkpoint does not intersect with a edge
 	// If there is intersection then shorten the checkpoint
 	sf::Vector2f intersectionPoint;
-	for (auto& i : m_innerCheckpoints)
+	for (size_t i = 0; i < m_innerMax; ++i)
 	{
 		for (auto& j : edges)
 		{
-			if (GetIntersectionPoint(i, j, intersectionPoint))
+			if (GetIntersectionPoint(m_checkpoints[i], j, intersectionPoint))
 			{
-				i[1] = intersectionPoint;
+				m_checkpoints[i][1] = intersectionPoint;
 			}
 		}
 
-		if (GetIntersectionPoint(i, finishLine, intersectionPoint))
+		if (GetIntersectionPoint(m_checkpoints[i], finishLine, intersectionPoint))
 		{
-			i[1] = intersectionPoint;
+			m_checkpoints[i][1] = intersectionPoint;
 		}
 	}
 
 	// Check if particular outer checkpoint does not intersect with a edge
 	// If there is intersection then shorten the checkpoint
-	for (auto& i : m_outerCheckpoints)
+	for (size_t i = m_innerMax; i < m_checkpoints.size(); ++i)
 	{
 		for (auto& j : edges)
 		{
-			if (GetIntersectionPoint(i, j, intersectionPoint))
+			if (GetIntersectionPoint(m_checkpoints[i], j, intersectionPoint))
 			{
-				i[1] = intersectionPoint;
+				m_checkpoints[i][1] = intersectionPoint;
 			}
 		}
 
-		if (GetIntersectionPoint(i, finishLine, intersectionPoint))
+		if (GetIntersectionPoint(m_checkpoints[i], finishLine, intersectionPoint))
 		{
-			i[1] = intersectionPoint;
+			m_checkpoints[i][1] = intersectionPoint;
 		}
 	}
 }
@@ -90,18 +92,19 @@ Fitness DrawableCheckpointMapRA::calculateFitness(DetailedCar& car, const Edge& 
 	if (Intersect(finishLine, car.first->getPoints()))
 		return Fitness(-1);
 
+	size_t i = 0;
 	Fitness innerFitness = 0;
-	for (size_t i = 0; i < m_innerCheckpoints.size(); ++i)
+	for (; i < m_innerMax; ++i)
 	{
-		if (Intersect(m_innerCheckpoints[i], car.first->getPoints()))
-			innerFitness = Fitness(i - 1);
+		if (Intersect(m_checkpoints[i], car.first->getPoints()))
+			innerFitness = Fitness(i);
 	}
 
 	Fitness outerFitness = 0;
-	for (size_t i = 0; i < m_outerCheckpoints.size(); ++i)
+	for (i = m_innerMax; i < m_checkpoints.size(); ++i)
 	{
-		if (Intersect(m_outerCheckpoints[i], car.first->getPoints()))
-			outerFitness = Fitness(i - 1);
+		if (Intersect(m_checkpoints[i], car.first->getPoints()))
+			outerFitness = Fitness(i - m_innerMax);
 	}
 
 	if (innerFitness && outerFitness)
@@ -109,30 +112,13 @@ Fitness DrawableCheckpointMapRA::calculateFitness(DetailedCar& car, const Edge& 
 
 	double percentage;
 	if (innerFitness)
-		percentage = double(innerFitness) / m_innerCheckpoints.size();
+		percentage = double(innerFitness) / m_innerMax;
 	else
-		percentage = double(outerFitness) / m_outerCheckpoints.size();
+		percentage = double(outerFitness) / (m_checkpoints.size() - m_innerMax);
 	return Fitness(percentage * getMaxFitness());
 }
 
 Fitness DrawableCheckpointMapRA::getMaxFitness()
 {
-	return Fitness(m_innerCheckpoints.size() + m_outerCheckpoints.size()) / 2;
-}
-
-void DrawableCheckpointMapRA::draw()
-{
-	for (const auto& i : m_innerCheckpoints)
-	{
-		m_line[0].position = i[0];
-		m_line[1].position = i[1];
-		CoreWindow::getRenderWindow().draw(m_line.data(), 2, sf::Lines);
-	}
-
-	for (const auto& i : m_outerCheckpoints)
-	{
-		m_line[0].position = i[0];
-		m_line[1].position = i[1];
-		CoreWindow::getRenderWindow().draw(m_line.data(), 2, sf::Lines);
-	}
+	return Fitness(double(m_checkpoints.size()) / 2);
 }

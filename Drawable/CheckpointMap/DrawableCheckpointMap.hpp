@@ -14,12 +14,14 @@ class DrawableCheckpointMap
 
 protected:
 
+	Line m_line;
+	EdgeVector m_checkpoints;
+
 	FitnessVector m_fitnessVector;
 	FitnessVector m_previousFitnessVector;
 	Fitness m_highestFitness;
 	Fitness m_highestFitnessOverall;
 	std::vector<StoppableTimer> m_timers;
-	Line m_line;
 	double m_minFitnessImprovement;
 
 	DrawableCheckpointMap();
@@ -28,7 +30,7 @@ public:
 
 	virtual ~DrawableCheckpointMap();
 
-	virtual void draw() = 0;
+	void draw();
 
 	void iterate(DetailedCarFactory& factory, const Edge& finishLine);
 

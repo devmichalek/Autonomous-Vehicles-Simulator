@@ -14,6 +14,16 @@ DrawableCheckpointMap::~DrawableCheckpointMap()
 {
 }
 
+void DrawableCheckpointMap::draw()
+{
+	for (const auto& i : m_checkpoints)
+	{
+		m_line[0].position = i[0];
+		m_line[1].position = i[1];
+		CoreWindow::getRenderWindow().draw(m_line.data(), 2, sf::Lines);
+	}
+}
+
 void DrawableCheckpointMap::iterate(DetailedCarFactory& factory, const Edge& finishLine)
 {
 	auto maxFitness = getMaxFitness();
