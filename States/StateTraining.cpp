@@ -1,6 +1,10 @@
 #pragma once
 #include "StateTraining.hpp"
 #include "TypeObserver.hpp"
+#include "ArtificialNeuralNetwork.hpp"
+#include "DrawableManager.hpp"
+#include "DrawableCheckpointMap.hpp"
+#include "GeneticAlgorithm.hpp"
 
 StateTraining::~StateTraining()
 {
@@ -8,6 +12,7 @@ StateTraining::~StateTraining()
 	delete m_manager;
 	for (auto& i : m_carFactory)
 		delete std::get<0>(i);
+	delete m_checkpointMap;
 }
 
 void StateTraining::update()
@@ -27,66 +32,44 @@ void StateTraining::update()
 
 	if (!activity)
 	{
-		m_manager->calculateFitness(m_carFactory, m_fitnessVector, m_carTimers);
-		if (!m_evolution->iterate(m_fitnessVector))
+		// Calculate fitness and highest fitness overall
+		m_checkpointMap->iterate(m_carFactory, m_manager->getFinishLine());
+
+		// Generate new generation
+		if (m_evolution->iterate(m_checkpointMap->getFitnessVector()))
+		{
+			++m_generationNumber;
+
+			for (size_t i = 0; i < m_brains.size(); ++i)
+				m_brains[i].setData(m_evolution->getIndividual(i));
+
+			for (size_t i = 0; i < m_carFactory.size(); ++i)
+			{
+				delete m_carFactory[i].first;
+				m_carFactory[i].first = m_builder.getDrawableCar();
+				m_carFactory[i].second = true;
+			}
+
+			m_checkpointMap->reset();
+		}
+		else
 		{
 			// Finish
-
-		}
-		++m_generationNumber;
-
-		for (size_t i = 0; i < m_brains.size(); ++i)
-			m_brains[i].setData(m_evolution->getIndividual(i));
-
-		for (size_t i = 0; i < m_carFactory.size(); ++i)
-		{
-			delete m_carFactory[i].first;
-			m_carFactory[i].first = m_builder.getDrawableCar();
-			m_carFactory[i].second = true;
-			m_fitnessVector[i] = 0;
-			m_previousFitnessVector[i] = 0;
-			m_carTimers[i] = 0;
+			std::cout << "Stop\n";
 		}
 	}
 	else
 	{
-		double elapsedTime = CoreWindow::getElapsedTime();
-		for (auto &timer : m_carTimers)
-			timer += elapsedTime;
+		m_checkpointMap->incrementTimers();
 
 		if (m_viewTimer.increment())
 		{
-			for (size_t i = 0; i < m_carFactory.size(); ++i)
-			{
-				m_fitnessVector[i] = 0;
-				if (!m_carFactory[i].second)
-					continue;
-				m_manager->calculateFitness(m_carFactory[i], m_fitnessVector[i]);
-				m_carFactory[i].first->setFollowerColor();
-			}
-
-			auto iterator = std::max_element(m_fitnessVector.begin(), m_fitnessVector.end());
-			auto index = std::distance(m_fitnessVector.begin(), iterator);
+			auto index = m_checkpointMap->markLeader(m_carFactory, m_manager->getFinishLine());
 			m_viewCenter = m_carFactory[index].first->getCenter();
-			m_carFactory[index].first->setLeaderColor();
 		}
 
 		if (m_waveTimer.increment())
-		{
-			// Check if car has made improvement
-			// If car has made improvement then it is not punished
-			for (size_t i = 0; i < m_carFactory.size(); ++i)
-			{
-				if (!m_carFactory[i].second)
-					continue;
-				m_manager->calculateFitness(m_carFactory[i], m_fitnessVector[i]);
-				Fitness requiredFitness = m_previousFitnessVector[i];
-				requiredFitness += static_cast<Fitness>(double(m_manager->getMaxFitness()) * m_meanFitnessConst);
-				if (requiredFitness > m_fitnessVector[i])
-					m_carFactory[i].second = false;
-				m_previousFitnessVector[i] = requiredFitness;
-			}
-		}
+			m_checkpointMap->punish(m_carFactory, m_manager->getFinishLine());
 	}
 
 	auto& view = CoreWindow::getView();
@@ -99,19 +82,17 @@ void StateTraining::update()
 
 	m_populationText.update();
 	m_generationText.update();
+	m_highestFitnessText.update();
+	m_highestFitnessOverallText.update();
 }
 
 void StateTraining::load()
 {
-	m_populationText.setConsistentText("Population size:");
-	m_generationText.setConsistentText("Generation:");
-	m_populationText.setPosition(0.0039, 0.078, 0.005);
-	m_generationText.setPosition(0.0039, 0.055, 0.023);
-	m_populationText.setVariableText(std::to_string(m_populationSize));
-	m_generationText.setObserver(new TypeObserver(m_generationNumber, 0.2, "", "/" + std::to_string(m_numberOfGenerations)));
-
 	if (m_builder.load())
 	{
+		m_checkpointMap = m_builder.getDrawableCheckpointMap();
+		m_checkpointMap->restart(m_populationSize, 0.02);
+
 		m_manager = m_builder.getDrawableManager();
 		
 		for (size_t i = 0; i < m_populationSize; ++i)
@@ -119,11 +100,8 @@ void StateTraining::load()
 			DrawableCar* car = m_builder.getDrawableCar();
 			m_carFactory.push_back(std::pair(car, true));
 		}
-		m_fitnessVector.resize(m_populationSize, 0);
-		m_previousFitnessVector.resize(m_populationSize, 0);
-		m_carTimers.resize(m_populationSize, 0);
 
-		std::vector<size_t> hiddenLayersSizes = { 5, 4 };
+		std::vector<size_t> hiddenLayersSizes = { 6, 6 };
 		ArtificialNeuralNetwork ann(CAR_NUMBER_OF_SENSORS, CAR_NUMBER_OF_INPUTS, hiddenLayersSizes);
 		ann.setBiasVector({ 0.25, 0.1, 0.05 });
 		ann.setActivationVector({ activationLeakyrelu, activationTanh, activationRelu });
@@ -148,15 +126,29 @@ void StateTraining::load()
 		for (size_t i = 0; i < m_brains.size(); ++i)
 			m_brains[i].setData(m_evolution->getIndividual(i));
 	}
+
+	m_populationText.setConsistentText("Population size:");
+	m_generationText.setConsistentText("Generation:");
+	m_highestFitnessText.setConsistentText("Highest fitness:");
+	m_highestFitnessOverallText.setConsistentText("Highest fitness overall:");
+	m_populationText.setPosition(0.0039, 0.078, 0.005);
+	m_generationText.setPosition(0.0039, 0.055, 0.025);
+	m_highestFitnessText.setPosition(0.0039, 0.078, 0.045);
+	m_highestFitnessOverallText.setPosition(0.0039, 0.12, 0.065);
+	m_populationText.setVariableText(std::to_string(m_populationSize));
+	m_generationText.setObserver(new TypeObserver(m_generationNumber, 0.2, "", "/" + std::to_string(m_numberOfGenerations)));
+	m_highestFitnessText.setObserver(new TypeObserver(m_checkpointMap->getHighestFitness(), 0.1));
+	m_highestFitnessOverallText.setObserver(new TypeObserver(m_checkpointMap->getHighestFitnessOverall(), 0.5));
 }
 
 void StateTraining::draw()
 {
 	for (auto& car : m_carFactory)
 	{
-		if (!car.second)
+		car.first->drawBody();
+		if(!car.second)
 			continue;
-		car.first->draw();
+		car.first->drawBeams();
 	}
 
 	m_manager->drawFinishLine();
@@ -164,4 +156,6 @@ void StateTraining::draw()
 
 	m_populationText.draw();
 	m_generationText.draw();
+	m_highestFitnessText.draw();
+	m_highestFitnessOverallText.draw();
 }

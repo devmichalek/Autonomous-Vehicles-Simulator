@@ -7,7 +7,7 @@ class TypeObserver :
 {
 public:
 
-	TypeObserver(Type& data, double timeout = 0.2, std::string prefix = "", std::string postfix = "") :
+	TypeObserver(const Type& data, double timeout = 0.2, std::string prefix = "", std::string postfix = "") :
 		Observer(timeout), m_data(data)
 	{
 		m_prefix = prefix;
@@ -20,12 +20,12 @@ public:
 
 	std::string read()
 	{
-		return m_prefix + std::to_string(static_cast<CastType>(m_data)) + m_postfix;
+		return m_prefix + std::to_string(static_cast<const CastType>(m_data)) + m_postfix;
 	}
 
 private:
 
-	Type& m_data;
+	const Type& m_data;
 
 	std::string m_prefix;
 

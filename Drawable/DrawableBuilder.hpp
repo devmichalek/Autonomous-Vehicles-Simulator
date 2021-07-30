@@ -5,6 +5,7 @@
 class DrawableManager;
 class DrawableCar;
 class DrawableFinishLine;
+class DrawableCheckpointMap;
 
 class DrawableBuilder
 {
@@ -16,10 +17,7 @@ class DrawableBuilder
 	double m_carAngle;
 
 	bool m_finishLineSpecified;
-	Edge m_finishLineSegment;
-
-	EdgeVector m_innerCheckpoints;
-	EdgeVector m_outerCheckpoints;
+	Edge m_finishLineEdge;
 
 	static inline const std::string m_carAngleString = "Car angle: ";
 	static inline const std::string m_carCenterString = "Car center: ";
@@ -29,12 +27,6 @@ class DrawableBuilder
 	bool getPointFromString(std::string line, sf::Vector2f& result);
 
 	bool getEdgeFromString(std::string line, Edge& result);
-
-	std::vector<size_t> getEdgeSequences();
-
-	bool isOverlappingEdgeSequence(size_t iMin, size_t iMax, size_t jMin, size_t jMax);
-
-	void generateCheckpoints(size_t iMin, size_t iMax, size_t jMin, size_t jMax);
 
 public:
 	DrawableBuilder()
@@ -64,4 +56,6 @@ public:
 	DrawableManager* getDrawableManager();
 
 	DrawableCar* getDrawableCar();
+
+	DrawableCheckpointMap* getDrawableCheckpointMap();
 };

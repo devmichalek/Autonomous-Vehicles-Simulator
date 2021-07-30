@@ -2,8 +2,7 @@
 #include <vector>
 #include <array>
 #include <SFML/Graphics/RectangleShape.hpp>
-#include "Neural.hpp"
-#include "Genetic.hpp"
+#include <cmath>
 
 const size_t EDGE_NUMBER_OF_POINTS = 2;
 const size_t CAR_NUMBER_OF_POINTS = 4;
@@ -17,7 +16,8 @@ using CarPoints = std::array<sf::Vector2f, CAR_NUMBER_OF_POINTS>;
 using CarBeams = std::array<Edge, CAR_NUMBER_OF_SENSORS>;
 using CarBeamAngles = std::array<double, CAR_NUMBER_OF_SENSORS>;
 class DrawableCar;
-using DrawableCarFactory = std::vector<std::pair<DrawableCar*, bool>>;
+using DetailedCar = std::pair<DrawableCar*, bool>;
+using DetailedCarFactory = std::vector<DetailedCar>;
 
 inline bool Ccw(sf::Vector2f a, sf::Vector2f b, sf::Vector2f c)
 {
@@ -25,20 +25,20 @@ inline bool Ccw(sf::Vector2f a, sf::Vector2f b, sf::Vector2f c)
 }
 
 // Returns true if there is intersection between edge and edge described in two points
-inline bool Intersect(Edge& s, sf::Vector2f& x, sf::Vector2f& y)
+inline bool Intersect(const Edge& s, const sf::Vector2f& x, const sf::Vector2f& y)
 {
     return Ccw(s[0], x, y) != Ccw(s[1], x, y) && Ccw(s[0], s[1], x) != Ccw(s[0], s[1], y);
 }
 
 // Returns true if there is intersection between two edges
-inline bool Intersect(Edge& a, Edge& b)
+inline bool Intersect(const Edge& a, const Edge& b)
 {
     return Intersect(a, b[0], b[1]);
 }
 
 // Check if edge intersects with car
 // This function does not work with collinear points!
-inline bool Intersect(Edge& edge, CarPoints& carPoints)
+inline bool Intersect(const Edge& edge, const CarPoints& carPoints)
 {
     if (Intersect(edge, carPoints[0], carPoints[1]))
         return true;
@@ -93,7 +93,7 @@ inline sf::Vector2f GetEndPoint(sf::Vector2f point, double angle, float length)
 }
 
 // Checks if there is intersection point between two edges
-inline bool GetIntersectionPoint(Edge& a, Edge& b, sf::Vector2f& result)
+inline bool GetIntersectionPoint(const Edge& a, const Edge& b, sf::Vector2f& result)
 {
     float s1_x, s1_y, s2_x, s2_y;
     s1_x = a[1].x - a[0].x;
@@ -123,13 +123,13 @@ inline double Angle(sf::Vector2f a, sf::Vector2f b)
 }
 
 // Calculates distance between two points
-inline double Distance(sf::Vector2f a, sf::Vector2f b)
+inline double Distance(const sf::Vector2f a, const sf::Vector2f b)
 {
     return std::sqrt(std::pow(a.x - b.x, 2) + std::pow(a.y - b.y, 2));
 }
 
 // Calculates length of a edge
-inline double Distance(Edge& edge)
+inline double Distance(const Edge& edge)
 {
     return Distance(edge[0], edge[1]);
 }

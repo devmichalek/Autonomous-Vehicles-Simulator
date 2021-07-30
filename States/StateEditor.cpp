@@ -461,7 +461,10 @@ void StateEditor::load()
 void StateEditor::draw()
 {
 	if (m_drawCar)
-		m_drawableCar.draw();
+	{
+		m_drawableCar.drawBody();
+		m_drawableCar.drawBeams();
+	}
 
 	if (m_drawFinishLine)
 		m_drawableFinishLine.draw();

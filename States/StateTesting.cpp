@@ -7,12 +7,14 @@ StateTesting::StateTesting()
 {
 	m_manager = nullptr;
 	m_car = nullptr;
+	m_checkpointMap = nullptr;
 }
 
 StateTesting::~StateTesting()
 {
 	delete m_manager;
 	delete m_car;
+	delete m_checkpointMap;
 }
 
 void StateTesting::update()
@@ -20,8 +22,8 @@ void StateTesting::update()
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
 	{
 		m_carFactory.front().second = true;
-		m_manager->calculateFitness(m_carFactory.front(), m_fitnessVector.front());
-		std::cout << m_fitnessVector.front() << std::endl;
+		m_checkpointMap->iterate(m_carFactory, m_manager->getFinishLine());
+		std::cout << m_checkpointMap->getHighestFitness() << std::endl;
 	}
 
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
@@ -56,10 +58,11 @@ void StateTesting::load()
 	DrawableBuilder builder;
 	if (builder.load())
 	{
+		m_checkpointMap = builder.getDrawableCheckpointMap();
 		m_manager = builder.getDrawableManager();
 		m_car = builder.getDrawableCar();
 		m_carFactory.push_back(std::pair(m_car, true));
-		m_fitnessVector.push_back(0);
+		m_checkpointMap->restart(m_carFactory.size(), 0.02);
 	}
 }
 
@@ -69,10 +72,11 @@ void StateTesting::draw()
 	{
 		if (!car.second)
 			continue;
-		car.first->draw();
+		car.first->drawBody();
+		car.first->drawBeams();
 	}
 
 	m_manager->drawFinishLine();
 	m_manager->drawEdges();
-	m_manager->drawCheckpoints();
+	m_checkpointMap->draw();
 }

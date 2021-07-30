@@ -6,7 +6,6 @@ class DrawableFinishLine
 {
 	Line m_line;
 	Edge m_edge;
-	friend class DrawableManager;
 
 public:
 	DrawableFinishLine()
@@ -42,6 +41,11 @@ public:
 	inline void set(Edge edge)
 	{
 		m_edge = edge;
+	}
+
+	inline const Edge& get() const
+	{
+		return m_edge;
 	}
 
 	inline void draw()

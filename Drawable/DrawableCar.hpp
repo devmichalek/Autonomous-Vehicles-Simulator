@@ -1,11 +1,9 @@
 #pragma once
-#include <math.h>
-#include <array>
 #include <SFML/Graphics/ConvexShape.hpp>
 #include <SFML/Graphics/CircleShape.hpp>
-#include <SFML/Graphics/RenderWindow.hpp>
 #include "CoreWindow.hpp"
 #include "DrawableMath.hpp"
+#include "Neural.hpp"
 
 class DrawableCar
 {
@@ -13,7 +11,7 @@ class DrawableCar
 	double m_angle;
 	double m_speed;
 	inline static const double m_rotationConst = 150.0;
-	inline static const double m_maxSpeedConst = 1.4;
+	inline static const double m_maxSpeedConst = 1.5;
 	inline static const double m_minSpeedConst = 0;
 	inline static const double m_speedConst = 300.0;
 
@@ -22,7 +20,6 @@ class DrawableCar
 	sf::Vector2f m_size;
 	sf::Vector2f m_center;
 	CarPoints m_points;
-	friend class DrawableManager;
 
 	// Beam data
 	Line m_beamShape;
@@ -35,20 +32,6 @@ class DrawableCar
 	sf::Vector2f m_sensorSize;
 	NeuronLayer m_sensors;
 	inline static const Neuron m_sensorMaxValue = 1.0;
-
-	// Update sensors and its beams
-	inline void detect(Edge& edge)
-	{
-		sf::Vector2f ipoint; // Intersection point
-		for (size_t i = 0; i < CAR_NUMBER_OF_SENSORS; ++i)
-		{
-			if (GetIntersectionPoint(edge, m_beams[i], ipoint))
-			{
-				m_beams[i][1] = ipoint;
-				m_sensors[i] = Distance(m_beams[i]) / m_beamReach;
-			}
-		}
-	}
 
 public:
 	DrawableCar() :
@@ -109,8 +92,11 @@ public:
 	// Update car rotation and position
 	void update();
 
-	// Draws car
-	void draw();
+	// Draws car body
+	void drawBody();
+
+	// Draws car sensor beams
+	void drawBeams();
 
 	// Output sensors data
 	NeuronLayer processOutput()
@@ -124,5 +110,25 @@ public:
 		accelerate(layer[0]);
 		rotate(layer[1]);
 		brake(layer[2]);
+	}
+
+	// Return car described in points
+	const CarPoints& getPoints()
+	{
+		return m_points;
+	}
+
+	// Update sensors and its beams
+	inline void detect(const Edge& edge)
+	{
+		sf::Vector2f ipoint; // Intersection point
+		for (size_t i = 0; i < CAR_NUMBER_OF_SENSORS; ++i)
+		{
+			if (GetIntersectionPoint(edge, m_beams[i], ipoint))
+			{
+				m_beams[i][1] = ipoint;
+				m_sensors[i] = Distance(m_beams[i]) / m_beamReach;
+			}
+		}
 	}
 };

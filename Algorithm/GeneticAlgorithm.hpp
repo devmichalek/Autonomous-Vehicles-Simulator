@@ -112,14 +112,18 @@ protected:
 		m_population.push_back(newChromosome);
 	}
 
-	virtual void select(FitnessVector& points) // Select parents
+	virtual void select(const FitnessVector& points) // Select parents
 	{
+		// Deep copy
+		FitnessVector dummy = points;
+
+		// Find best ones
 		std::vector<Chromosome<Type>> newPopulation;
 		for (size_t i = 0; i < m_parentsCount; ++i)
 		{
 			// Select parent
-			auto bestChromosomeIndex = std::distance(points.begin(), std::max_element(points.begin(), points.end()));
-			points[bestChromosomeIndex] = 0;
+			auto bestChromosomeIndex = std::distance(dummy.begin(), std::max_element(dummy.begin(), dummy.end()));
+			dummy[bestChromosomeIndex] = 0;
 			newPopulation.push_back(m_population[bestChromosomeIndex]);
 		}
 
@@ -158,7 +162,7 @@ public:
 		return Chromosome<Type>(m_chromosomeLength); // Error
 	}
 
-	bool iterate(FitnessVector& points)
+	bool iterate(const FitnessVector& points)
 	{
 		++m_currentIteration;
 		if (m_currentIteration > m_maxNumberOfGenerations)

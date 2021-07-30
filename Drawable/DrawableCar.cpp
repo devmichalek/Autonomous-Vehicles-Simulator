@@ -102,20 +102,26 @@ void DrawableCar::update()
 	}
 }
 
-void DrawableCar::draw()
+void DrawableCar::drawBody()
 {
 	// Draw car
 	CoreWindow::getRenderWindow().draw(m_carShape);
 
 	for (const auto& position : m_beams)
 	{
+		// Draw sensor
+		m_sensorShape.setPosition(position[0] - m_sensorSize);
+		CoreWindow::getRenderWindow().draw(m_sensorShape);
+	}
+}
+
+void DrawableCar::drawBeams()
+{
+	for (const auto& position : m_beams)
+	{
 		// Draw beam
 		m_beamShape[0].position = position[0];
 		m_beamShape[1].position = position[1];
 		CoreWindow::getRenderWindow().draw(m_beamShape.data(), 2, sf::Lines);
-
-		// Draw sensor
-		m_sensorShape.setPosition(position[0] - m_sensorSize);
-		CoreWindow::getRenderWindow().draw(m_sensorShape);
 	}
 }

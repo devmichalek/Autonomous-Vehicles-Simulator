@@ -1,10 +1,14 @@
 #pragma once
 #include "StateAbstract.hpp"
-#include "GeneticAlgorithm.hpp"
-#include "DrawableManager.hpp"
+#include "ArtificialNeuralNetwork.hpp"
 #include "DrawableBuilder.hpp"
 #include "DrawableDoubleText.hpp"
 #include "CycleTimer.hpp"
+#include "StoppableTimer.hpp"
+
+class GeneticAlgorithmNeuron;
+class DrawableManager;
+class DrawableCheckpointMap;
 
 class StateTraining : public StateAbstract
 {
@@ -12,16 +16,13 @@ class StateTraining : public StateAbstract
 	std::vector<ArtificialNeuralNetwork> m_brains;
 	DrawableBuilder m_builder;
 	DrawableManager* m_manager;
-	DrawableCarFactory m_carFactory;
-	FitnessVector m_fitnessVector;
-	FitnessVector m_previousFitnessVector;
-	const double m_meanFitnessConst = 0.02;
+	DetailedCarFactory m_carFactory;
+	DrawableCheckpointMap* m_checkpointMap;
 
-	const size_t m_populationSize = 10;
-	const size_t m_numberOfGenerations = 30;
+	const size_t m_populationSize = 45;
+	const size_t m_numberOfGenerations = 1000;
 	size_t m_generationNumber;
 
-	std::vector<double> m_carTimers;
 	CycleTimer m_waveTimer;
 	CycleTimer m_viewTimer;
 	
@@ -30,6 +31,8 @@ class StateTraining : public StateAbstract
 
 	DrawableDoubleText m_populationText;
 	DrawableDoubleText m_generationText;
+	DrawableDoubleText m_highestFitnessText;
+	DrawableDoubleText m_highestFitnessOverallText;
 
 public:
 	StateTraining(StateTraining&) = delete;
@@ -40,6 +43,7 @@ public:
 	{
 		m_evolution = nullptr;
 		m_manager = nullptr;
+		m_checkpointMap = nullptr;
 		m_generationNumber = 1;
 	}
 
