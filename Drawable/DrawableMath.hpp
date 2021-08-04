@@ -5,12 +5,14 @@
 #include <cmath>
 
 const size_t EDGE_NUMBER_OF_POINTS = 2;
+const size_t TRIANGLE_NUMBER_OF_POINTS = 3;
 const size_t CAR_NUMBER_OF_POINTS = 4;
 const size_t CAR_NUMBER_OF_SENSORS = 5;
 const size_t CAR_NUMBER_OF_INPUTS = 3;
 
 using Edge = std::array<sf::Vector2f, EDGE_NUMBER_OF_POINTS>;
 using EdgeVector = std::vector<Edge>;
+using Triangle = std::array<sf::Vector2f, TRIANGLE_NUMBER_OF_POINTS>;
 using Line = std::array<sf::Vertex, EDGE_NUMBER_OF_POINTS>;
 using CarPoints = std::array<sf::Vector2f, CAR_NUMBER_OF_POINTS>;
 using CarBeams = std::array<Edge, CAR_NUMBER_OF_SENSORS>;
@@ -88,7 +90,7 @@ inline sf::Vector2f GetMidpoint(sf::Vector2f a, sf::Vector2f b)
 inline sf::Vector2f GetEndPoint(sf::Vector2f point, double angle, float length)
 {
     float x = point.x + length * float(cos(angle * M_PI / 180));
-    float y = point.y + length * float(sin(angle * M_PI / 180));
+    float y = point.y - length * float(sin(angle * M_PI / 180));
     return sf::Vector2f(x, y);
 }
 
@@ -116,10 +118,17 @@ inline bool GetIntersectionPoint(const Edge& a, const Edge& b, sf::Vector2f& res
     return false;
 }
 
-// Calculate angle between two points
-inline double Angle(sf::Vector2f a, sf::Vector2f b)
+// Calculate angle between the line defined by two points and the horizontal axis
+inline double DifferenceVectorAngle(sf::Vector2f a, sf::Vector2f b)
 {
-    return atan2(a.y - b.y, a.x - b.x) * 180.0 / M_PI;
+    auto deltaY = b.y - a.y; // y axis is upside down
+    auto deltaX = a.x - b.x;
+    return atan2(deltaY, deltaX) * 180.0 / M_PI;
+}
+
+inline double CastAtan2ToFullAngle(double angle)
+{
+    return angle < 0 ? (angle + 360) : angle;
 }
 
 // Calculates distance between two points
@@ -132,4 +141,34 @@ inline double Distance(const sf::Vector2f a, const sf::Vector2f b)
 inline double Distance(const Edge& edge)
 {
     return Distance(edge[0], edge[1]);
+}
+
+inline float TriangleSign(sf::Vector2f p1, sf::Vector2f p2, sf::Vector2f p3)
+{
+    return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
+}
+
+// Check if point is inside triangle
+inline bool IsPointInsideTriangle(const Triangle& triangle, const sf::Vector2f point)
+{
+    float d1 = TriangleSign(point, triangle[0], triangle[1]);
+    float d2 = TriangleSign(point, triangle[1], triangle[2]);
+    float d3 = TriangleSign(point, triangle[2], triangle[0]);
+
+    bool has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+    bool has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+
+    return !(has_neg && has_pos);
+}
+
+// Check if car is inside triangle
+inline bool IsCarInsideTriangle(const Triangle& triangle, const CarPoints& car)
+{
+    for (size_t i = 0; i < CAR_NUMBER_OF_POINTS; ++i)
+    {
+        if (IsPointInsideTriangle(triangle, car[i]))
+            return true;
+    }
+    
+    return false;
 }

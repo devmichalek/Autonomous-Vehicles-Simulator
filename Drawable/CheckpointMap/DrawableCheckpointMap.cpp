@@ -6,22 +6,10 @@ DrawableCheckpointMap::DrawableCheckpointMap()
 {
 	m_highestFitness = 0;
 	m_highestFitnessOverall = 0;
-	m_line[0].color = sf::Color(0, 255, 0, 64);
-	m_line[1].color = m_line[0].color;
 }
 
 DrawableCheckpointMap::~DrawableCheckpointMap()
 {
-}
-
-void DrawableCheckpointMap::draw()
-{
-	for (const auto& i : m_checkpoints)
-	{
-		m_line[0].position = i[0];
-		m_line[1].position = i[1];
-		CoreWindow::getRenderWindow().draw(m_line.data(), 2, sf::Lines);
-	}
 }
 
 void DrawableCheckpointMap::iterate(DetailedCarFactory& factory, const Edge& finishLine)

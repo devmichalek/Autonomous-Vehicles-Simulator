@@ -13,9 +13,9 @@ DrawableCheckpointMapRA::DrawableCheckpointMapRA(const EdgeVector& edges, const 
 		auto edgeLength = Distance(edges[i]) - 1;
 		auto p1 = edges[i][0];
 		auto p2 = edges[i][1];
-		float angle = (float)Angle(p1, p2);
+		float angle = (float)DifferenceVectorAngle(p1, p2);
 
-		const float checkpointAngle = angle + 90; // 90 degrees
+		const float checkpointAngle = angle - 90; // 90 degrees
 		size_t checkpointCount = static_cast<size_t>(edgeLength / checkpointGap) + 1;
 
 		for (float gap = 0; checkpointCount-- > 0; gap -= checkpointGap)
@@ -35,9 +35,9 @@ DrawableCheckpointMapRA::DrawableCheckpointMapRA(const EdgeVector& edges, const 
 		auto edgeLength = Distance(edges[i]) - 1;
 		auto p1 = edges[i][0];
 		auto p2 = edges[i][1];
-		float angle = (float)Angle(p1, p2);
+		float angle = (float)DifferenceVectorAngle(p1, p2);
 
-		const float checkpointAngle = angle - 90; // 90 degrees
+		const float checkpointAngle = angle + 90; // 90 degrees
 		size_t checkpointCount = static_cast<size_t>(edgeLength / checkpointGap) + 1;
 
 		for (float gap = 0; checkpointCount-- > 0; gap -= checkpointGap)
@@ -84,6 +84,19 @@ DrawableCheckpointMapRA::DrawableCheckpointMapRA(const EdgeVector& edges, const 
 		{
 			m_checkpoints[i][1] = intersectionPoint;
 		}
+	}
+
+	m_line[0].color = sf::Color(0, 255, 0, 64);
+	m_line[1].color = m_line[0].color;
+}
+
+void DrawableCheckpointMapRA::draw()
+{
+	for (const auto& i : m_checkpoints)
+	{
+		m_line[0].position = i[0];
+		m_line[1].position = i[1];
+		CoreWindow::getRenderWindow().draw(m_line.data(), 2, sf::Lines);
 	}
 }
 

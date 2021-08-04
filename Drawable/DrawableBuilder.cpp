@@ -3,6 +3,7 @@
 #include "DrawableFinishLine.hpp"
 #include "DrawableCheckpointMap.hpp"
 #include "DrawableCheckpointMapRA.hpp"
+#include "DrawableCheckpointMapT.hpp"
 #include <fstream>
 
 bool DrawableBuilder::getPointFromString(std::string line, sf::Vector2f& result)
@@ -213,5 +214,6 @@ DrawableCheckpointMap* DrawableBuilder::getDrawableCheckpointMap()
 		}
 	}
 
-	return new DrawableCheckpointMapRA(m_edges, pivot, m_finishLineEdge);
+	//return new DrawableCheckpointMapRA(m_edges, pivot, m_finishLineEdge);
+	return new DrawableCheckpointMapT(m_edges, pivot, m_finishLineEdge);
 }

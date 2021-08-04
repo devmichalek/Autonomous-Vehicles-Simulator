@@ -9,6 +9,8 @@ public:
 
 	DrawableCheckpointMapRA(const EdgeVector& edges, const size_t pivot, const Edge& finishLine);
 
+	void draw();
+
 private:
 
 	Fitness calculateFitness(DetailedCar& car, const Edge& finishLine);
@@ -16,4 +18,8 @@ private:
 	Fitness getMaxFitness();
 
 	size_t m_innerMax;
+
+	Line m_line;
+
+	EdgeVector m_checkpoints;
 };

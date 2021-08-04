@@ -75,7 +75,7 @@ void StateTraining::update()
 	auto& view = CoreWindow::getView();
 	auto currentViewCenter = view.getCenter();
 	auto distance = Distance(currentViewCenter, m_viewCenter);
-	auto angle = Angle(currentViewCenter, m_viewCenter);
+	auto angle = DifferenceVectorAngle(currentViewCenter, m_viewCenter);
 	auto newCenter = GetEndPoint(currentViewCenter, angle, -distance / m_viewMovementConst);
 	view.setCenter(newCenter);
 	CoreWindow::getRenderWindow().setView(view);

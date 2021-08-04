@@ -14,9 +14,6 @@ class DrawableCheckpointMap
 
 protected:
 
-	Line m_line;
-	EdgeVector m_checkpoints;
-
 	FitnessVector m_fitnessVector;
 	FitnessVector m_previousFitnessVector;
 	Fitness m_highestFitness;
@@ -30,7 +27,7 @@ public:
 
 	virtual ~DrawableCheckpointMap();
 
-	void draw();
+	virtual void draw() = 0;
 
 	void iterate(DetailedCarFactory& factory, const Edge& finishLine);
 

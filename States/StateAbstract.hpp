@@ -11,7 +11,7 @@ class StateAbstract
 		COUNT
 	};
 
-	inline static Type m_type = TESTING;
+	inline static Type m_type = TRAINING;
 
 public:
 

@@ -27,3 +27,6 @@ https://gamedev.stackexchange.com/questions/86755/how-to-calculate-corner-positi
 
 Genetic algorithms - exercises
 http://www.jakubw.pl/com/bib/1996_Alg_genetyczne_cwiczenia.pdf
+
+How to check if point is inside triangle
+https://stackoverflow.com/questions/2049582/how-to-determine-if-a-point-is-in-a-2d-triangle/21510010#21510010
