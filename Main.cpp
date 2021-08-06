@@ -4,8 +4,14 @@
 int main()
 {
     TestEngine testEngine;
+
     CoreEngine coreEngine;
-    coreEngine.load();
+    if (!coreEngine.load())
+    {
+        coreEngine.errorLoop();
+        return 1;
+    }
+
     coreEngine.loop();
     return 0;
 }

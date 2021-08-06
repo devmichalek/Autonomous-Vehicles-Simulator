@@ -46,7 +46,7 @@ void StateTraining::update()
 			for (size_t i = 0; i < m_carFactory.size(); ++i)
 			{
 				delete m_carFactory[i].first;
-				m_carFactory[i].first = m_builder.getDrawableCar();
+				m_carFactory[i].first = m_builder.GetDrawableCar();
 				m_carFactory[i].second = true;
 			}
 
@@ -76,7 +76,7 @@ void StateTraining::update()
 	auto currentViewCenter = view.getCenter();
 	auto distance = Distance(currentViewCenter, m_viewCenter);
 	auto angle = DifferenceVectorAngle(currentViewCenter, m_viewCenter);
-	auto newCenter = GetEndPoint(currentViewCenter, angle, -distance / m_viewMovementConst);
+	auto newCenter = GetEndPoint(currentViewCenter, angle, float(-distance / m_viewMovementConst));
 	view.setCenter(newCenter);
 	CoreWindow::getRenderWindow().setView(view);
 
@@ -86,46 +86,48 @@ void StateTraining::update()
 	m_highestFitnessOverallText.update();
 }
 
-void StateTraining::load()
+bool StateTraining::load()
 {
-	if (m_builder.load())
+	if (!m_builder.Load())
 	{
-		m_checkpointMap = m_builder.getDrawableCheckpointMap();
-		m_checkpointMap->restart(m_populationSize, 0.02);
-
-		m_manager = m_builder.getDrawableManager();
-		
-		for (size_t i = 0; i < m_populationSize; ++i)
-		{
-			DrawableCar* car = m_builder.getDrawableCar();
-			m_carFactory.push_back(std::pair(car, true));
-		}
-
-		std::vector<size_t> hiddenLayersSizes = { 6, 6 };
-		ArtificialNeuralNetwork ann(CAR_NUMBER_OF_SENSORS, CAR_NUMBER_OF_INPUTS, hiddenLayersSizes);
-		ann.setBiasVector({ 0.25, 0.1, 0.05 });
-		ann.setActivationVector({ activationLeakyrelu, activationTanh, activationRelu });
-		m_brains.resize(m_populationSize, ann);
-
-		const size_t chromosomeLength = ann.getDataUnitsCount();
-		double crossoverProbability = 0.5;
-		double mutationProbability = 0.05;
-		bool decreaseMutationOverGenerations = false;
-		bool singlePointCrossover = false;
-		unsigned int precision = 1000;
-		std::pair<Neuron, Neuron> range = std::pair(-1.0, 1.0);
-		m_evolution = new GeneticAlgorithmNeuron(m_numberOfGenerations,
-												 chromosomeLength,
-												 m_populationSize,
-												 crossoverProbability,
-												 mutationProbability,
-												 decreaseMutationOverGenerations,
-												 singlePointCrossover,
-												 precision,
-												 range);
-		for (size_t i = 0; i < m_brains.size(); ++i)
-			m_brains[i].setData(m_evolution->getIndividual(i));
+		return false;
 	}
+
+	m_checkpointMap = m_builder.GetDrawableCheckpointMap();
+	m_checkpointMap->restart(m_populationSize, 0.02);
+
+	m_manager = m_builder.GetDrawableManager();
+		
+	for (size_t i = 0; i < m_populationSize; ++i)
+	{
+		DrawableCar* car = m_builder.GetDrawableCar();
+		m_carFactory.push_back(std::pair(car, true));
+	}
+
+	std::vector<size_t> hiddenLayersSizes = { 6, 6 };
+	ArtificialNeuralNetwork ann(CAR_NUMBER_OF_SENSORS, CAR_NUMBER_OF_INPUTS, hiddenLayersSizes);
+	ann.setBiasVector({ 0.25, 0.1, 0.05 });
+	ann.setActivationVector({ activationLeakyrelu, activationTanh, activationRelu });
+	m_brains.resize(m_populationSize, ann);
+
+	const size_t chromosomeLength = ann.getDataUnitsCount();
+	double crossoverProbability = 0.5;
+	double mutationProbability = 0.05;
+	bool decreaseMutationOverGenerations = false;
+	bool singlePointCrossover = false;
+	unsigned int precision = 1000;
+	std::pair<Neuron, Neuron> range = std::pair(-1.0, 1.0);
+	m_evolution = new GeneticAlgorithmNeuron(m_numberOfGenerations,
+												chromosomeLength,
+												m_populationSize,
+												crossoverProbability,
+												mutationProbability,
+												decreaseMutationOverGenerations,
+												singlePointCrossover,
+												precision,
+												range);
+	for (size_t i = 0; i < m_brains.size(); ++i)
+		m_brains[i].setData(m_evolution->getIndividual(i));
 
 	m_populationText.setConsistentText("Population size:");
 	m_generationText.setConsistentText("Generation:");
@@ -139,6 +141,8 @@ void StateTraining::load()
 	m_generationText.setObserver(new TypeObserver(m_generationNumber, 0.2, "", "/" + std::to_string(m_numberOfGenerations)));
 	m_highestFitnessText.setObserver(new TypeObserver(m_checkpointMap->getHighestFitness(), 0.1));
 	m_highestFitnessOverallText.setObserver(new TypeObserver(m_checkpointMap->getHighestFitnessOverall(), 0.5));
+
+	return true;
 }
 
 void StateTraining::draw()

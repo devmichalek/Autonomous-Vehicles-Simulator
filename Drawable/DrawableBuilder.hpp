@@ -1,61 +1,59 @@
 #pragma once
 #include "DrawableCar.hpp"
-#include "DrawableFinishLine.hpp"
 
 class DrawableManager;
 class DrawableCar;
-class DrawableFinishLine;
 class DrawableCheckpointMap;
 
 class DrawableBuilder
 {
-	bool m_edgeSpecified;
+	size_t m_edgesPivot;
 	EdgeVector m_edges;
-
 	bool m_carSpecified;
 	sf::Vector2f m_carCenter;
 	double m_carAngle;
-
-	bool m_finishLineSpecified;
-	Edge m_finishLineEdge;
+	bool m_validated;
 
 	static inline const std::string m_carAngleString = "Car angle: ";
 	static inline const std::string m_carCenterString = "Car center: ";
-	static inline const std::string m_finishLineString = "Finish line position: ";
 	static inline const std::string m_edgeString = "Edge: ";
 
-	bool getPointFromString(std::string line, sf::Vector2f& result);
+	bool GetPointFromString(std::string line, sf::Vector2f& result);
 
-	bool getEdgeFromString(std::string line, Edge& result);
+	bool GetEdgeFromString(std::string line, Edge& result);
+
+	std::vector<size_t> CountEdgeSequences();
+
+	bool IsEdgeSequenceIntersection(std::vector<size_t>);
+
+	bool ValidateEdges();
 
 public:
 	DrawableBuilder()
 	{
-		clear();
+		Clear();
 	}
 
 	~DrawableBuilder()
 	{
 	}
 
-	void addCar(double angle, sf::Vector2f center);
+	void AddCar(double angle, sf::Vector2f center);
 
-	void addEdge(Edge edge);
-
-	void addFinishLine(Edge edge);
+	void AddEdge(Edge edge);
 
 	// Load map from file
-	bool load(const char* filename = "input.txt");
+	bool Load(const char* filename = "input.txt");
 
 	// Save map to file
-	bool save(const char* filename = "output.txt");
+	bool Save(const char* filename = "output.txt");
 
 	// Clear internal fields
-	void clear();
+	void Clear();
 
-	DrawableManager* getDrawableManager();
+	DrawableManager* GetDrawableManager();
 
-	DrawableCar* getDrawableCar();
+	DrawableCar* GetDrawableCar();
 
-	DrawableCheckpointMap* getDrawableCheckpointMap();
+	DrawableCheckpointMap* GetDrawableCheckpointMap();
 };

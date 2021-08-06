@@ -23,10 +23,15 @@ CoreEngine::~CoreEngine()
 		delete i;
 }
 
-void CoreEngine::load()
+bool CoreEngine::load()
 {
 	for (const auto& i : m_states)
-		i->load();
+	{
+		if (!i->load())
+			return false;
+	}
+
+	return true;
 }
 
 void CoreEngine::loop()
@@ -55,6 +60,26 @@ void CoreEngine::loop()
 		
 		// Draw
 		m_states[StateAbstract::type()]->draw();
+
+		// Display
+		window.display();
+	}
+}
+
+void CoreEngine::errorLoop()
+{
+	CoreWindow& window = CoreWindow::getInstance();
+	while (window.isOpen())
+	{
+		// Clear
+		window.clear();
+
+		// Catch event
+		while (window.isEvent())
+		{
+			if (window.getEvent().type == sf::Event::Closed)
+				window.close();
+		}
 
 		// Display
 		window.display();

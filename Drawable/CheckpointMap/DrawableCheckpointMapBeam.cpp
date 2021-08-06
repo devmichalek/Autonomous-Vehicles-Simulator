@@ -1,9 +1,10 @@
-#include "DrawableCheckpointMapRA.hpp"
+#include "DrawableCheckpointMapBeam.hpp"
 #include "DrawableCar.hpp"
-#include "DrawableFinishLine.hpp"
 
-DrawableCheckpointMapRA::DrawableCheckpointMapRA(const EdgeVector& edges, const size_t pivot, const Edge& finishLine)
+DrawableCheckpointMapBeam::DrawableCheckpointMapBeam(const EdgeVector& edges, const size_t pivot)
 {
+	const Edge& finishLine = edges[edges.size() - 1];
+	const Edge& blockingEdge = edges[edges.size() - 2];
 	const float checkpointLength = float(CoreWindow::getSize().x);
 	const float checkpointGap = float((CoreWindow::getSize().x / 30.0f) / 3);
 
@@ -90,7 +91,7 @@ DrawableCheckpointMapRA::DrawableCheckpointMapRA(const EdgeVector& edges, const 
 	m_line[1].color = m_line[0].color;
 }
 
-void DrawableCheckpointMapRA::draw()
+void DrawableCheckpointMapBeam::draw()
 {
 	for (const auto& i : m_checkpoints)
 	{
@@ -100,7 +101,7 @@ void DrawableCheckpointMapRA::draw()
 	}
 }
 
-Fitness DrawableCheckpointMapRA::calculateFitness(DetailedCar& car, const Edge& finishLine)
+Fitness DrawableCheckpointMapBeam::calculateFitness(DetailedCar& car, const Edge& finishLine)
 {
 	if (Intersect(finishLine, car.first->getPoints()))
 		return Fitness(-1);
@@ -131,7 +132,7 @@ Fitness DrawableCheckpointMapRA::calculateFitness(DetailedCar& car, const Edge& 
 	return Fitness(percentage * getMaxFitness());
 }
 
-Fitness DrawableCheckpointMapRA::getMaxFitness()
+Fitness DrawableCheckpointMapBeam::getMaxFitness()
 {
 	return Fitness(double(m_checkpoints.size()) / 2);
 }

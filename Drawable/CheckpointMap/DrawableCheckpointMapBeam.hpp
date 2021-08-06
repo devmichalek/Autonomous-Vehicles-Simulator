@@ -2,12 +2,12 @@
 #include "DrawableCheckpointMap.hpp"
 
 // Right angle algorithm implementation
-class DrawableCheckpointMapRA :
+class DrawableCheckpointMapBeam :
 	public DrawableCheckpointMap
 {
 public:
 
-	DrawableCheckpointMapRA(const EdgeVector& edges, const size_t pivot, const Edge& finishLine);
+	DrawableCheckpointMapBeam(const EdgeVector& edges, const size_t pivot);
 
 	void draw();
 

@@ -1,7 +1,6 @@
 #pragma once
 #include "StateAbstract.hpp"
 #include "DrawableManager.hpp"
-#include "DrawableFinishLine.hpp"
 #include "DrawableCheckpointMap.hpp"
 
 class StateTesting : public StateAbstract
@@ -20,7 +19,7 @@ public:
 
 	void update();
 
-	void load();
+	bool load();
 
 	void draw();
 };

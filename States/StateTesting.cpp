@@ -53,17 +53,21 @@ void StateTesting::update()
 	CoreWindow::getRenderWindow().setView(view);
 }
 
-void StateTesting::load()
+bool StateTesting::load()
 {
 	DrawableBuilder builder;
-	if (builder.load())
+	if (!builder.Load())
 	{
-		m_checkpointMap = builder.getDrawableCheckpointMap();
-		m_manager = builder.getDrawableManager();
-		m_car = builder.getDrawableCar();
-		m_carFactory.push_back(std::pair(m_car, true));
-		m_checkpointMap->restart(m_carFactory.size(), 0.02);
+		return false;
 	}
+
+	m_checkpointMap = builder.GetDrawableCheckpointMap();
+	m_manager = builder.GetDrawableManager();
+	m_car = builder.GetDrawableCar();
+	m_carFactory.push_back(std::pair(m_car, true));
+	m_checkpointMap->restart(m_carFactory.size(), 0.02);
+
+	return true;
 }
 
 void StateTesting::draw()

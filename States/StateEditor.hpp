@@ -1,7 +1,6 @@
 #pragma once
 #include "StateAbstract.hpp"
 #include "DrawableCar.hpp"
-#include "DrawableFinishLine.hpp"
 #include "DrawableDoubleText.hpp"
 #include "DrawableTripleText.hpp"
 #include "DrawableTripleTextStatus.hpp"
@@ -12,8 +11,7 @@ class StateEditor : public StateAbstract
 	enum class ActiveMode
 	{
 		EDGE,
-		CAR,
-		FINISH_LINE
+		CAR
 	} m_activeMode;
 	std::map<ActiveMode, std::string> m_activeModeMap;
 
@@ -31,19 +29,12 @@ class StateEditor : public StateAbstract
 	} m_carSubmode;
 	std::map<CarSubmode, std::string> m_carSubmodeMap;
 
-	enum class FinishLineSubmode
-	{
-		INSERT
-	} m_finishLineSubmode;
-	std::map<FinishLineSubmode, std::string> m_finishLineSubmodeMap;
-
 	enum class SaveStatus
 	{
 		UP_TO_DATE,
 		OUT_OF_DATE,
 		ERROR_NO_EDGES_POSITIONED,
 		ERROR_NO_CAR_POSITIONED,
-		ERROR_NO_FINISH_LINE_POSITIONED,
 		ERROR_CANNOT_OPEN_FILE
 	} m_saveStatus;
 	std::map<SaveStatus, std::tuple<std::string, std::string, sf::Color>> m_saveStatusMap;
@@ -60,11 +51,6 @@ class StateEditor : public StateAbstract
 	bool m_drawCar;
 	DrawableCar m_drawableCar;
 
-	bool m_drawFinishLine;
-	bool m_insertFinishLine;
-	sf::Vector2f m_finishLineBeggining;
-	DrawableFinishLine m_drawableFinishLine;
-
 	bool m_spaceKeyPressed;
 	bool m_saveKeysPressed;
 
@@ -77,7 +63,6 @@ class StateEditor : public StateAbstract
 	DrawableDoubleText m_edgeCountText;
 	DrawableTripleText m_carSubmodeText;
 	DrawableTripleText m_carAngleText;
-	DrawableTripleText m_finishLineSubmodeText;
 	std::vector<std::function<std::string()>> m_textFunctions;
 
 	void setActiveMode(ActiveMode);
@@ -91,7 +76,6 @@ public:
 		m_activeMode = ActiveMode::EDGE;
 		m_edgeSubmode = EdgeSubmode::GLUED_INSERT;
 		m_carSubmode = CarSubmode::INSERT;
-		m_finishLineSubmode = FinishLineSubmode::INSERT;
 		m_saveStatus = SaveStatus::OUT_OF_DATE;
 		m_line[0].color = sf::Color::White;
 		m_line[1].color = sf::Color::White;
@@ -100,8 +84,6 @@ public:
 		m_insertEdge = false;
 		m_removeEdge = false;
 		m_drawCar = false;
-		m_drawFinishLine = false;
-		m_insertFinishLine = false;
 		m_spaceKeyPressed = false;
 		m_saveKeysPressed = false;
 	}
@@ -114,7 +96,7 @@ public:
 
 	void update();
 
-	void load();
+	bool load();
 
 	void draw();
 };

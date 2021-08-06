@@ -1,7 +1,6 @@
 #pragma once
 #include "DrawableMath.hpp"
 #include "Genetic.hpp"
-#include "DrawableFinishLine.hpp"
 #include "StoppableTimer.hpp"
 
 class StoppableTimer;

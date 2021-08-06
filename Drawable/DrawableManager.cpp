@@ -3,7 +3,7 @@
 
 const Edge& DrawableManager::getFinishLine() const
 {
-	return m_finishLine.get();
+	return m_edges[m_finishLineIndex];
 }
 
 void DrawableManager::intersect(DetailedCarFactory& cars)
@@ -13,7 +13,7 @@ void DrawableManager::intersect(DetailedCarFactory& cars)
 		if (!car.second)
 			continue;
 
-		if (Intersect(m_finishLine.get(), car.first->getPoints()))
+		if (Intersect(m_edges[m_finishLineIndex], car.first->getPoints()))
 		{
 			car.second = false;
 		}
@@ -32,7 +32,9 @@ void DrawableManager::intersect(DetailedCarFactory& cars)
 
 void DrawableManager::drawFinishLine()
 {
-	m_finishLine.draw();
+	m_edgeLine[0].position = m_edges[m_finishLineIndex][0];
+	m_edgeLine[1].position = m_edges[m_finishLineIndex][1];
+	CoreWindow::getRenderWindow().draw(m_edgeLine.data(), 2, sf::Lines);
 }
 
 void DrawableManager::drawEdges()

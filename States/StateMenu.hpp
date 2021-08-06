@@ -14,7 +14,7 @@ public:
 
 	void update();
 
-	void load();
+	bool load();
 
 	void draw();
 };

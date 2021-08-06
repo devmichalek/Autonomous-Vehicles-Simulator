@@ -12,8 +12,11 @@ public:
 	~CoreEngine();
 
 	// Calls load function of each state
-	void load();
+	bool load();
 
 	// Execution loop
 	void loop();
+
+	// Execution of loop in case of error
+	void errorLoop();
 };

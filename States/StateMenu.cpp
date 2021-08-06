@@ -21,9 +21,9 @@ void StateMenu::update()
 
 }
 
-void StateMenu::load()
+bool StateMenu::load()
 {
-
+	return true;
 }
 
 void StateMenu::draw()

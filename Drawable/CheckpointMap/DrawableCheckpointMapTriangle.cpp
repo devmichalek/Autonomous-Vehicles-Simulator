@@ -1,27 +1,34 @@
-#include "DrawableCheckpointMapT.hpp"
+#include "DrawableCheckpointMapTriangle.hpp"
 #include "DrawableCar.hpp"
-#include "DrawableFinishLine.hpp"
 
-DrawableCheckpointMapT::DrawableCheckpointMapT(const EdgeVector& edges, const size_t pivot, const Edge& finishLine)
+DrawableCheckpointMapTriangle::DrawableCheckpointMapTriangle(const EdgeVector& edges, const size_t pivot)
 {
-	std::vector<std::vector<std::pair<size_t, double>>> availableEndPoints; // End point + distance
+	const Edge& finishLine = edges[edges.size() - 1];
+	const Edge& blockingEdge = edges[edges.size() - 2];
+
+	using EndPoint = std::pair<size_t, double>; // Consists of point and distance to this point
+	std::vector<std::vector<EndPoint>> availableEndPoints;
+	const size_t edgesCount = edges.size();
 
 	// Gather available end points for each point from inner edge sequence
 	for (size_t i = 0; i < pivot; ++i)
 	{
-		std::vector<std::pair<size_t, double>> endPoints;
-		for (size_t j = pivot; j < edges.size(); ++j)
+		std::vector<EndPoint> endPoints;
+		for (size_t j = pivot; j < edgesCount; ++j)
 		{
 			bool intersection = false;
 			Edge edge = { edges[i][0], edges[j][0] };
-			for (size_t k = 0; k < edges.size(); ++k)
+			for (size_t k = 0; k < edgesCount; ++k)
 			{
 				// Check if there is no intersection with any edge
 				if (k == i || k == j)
 					continue;
 
 				if (Intersect(edge, edges[k]))
+				{
 					intersection = true;
+					break;
+				}
 			}
 
 			// There was no intersection
@@ -34,21 +41,15 @@ DrawableCheckpointMapT::DrawableCheckpointMapT(const EdgeVector& edges, const si
 		}
 
 		// Sort from the smallest distance to the greatest
-		auto Compare = [&](const std::pair<size_t, double>& a, const std::pair<size_t, double>& b) { return a.second > b.second; };
+		auto Compare = [&](const EndPoint& a, const EndPoint& b) { return a.second > b.second; };
 		std::sort(endPoints.begin(), endPoints.end(), Compare);
 
 		// Insert end points
 		availableEndPoints.push_back(endPoints);
 	}
 
-	// Calculate base angles
-	std::vector<double> angleBordersVector(pivot);
-	for (size_t i = 1; i < pivot; ++i)
-		angleBordersVector[i] = CastAtan2ToFullAngle(DifferenceVectorAngle(edges[i - 1][1], edges[i - 1][0]));
-	angleBordersVector[0] = CastAtan2ToFullAngle(DifferenceVectorAngle(edges[pivot - 1][1], edges[pivot - 1][0]));
-
 	// Start adding checkpoints, add checkpoint only if there is no intersection with other checkpoint
-	using EdgeAngle = std::pair<Edge, double>; // Edge + angle
+	using EdgeAngle = std::pair<Edge, double>; // Edge + its angle against x axis
 	using LocalCheckpoints = std::vector<EdgeAngle>; // Vector of edge angles for particular checkpoint
 	std::vector<LocalCheckpoints> checkpoints(pivot, LocalCheckpoints());
 	bool process = true;
@@ -92,6 +93,11 @@ DrawableCheckpointMapT::DrawableCheckpointMapT(const EdgeVector& edges, const si
 		}
 	}
 
+	// Calculate base angles
+	std::vector<double> angleBordersVector(pivot);
+	for (size_t i = 1; i < pivot; ++i)
+		angleBordersVector[i] = CastAtan2ToFullAngle(DifferenceVectorAngle(edges[i - 1][1], edges[i - 1][0]));
+	angleBordersVector[0] = CastAtan2ToFullAngle(DifferenceVectorAngle(edges[pivot - 1][1], edges[pivot - 1][0]));
 
 	// Sort checkpoints
 	for (size_t i = 0; i < pivot; ++i)
@@ -136,10 +142,11 @@ DrawableCheckpointMapT::DrawableCheckpointMapT(const EdgeVector& edges, const si
 		m_checkpoints.push_back(triangle);
 	}
 
+	// Set shape point count
 	m_shape.setPointCount(TRIANGLE_NUMBER_OF_POINTS);
 }
 
-void DrawableCheckpointMapT::draw()
+void DrawableCheckpointMapTriangle::draw()
 {
 	for (size_t i = 0; i < m_checkpoints.size(); ++i)
 	{
@@ -154,19 +161,19 @@ void DrawableCheckpointMapT::draw()
 	}
 }
 
-Fitness DrawableCheckpointMapT::calculateFitness(DetailedCar& car, const Edge& finishLine)
+Fitness DrawableCheckpointMapTriangle::calculateFitness(DetailedCar& car, const Edge& finishLine)
 {
 	Fitness fitness = 0;
 	for (size_t i = 0; i < m_checkpoints.size(); ++i)
 	{
 		if (IsCarInsideTriangle(m_checkpoints[i], car.first->getPoints()))
-			fitness = Fitness(i);
+			fitness = Fitness(i + 1);
 	}
 
 	return fitness;
 }
 
-Fitness DrawableCheckpointMapT::getMaxFitness()
+Fitness DrawableCheckpointMapTriangle::getMaxFitness()
 {
 	return Fitness(m_checkpoints.size());
 }

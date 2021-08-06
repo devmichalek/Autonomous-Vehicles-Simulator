@@ -1,12 +1,11 @@
 #include "DrawableBuilder.hpp"
 #include "DrawableManager.hpp"
-#include "DrawableFinishLine.hpp"
 #include "DrawableCheckpointMap.hpp"
-#include "DrawableCheckpointMapRA.hpp"
-#include "DrawableCheckpointMapT.hpp"
+#include "DrawableCheckpointMapBeam.hpp"
+#include "DrawableCheckpointMapTriangle.hpp"
 #include <fstream>
 
-bool DrawableBuilder::getPointFromString(std::string line, sf::Vector2f& result)
+bool DrawableBuilder::GetPointFromString(std::string line, sf::Vector2f& result)
 {
 	size_t position = line.find(' ');
 	if (position == std::string::npos)
@@ -20,7 +19,7 @@ bool DrawableBuilder::getPointFromString(std::string line, sf::Vector2f& result)
 	return true;
 }
 
-bool DrawableBuilder::getEdgeFromString(std::string line, Edge& result)
+bool DrawableBuilder::GetEdgeFromString(std::string line, Edge& result)
 {
 	std::vector<float> data;
 	while (data.size() != 3)
@@ -44,28 +43,100 @@ bool DrawableBuilder::getEdgeFromString(std::string line, Edge& result)
 	return true;
 }
 
-void DrawableBuilder::addCar(double angle, sf::Vector2f center)
+std::vector<size_t> DrawableBuilder::CountEdgeSequences()
+{
+	Edge edge = m_edges.front();
+	std::vector<size_t> result;
+	for (size_t i = 1; i < m_edges.size(); ++i)
+	{
+		if (m_edges[i - 1][1] == m_edges[i][0])
+		{
+			// If the end of the previous edge is the beggining of the current edge
+			// It meanse there is no gap
+			if (edge[0] == m_edges[i][1])
+			{
+				result.push_back(i + 1);
+				if (i + 1 >= m_edges.size())
+					break;
+				edge = m_edges[i + 1];
+				++i;
+			}
+		}
+	}
+
+	return result;
+}
+
+bool DrawableBuilder::IsEdgeSequenceIntersection(std::vector<size_t> pivots)
+{
+	auto pivot = pivots.front();
+	for (size_t i = 0; i < pivot; ++i)
+	{
+		for (size_t j = pivot; j < m_edges.size(); ++j)
+		{
+			if (Intersect(m_edges[i], m_edges[j]))
+				return true;
+		}
+	}
+
+	return false;
+}
+
+bool DrawableBuilder::ValidateEdges()
+{
+	if (m_validated)
+		return true;
+
+	if (m_edges.empty())
+		return false;
+
+	auto pivots = CountEdgeSequences();
+	if (pivots.size() != 2)
+		return false;
+
+	if (IsEdgeSequenceIntersection(pivots))
+		return false;
+
+	// Set number of inner edges, pivot from where outer edges start
+	m_edgesPivot = pivots.front();
+
+	if (m_edgesPivot < 4)
+		return false;
+
+	if (m_edges.size() - m_edgesPivot < 4)
+		return false;
+
+	// Add finish line position
+	Edge finishLineEdge;
+	finishLineEdge[0] = m_edges.front()[0];
+	finishLineEdge[1] = m_edges[m_edgesPivot][0];
+	m_edges.push_back(finishLineEdge);
+
+	// Set blocking edge position
+	Edge blockEdge;
+	blockEdge[0] = m_edges.front()[1];
+	blockEdge[1] = m_edges[m_edgesPivot][1];
+	m_edges.insert(m_edges.begin(), blockEdge);
+	++m_edgesPivot;
+
+	m_validated = true;
+}
+
+void DrawableBuilder::AddCar(double angle, sf::Vector2f center)
 {
 	m_carSpecified = true;
 	m_carCenter = center;
 	m_carAngle = angle;
 }
 
-void DrawableBuilder::addEdge(Edge edge)
+void DrawableBuilder::AddEdge(Edge edge)
 {
-	m_edgeSpecified = true;
 	m_edges.push_back(edge);
 }
 
-void DrawableBuilder::addFinishLine(Edge edge)
+bool DrawableBuilder::Load(const char* filename)
 {
-	m_finishLineSpecified = true;
-	m_finishLineEdge = edge;
-}
-
-bool DrawableBuilder::load(const char* filename)
-{
-	clear();
+	Clear();
 
 	if (!filename)
 		return false;
@@ -87,18 +158,9 @@ bool DrawableBuilder::load(const char* filename)
 	if (line.find(m_carCenterString) != 0)
 		return false;
 	line.erase(0, m_carCenterString.size());
-	if (!getPointFromString(line, m_carCenter))
+	if (!GetPointFromString(line, m_carCenter))
 		return false;
 	m_carSpecified = true;
-
-	// Get finish line coordinates
-	std::getline(output, line);
-	if (line.find(m_finishLineString) != 0)
-		return false;
-	line.erase(0, m_finishLineString.size());
-	if (!getEdgeFromString(line, m_finishLineEdge))
-		return false;
-	m_finishLineSpecified = true;
 
 	// Get edges
 	Edge edge;
@@ -108,27 +170,31 @@ bool DrawableBuilder::load(const char* filename)
 			return false;
 
 		line.erase(0, m_edgeString.size());
-		if (!getEdgeFromString(line, edge))
+		if (!GetEdgeFromString(line, edge))
 			return false;
 		m_edges.push_back(edge);
 	}
-	m_edgeSpecified = true;
+
+	if (!ValidateEdges())
+	{
+		Clear();
+		return false;
+	}
 
 	return true;
 }
 
-bool DrawableBuilder::save(const char* filename)
+bool DrawableBuilder::Save(const char* filename)
 {
+	Clear();
+
 	if (!filename)
 		return false;
 
-	if (!m_edgeSpecified)
+	if (!ValidateEdges())
 		return false;
 
 	if (!m_carSpecified)
-		return false;
-
-	if (!m_finishLineSpecified)
 		return false;
 
 	std::ofstream output(filename);
@@ -139,37 +205,31 @@ bool DrawableBuilder::save(const char* filename)
 	output << m_carAngleString << m_carAngle << std::endl;
 	output << m_carCenterString << m_carCenter.x << " " << m_carCenter.y << std::endl;
 	
-	// Save finish line
-	output << m_finishLineString << m_finishLineEdge[0].x << " " << m_finishLineEdge[0].y << " " << m_finishLineEdge[1].x << " " << m_finishLineEdge[1].y << std::endl;
-	
 	// Save edges
 	for (auto& i : m_edges)
 		output << m_edgeString << i[0].x << " " << i[0].y << " " << i[1].x << " " << i[1].y << std::endl;
 
-	clear();
 	return true;
 }
 
-void DrawableBuilder::clear()
+void DrawableBuilder::Clear()
 {
-	m_edgeSpecified = false;
+	m_edgesPivot = 0;
+	m_edges.clear();
 	m_carSpecified = false;
-	m_finishLineSpecified = false;
+	m_validated = false;
 }
 
-DrawableManager* DrawableBuilder::getDrawableManager()
+DrawableManager* DrawableBuilder::GetDrawableManager()
 {
-	if(!m_finishLineSpecified)
+	if (!ValidateEdges())
 		return nullptr;
 
-	if (!m_edgeSpecified)
-		return nullptr;
-
-	DrawableManager* result = new DrawableManager(std::move(m_edges), std::move(m_finishLineEdge));
+	DrawableManager* result = new DrawableManager(std::move(m_edges));
 	return result;
 }
 
-DrawableCar* DrawableBuilder::getDrawableCar()
+DrawableCar* DrawableBuilder::GetDrawableCar()
 {
 	if (!m_carSpecified)
 		return nullptr;
@@ -180,40 +240,11 @@ DrawableCar* DrawableBuilder::getDrawableCar()
 	return result;
 }
 
-DrawableCheckpointMap* DrawableBuilder::getDrawableCheckpointMap()
+DrawableCheckpointMap* DrawableBuilder::GetDrawableCheckpointMap()
 {
-	Edge edge = m_edges.front();
-	std::vector<size_t> result;
-	for (size_t i = 1; i < m_edges.size(); ++i)
-	{
-		if (m_edges[i - 1][1] == m_edges[i][0])
-		{
-			// If the end of the previous edge is the beggining of the current edge
-			// It meanse there is no gap
-			if (edge[0] == m_edges[i][1])
-			{
-				result.push_back(i + 1);
-				if (i + 1 >= m_edges.size())
-					break;
-				edge = m_edges[i + 1];
-				++i;
-			}
-		}
-	}
-
-	if (result.size() != 2)
+	if (!ValidateEdges())
 		return nullptr;
 
-	auto pivot = result.front();
-	for (size_t i = 0; i < pivot; ++i)
-	{
-		for (size_t j = pivot; j < m_edges.size(); ++j)
-		{
-			if (Intersect(m_edges[i], m_edges[j]))
-				return nullptr;
-		}
-	}
-
-	//return new DrawableCheckpointMapRA(m_edges, pivot, m_finishLineEdge);
-	return new DrawableCheckpointMapT(m_edges, pivot, m_finishLineEdge);
+	//return new DrawableCheckpointMapBeam(m_edges, m_edgesPivot);
+	return new DrawableCheckpointMapTriangle(m_edges, m_edgesPivot);
 }

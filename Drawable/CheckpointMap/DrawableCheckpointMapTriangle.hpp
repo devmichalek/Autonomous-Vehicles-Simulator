@@ -4,12 +4,12 @@
 #include "DrawableCheckpointMap.hpp"
 
 // Triangle algorithm implementation
-class DrawableCheckpointMapT :
+class DrawableCheckpointMapTriangle :
 	public DrawableCheckpointMap
 {
 public:
 
-	DrawableCheckpointMapT(const EdgeVector& edges, const size_t pivot, const Edge& finishLine);
+	DrawableCheckpointMapTriangle(const EdgeVector& edges, const size_t pivot);
 
 	void draw();
 
