@@ -1,18 +1,18 @@
 #pragma once
 #include "StateTesting.hpp"
 #include "DrawableBuilder.hpp"
-#include <iostream>
+#include "CoreConsoleLogger.hpp"
 
 StateTesting::StateTesting()
 {
-	m_manager = nullptr;
+	m_edgeManager = nullptr;
 	m_car = nullptr;
 	m_checkpointMap = nullptr;
 }
 
 StateTesting::~StateTesting()
 {
-	delete m_manager;
+	delete m_edgeManager;
 	delete m_car;
 	delete m_checkpointMap;
 }
@@ -22,8 +22,8 @@ void StateTesting::update()
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
 	{
 		m_carFactory.front().second = true;
-		m_checkpointMap->iterate(m_carFactory, m_manager->getFinishLine());
-		std::cout << m_checkpointMap->getHighestFitness() << std::endl;
+		m_checkpointMap->iterate(m_carFactory);
+		CoreConsoleLogger::PrintMessage("Highest fitness: " + std::to_string(m_checkpointMap->getHighestFitness()));
 	}
 
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
@@ -46,11 +46,11 @@ void StateTesting::update()
 	}
 
 	m_car->update();
-	m_manager->intersect(m_carFactory);
+	m_edgeManager->intersect(m_carFactory);
 
-	auto& view = CoreWindow::getView();
+	auto& view = CoreWindow::GetView();
 	view.setCenter(m_car->getCenter());
-	CoreWindow::getRenderWindow().setView(view);
+	CoreWindow::GetRenderWindow().setView(view);
 }
 
 bool StateTesting::load()
@@ -62,11 +62,13 @@ bool StateTesting::load()
 	}
 
 	m_checkpointMap = builder.GetDrawableCheckpointMap();
-	m_manager = builder.GetDrawableManager();
+	m_edgeManager = builder.GetDrawableManager();
 	m_car = builder.GetDrawableCar();
+	m_car->init(CAR_TWELVE_NUMBER_OF_SENSORS);
 	m_carFactory.push_back(std::pair(m_car, true));
 	m_checkpointMap->restart(m_carFactory.size(), 0.02);
 
+	CoreConsoleLogger::PrintSuccess("State \"Testing\" dependencies loaded correctly");
 	return true;
 }
 
@@ -80,7 +82,6 @@ void StateTesting::draw()
 		car.first->drawBeams();
 	}
 
-	m_manager->drawFinishLine();
-	m_manager->drawEdges();
+	m_edgeManager->drawEdges();
 	m_checkpointMap->draw();
 }

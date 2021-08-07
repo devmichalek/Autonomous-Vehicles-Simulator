@@ -1,22 +1,22 @@
 #pragma once
-#include <vector>
-#include "StateAbstract.hpp"
+
+class StateManager;
 
 class CoreEngine final
 {
-	// State container
-	std::vector<StateAbstract*> m_states;
-
 public:
+
 	explicit CoreEngine();
+
 	~CoreEngine();
 
-	// Calls load function of each state
-	bool load();
+private:
 
-	// Execution loop
-	void loop();
+	// Program execution loop
+	void Loop();
 
-	// Execution of loop in case of error
-	void errorLoop();
+	// Load program resources
+	bool Load();
+
+	StateManager* m_stateManager;
 };

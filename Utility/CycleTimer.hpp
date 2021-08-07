@@ -19,7 +19,7 @@ public:
 
 	bool increment()
 	{
-		m_value += CoreWindow::getElapsedTime() * m_multiplier;
+		m_value += CoreWindow::GetElapsedTime() * m_multiplier;
 		if (m_value > m_max)
 		{
 			m_value = m_min;
@@ -31,7 +31,7 @@ public:
 
 	bool decrement()
 	{
-		m_value -= CoreWindow::getElapsedTime() * m_multiplier;
+		m_value -= CoreWindow::GetElapsedTime() * m_multiplier;
 		if (m_value < m_min)
 		{
 			m_value = m_max;

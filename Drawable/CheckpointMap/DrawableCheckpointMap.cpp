@@ -12,12 +12,12 @@ DrawableCheckpointMap::~DrawableCheckpointMap()
 {
 }
 
-void DrawableCheckpointMap::iterate(DetailedCarFactory& factory, const Edge& finishLine)
+void DrawableCheckpointMap::iterate(DetailedCarFactory& factory)
 {
 	auto maxFitness = getMaxFitness();
 	for (size_t i = 0; i < factory.size(); ++i)
 	{
-		m_fitnessVector[i] = calculateFitness(factory[i], finishLine);
+		m_fitnessVector[i] = calculateFitness(factory[i]);
 		m_fitnessVector[i] += static_cast<Fitness>(double(maxFitness) / m_timers[i].value());
 	}
 
@@ -27,7 +27,7 @@ void DrawableCheckpointMap::iterate(DetailedCarFactory& factory, const Edge& fin
 		m_highestFitnessOverall = m_highestFitness;
 }
 
-size_t DrawableCheckpointMap::markLeader(DetailedCarFactory& factory, const Edge& finishLine)
+size_t DrawableCheckpointMap::markLeader(DetailedCarFactory& factory)
 {
 	auto maxFitness = getMaxFitness();
 	for (size_t i = 0; i < factory.size(); ++i)
@@ -38,7 +38,7 @@ size_t DrawableCheckpointMap::markLeader(DetailedCarFactory& factory, const Edge
 			m_fitnessVector[i] = 0;
 			continue;
 		}
-		m_fitnessVector[i] = calculateFitness(factory[i], finishLine);
+		m_fitnessVector[i] = calculateFitness(factory[i]);
 	}
 
 	auto iterator = std::max_element(m_fitnessVector.begin(), m_fitnessVector.end());
@@ -51,7 +51,7 @@ size_t DrawableCheckpointMap::markLeader(DetailedCarFactory& factory, const Edge
 	return index;
 }
 
-void DrawableCheckpointMap::punish(DetailedCarFactory& factory, const Edge& finishLine)
+void DrawableCheckpointMap::punish(DetailedCarFactory& factory)
 {
 	// Check if car has made improvement
 	// If car has made improvement then it is not punished
@@ -60,7 +60,7 @@ void DrawableCheckpointMap::punish(DetailedCarFactory& factory, const Edge& fini
 	{
 		if (!factory[i].second)
 			continue;
-		m_fitnessVector[i] = calculateFitness(factory[i], finishLine);
+		m_fitnessVector[i] = calculateFitness(factory[i]);
 		Fitness requiredFitness = m_previousFitnessVector[i];
 		requiredFitness += static_cast<Fitness>(double(maxFitness) * m_minFitnessImprovement);
 		if (requiredFitness > m_fitnessVector[i])

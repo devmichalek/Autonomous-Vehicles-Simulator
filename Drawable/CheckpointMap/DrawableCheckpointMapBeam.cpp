@@ -5,8 +5,8 @@ DrawableCheckpointMapBeam::DrawableCheckpointMapBeam(const EdgeVector& edges, co
 {
 	const Edge& finishLine = edges[edges.size() - 1];
 	const Edge& blockingEdge = edges[edges.size() - 2];
-	const float checkpointLength = float(CoreWindow::getSize().x);
-	const float checkpointGap = float((CoreWindow::getSize().x / 30.0f) / 3);
+	const float checkpointLength = float(CoreWindow::GetSize().x);
+	const float checkpointGap = float((CoreWindow::GetSize().x / 30.0f) / 3);
 
 	// For all inner edges from the edge sequence
 	for (size_t i = 0; i < pivot; ++i)
@@ -97,15 +97,12 @@ void DrawableCheckpointMapBeam::draw()
 	{
 		m_line[0].position = i[0];
 		m_line[1].position = i[1];
-		CoreWindow::getRenderWindow().draw(m_line.data(), 2, sf::Lines);
+		CoreWindow::GetRenderWindow().draw(m_line.data(), 2, sf::Lines);
 	}
 }
 
-Fitness DrawableCheckpointMapBeam::calculateFitness(DetailedCar& car, const Edge& finishLine)
+Fitness DrawableCheckpointMapBeam::calculateFitness(DetailedCar& car)
 {
-	if (Intersect(finishLine, car.first->getPoints()))
-		return Fitness(-1);
-
 	size_t i = 0;
 	Fitness innerFitness = 0;
 	for (; i < m_innerMax; ++i)

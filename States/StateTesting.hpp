@@ -1,11 +1,11 @@
 #pragma once
-#include "StateAbstract.hpp"
-#include "DrawableManager.hpp"
+#include "StateInterface.hpp"
+#include "DrawableEdgeManager.hpp"
 #include "DrawableCheckpointMap.hpp"
 
-class StateTesting : public StateAbstract
+class StateTesting : public StateInterface
 {
-	DrawableManager* m_manager;
+	DrawableEdgeManager* m_edgeManager;
 	DrawableCar* m_car;
 	DetailedCarFactory m_carFactory;
 	DrawableCheckpointMap* m_checkpointMap;

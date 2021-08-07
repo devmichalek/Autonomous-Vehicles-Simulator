@@ -157,11 +157,11 @@ void DrawableCheckpointMapTriangle::draw()
 		sf::Uint8 green = 255 * ((i + 1) % 3);
 		sf::Uint8 blue = 255 * ((i + 2) % 3);
 		m_shape.setFillColor(sf::Color(red, green, blue, 48));
-		CoreWindow::getRenderWindow().draw(m_shape);
+		CoreWindow::GetRenderWindow().draw(m_shape);
 	}
 }
 
-Fitness DrawableCheckpointMapTriangle::calculateFitness(DetailedCar& car, const Edge& finishLine)
+Fitness DrawableCheckpointMapTriangle::calculateFitness(DetailedCar& car)
 {
 	Fitness fitness = 0;
 	for (size_t i = 0; i < m_checkpoints.size(); ++i)

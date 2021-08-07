@@ -1,87 +1,76 @@
 #include "CoreEngine.hpp"
 #include "CoreWindow.hpp"
-#include "StateMenu.hpp"
-#include "StateEditor.hpp"
-#include "StateTraining.hpp"
-#include "StateTesting.hpp"
 #include "FontContext.hpp"
+#include "StateManager.hpp"
+#include "CoreConsoleLogger.hpp"
+#include <limits>
+#include <iostream>
 
 CoreEngine::CoreEngine()
 {
-	CoreWindow::initialize();
-	FontContext::initialize();
-	m_states.push_back(new StateMenu());
-	m_states.push_back(new StateEditor());
-	m_states.push_back(new StateTraining());
-	m_states.push_back(new StateTesting());
-	m_states.shrink_to_fit();
+	if (!Load())
+	{
+		CoreConsoleLogger::PrintError("Loading engine dependencies failed");
+		CoreWindow::GetInstance().Close();
+		CoreConsoleLogger::PrintMessage("Press Enter to continue...");
+		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+	}
+	else
+	{
+		CoreConsoleLogger::PrintSuccess("Correctly loaded all engine dependencies");
+		Loop();
+	}
+		
 }
 
 CoreEngine::~CoreEngine()
 {
-	for (const auto& i : m_states)
-		delete i;
+	delete m_stateManager;
 }
 
-bool CoreEngine::load()
+void CoreEngine::Loop()
 {
-	for (const auto& i : m_states)
-	{
-		if (!i->load())
-			return false;
-	}
-
-	return true;
-}
-
-void CoreEngine::loop()
-{
-	CoreWindow& window = CoreWindow::getInstance();
-	while (window.isOpen())
+	CoreWindow& window = CoreWindow::GetInstance();
+	while (window.IsOpen())
 	{
 		// Clear
-		window.clear();
+		window.Clear();
 
 		// Catch event
-		while (window.isEvent())
+		while (window.IsEvent())
 		{
-			if (window.getEvent().type == sf::Event::Closed)
-				window.close();
+			if (window.GetEvent().type == sf::Event::Closed)
+				window.Close();
 
 			// Capture events
-			m_states[StateAbstract::type()]->capture();
+			m_stateManager->Capture();
 		}
 
 		// Restart clock
-		window.restartClock();
+		window.RestartClock();
 
 		// Mechanics
-		m_states[StateAbstract::type()]->update();
+		m_stateManager->Update();
 		
 		// Draw
-		m_states[StateAbstract::type()]->draw();
+		m_stateManager->Draw();
 
 		// Display
-		window.display();
+		window.Display();
 	}
 }
 
-void CoreEngine::errorLoop()
+bool CoreEngine::Load()
 {
-	CoreWindow& window = CoreWindow::getInstance();
-	while (window.isOpen())
-	{
-		// Clear
-		window.clear();
+	CoreWindow::Initialize();
+	
+	if (!FontContext::Initialize())
+		return false;
 
-		// Catch event
-		while (window.isEvent())
-		{
-			if (window.getEvent().type == sf::Event::Closed)
-				window.close();
-		}
+	m_stateManager = new StateManager;
 
-		// Display
-		window.display();
-	}
+	if (!m_stateManager->Load())
+		return false;
+
+	return true;
 }

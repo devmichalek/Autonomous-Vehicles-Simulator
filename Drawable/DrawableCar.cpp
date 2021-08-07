@@ -38,11 +38,60 @@ bool DrawableCar::inside(sf::Vector2f point)
 	return area <= correctArea;
 }
 
+void DrawableCar::init(size_t numberOfSensors)
+{
+	switch (numberOfSensors)
+	{
+		case CAR_TWELVE_NUMBER_OF_SENSORS:
+			m_beamAngles = { 180.0, 225.0, 270.0, 270.0, 315.0, 345.0, 0.0, 15.0, 45.0, 90.0, 90.0, 135.0 };
+			m_beamStartPositions.resize(numberOfSensors);
+			m_beamStartPositions[0] = std::tuple(0, 3, 0.5);
+			m_beamStartPositions[1] = std::tuple(0, 0, 0.5);
+			m_beamStartPositions[2] = std::tuple(0, 1, 0.5);
+			m_beamStartPositions[3] = std::tuple(1, 1, 0);
+			m_beamStartPositions[4] = std::tuple(1, 1, 0);
+			m_beamStartPositions[5] = std::tuple(1, 1, 0);
+			m_beamStartPositions[6] = std::tuple(1, 2, 0.5);
+			m_beamStartPositions[7] = std::tuple(2, 2, 0);
+			m_beamStartPositions[8] = std::tuple(2, 2, 0);
+			m_beamStartPositions[9] = std::tuple(2, 2, 0);
+			m_beamStartPositions[10] = std::tuple(2, 3, 0.5);
+			m_beamStartPositions[11] = std::tuple(3, 3, 0.5);
+			break;
+		case CAR_EIGHT_NUMBER_OF_SENSORS:
+			m_beamAngles = { 180.0, 225.0, 270.0, 315.0, 0.0, 45.0, 90.0, 135.0 };
+			m_beamStartPositions.resize(numberOfSensors);
+			m_beamStartPositions[0] = std::tuple(0, 3, 0.5);
+			m_beamStartPositions[1] = std::tuple(0, 0, 0.5);
+			m_beamStartPositions[2] = std::tuple(0, 1, 0.5);
+			m_beamStartPositions[3] = std::tuple(1, 1, 0);
+			m_beamStartPositions[4] = std::tuple(1, 2, 0.5);
+			m_beamStartPositions[5] = std::tuple(2, 2, 0);
+			m_beamStartPositions[6] = std::tuple(2, 3, 0.5);
+			m_beamStartPositions[7] = std::tuple(3, 3, 0.5);
+			break;
+		default:
+		case CAR_FIVE_NUMBER_OF_SENSORS:
+			numberOfSensors = CAR_FIVE_NUMBER_OF_SENSORS;
+			m_beamAngles = { 270.0, 315.0, 0.0, 45.0, 90.0 };
+			m_beamStartPositions.resize(numberOfSensors);
+			m_beamStartPositions[0] = std::tuple(0, 1, 0.5);
+			m_beamStartPositions[1] = std::tuple(1, 1, 0);
+			m_beamStartPositions[2] = std::tuple(1, 2, 0.5);
+			m_beamStartPositions[3] = std::tuple(2, 2, 0);
+			m_beamStartPositions[4] = std::tuple(2, 3, 0.5);
+			break;
+	}
+
+	m_beams.resize(numberOfSensors);
+	m_sensors.resize(numberOfSensors);
+}
+
 void DrawableCar::rotate(Neuron value)
 {
 	value *= 2.0;
 	value -= 1.0;
-	m_angle += value * m_rotationConst * CoreWindow::getElapsedTime();
+	m_angle += value * m_rotationConst * CoreWindow::GetElapsedTime();
 }
 
 void DrawableCar::accelerate(Neuron value)
@@ -64,7 +113,7 @@ void DrawableCar::update()
 
 	double cosResult = cos(m_angle * M_PI / 180);
 	double sinResult = sin(m_angle * M_PI / 180);
-	double elapsedTime = CoreWindow::getElapsedTime();
+	double elapsedTime = CoreWindow::GetElapsedTime();
 	m_center.x += static_cast<float>(m_speed * elapsedTime * m_speedConst * cosResult);
 	m_center.y += static_cast<float>(m_speed * elapsedTime * m_speedConst * sinResult);
 	m_speed -= elapsedTime;
@@ -84,17 +133,19 @@ void DrawableCar::update()
 		m_carShape.setPoint(i, point);
 	}
 
-	// Set sensor beams start point
-	m_beams[0][0] = GetMidpoint(m_points[0], m_points[1]);
-	m_beams[1][0] = m_points[1];
-	m_beams[2][0] = GetMidpoint(m_points[1], m_points[2]);
-	m_beams[3][0] = m_points[2];
-	m_beams[4][0] = GetMidpoint(m_points[2], m_points[3]);
-
-	// Set sensor beams end point and sensors value
-	for (unsigned i = 0; i < CAR_NUMBER_OF_SENSORS; ++i)
+	for (unsigned i = 0; i < m_beams.size(); ++i)
 	{
+		// Set sensor max value
 		m_sensors[i] = m_sensorMaxValue;
+
+		// Set beam start point
+		auto& carStartPoint = m_points[std::get<0>(m_beamStartPositions[i])];
+		auto& carEndPoint = m_points[std::get<1>(m_beamStartPositions[i])];
+		auto length = Distance(carStartPoint, carEndPoint) * std::get<2>(m_beamStartPositions[i]);
+		double angle = DifferenceVectorAngle(carStartPoint, carEndPoint);
+		m_beams[i][0] = GetEndPoint(m_points[std::get<0>(m_beamStartPositions[i])], angle, -length);
+
+		// Set beam end point
 		auto cosBeam = cos((m_angle + m_beamAngles[i]) * M_PI / 180);
 		auto sinBeam = sin((m_angle + m_beamAngles[i]) * M_PI / 180);
 		m_beams[i][1].x = static_cast<float>(m_beams[i][0].x + m_beamReach * cosBeam);
@@ -105,13 +156,13 @@ void DrawableCar::update()
 void DrawableCar::drawBody()
 {
 	// Draw car
-	CoreWindow::getRenderWindow().draw(m_carShape);
+	CoreWindow::GetRenderWindow().draw(m_carShape);
 
+	// Draw sensors
 	for (const auto& position : m_beams)
 	{
-		// Draw sensor
 		m_sensorShape.setPosition(position[0] - m_sensorSize);
-		CoreWindow::getRenderWindow().draw(m_sensorShape);
+		CoreWindow::GetRenderWindow().draw(m_sensorShape);
 	}
 }
 
@@ -119,9 +170,8 @@ void DrawableCar::drawBeams()
 {
 	for (const auto& position : m_beams)
 	{
-		// Draw beam
 		m_beamShape[0].position = position[0];
 		m_beamShape[1].position = position[1];
-		CoreWindow::getRenderWindow().draw(m_beamShape.data(), 2, sf::Lines);
+		CoreWindow::GetRenderWindow().draw(m_beamShape.data(), 2, sf::Lines);
 	}
 }

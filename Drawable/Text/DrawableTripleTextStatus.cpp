@@ -19,7 +19,7 @@ void DrawableTripleTextStatus::showStatusText()
 
 void DrawableTripleTextStatus::setPosition(double cx, double vx, double ix, double sx, double y)
 {
-	auto windowSize = CoreWindow::getSize();
+	auto windowSize = CoreWindow::GetSize();
 	float consistentX = float(double(windowSize.x) * cx);
 	float consistentY = float(double(windowSize.y) * y);
 	float variableX = float(double(windowSize.x) * vx);
@@ -45,7 +45,7 @@ void DrawableTripleTextStatus::update()
 	color.a = static_cast<sf::Uint8>(m_alphaTimer.value());
 	m_statusText.setFillColor(color);
 
-	sf::Vector2f viewOffset = CoreWindow::getViewOffset();
+	sf::Vector2f viewOffset = CoreWindow::GetViewOffset();
 	m_consistentText.setPosition(m_consistentPosition + viewOffset);
 	m_variableText.setPosition(m_variablePosition + viewOffset);
 	m_informationText.setPosition(m_informationPosition + viewOffset);
@@ -54,8 +54,8 @@ void DrawableTripleTextStatus::update()
 
 void DrawableTripleTextStatus::draw()
 {
-	CoreWindow::getRenderWindow().draw(m_consistentText);
-	CoreWindow::getRenderWindow().draw(m_variableText);
-	CoreWindow::getRenderWindow().draw(m_informationText);
-	CoreWindow::getRenderWindow().draw(m_statusText);
+	CoreWindow::GetRenderWindow().draw(m_consistentText);
+	CoreWindow::GetRenderWindow().draw(m_variableText);
+	CoreWindow::GetRenderWindow().draw(m_informationText);
+	CoreWindow::GetRenderWindow().draw(m_statusText);
 }

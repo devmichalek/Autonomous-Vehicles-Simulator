@@ -2,14 +2,15 @@
 #include "StateTraining.hpp"
 #include "TypeObserver.hpp"
 #include "ArtificialNeuralNetwork.hpp"
-#include "DrawableManager.hpp"
+#include "DrawableEdgeManager.hpp"
 #include "DrawableCheckpointMap.hpp"
 #include "GeneticAlgorithm.hpp"
+#include "CoreConsoleLogger.hpp"
 
 StateTraining::~StateTraining()
 {
 	delete m_evolution;
-	delete m_manager;
+	delete m_edgeManager;
 	for (auto& i : m_carFactory)
 		delete std::get<0>(i);
 	delete m_checkpointMap;
@@ -28,12 +29,12 @@ void StateTraining::update()
 		m_carFactory[i].first->update();
 	}
 
-	m_manager->intersect(m_carFactory);
+	m_edgeManager->intersect(m_carFactory);
 
 	if (!activity)
 	{
 		// Calculate fitness and highest fitness overall
-		m_checkpointMap->iterate(m_carFactory, m_manager->getFinishLine());
+		m_checkpointMap->iterate(m_carFactory);
 
 		// Generate new generation
 		if (m_evolution->iterate(m_checkpointMap->getFitnessVector()))
@@ -47,6 +48,7 @@ void StateTraining::update()
 			{
 				delete m_carFactory[i].first;
 				m_carFactory[i].first = m_builder.GetDrawableCar();
+				m_carFactory[i].first->init(m_annNumberOfInputs);
 				m_carFactory[i].second = true;
 			}
 
@@ -64,21 +66,21 @@ void StateTraining::update()
 
 		if (m_viewTimer.increment())
 		{
-			auto index = m_checkpointMap->markLeader(m_carFactory, m_manager->getFinishLine());
+			auto index = m_checkpointMap->markLeader(m_carFactory);
 			m_viewCenter = m_carFactory[index].first->getCenter();
 		}
 
 		if (m_waveTimer.increment())
-			m_checkpointMap->punish(m_carFactory, m_manager->getFinishLine());
+			m_checkpointMap->punish(m_carFactory);
 	}
 
-	auto& view = CoreWindow::getView();
+	auto& view = CoreWindow::GetView();
 	auto currentViewCenter = view.getCenter();
 	auto distance = Distance(currentViewCenter, m_viewCenter);
 	auto angle = DifferenceVectorAngle(currentViewCenter, m_viewCenter);
 	auto newCenter = GetEndPoint(currentViewCenter, angle, float(-distance / m_viewMovementConst));
 	view.setCenter(newCenter);
-	CoreWindow::getRenderWindow().setView(view);
+	CoreWindow::GetRenderWindow().setView(view);
 
 	m_populationText.update();
 	m_generationText.update();
@@ -96,23 +98,24 @@ bool StateTraining::load()
 	m_checkpointMap = m_builder.GetDrawableCheckpointMap();
 	m_checkpointMap->restart(m_populationSize, 0.02);
 
-	m_manager = m_builder.GetDrawableManager();
-		
+	m_edgeManager = m_builder.GetDrawableManager();
+	
 	for (size_t i = 0; i < m_populationSize; ++i)
 	{
 		DrawableCar* car = m_builder.GetDrawableCar();
+		car->init(m_annNumberOfInputs);
 		m_carFactory.push_back(std::pair(car, true));
 	}
 
-	std::vector<size_t> hiddenLayersSizes = { 6, 6 };
-	ArtificialNeuralNetwork ann(CAR_NUMBER_OF_SENSORS, CAR_NUMBER_OF_INPUTS, hiddenLayersSizes);
+	std::vector<size_t> hiddenLayersSizes = { 12, 12 };
+	ArtificialNeuralNetwork ann(m_annNumberOfInputs, CAR_NUMBER_OF_INPUTS, hiddenLayersSizes);
 	ann.setBiasVector({ 0.25, 0.1, 0.05 });
 	ann.setActivationVector({ activationLeakyrelu, activationTanh, activationRelu });
 	m_brains.resize(m_populationSize, ann);
 
 	const size_t chromosomeLength = ann.getDataUnitsCount();
 	double crossoverProbability = 0.5;
-	double mutationProbability = 0.05;
+	double mutationProbability = 0.1;
 	bool decreaseMutationOverGenerations = false;
 	bool singlePointCrossover = false;
 	unsigned int precision = 1000;
@@ -142,6 +145,7 @@ bool StateTraining::load()
 	m_highestFitnessText.setObserver(new TypeObserver(m_checkpointMap->getHighestFitness(), 0.1));
 	m_highestFitnessOverallText.setObserver(new TypeObserver(m_checkpointMap->getHighestFitnessOverall(), 0.5));
 
+	CoreConsoleLogger::PrintSuccess("State \"Training\" dependencies loaded correctly");
 	return true;
 }
 
@@ -155,8 +159,7 @@ void StateTraining::draw()
 		car.first->drawBeams();
 	}
 
-	m_manager->drawFinishLine();
-	m_manager->drawEdges();
+	m_edgeManager->drawEdges();
 
 	m_populationText.draw();
 	m_generationText.draw();

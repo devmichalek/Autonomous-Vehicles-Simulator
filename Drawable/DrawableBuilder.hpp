@@ -1,7 +1,7 @@
 #pragma once
 #include "DrawableCar.hpp"
 
-class DrawableManager;
+class DrawableEdgeManager;
 class DrawableCar;
 class DrawableCheckpointMap;
 
@@ -29,10 +29,8 @@ class DrawableBuilder
 	bool ValidateEdges();
 
 public:
-	DrawableBuilder()
-	{
-		Clear();
-	}
+
+	DrawableBuilder();
 
 	~DrawableBuilder()
 	{
@@ -51,7 +49,7 @@ public:
 	// Clear internal fields
 	void Clear();
 
-	DrawableManager* GetDrawableManager();
+	DrawableEdgeManager* GetDrawableManager();
 
 	DrawableCar* GetDrawableCar();
 

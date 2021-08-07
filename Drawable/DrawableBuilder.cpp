@@ -1,9 +1,14 @@
 #include "DrawableBuilder.hpp"
-#include "DrawableManager.hpp"
+#include "DrawableEdgeManager.hpp"
 #include "DrawableCheckpointMap.hpp"
 #include "DrawableCheckpointMapBeam.hpp"
 #include "DrawableCheckpointMapTriangle.hpp"
 #include <fstream>
+
+DrawableBuilder::DrawableBuilder()
+{
+	Clear();
+}
 
 bool DrawableBuilder::GetPointFromString(std::string line, sf::Vector2f& result)
 {
@@ -119,7 +124,12 @@ bool DrawableBuilder::ValidateEdges()
 	m_edges.insert(m_edges.begin(), blockEdge);
 	++m_edgesPivot;
 
+	/*m_edges.erase(m_edges.begin() + m_edgesPivot);
+	m_edges.erase(m_edges.begin() + 1);
+	--m_edgesPivot;*/
+
 	m_validated = true;
+	return true;
 }
 
 void DrawableBuilder::AddCar(double angle, sf::Vector2f center)
@@ -220,12 +230,12 @@ void DrawableBuilder::Clear()
 	m_validated = false;
 }
 
-DrawableManager* DrawableBuilder::GetDrawableManager()
+DrawableEdgeManager* DrawableBuilder::GetDrawableManager()
 {
 	if (!ValidateEdges())
 		return nullptr;
 
-	DrawableManager* result = new DrawableManager(std::move(m_edges));
+	DrawableEdgeManager* result = new DrawableEdgeManager(std::move(m_edges));
 	return result;
 }
 

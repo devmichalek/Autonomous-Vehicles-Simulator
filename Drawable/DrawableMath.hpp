@@ -7,7 +7,10 @@
 const size_t EDGE_NUMBER_OF_POINTS = 2;
 const size_t TRIANGLE_NUMBER_OF_POINTS = 3;
 const size_t CAR_NUMBER_OF_POINTS = 4;
-const size_t CAR_NUMBER_OF_SENSORS = 5;
+const size_t CAR_FIVE_NUMBER_OF_SENSORS = 5;
+const size_t CAR_EIGHT_NUMBER_OF_SENSORS = 8;
+const size_t CAR_TWELVE_NUMBER_OF_SENSORS = 12;
+const size_t CAR_DEFAULT_NUMBER_OF_SENSORS = CAR_FIVE_NUMBER_OF_SENSORS;
 const size_t CAR_NUMBER_OF_INPUTS = 3;
 
 using Edge = std::array<sf::Vector2f, EDGE_NUMBER_OF_POINTS>;
@@ -15,8 +18,6 @@ using EdgeVector = std::vector<Edge>;
 using Triangle = std::array<sf::Vector2f, TRIANGLE_NUMBER_OF_POINTS>;
 using Line = std::array<sf::Vertex, EDGE_NUMBER_OF_POINTS>;
 using CarPoints = std::array<sf::Vector2f, CAR_NUMBER_OF_POINTS>;
-using CarBeams = std::array<Edge, CAR_NUMBER_OF_SENSORS>;
-using CarBeamAngles = std::array<double, CAR_NUMBER_OF_SENSORS>;
 class DrawableCar;
 using DetailedCar = std::pair<DrawableCar*, bool>;
 using DetailedCarFactory = std::vector<DetailedCar>;
@@ -155,10 +156,10 @@ inline bool IsPointInsideTriangle(const Triangle& triangle, const sf::Vector2f p
     float d2 = TriangleSign(point, triangle[1], triangle[2]);
     float d3 = TriangleSign(point, triangle[2], triangle[0]);
 
-    bool has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
-    bool has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+    bool negative = (d1 < 0) || (d2 < 0) || (d3 < 0);
+    bool positive = (d1 > 0) || (d2 > 0) || (d3 > 0);
 
-    return !(has_neg && has_pos);
+    return !(negative && positive);
 }
 
 // Check if car is inside triangle

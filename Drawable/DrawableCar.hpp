@@ -22,14 +22,19 @@ class DrawableCar
 	CarPoints m_points;
 
 	// Beam data
-	Line m_beamShape;
+	using Beams = std::vector<Edge>;
+	using BeamAngles = std::vector<double>;
+	using BeamStartPosition = std::tuple<size_t, size_t, double>; // start index, end index, percentage of distance from start index
+	using BeamStartPositions = std::vector<BeamStartPosition>;
 	const double m_beamReach;
-	CarBeams m_beams;
-	CarBeamAngles m_beamAngles;
+	Line m_beamShape;
+	Beams m_beams;
+	BeamAngles m_beamAngles;
+	BeamStartPositions m_beamStartPositions;
 
 	// Sensor data
-	sf::CircleShape m_sensorShape;
 	sf::Vector2f m_sensorSize;
+	sf::CircleShape m_sensorShape;
 	NeuronLayer m_sensors;
 	inline static const Neuron m_sensorMaxValue = 1.0;
 
@@ -38,20 +43,19 @@ public:
 		m_angle(0.0),
 		m_speed(0.0),
 		m_center(0.0f, 0.0f),
-		m_beamReach(double(CoreWindow::getSize().y) * 0.75),
-		m_beamAngles({270.0, 315.0, 0.0, 45.0, 90.0})
+		m_beamReach(double(CoreWindow::GetSize().y) * 0.75)
 	{
-		auto windowSize = CoreWindow::getSize();
+		auto windowSize = CoreWindow::GetSize();
 		const float widthFactor = 30.0f;
 		const float heightFactor = 10.0f;
 		m_size = sf::Vector2f(windowSize.y / heightFactor, windowSize.x / widthFactor);
 		m_carShape.setPointCount(CAR_NUMBER_OF_POINTS);
+		m_beamShape[0].color = sf::Color(255, 255, 255, 144);
+		m_beamShape[1].color = sf::Color(255, 255, 255, 32);
 		m_sensorSize = sf::Vector2f(m_size.x / widthFactor, m_size.x / widthFactor);
 		m_sensorShape.setRadius(m_sensorSize.x);
 		m_sensorShape.setFillColor(sf::Color::Red);
-		m_beamShape[0].color = sf::Color(255, 255, 255, 144);
-		m_beamShape[1].color = sf::Color(255, 255, 255, 32);
-		m_sensors.resize(CAR_NUMBER_OF_SENSORS);
+		init(CAR_DEFAULT_NUMBER_OF_SENSORS);
 		update();
 	}
 
@@ -79,6 +83,9 @@ public:
 
 	// Returns true if given point is inside car rectangle
 	bool inside(sf::Vector2f point);
+
+	// Prepare sensors and beams
+	void init(size_t numberOfSensors);
 
 	// Rotate car by specified value (0; 1)
 	void rotate(Neuron value);
@@ -121,12 +128,12 @@ public:
 	// Update sensors and its beams
 	inline void detect(const Edge& edge)
 	{
-		sf::Vector2f ipoint; // Intersection point
-		for (size_t i = 0; i < CAR_NUMBER_OF_SENSORS; ++i)
+		sf::Vector2f intersectionPoint;
+		for (size_t i = 0; i < m_beams.size(); ++i)
 		{
-			if (GetIntersectionPoint(edge, m_beams[i], ipoint))
+			if (GetIntersectionPoint(edge, m_beams[i], intersectionPoint))
 			{
-				m_beams[i][1] = ipoint;
+				m_beams[i][1] = intersectionPoint;
 				m_sensors[i] = Distance(m_beams[i]) / m_beamReach;
 			}
 		}

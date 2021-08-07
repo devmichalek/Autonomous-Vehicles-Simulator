@@ -1,7 +1,7 @@
 #pragma once
-#include "StateAbstract.hpp"
+#include "StateInterface.hpp"
 
-class StateMenu : public StateAbstract
+class StateMenu : public StateInterface
 {
 public:
 	StateMenu(StateMenu&) = delete;

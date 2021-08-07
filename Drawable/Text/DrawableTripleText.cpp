@@ -9,7 +9,7 @@ void DrawableTripleText::setInformationText(std::string text)
 
 void DrawableTripleText::setPosition(double cx, double vx, double ix, double y)
 {
-	auto windowSize = CoreWindow::getSize();
+	auto windowSize = CoreWindow::GetSize();
 	float consistentX = float(double(windowSize.x) * cx);
 	float consistentY = float(double(windowSize.y) * y);
 	float variableX = float(double(windowSize.x) * vx);
@@ -27,7 +27,7 @@ void DrawableTripleText::update()
 	if (m_observer && m_observer->timeout())
 		m_variableText.setString(m_observer->read());
 
-	sf::Vector2f viewOffset = CoreWindow::getViewOffset();
+	sf::Vector2f viewOffset = CoreWindow::GetViewOffset();
 	m_consistentText.setPosition(m_consistentPosition + viewOffset);
 	m_variableText.setPosition(m_variablePosition + viewOffset);
 	m_informationText.setPosition(m_informationPosition + viewOffset);
@@ -35,7 +35,7 @@ void DrawableTripleText::update()
 
 void DrawableTripleText::draw()
 {
-	CoreWindow::getRenderWindow().draw(m_consistentText);
-	CoreWindow::getRenderWindow().draw(m_variableText);
-	CoreWindow::getRenderWindow().draw(m_informationText);
+	CoreWindow::GetRenderWindow().draw(m_consistentText);
+	CoreWindow::GetRenderWindow().draw(m_variableText);
+	CoreWindow::GetRenderWindow().draw(m_informationText);
 }

@@ -1,121 +1,123 @@
 #pragma once
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
-class CoreEngine;
 
 class CoreWindow final
 {
-	inline static const float m_screenRatio = 0.5625f;
-	inline static bool m_open = false;
-	inline static double m_elapsedTime = 0;
 	inline static sf::RenderWindow m_renderWindow;
 	inline static sf::View m_view;
 	inline static sf::Clock m_clock;
 	inline static sf::Event m_event;
-	inline static sf::Color m_backgroundColor = sf::Color::Black;
+	inline static bool m_open = false;
+	inline static double m_elapsedTime = 0;
+	inline static const float m_widthRatio = 0.8333f;
+	inline static const float m_screenRatio = 0.5625f;
+	inline static const sf::Color m_backgroundColor = sf::Color::Black;
 
-	CoreWindow()
-	{
-		// Find correct window size
-		float m_screenWidth = sf::VideoMode::getDesktopMode().width / 1.2f;
-		float m_screenHeight = m_screenWidth * m_screenRatio;
-		auto windowSize = sf::VideoMode(unsigned(m_screenWidth), unsigned(m_screenHeight));
-		auto windowTitle = "Symulator systemu autonomicznego sterowania pojazdami bazujacego na sztucznej sieci neuronowej";
-		m_renderWindow.create(windowSize, windowTitle, sf::Style::Close);
-		sf::Image icon;
-		if (icon.loadFromFile(""))
-			m_renderWindow.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
-		m_open = true;
-		m_view.setSize(sf::Vector2f(m_screenWidth, m_screenHeight));
-		m_view.setCenter(sf::Vector2f(m_screenWidth / 2, m_screenHeight / 2));
-		m_renderWindow.setView(m_view);
-	}
-
-	friend CoreEngine;
-	inline static void restartClock()
-	{
-		m_elapsedTime = static_cast<double>(m_clock.restart().asMicroseconds()) / 1000000;
-	}
+	CoreWindow();
 
 public:
-	static CoreWindow& getInstance()
+
+	CoreWindow(CoreWindow const&) = delete;
+
+	void operator=(CoreWindow const&) = delete;
+
+	// Returns singleton instance
+	static CoreWindow& GetInstance()
 	{
 		static CoreWindow instance;
 		return instance;
 	}
 
-	static void initialize()
+	// Creates singleton instance
+	inline static void Initialize()
 	{
-		getInstance();
+		GetInstance();
 	}
 
-	CoreWindow(CoreWindow const&) = delete;
-	void operator=(CoreWindow const&) = delete;
-
-	inline static bool isOpen()
+	// Returns true if window is open, false otherwise
+	inline static bool IsOpen()
 	{
 		return m_open;
 	}
 
-	inline static sf::Vector2i getMousePosition()
+	// Returns mouse position
+	inline static sf::Vector2i GetMousePosition()
 	{
 		return sf::Mouse::getPosition(m_renderWindow);
 	}
 
-	inline static sf::Vector2i getPosition()
+	// Returns window position
+	inline static sf::Vector2i GetPosition()
 	{
 		return m_renderWindow.getPosition();
 	}
 
-	inline static sf::Vector2u getSize()
+	// Returns window size
+	inline static sf::Vector2u GetSize()
 	{
 		return m_renderWindow.getSize();
 	}
 
-	inline static void close()
+	// Closes window
+	inline static void Close()
 	{
 		m_renderWindow.close();
 		m_open = false;
 	}
 
-	inline static void clear()
+	// Clears window drawing area with background color
+	inline static void Clear()
 	{
 		m_renderWindow.clear(m_backgroundColor);
 	}
 
-	inline static void display()
+	// Displays on window what has been rendered so far
+	inline static void Display()
 	{
 		m_renderWindow.display();
 	}
 
-	inline static bool isEvent()
+	// Returns true if event occurred, false otherwise
+	inline static bool IsEvent()
 	{
 		return m_renderWindow.pollEvent(m_event);
 	}
 
-	inline static const sf::Event& getEvent()
+	// Returns system event
+	inline static const sf::Event& GetEvent()
 	{
 		return m_event;
 	}
 
-	inline static sf::RenderWindow& getRenderWindow()
+	// Returns render window
+	inline static sf::RenderWindow& GetRenderWindow()
 	{
 		return m_renderWindow;
 	}
 
-	inline static sf::View& getView()
+	// Returns current window view
+	inline static sf::View& GetView()
 	{
 		return m_view;
 	}
 
-	inline static sf::Vector2f getViewOffset()
+	// Returns current view offset
+	inline static sf::Vector2f GetViewOffset()
 	{
 		auto& size = m_view.getSize();
 		return m_view.getCenter() - sf::Vector2f(size.x / 2, size.y / 2);
 	}
 
-	inline static double& getElapsedTime()
+	// Returns elapsed time since last clock reset
+	inline static double& GetElapsedTime()
 	{
 		return m_elapsedTime;
+	}
+
+	// Restarts clock
+	inline static void RestartClock()
+	{
+		m_elapsedTime = static_cast<double>(m_clock.restart().asMicroseconds()) / 1000000;
 	}
 };

@@ -1,5 +1,5 @@
 #pragma once
-#include "StateAbstract.hpp"
+#include "StateInterface.hpp"
 #include "ArtificialNeuralNetwork.hpp"
 #include "DrawableBuilder.hpp"
 #include "DrawableDoubleText.hpp"
@@ -7,20 +7,21 @@
 #include "StoppableTimer.hpp"
 
 class GeneticAlgorithmNeuron;
-class DrawableManager;
+class DrawableEdgeManager;
 class DrawableCheckpointMap;
 
-class StateTraining : public StateAbstract
+class StateTraining : public StateInterface
 {
 	GeneticAlgorithmNeuron* m_evolution;
 	std::vector<ArtificialNeuralNetwork> m_brains;
 	DrawableBuilder m_builder;
-	DrawableManager* m_manager;
+	DrawableEdgeManager* m_edgeManager;
 	DetailedCarFactory m_carFactory;
 	DrawableCheckpointMap* m_checkpointMap;
 
-	const size_t m_populationSize = 45;
+	const size_t m_populationSize = 30;
 	const size_t m_numberOfGenerations = 1000;
+	const size_t m_annNumberOfInputs = CAR_TWELVE_NUMBER_OF_SENSORS;
 	size_t m_generationNumber;
 
 	CycleTimer m_waveTimer;
@@ -42,7 +43,7 @@ public:
 		m_viewTimer(1.0, 0.1)
 	{
 		m_evolution = nullptr;
-		m_manager = nullptr;
+		m_edgeManager = nullptr;
 		m_checkpointMap = nullptr;
 		m_generationNumber = 1;
 	}

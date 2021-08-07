@@ -6,18 +6,20 @@ class FontContext
 public:
 
 	// Initializes font
-	static bool initialize();
+	static bool Initialize();
 
-	static const sf::Font& getFont();
+	// Returns global font
+	static const sf::Font& GetFont();
 
-	static unsigned int getCharacterSize();
+	// Returns standard character size multiplied with multiplier
+	static unsigned int GetCharacterSize(size_t multiplier = 1);
 
 private:
 
 	// Global font for all derived classes
 	static sf::Font m_font;
 
-	// Global text character size
+	// Standard text character size
 	static unsigned int m_characterSize;
 
 	// Field that tells if font is initialized

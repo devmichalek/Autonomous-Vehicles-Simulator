@@ -48,16 +48,16 @@ namespace TestGeneticAlgorithm
 							 Chromosome<Type>& bestChromosome)
 	{
 		const unsigned perfectResults = 100;
-		auto precentBestResult = unsigned(results * perfectResults);
-		auto precentExpectedResults = unsigned(expectedResults * perfectResults);
+		auto percentBestResult = unsigned(results * perfectResults);
+		auto percentExpectedResults = unsigned(expectedResults * perfectResults);
 
 		std::cout << "\tExpected: " << expectedChromosome << std::endl;
 		std::cout << "\tResult:   " << bestChromosome << std::endl;
 
 		HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
-		if (precentBestResult > precentExpectedResults || precentBestResult == perfectResults)
+		if (percentBestResult > percentExpectedResults || percentBestResult == perfectResults)
 			SetConsoleTextAttribute(handle, 10);
-		else if (precentBestResult == precentExpectedResults)
+		else if (percentBestResult == percentExpectedResults)
 			SetConsoleTextAttribute(handle, 14);
 		else
 			SetConsoleTextAttribute(handle, 12);
@@ -300,11 +300,11 @@ namespace TestGeneticAlgorithm
 	{
 		std::cout << "Test title: TestGeneticAlgorithm\n";
 
-		const bool runTestGroupBooleans = false;
-		const bool runTestGroupCharacters = false;
-		const bool runTestGroupFloatingPoints = false;
-		const bool runTestGroupNeurons = false;
-		const bool runTestGroupIntegers = false;
+		const bool runTestGroupBooleans = true;
+		const bool runTestGroupCharacters = true;
+		const bool runTestGroupFloatingPoints = true;
+		const bool runTestGroupNeurons = true;
+		const bool runTestGroupIntegers = true;
 
 		if (runTestGroupBooleans)
 		{

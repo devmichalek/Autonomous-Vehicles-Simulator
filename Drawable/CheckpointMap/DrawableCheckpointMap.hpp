@@ -9,7 +9,7 @@ class DrawableCheckpointMap
 {
 	virtual Fitness getMaxFitness() = 0;
 
-	virtual Fitness calculateFitness(DetailedCar&, const Edge&) = 0;
+	virtual Fitness calculateFitness(DetailedCar&) = 0;
 
 protected:
 
@@ -28,11 +28,11 @@ public:
 
 	virtual void draw() = 0;
 
-	void iterate(DetailedCarFactory& factory, const Edge& finishLine);
+	void iterate(DetailedCarFactory& factory);
 
-	size_t markLeader(DetailedCarFactory& factory, const Edge& finishLine);
+	size_t markLeader(DetailedCarFactory& factory);
 
-	void punish(DetailedCarFactory& factory, const Edge& finishLine);
+	void punish(DetailedCarFactory& factory);
 	
 	void reset();
 

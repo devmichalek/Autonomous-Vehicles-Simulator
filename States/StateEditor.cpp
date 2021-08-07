@@ -3,6 +3,7 @@
 #include "DrawableBuilder.hpp"
 #include "TypeObserver.hpp"
 #include "FunctionObserver.hpp"
+#include "CoreConsoleLogger.hpp"
 
 void StateEditor::setActiveMode(ActiveMode activeMode)
 {
@@ -29,12 +30,12 @@ void StateEditor::setActiveMode(ActiveMode activeMode)
 
 void StateEditor::capture()
 {
-	if ((CoreWindow::getEvent().type == sf::Event::MouseButtonPressed ||
-		(CoreWindow::getEvent().type == sf::Event::KeyPressed && CoreWindow::getEvent().key.code == sf::Keyboard::Space)) && !m_spaceKeyPressed)
+	if ((CoreWindow::GetEvent().type == sf::Event::MouseButtonPressed ||
+		(CoreWindow::GetEvent().type == sf::Event::KeyPressed && CoreWindow::GetEvent().key.code == sf::Keyboard::Space)) && !m_spaceKeyPressed)
 	{
 		m_spaceKeyPressed = true;
-		sf::Vector2i mousePosition = CoreWindow::getMousePosition();
-		sf::Vector2f viewOffset = CoreWindow::getViewOffset();
+		sf::Vector2i mousePosition = CoreWindow::GetMousePosition();
+		sf::Vector2f viewOffset = CoreWindow::GetViewOffset();
 		sf::Vector2f correctPosition;
 		correctPosition.x = static_cast<float>(mousePosition.x + viewOffset.x);
 		correctPosition.y = static_cast<float>(mousePosition.y + viewOffset.y);
@@ -52,11 +53,19 @@ void StateEditor::capture()
 							if (!m_edges.empty())
 							{
 								size_t size = m_edges.size() - 1;
+								Edge temporaryEdge = { m_edgeBeggining, correctPosition };
+								sf::Vector2f intersectionPoint;
 								for (size_t i = 0; i < size; ++i)
 								{
-									if (Intersect(m_edges[i], m_edgeBeggining, correctPosition))
+									if (GetIntersectionPoint(m_edges[i], temporaryEdge, intersectionPoint))
 									{
-										correctPosition = m_edges[i][0];
+										auto segment = Distance(m_edges[i][0], intersectionPoint);
+										auto length = Distance(m_edges[i]);
+										double percentage = segment / length;
+										if (percentage < 0.5)
+											correctPosition = m_edges[i][0];
+										else
+											correctPosition = m_edges[i][1];
 										m_insertEdge = false;
 										break;
 									}
@@ -134,8 +143,8 @@ void StateEditor::capture()
 				break;
 		}
 	}
-	else if (CoreWindow::getEvent().type == sf::Event::MouseButtonReleased ||
-			 (CoreWindow::getEvent().type == sf::Event::KeyReleased && CoreWindow::getEvent().key.code == sf::Keyboard::Space))
+	else if (CoreWindow::GetEvent().type == sf::Event::MouseButtonReleased ||
+			 (CoreWindow::GetEvent().type == sf::Event::KeyReleased && CoreWindow::GetEvent().key.code == sf::Keyboard::Space))
 		m_spaceKeyPressed = false;
 }
 
@@ -147,6 +156,30 @@ void StateEditor::update()
 		{
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::F2))
 				setActiveMode(ActiveMode::CAR);
+			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) ||
+					 sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))
+			{
+				sf::Vector2f correctPosition;
+				if (m_edges.empty())
+				{
+					sf::Vector2i mousePosition = CoreWindow::GetMousePosition();
+					sf::Vector2f viewOffset = CoreWindow::GetViewOffset();
+					correctPosition.x = static_cast<float>(mousePosition.x + viewOffset.x);
+					correctPosition.y = static_cast<float>(mousePosition.y + viewOffset.y);
+				}
+				else
+				{
+					correctPosition = m_edges.back()[1];
+				}
+
+				m_insertEdge = true;
+				m_edgeBeggining = correctPosition;
+			}
+			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+			{
+				m_insertEdge = false;
+				m_removeEdge = false;
+			}
 			else
 			{
 				EdgeSubmode mode = m_edgeSubmode;
@@ -156,7 +189,7 @@ void StateEditor::update()
 					mode = EdgeSubmode::GLUED_INSERT;
 				}
 				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2) ||
-						 sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad2))
+					sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad2))
 				{
 					mode = EdgeSubmode::REMOVE;
 				}
@@ -213,7 +246,7 @@ void StateEditor::update()
 			break;
 	}
 
-	float elapsedTime = float(CoreWindow::getElapsedTime());
+	float elapsedTime = float(CoreWindow::GetElapsedTime());
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Add))
 	{
 		m_movementTimer.increment();
@@ -225,28 +258,28 @@ void StateEditor::update()
 	
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
 	{
-		auto& view = CoreWindow::getView();
+		auto& view = CoreWindow::GetView();
 		view.move(sf::Vector2f(static_cast<float>(-m_movementTimer.value() * elapsedTime), 0));
-		CoreWindow::getRenderWindow().setView(view);
+		CoreWindow::GetRenderWindow().setView(view);
 	}
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
 	{
-		auto& view = CoreWindow::getView();
+		auto& view = CoreWindow::GetView();
 		view.move(sf::Vector2f(static_cast<float>(m_movementTimer.value() * elapsedTime), 0));
-		CoreWindow::getRenderWindow().setView(view);
+		CoreWindow::GetRenderWindow().setView(view);
 	}
 
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
 	{
-		auto& view = CoreWindow::getView();
+		auto& view = CoreWindow::GetView();
 		view.move(sf::Vector2f(0, static_cast<float>(-m_movementTimer.value() * elapsedTime)));
-		CoreWindow::getRenderWindow().setView(view);
+		CoreWindow::GetRenderWindow().setView(view);
 	}
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
 	{
-		auto& view = CoreWindow::getView();
+		auto& view = CoreWindow::GetView();
 		view.move(sf::Vector2f(0, static_cast<float>(m_movementTimer.value() * elapsedTime)));
-		CoreWindow::getRenderWindow().setView(view);
+		CoreWindow::GetRenderWindow().setView(view);
 	}
 
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) ||
@@ -349,9 +382,9 @@ bool StateEditor::load()
 	m_textFunctions.reserve(16U);
 	m_activeModeText.setVariableText(m_activeModeMap[m_activeMode]);
 	m_movementText.setObserver(new TypeObserver<double, int>(m_movementTimer.value(), 0.05));
-	m_textFunctions.push_back([&] { return std::to_string(int(CoreWindow::getViewOffset().x)); });
+	m_textFunctions.push_back([&] { return std::to_string(int(CoreWindow::GetViewOffset().x)); });
 	m_viewOffsetXText.setObserver(new FunctionObserver<std::string>(m_textFunctions.back(), 0.05));
-	m_textFunctions.push_back([&] { return std::to_string(int(CoreWindow::getViewOffset().y)); });
+	m_textFunctions.push_back([&] { return std::to_string(int(CoreWindow::GetViewOffset().y)); });
 	m_viewOffsetYText.setObserver(new FunctionObserver<std::string>(m_textFunctions.back(), 0.05));
 	m_textFunctions.push_back([&] { return std::get<1>(m_saveStatusMap[m_saveStatus]); });
 	m_saveText.setObserver(new FunctionObserver<std::string>(m_textFunctions.back(), 0.5));
@@ -366,11 +399,11 @@ bool StateEditor::load()
 	m_activeModeText.setInformationText("| Keys: [F1] [F2]");
 	m_movementText.setInformationText("| Keys: [+] [-]");
 	m_saveText.setInformationText("| Keys: [Ctrl] + [S]");
-	m_edgeSubmodeText.setInformationText("| Keys: [1] [2]");
+	m_edgeSubmodeText.setInformationText("| Keys: [1] [2] [Ctrl] [Esc]");
 	m_carSubmodeText.setInformationText("| Keys: [1] [2]");
 	m_carAngleText.setInformationText("| Keys: [Z] [X]");
 	
-	// Set positions
+	// Set text positions
 	m_activeModeText.setPosition(0.0039, 0.07, 0.15, 0.022 * 0);
 	m_movementText.setPosition(0.0039, 0.07, 0.15, 0.022 * 1);
 	m_viewOffsetXText.setPosition(0.0039, 0.07, 0.022 * 2);
@@ -381,7 +414,7 @@ bool StateEditor::load()
 	m_carSubmodeText.setPosition(0.0039, 0.07, 0.15, 1 - (0.022 * 1));
 	m_carAngleText.setPosition(0.0039, 0.07, 0.15, 1 - (0.022 * 2));
 
-	// No errors
+	CoreConsoleLogger::PrintSuccess("State \"Editor\" dependencies loaded correctly");
 	return true;
 }
 
@@ -399,7 +432,7 @@ void StateEditor::draw()
 	{
 		m_line[0].position = i[0];
 		m_line[1].position = i[1];
-		CoreWindow::getRenderWindow().draw(m_line.data(), 2, sf::Lines);
+		CoreWindow::GetRenderWindow().draw(m_line.data(), 2, sf::Lines);
 	}
 
 	switch (m_activeMode)
@@ -408,25 +441,25 @@ void StateEditor::draw()
 		{
 			if (m_insertEdge)
 			{
-				sf::Vector2i mousePosition = CoreWindow::getMousePosition();
+				sf::Vector2i mousePosition = CoreWindow::GetMousePosition();
 				m_line[0].position = m_edgeBeggining;
 				m_line[1].position.x = static_cast<float>(mousePosition.x);
 				m_line[1].position.y = static_cast<float>(mousePosition.y);
-				m_line[1].position += CoreWindow::getViewOffset();
+				m_line[1].position += CoreWindow::GetViewOffset();
 				m_line[0].color = sf::Color::White;
 				m_line[1].color = m_line[0].color;
-				CoreWindow::getRenderWindow().draw(m_line.data(), 2, sf::Lines);
+				CoreWindow::GetRenderWindow().draw(m_line.data(), 2, sf::Lines);
 			}
 			else if (m_removeEdge)
 			{
-				sf::Vector2i mousePosition = CoreWindow::getMousePosition();
+				sf::Vector2i mousePosition = CoreWindow::GetMousePosition();
 				m_line[0].position = m_edgeBeggining;
 				m_line[1].position.x = static_cast<float>(mousePosition.x);
 				m_line[1].position.y = static_cast<float>(mousePosition.y);
-				m_line[1].position += CoreWindow::getViewOffset();
+				m_line[1].position += CoreWindow::GetViewOffset();
 				m_line[0].color = sf::Color::Red;
 				m_line[1].color = m_line[0].color;
-				CoreWindow::getRenderWindow().draw(m_line.data(), 2, sf::Lines);
+				CoreWindow::GetRenderWindow().draw(m_line.data(), 2, sf::Lines);
 			}
 
 			m_edgeSubmodeText.draw();

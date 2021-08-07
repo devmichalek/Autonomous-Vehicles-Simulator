@@ -5,6 +5,10 @@ struct TestEngine
 {
 	TestEngine()
 	{
-		TestGeneticAlgorithm::runTests();
+		const bool runTestGeneticAlgorithm = false;
+		if (runTestGeneticAlgorithm)
+			TestGeneticAlgorithm::runTests();
+
+
 	}
 };

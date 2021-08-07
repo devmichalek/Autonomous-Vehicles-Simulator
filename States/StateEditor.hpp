@@ -1,12 +1,12 @@
 #pragma once
-#include "StateAbstract.hpp"
+#include "StateInterface.hpp"
 #include "DrawableCar.hpp"
 #include "DrawableDoubleText.hpp"
 #include "DrawableTripleText.hpp"
 #include "DrawableTripleTextStatus.hpp"
 #include "CycleTimer.hpp"
 
-class StateEditor : public StateAbstract
+class StateEditor : public StateInterface
 {
 	enum class ActiveMode
 	{

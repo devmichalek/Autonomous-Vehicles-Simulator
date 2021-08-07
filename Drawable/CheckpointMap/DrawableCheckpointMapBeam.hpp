@@ -13,7 +13,7 @@ public:
 
 private:
 
-	Fitness calculateFitness(DetailedCar& car, const Edge& finishLine);
+	Fitness calculateFitness(DetailedCar& car);
 
 	Fitness getMaxFitness();
 
