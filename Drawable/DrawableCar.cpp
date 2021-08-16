@@ -3,12 +3,14 @@
 
 void DrawableCar::setLeaderColor()
 {
-	m_carShape.setFillColor(sf::Color(244, 160, 0, 255));
+	m_body[1].color = sf::Color::Green;
+	m_body[2].color = m_body[1].color;
 }
 
 void DrawableCar::setFollowerColor()
 {
-	m_carShape.setFillColor(sf::Color::White);
+	m_body[1].color = sf::Color::Yellow;
+	m_body[2].color = m_body[1].color;
 }
 
 void DrawableCar::setCenter(const sf::Vector2f center)
@@ -96,26 +98,26 @@ void DrawableCar::rotate(Neuron value)
 
 void DrawableCar::accelerate(Neuron value)
 {
-	m_speed += (value / m_speedConst);
+	m_speed += (value / m_speedFactor);
 }
 
 void DrawableCar::brake(Neuron value)
 {
-	m_speed -= (value / m_speedConst);
+	m_speed -= (value / m_speedFactor);
 }
 
 void DrawableCar::update()
 {
-	if (m_speed > m_maxSpeedConst)
-		m_speed = m_maxSpeedConst;
-	else if (m_speed < m_minSpeedConst)
-		m_speed = m_minSpeedConst;
+	if (m_speed > m_maxSpeed)
+		m_speed = m_maxSpeed;
+	else if (m_speed < m_minSpeed)
+		m_speed = m_minSpeed;
 
 	double cosResult = cos(m_angle * M_PI / 180);
 	double sinResult = sin(m_angle * M_PI / 180);
 	double elapsedTime = CoreWindow::GetElapsedTime();
-	m_center.x += static_cast<float>(m_speed * elapsedTime * m_speedConst * cosResult);
-	m_center.y += static_cast<float>(m_speed * elapsedTime * m_speedConst * sinResult);
+	m_center.x += static_cast<float>(m_speed * elapsedTime * m_speedFactor * cosResult);
+	m_center.y += static_cast<float>(m_speed * elapsedTime * m_speedFactor * sinResult);
 	m_speed -= elapsedTime;
 
 	m_points[0] = sf::Vector2f(-m_size.x / 2, -m_size.y / 2);
@@ -130,7 +132,7 @@ void DrawableCar::update()
 		float rotatedY = static_cast<float>(double(point.x) * sinResult + double(point.y) * cosResult);
 		point.x = rotatedX + m_center.x;
 		point.y = rotatedY + m_center.y;
-		m_carShape.setPoint(i, point);
+		m_body[i].position = point;
 	}
 
 	for (unsigned i = 0; i < m_beams.size(); ++i)
@@ -143,7 +145,7 @@ void DrawableCar::update()
 		auto& carEndPoint = m_points[std::get<1>(m_beamStartPositions[i])];
 		auto length = Distance(carStartPoint, carEndPoint) * std::get<2>(m_beamStartPositions[i]);
 		double angle = DifferenceVectorAngle(carStartPoint, carEndPoint);
-		m_beams[i][0] = GetEndPoint(m_points[std::get<0>(m_beamStartPositions[i])], angle, -length);
+		m_beams[i][0] = GetEndPoint(m_points[std::get<0>(m_beamStartPositions[i])], angle, float(-length));
 
 		// Set beam end point
 		auto cosBeam = cos((m_angle + m_beamAngles[i]) * M_PI / 180);
@@ -155,8 +157,8 @@ void DrawableCar::update()
 
 void DrawableCar::drawBody()
 {
-	// Draw car
-	CoreWindow::GetRenderWindow().draw(m_carShape);
+	// Draw car body
+	CoreWindow::GetRenderWindow().draw(m_body.data(), CAR_NUMBER_OF_POINTS, sf::Quads);
 
 	// Draw sensors
 	for (const auto& position : m_beams)

@@ -30,3 +30,6 @@ http://www.jakubw.pl/com/bib/1996_Alg_genetyczne_cwiczenia.pdf
 
 How to check if point is inside triangle
 https://stackoverflow.com/questions/2049582/how-to-determine-if-a-point-is-in-a-2d-triangle/21510010#21510010
+
+How to hide windows console
+https://stackoverflow.com/questions/2139637/hide-console-of-windows-application

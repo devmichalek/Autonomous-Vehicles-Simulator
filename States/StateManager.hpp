@@ -1,60 +1,38 @@
 #pragma once
-#include "StateInterface.hpp"
-#include "StateMenu.hpp"
-#include "StateEditor.hpp"
-#include "StateTraining.hpp"
-#include "StateTesting.hpp"
 #include <array>
+#include <map>
+#include <string>
+
+class StateInterface;
+class DrawableTripleText;
 
 class StateManager
 {
 public:
-	StateManager()
-	{
-		m_states[MENU_STATE] = new StateMenu();
-		m_states[EDITOR_STATE] = new StateEditor();
-		m_states[TRAINING_STATE] = new StateTraining();
-		m_states[TESTING_STATE] = new StateTesting();
-		m_currentState = TRAINING_STATE;
-	}
 
-	~StateManager()
-	{
-		for (const auto& state : m_states)
-			delete state;
-	}
+	StateManager();
 
-	inline bool Load()
-	{
-		for (const auto& state : m_states)
-		{
-			if (!state->load())
-				return false;
-		}
+	~StateManager();
 
-		return true;
-	}
+	// Load all states resources
+	bool Load();
 
-	inline void Capture()
-	{
-		m_states[m_currentState]->capture();
-	}
+	// Capture active state resources
+	void Capture();
 
-	inline void Update()
-	{
-		m_states[m_currentState]->update();
-	}
+	// Update active state resources
+	void Update();
 
-	inline void Draw()
-	{
-		m_states[m_currentState]->draw();
-	}
+	// Draw active state resources and its text representation
+	void Draw();
 
 private:
+
 	enum
 	{
-		MENU_STATE,
-		EDITOR_STATE,
+		MAP_EDITOR_STATE,
+		ANN_EDITOR_STATE,
+		VEHICLE_EDITOR_STATE,
 		TRAINING_STATE,
 		TESTING_STATE,
 		STATE_TABLE_SIZE
@@ -65,4 +43,13 @@ private:
 
 	// Current state
 	size_t m_currentState;
+
+	// Texts representation of a state
+	DrawableTripleText* m_stateText;
+
+	// String representations of states
+	std::array<std::string, STATE_TABLE_SIZE> m_statesStrings;
+
+	// Control keys allowing to change the state
+	std::map<size_t, std::pair<size_t, bool>> m_controlKeys;
 };

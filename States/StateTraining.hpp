@@ -10,7 +10,7 @@ class GeneticAlgorithmNeuron;
 class DrawableEdgeManager;
 class DrawableCheckpointMap;
 
-class StateTraining : public StateInterface
+class StateTraining final : public StateInterface
 {
 	GeneticAlgorithmNeuron* m_evolution;
 	std::vector<ArtificialNeuralNetwork> m_brains;
@@ -36,7 +36,9 @@ class StateTraining : public StateInterface
 	DrawableDoubleText m_highestFitnessOverallText;
 
 public:
-	StateTraining(StateTraining&) = delete;
+	StateTraining(const StateTraining&) = delete;
+
+	const StateTraining& operator=(const StateTraining&) = delete;
 
 	StateTraining() :
 		m_waveTimer(0.0, 4.0),
@@ -50,9 +52,13 @@ public:
 
 	~StateTraining();
 
-	void update();
+	void Reload();
 
-	bool load();
+	void Capture();
 
-	void draw();
+	void Update();
+
+	bool Load();
+
+	void Draw();
 };

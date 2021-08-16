@@ -1,15 +1,16 @@
 #pragma once
+#include <SFML/Graphics/ConvexShape.hpp>
 #include "DrawableMath.hpp"
 #include "Genetic.hpp"
 #include "StoppableTimer.hpp"
 
 class StoppableTimer;
 
-class DrawableCheckpointMap
+class DrawableCheckpointMap final
 {
-	virtual Fitness getMaxFitness() = 0;
+	Fitness getMaxFitness();
 
-	virtual Fitness calculateFitness(DetailedCar&) = 0;
+	Fitness calculateFitness(DetailedCar&);
 
 protected:
 
@@ -19,14 +20,16 @@ protected:
 	Fitness m_highestFitnessOverall;
 	std::vector<StoppableTimer> m_timers;
 	double m_minFitnessImprovement;
-
-	DrawableCheckpointMap();
+	sf::ConvexShape m_shape;
+	std::vector<Triangle> m_checkpoints;
 
 public:
 
-	virtual ~DrawableCheckpointMap();
+	DrawableCheckpointMap(const EdgeVector& edges, const size_t pivot);
 
-	virtual void draw() = 0;
+	~DrawableCheckpointMap();
+
+	void draw();
 
 	void iterate(DetailedCarFactory& factory);
 

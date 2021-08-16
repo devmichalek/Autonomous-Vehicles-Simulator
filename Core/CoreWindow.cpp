@@ -1,6 +1,6 @@
 #pragma once
 #include "CoreWindow.hpp"
-#include "CoreConsoleLogger.hpp"
+#include "CoreLogger.hpp"
 
 CoreWindow::CoreWindow()
 {
@@ -22,9 +22,9 @@ CoreWindow::CoreWindow()
 	if (icon.loadFromFile(filename))
 		m_renderWindow.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
 	else
-		CoreConsoleLogger::PrintWarning("Cannot load window icon \"" + filename + "\"");
+		CoreLogger::PrintWarning("Cannot load window icon \"" + filename + "\"");
 
 	// Set window as open
 	m_open = true;
-	CoreConsoleLogger::PrintSuccess("Window initialized correctly");
+	CoreLogger::PrintSuccess("Window initialized correctly");
 }

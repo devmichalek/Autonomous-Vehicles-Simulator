@@ -1,6 +1,6 @@
-#include <string>
+#include <fstream>
 
-class CoreConsoleLogger
+class CoreLogger
 {
 public:
 
@@ -12,7 +12,11 @@ public:
 
 	static void PrintMessage(std::string message);
 
+	static void Initialize();
+
 private:
 
-	static void PrintInternal(const char* prefix, std::string& message, unsigned short color);
+	static void PrintInternal(const char* prefix, std::string& message);
+
+	static std::ofstream m_output;
 };

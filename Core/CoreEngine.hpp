@@ -18,5 +18,6 @@ private:
 	// Load program resources
 	bool Load();
 
+	// State manager
 	StateManager* m_stateManager;
 };

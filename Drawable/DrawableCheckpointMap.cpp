@@ -1,8 +1,29 @@
-#include "DrawableCheckpointMapTriangle.hpp"
+#pragma once
+#include "DrawableCheckpointMap.hpp"
 #include "DrawableCar.hpp"
 
-DrawableCheckpointMapTriangle::DrawableCheckpointMapTriangle(const EdgeVector& edges, const size_t pivot)
+Fitness DrawableCheckpointMap::getMaxFitness()
 {
+	return Fitness(m_checkpoints.size());
+}
+
+Fitness DrawableCheckpointMap::calculateFitness(DetailedCar& car)
+{
+	Fitness fitness = 0;
+	for (size_t i = 0; i < m_checkpoints.size(); ++i)
+	{
+		if (IsCarInsideTriangle(m_checkpoints[i], car.first->getPoints()))
+			fitness = Fitness(i + 1);
+	}
+
+	return fitness;
+}
+
+DrawableCheckpointMap::DrawableCheckpointMap(const EdgeVector& edges, const size_t pivot)
+{
+	m_highestFitness = 0;
+	m_highestFitnessOverall = 0;
+
 	const Edge& finishLine = edges[edges.size() - 1];
 	const Edge& blockingEdge = edges[edges.size() - 2];
 
@@ -142,11 +163,19 @@ DrawableCheckpointMapTriangle::DrawableCheckpointMapTriangle(const EdgeVector& e
 		m_checkpoints.push_back(triangle);
 	}
 
+	// Erase continuity
+	m_checkpoints.erase(m_checkpoints.begin());
+	m_checkpoints.erase(m_checkpoints.begin());
+
 	// Set shape point count
 	m_shape.setPointCount(TRIANGLE_NUMBER_OF_POINTS);
 }
 
-void DrawableCheckpointMapTriangle::draw()
+DrawableCheckpointMap::~DrawableCheckpointMap()
+{
+}
+
+void DrawableCheckpointMap::draw()
 {
 	for (size_t i = 0; i < m_checkpoints.size(); ++i)
 	{
@@ -161,19 +190,98 @@ void DrawableCheckpointMapTriangle::draw()
 	}
 }
 
-Fitness DrawableCheckpointMapTriangle::calculateFitness(DetailedCar& car)
+void DrawableCheckpointMap::iterate(DetailedCarFactory& factory)
 {
-	Fitness fitness = 0;
-	for (size_t i = 0; i < m_checkpoints.size(); ++i)
+	auto maxFitness = getMaxFitness();
+	for (size_t i = 0; i < factory.size(); ++i)
 	{
-		if (IsCarInsideTriangle(m_checkpoints[i], car.first->getPoints()))
-			fitness = Fitness(i + 1);
+		m_fitnessVector[i] = calculateFitness(factory[i]);
+		m_fitnessVector[i] += static_cast<Fitness>(double(maxFitness) / m_timers[i].Value());
 	}
 
-	return fitness;
+	auto iterator = std::max_element(m_fitnessVector.begin(), m_fitnessVector.end());
+	m_highestFitness = *iterator;
+	if (m_highestFitnessOverall < m_highestFitness)
+		m_highestFitnessOverall = m_highestFitness;
 }
 
-Fitness DrawableCheckpointMapTriangle::getMaxFitness()
+size_t DrawableCheckpointMap::markLeader(DetailedCarFactory& factory)
 {
-	return Fitness(m_checkpoints.size());
+	auto maxFitness = getMaxFitness();
+	for (size_t i = 0; i < factory.size(); ++i)
+	{
+		factory[i].first->setFollowerColor();
+		if (!factory[i].second)
+		{
+			m_fitnessVector[i] = 0;
+			continue;
+		}
+		m_fitnessVector[i] = calculateFitness(factory[i]);
+	}
+
+	auto iterator = std::max_element(m_fitnessVector.begin(), m_fitnessVector.end());
+	m_highestFitness = *iterator;
+	if (m_highestFitnessOverall < m_highestFitness)
+		m_highestFitnessOverall = m_highestFitness;
+
+	size_t index = std::distance(m_fitnessVector.begin(), iterator);
+	factory[index].first->setLeaderColor();
+	return index;
+}
+
+void DrawableCheckpointMap::punish(DetailedCarFactory& factory)
+{
+	// Check if car has made improvement
+	// If car has made improvement then it is not punished
+	auto maxFitness = getMaxFitness();
+	for (size_t i = 0; i < factory.size(); ++i)
+	{
+		if (!factory[i].second)
+			continue;
+		m_fitnessVector[i] = calculateFitness(factory[i]);
+		Fitness requiredFitness = m_previousFitnessVector[i];
+		requiredFitness += static_cast<Fitness>(double(maxFitness) * m_minFitnessImprovement);
+		if (requiredFitness > m_fitnessVector[i])
+			factory[i].second = false;
+		m_previousFitnessVector[i] = m_fitnessVector[i];
+	}
+}
+
+void DrawableCheckpointMap::reset()
+{
+	for (size_t i = 0; i < m_fitnessVector.size(); ++i)
+	{
+		m_fitnessVector[i] = 0;
+		m_previousFitnessVector[i] = 0;
+		m_timers[i].Reset();
+	}
+}
+
+void DrawableCheckpointMap::restart(size_t size, double minFitnessImprovement)
+{
+	m_fitnessVector.resize(size, 0);
+	m_previousFitnessVector.resize(size, 0);
+	m_timers.resize(size, StoppableTimer(0.0, std::numeric_limits<double>::max()));
+	m_minFitnessImprovement = minFitnessImprovement;
+}
+
+void DrawableCheckpointMap::incrementTimers()
+{
+	for (auto& timer : m_timers)
+		timer.Increment();
+}
+
+const FitnessVector& DrawableCheckpointMap::getFitnessVector() const
+{
+	return m_fitnessVector;
+}
+
+const Fitness& DrawableCheckpointMap::getHighestFitness() const
+{
+	return m_highestFitness;
+}
+
+const Fitness& DrawableCheckpointMap::getHighestFitnessOverall() const
+{
+	return m_highestFitnessOverall;
 }

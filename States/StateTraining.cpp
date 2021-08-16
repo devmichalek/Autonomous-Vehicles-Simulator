@@ -1,11 +1,11 @@
 #pragma once
 #include "StateTraining.hpp"
-#include "TypeObserver.hpp"
+#include "TypeTimerObserver.hpp"
 #include "ArtificialNeuralNetwork.hpp"
 #include "DrawableEdgeManager.hpp"
 #include "DrawableCheckpointMap.hpp"
 #include "GeneticAlgorithm.hpp"
-#include "CoreConsoleLogger.hpp"
+#include "CoreLogger.hpp"
 
 StateTraining::~StateTraining()
 {
@@ -16,7 +16,17 @@ StateTraining::~StateTraining()
 	delete m_checkpointMap;
 }
 
-void StateTraining::update()
+void StateTraining::Reload()
+{
+
+}
+
+void StateTraining::Capture()
+{
+
+}
+
+void StateTraining::Update()
 {
 	bool activity = false;
 	for (size_t i = 0; i < m_carFactory.size(); ++i)
@@ -24,12 +34,12 @@ void StateTraining::update()
 		if (!m_carFactory[i].second)
 			continue;
 		activity = true;
-		NeuronLayer output = m_brains[i].calculate(m_carFactory[i].first->processOutput());
+		NeuronLayer output = m_brains[i].Update(m_carFactory[i].first->processOutput());
 		m_carFactory[i].first->processInput(output);
 		m_carFactory[i].first->update();
 	}
 
-	m_edgeManager->intersect(m_carFactory);
+	m_edgeManager->Intersect(m_carFactory);
 
 	if (!activity)
 	{
@@ -42,7 +52,7 @@ void StateTraining::update()
 			++m_generationNumber;
 
 			for (size_t i = 0; i < m_brains.size(); ++i)
-				m_brains[i].setData(m_evolution->getIndividual(i));
+				m_brains[i].SetFromRawData(m_evolution->getIndividual(i));
 
 			for (size_t i = 0; i < m_carFactory.size(); ++i)
 			{
@@ -64,13 +74,13 @@ void StateTraining::update()
 	{
 		m_checkpointMap->incrementTimers();
 
-		if (m_viewTimer.increment())
+		if (m_viewTimer.Increment())
 		{
 			auto index = m_checkpointMap->markLeader(m_carFactory);
 			m_viewCenter = m_carFactory[index].first->getCenter();
 		}
 
-		if (m_waveTimer.increment())
+		if (m_waveTimer.Increment())
 			m_checkpointMap->punish(m_carFactory);
 	}
 
@@ -82,16 +92,17 @@ void StateTraining::update()
 	view.setCenter(newCenter);
 	CoreWindow::GetRenderWindow().setView(view);
 
-	m_populationText.update();
-	m_generationText.update();
-	m_highestFitnessText.update();
-	m_highestFitnessOverallText.update();
+	m_populationText.Update();
+	m_generationText.Update();
+	m_highestFitnessText.Update();
+	m_highestFitnessOverallText.Update();
 }
 
-bool StateTraining::load()
+bool StateTraining::Load()
 {
-	if (!m_builder.Load())
+	/*if (!m_builder.Load())
 	{
+
 		return false;
 	}
 
@@ -110,12 +121,12 @@ bool StateTraining::load()
 	std::vector<size_t> hiddenLayersSizes = { 12, 12 };
 	ArtificialNeuralNetwork ann(m_annNumberOfInputs, CAR_NUMBER_OF_INPUTS, hiddenLayersSizes);
 	ann.setBiasVector({ 0.25, 0.1, 0.05 });
-	ann.setActivationVector({ activationLeakyrelu, activationTanh, activationRelu });
+	ann.setActivationVector({ ActivationLeakyRelu, ActivationTanh, ActivationRelu });
 	m_brains.resize(m_populationSize, ann);
 
-	const size_t chromosomeLength = ann.getDataUnitsCount();
+	const size_t chromosomeLength = ann.GetNumberOfWeights();
 	double crossoverProbability = 0.5;
-	double mutationProbability = 0.1;
+	double mutationProbability = 0.05;
 	bool decreaseMutationOverGenerations = false;
 	bool singlePointCrossover = false;
 	unsigned int precision = 1000;
@@ -132,24 +143,24 @@ bool StateTraining::load()
 	for (size_t i = 0; i < m_brains.size(); ++i)
 		m_brains[i].setData(m_evolution->getIndividual(i));
 
-	m_populationText.setConsistentText("Population size:");
-	m_generationText.setConsistentText("Generation:");
-	m_highestFitnessText.setConsistentText("Highest fitness:");
-	m_highestFitnessOverallText.setConsistentText("Highest fitness overall:");
-	m_populationText.setPosition(0.0039, 0.078, 0.005);
-	m_generationText.setPosition(0.0039, 0.055, 0.025);
-	m_highestFitnessText.setPosition(0.0039, 0.078, 0.045);
-	m_highestFitnessOverallText.setPosition(0.0039, 0.12, 0.065);
-	m_populationText.setVariableText(std::to_string(m_populationSize));
-	m_generationText.setObserver(new TypeObserver(m_generationNumber, 0.2, "", "/" + std::to_string(m_numberOfGenerations)));
-	m_highestFitnessText.setObserver(new TypeObserver(m_checkpointMap->getHighestFitness(), 0.1));
-	m_highestFitnessOverallText.setObserver(new TypeObserver(m_checkpointMap->getHighestFitnessOverall(), 0.5));
+	m_populationText.SetConsistentText("Population size:");
+	m_generationText.SetConsistentText("Generation:");
+	m_highestFitnessText.SetConsistentText("Highest fitness:");
+	m_highestFitnessOverallText.SetConsistentText("Highest fitness overall:");
+	m_populationText.SetPosition(0.0039, 0.078, 0.005);
+	m_generationText.SetPosition(0.0039, 0.055, 0.025);
+	m_highestFitnessText.SetPosition(0.0039, 0.078, 0.045);
+	m_highestFitnessOverallText.SetPosition(0.0039, 0.12, 0.065);
+	m_populationText.SetVariableText(std::to_string(m_populationSize));
+	m_generationText.SetObserver(new TypeTimerObserver(m_generationNumber, 0.2, "", "/" + std::to_string(m_numberOfGenerations)));
+	m_highestFitnessText.SetObserver(new TypeTimerObserver(m_checkpointMap->getHighestFitness(), 0.1));
+	m_highestFitnessOverallText.SetObserver(new TypeTimerObserver(m_checkpointMap->getHighestFitnessOverall(), 0.5));*/
 
-	CoreConsoleLogger::PrintSuccess("State \"Training\" dependencies loaded correctly");
+	CoreLogger::PrintSuccess("State \"Training\" dependencies loaded correctly");
 	return true;
 }
 
-void StateTraining::draw()
+void StateTraining::Draw()
 {
 	for (auto& car : m_carFactory)
 	{
@@ -159,10 +170,10 @@ void StateTraining::draw()
 		car.first->drawBeams();
 	}
 
-	m_edgeManager->drawEdges();
+	m_edgeManager->Draw();
 
-	m_populationText.draw();
-	m_generationText.draw();
-	m_highestFitnessText.draw();
-	m_highestFitnessOverallText.draw();
+	m_populationText.Draw();
+	m_generationText.Draw();
+	m_highestFitnessText.Draw();
+	m_highestFitnessOverallText.Draw();
 }

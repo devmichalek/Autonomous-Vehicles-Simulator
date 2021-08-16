@@ -1,7 +1,34 @@
 #pragma once
 #include "DrawableEdgeManager.hpp"
 
-void DrawableEdgeManager::intersect(DetailedCarFactory& cars)
+DrawableEdgeManager::DrawableEdgeManager(EdgeVector edges, size_t pivot)
+{
+	m_edgeLine[0].color = sf::Color::White;
+	m_edgeLine[1].color = m_edgeLine[0].color;
+	m_edges = std::move(edges);
+
+	// Add finish line position
+	Edge finishLineEdge;
+	finishLineEdge[0] = m_edges.front()[0];
+	finishLineEdge[1] = m_edges[pivot][0];
+	m_edges.push_back(finishLineEdge);
+
+	// Set blocking edge position
+	Edge blockEdge;
+	blockEdge[0] = m_edges.front()[1];
+	blockEdge[1] = m_edges[pivot][1];
+	m_edges.insert(m_edges.begin(), blockEdge);
+
+	// Erase continuity
+	m_edges.erase(m_edges.begin() + pivot + 1);
+	m_edges.erase(m_edges.begin() + 1);
+}
+
+DrawableEdgeManager::~DrawableEdgeManager()
+{
+}
+
+void DrawableEdgeManager::Intersect(DetailedCarFactory& cars)
 {
 	for (auto& car : cars)
 	{
@@ -10,7 +37,7 @@ void DrawableEdgeManager::intersect(DetailedCarFactory& cars)
 
 		for (auto& edge : m_edges)
 		{
-			if (Intersect(edge, car.first->getPoints()))
+			if (::Intersect(edge, car.first->getPoints()))
 			{
 				car.second = false;
 			}
@@ -20,7 +47,7 @@ void DrawableEdgeManager::intersect(DetailedCarFactory& cars)
 	}
 }
 
-void DrawableEdgeManager::drawEdges()
+void DrawableEdgeManager::Draw()
 {
 	for (const auto& i : m_edges)
 	{

@@ -1,5 +1,4 @@
 #pragma once
-#include <SFML/Graphics/ConvexShape.hpp>
 #include <SFML/Graphics/CircleShape.hpp>
 #include "CoreWindow.hpp"
 #include "DrawableMath.hpp"
@@ -8,25 +7,26 @@
 class DrawableCar
 {
 	// Car attributes
-	double m_angle;
+	double m_angle; // Angle in relation to x axis
 	double m_speed;
 	inline static const double m_rotationConst = 150.0;
-	inline static const double m_maxSpeedConst = 1.5;
-	inline static const double m_minSpeedConst = 0;
-	inline static const double m_speedConst = 300.0;
+	inline static const double m_maxSpeed = 1.5;
+	inline static const double m_minSpeed = 0.0;
+	inline static const double m_speedFactor = 300.0;
 
 	// Car data
-	sf::ConvexShape m_carShape;
-	sf::Vector2f m_size;
+	using Body = std::array<sf::Vertex, CAR_NUMBER_OF_POINTS>;
+	Body m_body;
 	sf::Vector2f m_center;
+	sf::Vector2f m_size;
 	CarPoints m_points;
 
 	// Beam data
 	using Beams = std::vector<Edge>;
 	using BeamAngles = std::vector<double>;
-	using BeamStartPosition = std::tuple<size_t, size_t, double>; // start index, end index, percentage of distance from start index
+	using BeamStartPosition = std::tuple<size_t, size_t, double>; // Start index, end index, percentage of distance from start index
 	using BeamStartPositions = std::vector<BeamStartPosition>;
-	const double m_beamReach;
+	double m_beamReach;
 	Line m_beamShape;
 	Beams m_beams;
 	BeamAngles m_beamAngles;
@@ -42,20 +42,21 @@ public:
 	DrawableCar() :
 		m_angle(0.0),
 		m_speed(0.0),
-		m_center(0.0f, 0.0f),
-		m_beamReach(double(CoreWindow::GetSize().y) * 0.75)
+		m_center(sf::Vector2f(0.0f, 0.0f))
 	{
 		auto windowSize = CoreWindow::GetSize();
 		const float widthFactor = 30.0f;
 		const float heightFactor = 10.0f;
 		m_size = sf::Vector2f(windowSize.y / heightFactor, windowSize.x / widthFactor);
-		m_carShape.setPointCount(CAR_NUMBER_OF_POINTS);
+		setCenter(sf::Vector2f(0.0f, 0.0f));
+		m_beamReach = double(CoreWindow::GetSize().y) * 0.75;
 		m_beamShape[0].color = sf::Color(255, 255, 255, 144);
 		m_beamShape[1].color = sf::Color(255, 255, 255, 32);
 		m_sensorSize = sf::Vector2f(m_size.x / widthFactor, m_size.x / widthFactor);
 		m_sensorShape.setRadius(m_sensorSize.x);
 		m_sensorShape.setFillColor(sf::Color::Red);
-		init(CAR_DEFAULT_NUMBER_OF_SENSORS);
+		setFollowerColor();
+		init();
 		update();
 	}
 
@@ -85,7 +86,7 @@ public:
 	bool inside(sf::Vector2f point);
 
 	// Prepare sensors and beams
-	void init(size_t numberOfSensors);
+	void init(size_t numberOfSensors = CAR_DEFAULT_NUMBER_OF_SENSORS);
 
 	// Rotate car by specified value (0; 1)
 	void rotate(Neuron value);
@@ -112,7 +113,7 @@ public:
 	}
 
 	// Input data
-	void processInput(NeuronLayer& layer)
+	void processInput(const NeuronLayer& layer)
 	{
 		accelerate(layer[0]);
 		rotate(layer[1]);

@@ -1,42 +1,36 @@
 #pragma once
 #include "FontContext.hpp"
+#include <array>
 
-class Observer;
+class ObserverIf;
 
 class DrawableDoubleText
 {
 public:
 
-	DrawableDoubleText()
-	{
-		// Set font
-		m_consistentText.setFont(FontContext::GetFont());
-		m_variableText.setFont(FontContext::GetFont());
+	DrawableDoubleText();
 
-		// Set color
-		m_consistentText.setFillColor(sf::Color::White);
-		m_variableText.setFillColor(sf::Color(0xC0, 0xC0, 0xC0, 0xFF));
+	virtual ~DrawableDoubleText();
 
-		// Set character size
-		m_consistentText.setCharacterSize(FontContext::GetCharacterSize());
-		m_variableText.setCharacterSize(FontContext::GetCharacterSize());
+	void SetConsistentText(std::string text);
 
-		m_observer = nullptr;
-	}
+	void SetVariableText(std::string text);
 
-	~DrawableDoubleText();
+	void SetVariableTextColor(sf::Color color = sf::Color(0xC0, 0xC0, 0xC0, 0xFF));
 
-	void setConsistentText(std::string text);
+	// Sets consistent text and variable text positions
+	// First component is used as x position for consistent text
+	// Second component is used as x position for variable text
+	// Third component is used as y position for both texts
+	virtual void SetPosition(std::array<FontContext::Component, 3> components);
 
-	void setVariableText(std::string text);
+	void SetObserver(ObserverIf* observer);
 
-	virtual void setPosition(double cx, double vx, double y);
+	void ResetObserverTimer();
 
-	void setObserver(Observer* observer);
+	virtual void Update();
 
-	virtual void update();
-
-	virtual void draw();
+	virtual void Draw();
 
 protected:
 
@@ -44,5 +38,5 @@ protected:
 	sf::Text m_variableText;
 	sf::Vector2f m_consistentPosition;
 	sf::Vector2f m_variablePosition;
-	Observer* m_observer;
+	ObserverIf* m_observer;
 };

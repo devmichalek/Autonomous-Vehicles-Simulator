@@ -5,6 +5,8 @@
 #include <cmath>
 
 const size_t EDGE_NUMBER_OF_POINTS = 2;
+const size_t MIN_NUMBER_OF_INNER_EDGES = 4;
+const size_t MIN_NUMBER_OF_OUTER_EDGES = MIN_NUMBER_OF_INNER_EDGES;
 const size_t TRIANGLE_NUMBER_OF_POINTS = 3;
 const size_t CAR_NUMBER_OF_POINTS = 4;
 const size_t CAR_FIVE_NUMBER_OF_SENSORS = 5;

@@ -8,28 +8,24 @@ class DrawableTripleText :
 {
 public:
 
-	DrawableTripleText() :
-		DrawableDoubleText()
-	{
-		// Set font
-		m_informationText.setFont(FontContext::GetFont());
+	DrawableTripleText();
 
-		// Set color
-		m_informationText.setFillColor(sf::Color::White);
+	virtual ~DrawableTripleText();
 
-		// Set character size
-		m_informationText.setCharacterSize(FontContext::GetCharacterSize());
-	}
+	void SetInformationText(std::string text);
 
-	void setInformationText(std::string text);
+	// Sets consistent text, variable text and information text positions
+	// First component is used as x position for consistent text
+	// Second component is used as x position for variable text
+	// Third component is used as x position for information text
+	// Fourth component is used as y position for all texts
+	virtual void SetPosition(std::array<FontContext::Component, 4> components);
 
-	virtual void setPosition(double cx, double vx, double ix, double y);
+	virtual void Update();
 
-	virtual void update();
+	virtual void Draw();
 
-	virtual void draw();
-
-protected:
+private:
 
 	sf::Text m_informationText;
 	sf::Vector2f m_informationPosition;

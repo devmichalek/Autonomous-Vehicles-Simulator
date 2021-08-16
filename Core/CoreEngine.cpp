@@ -1,8 +1,9 @@
 #include "CoreEngine.hpp"
 #include "CoreWindow.hpp"
+#include "ActivationFunctionContext.hpp"
 #include "FontContext.hpp"
 #include "StateManager.hpp"
-#include "CoreConsoleLogger.hpp"
+#include "CoreLogger.hpp"
 #include <limits>
 #include <iostream>
 
@@ -10,14 +11,14 @@ CoreEngine::CoreEngine()
 {
 	if (!Load())
 	{
-		CoreConsoleLogger::PrintError("Loading engine dependencies failed");
+		CoreLogger::PrintError("Loading engine dependencies failed");
 		CoreWindow::GetInstance().Close();
-		CoreConsoleLogger::PrintMessage("Press Enter to continue...");
+		CoreLogger::PrintMessage("Press Enter to continue...");
 		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	}
 	else
 	{
-		CoreConsoleLogger::PrintSuccess("Correctly loaded all engine dependencies");
+		CoreLogger::PrintSuccess("Correctly loaded all engine dependencies");
 		Loop();
 	}
 		
@@ -62,7 +63,9 @@ void CoreEngine::Loop()
 
 bool CoreEngine::Load()
 {
+	CoreLogger::Initialize();
 	CoreWindow::Initialize();
+	ActivationFunctionContext::Initialize();
 	
 	if (!FontContext::Initialize())
 		return false;

@@ -17,13 +17,13 @@ public:
 	{
 	}
 
-	virtual void capture()
-	{
-	}
+	virtual void Reload() = 0;
 
-	virtual void update() = 0;
+	virtual void Capture() = 0;
 
-	virtual bool load() = 0;
+	virtual void Update() = 0;
 
-	virtual void draw() = 0;
+	virtual bool Load() = 0;
+
+	virtual void Draw() = 0;
 };
