@@ -22,8 +22,8 @@ DrawableBuilder::DrawableBuilder()
 	m_operationsMap[ERROR_CANNOT_EXTRACT_DOUBLE_WHILE_READING] = "Error: cannot extract floating point value from string while reading!";
 	m_operationsMap[ERROR_CANNOT_EXTRACT_POINT_WHILE_READING] = "Error: cannot extract point from string while reading!";
 	m_operationsMap[ERROR_CANNOT_EXTRACT_EDGE_WHILE_READING] = "Error: cannot extract edge from string while reading!";
-	m_operationsMap[ERROR_CANNOT_FIND_CAR_ANGLE_STRING_WHILE_READING] = "Error: cannot extract car angle string line while reading!";
-	m_operationsMap[ERROR_CANNOT_FIND_CAR_CENTER_STRING_WHILE_READING] = "Error: cannot extract car center string line while reading!";
+	m_operationsMap[ERROR_CANNOT_FIND_VEHICLE_ANGLE_STRING_WHILE_READING] = "Error: cannot extract vehicle angle string line while reading!";
+	m_operationsMap[ERROR_CANNOT_FIND_VEHICLE_CENTER_STRING_WHILE_READING] = "Error: cannot extract vehicle center string line while reading!";
 	m_operationsMap[ERROR_CANNOT_FIND_EDGE_STRING_WHILE_READING] = "Error: cannot extract edge string line while reading!";
 	m_operationsMap[ERROR_EMPTY_FILENAME_CANNOT_OPEN_FILE_FOR_WRITING] = "Error: filename is empty, cannot open file for writing!";
 	m_operationsMap[ERROR_CANNOT_OPEN_FILE_FOR_WRITING] = "Error: cannot open file for writing!";
@@ -38,7 +38,7 @@ void DrawableBuilder::Clear()
 {
 	m_edgesPivot = 0;
 	m_edges.clear();
-	m_carSpecified = false;
+	m_vehicleSpecified = false;
 	m_validated = false;
 	m_lastOperationStatus = UNKNOWN;
 }
@@ -51,7 +51,7 @@ bool DrawableBuilder::Validate()
 		return true;
 	}
 
-	if (!m_carSpecified)
+	if (!m_vehicleSpecified)
 	{
 		m_lastOperationStatus = ERROR_VEHICLE_IS_NOT_SPECIFIED;
 		return false;
@@ -134,11 +134,11 @@ bool DrawableBuilder::Validate()
 	return true;
 }
 
-void DrawableBuilder::AddCar(double angle, sf::Vector2f center)
+void DrawableBuilder::AddVehicle(double angle, sf::Vector2f center)
 {
-	m_carSpecified = true;
-	m_carCenter = center;
-	m_carAngle = angle;
+	m_vehicleSpecified = true;
+	m_vehicleCenter = center;
+	m_vehicleAngle = angle;
 }
 
 void DrawableBuilder::AddEdge(Edge edge)
@@ -258,29 +258,29 @@ bool DrawableBuilder::Load(std::string filename)
 		return true;
 	};
 
-	// Get car angle
+	// Get vehicle angle
 	std::string line;
 	std::getline(input, line);
-	if (line.find(m_carAngleString) != 0)
+	if (line.find(m_vehicleAngleString) != 0)
 	{
-		m_lastOperationStatus = ERROR_CANNOT_FIND_CAR_ANGLE_STRING_WHILE_READING;
+		m_lastOperationStatus = ERROR_CANNOT_FIND_VEHICLE_ANGLE_STRING_WHILE_READING;
 		return false;
 	}
-	line.erase(0, m_carAngleString.size());
-	if (!ExtractDoubleFromString(line, m_carAngle))
+	line.erase(0, m_vehicleAngleString.size());
+	if (!ExtractDoubleFromString(line, m_vehicleAngle))
 		return false;
 	
-	// Get car center
+	// Get vehicle center
 	std::getline(input, line);
-	if (line.find(m_carCenterString) != 0)
+	if (line.find(m_vehicleCenterString) != 0)
 	{
-		m_lastOperationStatus = ERROR_CANNOT_FIND_CAR_CENTER_STRING_WHILE_READING;
+		m_lastOperationStatus = ERROR_CANNOT_FIND_VEHICLE_CENTER_STRING_WHILE_READING;
 		return false;
 	}
-	line.erase(0, m_carCenterString.size());
-	if (!ExtractPointFromString(line, m_carCenter))
+	line.erase(0, m_vehicleCenterString.size());
+	if (!ExtractPointFromString(line, m_vehicleCenter))
 		return false;
-	m_carSpecified = true;
+	m_vehicleSpecified = true;
 
 	// Get edges
 	Edge edge;
@@ -326,9 +326,9 @@ bool DrawableBuilder::Save(std::string filename)
 		return false;
 	}
 
-	// Save car
-	output << m_carAngleString << m_carAngle << std::endl;
-	output << m_carCenterString << m_carCenter.x << " " << m_carCenter.y << std::endl;
+	// Save vehicle
+	output << m_vehicleAngleString << m_vehicleAngle << std::endl;
+	output << m_vehicleCenterString << m_vehicleCenter.x << " " << m_vehicleCenter.y << std::endl;
 	
 	// Save edges
 	for (auto& i : m_edges)
@@ -361,9 +361,9 @@ EdgeVector DrawableBuilder::GetEdges()
 	return m_edges;
 }
 
-std::pair<sf::Vector2f, double> DrawableBuilder::GetCar()
+std::pair<sf::Vector2f, double> DrawableBuilder::GetVehicle()
 {
-	return std::make_pair(m_carCenter, m_carAngle);
+	return std::make_pair(m_vehicleCenter, m_vehicleAngle);
 }
 
 DrawableEdgeManager* DrawableBuilder::GetDrawableManager()
@@ -372,17 +372,6 @@ DrawableEdgeManager* DrawableBuilder::GetDrawableManager()
 		return nullptr;
 
 	return new DrawableEdgeManager(m_edges, m_edgesPivot);
-}
-
-DrawableCar* DrawableBuilder::GetDrawableCar()
-{
-	if (!Validate())
-		return nullptr;
-	
-	DrawableCar* result = new DrawableCar;
-	result->setAngle(m_carAngle);
-	result->setCenter(m_carCenter);
-	return result;
 }
 
 DrawableCheckpointMap* DrawableBuilder::GetDrawableCheckpointMap()

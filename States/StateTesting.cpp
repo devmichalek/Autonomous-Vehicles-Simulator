@@ -10,13 +10,14 @@ StateTesting::StateTesting()
 	m_mode = STOPPED_MODE;
 	m_filenameTypeStrings[MAP_FILENAME_TYPE] = "Map";
 	m_filenameTypeStrings[ANN_FILENAME_TYPE] = "ANN";
-	m_filenameTypeStrings[CAR_FILENAME_TYPE] = "Car";
+	m_filenameTypeStrings[VEHICLE_FILENAME_TYPE] = "Vehicle";
 	m_filenameType = MAP_FILENAME_TYPE;
 	m_modeKey = std::make_pair(sf::Keyboard::M, false);
 	m_filenameTypeKey = std::make_pair(sf::Keyboard::F, false);
+	m_drawableVehicleBuilder.CreateDummy();
 	m_edgeManager = nullptr;
-	m_userCar = nullptr;
-	m_carFactory.resize(2U);
+	m_userVehicle = nullptr;
+	m_vehicleFactory.resize(2U);
 	m_checkpointMap = nullptr;
 	m_textFunctions.reserve(16U);
 }
@@ -24,7 +25,7 @@ StateTesting::StateTesting()
 StateTesting::~StateTesting()
 {
 	delete m_edgeManager;
-	delete m_userCar;
+	delete m_userVehicle;
 	delete m_checkpointMap;
 }
 
@@ -37,8 +38,8 @@ void StateTesting::Reload()
 	m_drawableBuilder.Clear();
 	delete m_edgeManager;
 	m_edgeManager = nullptr;
-	delete m_userCar;
-	m_userCar = nullptr;
+	delete m_userVehicle;
+	m_userVehicle = nullptr;
 	delete m_checkpointMap;
 	m_checkpointMap = nullptr;
 }
@@ -128,25 +129,27 @@ void StateTesting::Update()
 								m_filenameText.SetSuccessStatusText(status.second);
 								delete m_edgeManager;
 								m_edgeManager = m_drawableBuilder.GetDrawableManager();
-								for (auto& car : m_carFactory)
+								for (auto& vehicle : m_vehicleFactory)
 								{
-									delete car.first;
-									car = std::pair(m_drawableBuilder.GetDrawableCar(), true);
-									car.first->init(CAR_DEFAULT_NUMBER_OF_SENSORS);
-									car.first->update();
+									delete vehicle.first;
+									vehicle = std::pair(m_drawableVehicleBuilder.Get(), true);
+									auto details = m_drawableBuilder.GetVehicle();
+									vehicle.first->SetCenter(details.first);
+									vehicle.first->SetAngle(details.second);
+									vehicle.first->Update();
 								}
 
-								m_userCar = m_carFactory[0].first;
+								m_userVehicle = m_vehicleFactory[0].first;
 								delete m_checkpointMap;
 								m_checkpointMap = m_drawableBuilder.GetDrawableCheckpointMap();
-								m_checkpointMap->restart(m_carFactory.size(), 0.0);
+								m_checkpointMap->restart(m_vehicleFactory.size(), 0.0);
 
-								for (auto& car : m_carFactory)
-									car.first->update();
+								for (auto& vehicle : m_vehicleFactory)
+									vehicle.first->Update();
 
 								// Update view
 								auto& view = CoreWindow::GetView();
-								view.setCenter(m_userCar->getCenter());
+								view.setCenter(m_userVehicle->GetCenter());
 								CoreWindow::GetRenderWindow().setView(view);
 							}
 							else
@@ -158,7 +161,7 @@ void StateTesting::Update()
 
 							break;
 
-						case CAR_FILENAME_TYPE:
+						case VEHICLE_FILENAME_TYPE:
 
 							break;
 
@@ -174,37 +177,37 @@ void StateTesting::Update()
 		{
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
 			{
-				m_carFactory.front().second = true;
-				m_checkpointMap->iterate(m_carFactory);
+				m_vehicleFactory.front().second = true;
+				m_checkpointMap->iterate(m_vehicleFactory);
 			}
 
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
 			{
-				m_userCar->rotate(0.0);
+				m_userVehicle->Rotate(0.0);
 			}
 			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
 			{
-				m_userCar->rotate(1.0);
+				m_userVehicle->Rotate(1.0);
 			}
 
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
 			{
-				m_userCar->accelerate(1.0);
+				m_userVehicle->Accelerate(1.0);
 			}
 
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
 			{
-				m_userCar->brake(1.0);
+				m_userVehicle->Brake(1.0);
 			}
 			
 			if (m_edgeManager)
 			{
-				m_userCar->update();
-				m_edgeManager->Intersect(m_carFactory);
+				m_userVehicle->Update();
+				m_edgeManager->Intersect(m_vehicleFactory);
 
 				// Update view
 				auto& view = CoreWindow::GetView();
-				view.setCenter(m_userCar->getCenter());
+				view.setCenter(m_userVehicle->GetCenter());
 				CoreWindow::GetRenderWindow().setView(view);
 			}
 
@@ -270,12 +273,12 @@ void StateTesting::Draw()
 			break;
 	}
 	
-	for (auto& car : m_carFactory)
+	for (auto& vehicle : m_vehicleFactory)
 	{
-		if (!car.second)
+		if (!vehicle.second)
 			continue;
-		car.first->drawBody();
-		car.first->drawBeams();
+		vehicle.first->DrawBody();
+		vehicle.first->DrawBeams();
 	}
 
 	if (m_edgeManager)

@@ -1,11 +1,11 @@
 #include "CoreEngine.hpp"
 #include "CoreWindow.hpp"
 #include "ActivationFunctionContext.hpp"
+#include "DrawableVehicle.hpp"
 #include "FontContext.hpp"
 #include "StateManager.hpp"
 #include "CoreLogger.hpp"
 #include <limits>
-#include <iostream>
 
 CoreEngine::CoreEngine()
 {
@@ -13,8 +13,6 @@ CoreEngine::CoreEngine()
 	{
 		CoreLogger::PrintError("Loading engine dependencies failed");
 		CoreWindow::GetInstance().Close();
-		CoreLogger::PrintMessage("Press Enter to continue...");
-		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	}
 	else
 	{
@@ -66,7 +64,8 @@ bool CoreEngine::Load()
 	CoreLogger::Initialize();
 	CoreWindow::Initialize();
 	ActivationFunctionContext::Initialize();
-	
+	DrawableVehicle::Initialize();
+
 	if (!FontContext::Initialize())
 		return false;
 

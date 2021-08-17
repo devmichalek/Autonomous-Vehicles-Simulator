@@ -2,6 +2,7 @@
 #include "StateInterface.hpp"
 #include "ArtificialNeuralNetwork.hpp"
 #include "DrawableBuilder.hpp"
+#include "DrawableVehicleBuilder.hpp"
 #include "DrawableDoubleText.hpp"
 #include "CycleTimer.hpp"
 #include "StoppableTimer.hpp"
@@ -14,14 +15,15 @@ class StateTraining final : public StateInterface
 {
 	GeneticAlgorithmNeuron* m_evolution;
 	std::vector<ArtificialNeuralNetwork> m_brains;
-	DrawableBuilder m_builder;
+	DrawableBuilder m_drawableBuilder;
+	DrawableVehicleBuilder m_drawableVehicleBuilder;
 	DrawableEdgeManager* m_edgeManager;
-	DetailedCarFactory m_carFactory;
+	DetailedVehicleFactory m_vehicleFactory;
 	DrawableCheckpointMap* m_checkpointMap;
 
 	const size_t m_populationSize = 30;
 	const size_t m_numberOfGenerations = 1000;
-	const size_t m_annNumberOfInputs = CAR_TWELVE_NUMBER_OF_SENSORS;
+	const size_t m_annNumberOfInputs = 5;
 	size_t m_generationNumber;
 
 	CycleTimer m_waveTimer;

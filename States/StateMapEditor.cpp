@@ -16,9 +16,9 @@ void StateMapEditor::SetActiveMode(ActiveMode activeMode)
 				m_removeEdge = false;
 				m_edgeSubmodeText.SetVariableText(m_edgeSubmodeMap[m_edgeSubmode]);
 				break;
-			case ActiveMode::CAR:
-				m_carSubmode = CarSubmode::INSERT;
-				m_carSubmodeText.SetVariableText(m_carSubmodeMap[m_carSubmode]);
+			case ActiveMode::VEHICLE:
+				m_vehicleSubmode = VehicleSubmode::INSERT;
+				m_vehicleSubmodeText.SetVariableText(m_vehicleSubmodeMap[m_vehicleSubmode]);
 				break;
 		}
 
@@ -32,22 +32,22 @@ StateMapEditor::StateMapEditor() :
 {
 	m_activeMode = ActiveMode::EDGE;
 	m_edgeSubmode = EdgeSubmode::GLUED_INSERT;
-	m_carSubmode = CarSubmode::INSERT;
+	m_vehicleSubmode = VehicleSubmode::INSERT;
 	m_line[0].color = sf::Color::White;
 	m_line[1].color = sf::Color::White;
 	m_edges.reserve(1024);
 	m_insertEdge = false;
 	m_removeEdge = false;
 	m_upToDate = false;
-	m_carPositioned = false;
-	m_drawableCar.setAngle(0.0);
-	m_drawableCar.setCenter(sf::Vector2f(0.0f, 0.0f));
+	m_vehiclePositioned = false;
+	m_drawableVehicle = m_drawableVehicleBuilder.Get();
 	m_spaceKeyPressed = false;
 	m_textFunctions.reserve(16U);
 }
 
 StateMapEditor::~StateMapEditor()
 {
+	delete m_drawableVehicle;
 }
 
 void StateMapEditor::Reload()
@@ -55,17 +55,17 @@ void StateMapEditor::Reload()
 	// Reset internal states
 	m_activeMode = ActiveMode::EDGE;
 	m_edgeSubmode = EdgeSubmode::GLUED_INSERT;
-	m_carSubmode = CarSubmode::INSERT;
+	m_vehicleSubmode = VehicleSubmode::INSERT;
 	m_edges.clear();
 	m_insertEdge = false;
 	m_removeEdge = false;
 	m_edgeBeggining = sf::Vector2f(0.0, 0.0);
 	m_movementTimer.Reset();
 	m_upToDate = false;
-	m_carPositioned = false;
-	m_drawableCar.setAngle(0.0);
-	m_drawableCar.setCenter(sf::Vector2f(0.0f, 0.0f));
-	m_builder.Clear();
+	m_vehiclePositioned = false;
+	delete m_drawableVehicle;
+	m_drawableVehicle = m_drawableVehicleBuilder.Get();
+	m_drawableBuilder.Clear();
 	m_spaceKeyPressed = false;
 
 	// Reset texts
@@ -77,8 +77,8 @@ void StateMapEditor::Reload()
 	m_filenameText.ResetObserverTimer();
 	m_edgeSubmodeText.SetVariableText(m_edgeSubmodeMap[m_edgeSubmode]);
 	m_edgeCountText.ResetObserverTimer();
-	m_carSubmodeText.SetVariableText(m_carSubmodeMap[m_carSubmode]);
-	m_carAngleText.ResetObserverTimer();
+	m_vehicleSubmodeText.SetVariableText(m_vehicleSubmodeMap[m_vehicleSubmode]);
+	m_vehicleAngleText.ResetObserverTimer();
 
 	// Reset view
 	auto& view = CoreWindow::GetView();
@@ -170,23 +170,23 @@ void StateMapEditor::Capture()
 				}
 				break;
 			}
-			case ActiveMode::CAR:
+			case ActiveMode::VEHICLE:
 			{
-				switch (m_carSubmode)
+				switch (m_vehicleSubmode)
 				{
-					case CarSubmode::INSERT:
+					case VehicleSubmode::INSERT:
 					{
-						m_carPositioned = true;
-						m_drawableCar.setCenter(correctPosition);
-						m_drawableCar.update();
+						m_vehiclePositioned = true;
+						m_drawableVehicle->SetCenter(correctPosition);
+						m_drawableVehicle->Update();
 						m_upToDate = false;
 						break;
 					}
-					case CarSubmode::REMOVE:
+					case VehicleSubmode::REMOVE:
 					{
-						if (m_drawableCar.inside(correctPosition))
+						if (m_drawableVehicle->Inside(correctPosition))
 						{
-							m_carPositioned = false;
+							m_vehiclePositioned = false;
 							m_upToDate = false;
 						}
 						break;
@@ -213,18 +213,18 @@ void StateMapEditor::Update()
 {
 	if (m_filenameText.IsReading())
 	{
-		bool success = m_builder.Load(m_filenameText.GetFilename());
-		auto status = m_builder.GetLastOperationStatus();
+		bool success = m_drawableBuilder.Load(m_filenameText.GetFilename());
+		auto status = m_drawableBuilder.GetLastOperationStatus();
 		m_filenameText.ShowStatusText();
 		if (success)
 		{
 			m_filenameText.SetSuccessStatusText(status.second);
-			m_edges = m_builder.GetEdges();
-			m_carPositioned = true;
-			auto data = m_builder.GetCar();
-			m_drawableCar.setCenter(data.first);
-			m_drawableCar.setAngle(data.second);
-			m_drawableCar.update();
+			m_edges = m_drawableBuilder.GetEdges();
+			m_vehiclePositioned = true;
+			auto data = m_drawableBuilder.GetVehicle();
+			m_drawableVehicle->SetCenter(data.first);
+			m_drawableVehicle->SetAngle(data.second);
+			m_drawableVehicle->Update();
 			m_upToDate = true;
 		}
 		else
@@ -234,14 +234,14 @@ void StateMapEditor::Update()
 	{
 		if (!m_upToDate)
 		{
-			m_builder.Clear();
-			if (m_carPositioned)
-				m_builder.AddCar(m_drawableCar.getAngle(), m_drawableCar.getCenter());
+			m_drawableBuilder.Clear();
+			if (m_vehiclePositioned)
+				m_drawableBuilder.AddVehicle(m_drawableVehicle->GetAngle(), m_drawableVehicle->GetCenter());
 			for (auto& i : m_edges)
-				m_builder.AddEdge(i);
-			bool success = m_builder.Save(m_filenameText.GetFilename());
+				m_drawableBuilder.AddEdge(i);
+			bool success = m_drawableBuilder.Save(m_filenameText.GetFilename());
 			std::string message;
-			auto status = m_builder.GetLastOperationStatus();
+			auto status = m_drawableBuilder.GetLastOperationStatus();
 			m_filenameText.ShowStatusText();
 			if (success)
 				m_filenameText.SetSuccessStatusText(status.second);
@@ -257,7 +257,7 @@ void StateMapEditor::Update()
 		case ActiveMode::EDGE:
 		{
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::F2))
-				SetActiveMode(ActiveMode::CAR);
+				SetActiveMode(ActiveMode::VEHICLE);
 			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::LAlt) ||
 				sf::Keyboard::isKeyPressed(sf::Keyboard::RAlt))
 			{
@@ -322,41 +322,41 @@ void StateMapEditor::Update()
 
 			break;
 		}
-		case ActiveMode::CAR:
+		case ActiveMode::VEHICLE:
 		{
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::F1))
 				SetActiveMode(ActiveMode::EDGE);
 			else
 			{
-				CarSubmode mode = m_carSubmode;
+				VehicleSubmode mode = m_vehicleSubmode;
 				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1) ||
 					sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad1))
 				{
-					mode = CarSubmode::INSERT;
+					mode = VehicleSubmode::INSERT;
 				}
 				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2) ||
 					sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad2))
 				{
-					mode = CarSubmode::REMOVE;
+					mode = VehicleSubmode::REMOVE;
 				}
-				else if (m_carPositioned)
+				else if (m_vehiclePositioned)
 				{
 					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z))
 					{
-						m_drawableCar.rotate(0.0);
-						m_drawableCar.update();
+						m_drawableVehicle->Rotate(0.0);
+						m_drawableVehicle->Update();
 					}
 					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::X))
 					{
-						m_drawableCar.rotate(1.0);
-						m_drawableCar.update();
+						m_drawableVehicle->Rotate(1.0);
+						m_drawableVehicle->Update();
 					}
 				}
 
-				if (m_carSubmode != mode)
+				if (m_vehicleSubmode != mode)
 				{
-					m_carSubmode = mode;
-					m_carSubmodeText.SetVariableText(m_carSubmodeMap[m_carSubmode]);
+					m_vehicleSubmode = mode;
+					m_vehicleSubmodeText.SetVariableText(m_vehicleSubmodeMap[m_vehicleSubmode]);
 				}
 			}
 
@@ -410,20 +410,20 @@ void StateMapEditor::Update()
 	m_filenameText.Update();
 	m_edgeSubmodeText.Update();
 	m_edgeCountText.Update();
-	m_carSubmodeText.Update();
-	m_carAngleText.Update();
+	m_vehicleSubmodeText.Update();
+	m_vehicleAngleText.Update();
 }
 
 bool StateMapEditor::Load()
 {
 	m_activeModeMap[ActiveMode::EDGE] = "Edge mode";
-	m_activeModeMap[ActiveMode::CAR] = "Car mode";
+	m_activeModeMap[ActiveMode::VEHICLE] = "Vehicle mode";
 
 	m_edgeSubmodeMap[EdgeSubmode::GLUED_INSERT] = "Glued insert mode";
 	m_edgeSubmodeMap[EdgeSubmode::REMOVE] = "Remove mode";
 
-	m_carSubmodeMap[CarSubmode::INSERT] = "Insert mode";
-	m_carSubmodeMap[CarSubmode::REMOVE] = "Remove mode";
+	m_vehicleSubmodeMap[VehicleSubmode::INSERT] = "Insert mode";
+	m_vehicleSubmodeMap[VehicleSubmode::REMOVE] = "Remove mode";
 
 	// Set consistent texts
 	m_activeModeText.SetConsistentText("Active mode:");
@@ -432,8 +432,8 @@ bool StateMapEditor::Load()
 	m_viewOffsetYText.SetConsistentText("View offset y:");
 	m_edgeSubmodeText.SetConsistentText("Current mode:");
 	m_edgeCountText.SetConsistentText("Edge count:");
-	m_carSubmodeText.SetConsistentText("Current mode:");
-	m_carAngleText.SetConsistentText("Car angle:");
+	m_vehicleSubmodeText.SetConsistentText("Current mode:");
+	m_vehicleAngleText.SetConsistentText("Vehicle angle:");
 
 	// Set variable texts
 	m_activeModeText.SetVariableText(m_activeModeMap[m_activeMode]);
@@ -445,10 +445,10 @@ bool StateMapEditor::Load()
 	m_edgeSubmodeText.SetVariableText(m_edgeSubmodeMap[m_edgeSubmode]);
 	m_textFunctions.push_back([&] { return std::to_string(m_edges.size()); });
 	m_edgeCountText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.5));
-	m_carSubmodeText.SetVariableText(m_carSubmodeMap[m_carSubmode]);
-	m_textFunctions.push_back([&] { double angle = double((long long)(m_drawableCar.getAngle()) % 360);
+	m_vehicleSubmodeText.SetVariableText(m_vehicleSubmodeMap[m_vehicleSubmode]);
+	m_textFunctions.push_back([&] { double angle = double((long long)(m_drawableVehicle->GetAngle()) % 360);
 									return std::to_string(CastAtan2ToFullAngle(angle)); } );
-	m_carAngleText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.2));
+	m_vehicleAngleText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.2));
 
 	// Set information texts
 	m_activeModeText.SetInformationText("| [F1] [F2]");
@@ -456,8 +456,8 @@ bool StateMapEditor::Load()
 	m_viewOffsetXText.SetInformationText("| [Left] [Right]");
 	m_viewOffsetYText.SetInformationText("| [Up] [Down]");
 	m_edgeSubmodeText.SetInformationText("| [1] [2] [Alt] [Esc]");
-	m_carSubmodeText.SetInformationText("| [1] [2]");
-	m_carAngleText.SetInformationText("| [Z] [X]");
+	m_vehicleSubmodeText.SetInformationText("| [1] [2]");
+	m_vehicleAngleText.SetInformationText("| [Z] [X]");
 	
 	// Set text positions
 	m_activeModeText.SetPosition({ FontContext::Component(0), {3}, {7}, {0} });
@@ -467,8 +467,8 @@ bool StateMapEditor::Load()
 	m_filenameText.SetPosition({ FontContext::Component(0), {3}, {7}, {16}, {4} });
 	m_edgeSubmodeText.SetPosition({ FontContext::Component(0), {3}, {7}, {1, true} });
 	m_edgeCountText.SetPosition({ FontContext::Component(0), {3}, {2, true} });
-	m_carSubmodeText.SetPosition({ FontContext::Component(0), {3}, {7}, {1, true} });
-	m_carAngleText.SetPosition({ FontContext::Component(0), {3}, {7}, {2, true} });
+	m_vehicleSubmodeText.SetPosition({ FontContext::Component(0), {3}, {7}, {1, true} });
+	m_vehicleAngleText.SetPosition({ FontContext::Component(0), {3}, {7}, {2, true} });
 
 	CoreLogger::PrintSuccess("State \"Map Editor\" dependencies loaded correctly");
 	return true;
@@ -476,10 +476,10 @@ bool StateMapEditor::Load()
 
 void StateMapEditor::Draw()
 {
-	if (m_carPositioned)
+	if (m_vehiclePositioned)
 	{
-		m_drawableCar.drawBody();
-		m_drawableCar.drawBeams();
+		m_drawableVehicle->DrawBody();
+		m_drawableVehicle->DrawBeams();
 	}
 
 	m_line[0].color = sf::Color::White;
@@ -522,10 +522,10 @@ void StateMapEditor::Draw()
 			m_edgeCountText.Draw();
 			break;
 		}
-		case ActiveMode::CAR:
+		case ActiveMode::VEHICLE:
 		{
-			m_carSubmodeText.Draw();
-			m_carAngleText.Draw();
+			m_vehicleSubmodeText.Draw();
+			m_vehicleAngleText.Draw();
 			break;
 		}
 		default:

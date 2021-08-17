@@ -11,14 +11,18 @@ StateTraining::~StateTraining()
 {
 	delete m_evolution;
 	delete m_edgeManager;
-	for (auto& i : m_carFactory)
+	for (auto& i : m_vehicleFactory)
 		delete std::get<0>(i);
 	delete m_checkpointMap;
 }
 
 void StateTraining::Reload()
 {
-
+	// Reset view
+	auto& view = CoreWindow::GetView();
+	auto viewOffset = CoreWindow::GetViewOffset();
+	view.move(-viewOffset);
+	CoreWindow::GetRenderWindow().setView(view);
 }
 
 void StateTraining::Capture()
@@ -29,22 +33,22 @@ void StateTraining::Capture()
 void StateTraining::Update()
 {
 	bool activity = false;
-	for (size_t i = 0; i < m_carFactory.size(); ++i)
+	for (size_t i = 0; i < m_vehicleFactory.size(); ++i)
 	{
-		if (!m_carFactory[i].second)
+		if (!m_vehicleFactory[i].second)
 			continue;
 		activity = true;
-		NeuronLayer output = m_brains[i].Update(m_carFactory[i].first->processOutput());
-		m_carFactory[i].first->processInput(output);
-		m_carFactory[i].first->update();
+		NeuronLayer output = m_brains[i].Update(m_vehicleFactory[i].first->ProcessOutput());
+		m_vehicleFactory[i].first->ProcessInput(output);
+		m_vehicleFactory[i].first->Update();
 	}
 
-	m_edgeManager->Intersect(m_carFactory);
+	m_edgeManager->Intersect(m_vehicleFactory);
 
 	if (!activity)
 	{
 		// Calculate fitness and highest fitness overall
-		m_checkpointMap->iterate(m_carFactory);
+		m_checkpointMap->iterate(m_vehicleFactory);
 
 		// Generate new generation
 		if (m_evolution->iterate(m_checkpointMap->getFitnessVector()))
@@ -54,12 +58,14 @@ void StateTraining::Update()
 			for (size_t i = 0; i < m_brains.size(); ++i)
 				m_brains[i].SetFromRawData(m_evolution->getIndividual(i));
 
-			for (size_t i = 0; i < m_carFactory.size(); ++i)
+			for (size_t i = 0; i < m_vehicleFactory.size(); ++i)
 			{
-				delete m_carFactory[i].first;
-				m_carFactory[i].first = m_builder.GetDrawableCar();
-				m_carFactory[i].first->init(m_annNumberOfInputs);
-				m_carFactory[i].second = true;
+				delete m_vehicleFactory[i].first;
+				m_vehicleFactory[i] = std::pair(m_drawableVehicleBuilder.Get(), true);
+				auto details = m_drawableBuilder.GetVehicle();
+				m_vehicleFactory[i].first->SetCenter(details.first);
+				m_vehicleFactory[i].first->SetAngle(details.second);
+				m_vehicleFactory[i].first->Update();
 			}
 
 			m_checkpointMap->reset();
@@ -76,12 +82,12 @@ void StateTraining::Update()
 
 		if (m_viewTimer.Increment())
 		{
-			auto index = m_checkpointMap->markLeader(m_carFactory);
-			m_viewCenter = m_carFactory[index].first->getCenter();
+			auto index = m_checkpointMap->markLeader(m_vehicleFactory);
+			m_viewCenter = m_vehicleFactory[index].first->GetCenter();
 		}
 
 		if (m_waveTimer.Increment())
-			m_checkpointMap->punish(m_carFactory);
+			m_checkpointMap->punish(m_vehicleFactory);
 	}
 
 	auto& view = CoreWindow::GetView();
@@ -100,26 +106,26 @@ void StateTraining::Update()
 
 bool StateTraining::Load()
 {
-	/*if (!m_builder.Load())
+	/*if (!m_drawableBuilder.Load())
 	{
 
 		return false;
 	}
 
-	m_checkpointMap = m_builder.GetDrawableCheckpointMap();
+	m_checkpointMap = m_drawableBuilder.GetDrawableCheckpointMap();
 	m_checkpointMap->restart(m_populationSize, 0.02);
 
-	m_edgeManager = m_builder.GetDrawableManager();
+	m_edgeManager = m_drawableBuilder.GetDrawableManager();
 	
 	for (size_t i = 0; i < m_populationSize; ++i)
 	{
-		DrawableCar* car = m_builder.GetDrawableCar();
-		car->init(m_annNumberOfInputs);
-		m_carFactory.push_back(std::pair(car, true));
+		DrawableVehicle* vehicle = m_drawableVehicleBuilder.Get();
+		vehicle->Init();
+		m_vehicleFactory.push_back(std::pair(vehicle, true));
 	}
 
 	std::vector<size_t> hiddenLayersSizes = { 12, 12 };
-	ArtificialNeuralNetwork ann(m_annNumberOfInputs, CAR_NUMBER_OF_INPUTS, hiddenLayersSizes);
+	ArtificialNeuralNetwork ann(m_annNumberOfInputs, VEHICLE_NUMBER_OF_INPUTS, hiddenLayersSizes);
 	ann.setBiasVector({ 0.25, 0.1, 0.05 });
 	ann.setActivationVector({ ActivationLeakyRelu, ActivationTanh, ActivationRelu });
 	m_brains.resize(m_populationSize, ann);
@@ -162,12 +168,12 @@ bool StateTraining::Load()
 
 void StateTraining::Draw()
 {
-	for (auto& car : m_carFactory)
+	for (auto& vehicle : m_vehicleFactory)
 	{
-		car.first->drawBody();
-		if(!car.second)
+		vehicle.first->DrawBody();
+		if(!vehicle.second)
 			continue;
-		car.first->drawBeams();
+		vehicle.first->DrawBeams();
 	}
 
 	m_edgeManager->Draw();

@@ -8,21 +8,16 @@ const size_t EDGE_NUMBER_OF_POINTS = 2;
 const size_t MIN_NUMBER_OF_INNER_EDGES = 4;
 const size_t MIN_NUMBER_OF_OUTER_EDGES = MIN_NUMBER_OF_INNER_EDGES;
 const size_t TRIANGLE_NUMBER_OF_POINTS = 3;
-const size_t CAR_NUMBER_OF_POINTS = 4;
-const size_t CAR_FIVE_NUMBER_OF_SENSORS = 5;
-const size_t CAR_EIGHT_NUMBER_OF_SENSORS = 8;
-const size_t CAR_TWELVE_NUMBER_OF_SENSORS = 12;
-const size_t CAR_DEFAULT_NUMBER_OF_SENSORS = CAR_FIVE_NUMBER_OF_SENSORS;
-const size_t CAR_NUMBER_OF_INPUTS = 3;
+const size_t VEHICLE_NUMBER_OF_POINTS = 4;
+const size_t VEHICLE_NUMBER_OF_INPUTS = 3;
 
 using Edge = std::array<sf::Vector2f, EDGE_NUMBER_OF_POINTS>;
 using EdgeVector = std::vector<Edge>;
 using Triangle = std::array<sf::Vector2f, TRIANGLE_NUMBER_OF_POINTS>;
 using Line = std::array<sf::Vertex, EDGE_NUMBER_OF_POINTS>;
-using CarPoints = std::array<sf::Vector2f, CAR_NUMBER_OF_POINTS>;
-class DrawableCar;
-using DetailedCar = std::pair<DrawableCar*, bool>;
-using DetailedCarFactory = std::vector<DetailedCar>;
+class DrawableVehicle;
+using DetailedVehicle = std::pair<DrawableVehicle*, bool>;
+using DetailedVehicleFactory = std::vector<DetailedVehicle>;
 
 inline bool Ccw(sf::Vector2f a, sf::Vector2f b, sf::Vector2f c)
 {
@@ -41,45 +36,37 @@ inline bool Intersect(const Edge& a, const Edge& b)
     return Intersect(a, b[0], b[1]);
 }
 
-// Check if edge intersects with car
+// Checks if edge intersects with any vertex
 // This function does not work with collinear points!
-inline bool Intersect(const Edge& edge, const CarPoints& carPoints)
+inline bool Intersect(const Edge& edge, const sf::VertexArray& vertices)
 {
-    if (Intersect(edge, carPoints[0], carPoints[1]))
-        return true;
+    size_t lastIndex = vertices.getVertexCount() - 1;
+    for (size_t index = 0; index < lastIndex; ++index)
+    {
+        if (Intersect(edge, vertices[index].position, vertices[index + 1].position))
+            return true;
+    }
 
-    if (Intersect(edge, carPoints[1], carPoints[2]))
-        return true;
-
-    if (Intersect(edge, carPoints[2], carPoints[3]))
-        return true;
-
-    if (Intersect(edge, carPoints[3], carPoints[0]))
+    if (Intersect(edge, vertices[lastIndex].position, vertices[0].position))
         return true;
 
     return false;
 }
 
 // Based on triangle vertices calculate area
-inline float GetTriangleArea(sf::Vector2f& A, sf::Vector2f& B, sf::Vector2f& C)
+inline float GetTriangleArea(const sf::Vector2f& A, const sf::Vector2f& B, const sf::Vector2f& C)
 {
 	return std::fabs((B.x * A.y - A.x * B.y) + (C.x * B.y - B.x * C.y) + (A.x * C.y - C.x * A.y)) / 2;
 }
 
-// Calculates rectangle area by calculating four triangles
-inline float GetRectangleArea(CarPoints& carPoints, sf::Vector2f P)
+// Calculates figure area by calculating n triangles
+inline float GetFigureArea(const sf::VertexArray& vertices, const sf::Vector2f& center)
 {
-    sf::Vector2f& A = carPoints[0];
-    sf::Vector2f& B = carPoints[1];
-    sf::Vector2f& C = carPoints[2];
-    sf::Vector2f& D = carPoints[3];
-
-    float ABP = GetTriangleArea(A, B, P);
-    float BCP = GetTriangleArea(B, C, P);
-    float CDP = GetTriangleArea(C, D, P);
-    float DAP = GetTriangleArea(D, A, P);
-
-    float area = ABP + BCP + CDP + DAP;
+    float area = 0;
+    size_t lastIndex = vertices.getVertexCount() - 1;
+    for (size_t index = 0; index < lastIndex; ++index)
+        area += GetTriangleArea(vertices[index].position, vertices[index + 1].position, center);
+    area += GetTriangleArea(vertices[lastIndex].position, vertices[0].position, center);
     return area;
 }
 
@@ -140,7 +127,7 @@ inline double Distance(const sf::Vector2f a, const sf::Vector2f b)
     return std::sqrt(std::pow(a.x - b.x, 2) + std::pow(a.y - b.y, 2));
 }
 
-// Calculates length of a edge
+// Calculates length of an edge
 inline double Distance(const Edge& edge)
 {
     return Distance(edge[0], edge[1]);
@@ -151,8 +138,8 @@ inline float TriangleSign(sf::Vector2f p1, sf::Vector2f p2, sf::Vector2f p3)
     return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
 }
 
-// Check if point is inside triangle
-inline bool IsPointInsideTriangle(const Triangle& triangle, const sf::Vector2f point)
+// Returns true if point is inside triangle and false otherwise
+inline bool IsPointInsideTriangle(const Triangle& triangle, const sf::Vector2f& point)
 {
     float d1 = TriangleSign(point, triangle[0], triangle[1]);
     float d2 = TriangleSign(point, triangle[1], triangle[2]);
@@ -164,12 +151,23 @@ inline bool IsPointInsideTriangle(const Triangle& triangle, const sf::Vector2f p
     return !(negative && positive);
 }
 
-// Check if car is inside triangle
-inline bool IsCarInsideTriangle(const Triangle& triangle, const CarPoints& car)
+// Returns true if point is inside circle
+inline bool IsPointInsideCircle(const sf::Vector2f& center, double radius, const sf::Vector2f& point)
 {
-    for (size_t i = 0; i < CAR_NUMBER_OF_POINTS; ++i)
+    auto x = std::pow(double(point.x) - center.x, 2.0);
+    auto y = std::pow(double(point.y) - center.y, 2.0);
+    if (x + y < std::pow(radius, 2.0))
+        return true;
+    return false;
+}
+
+// Returns true if any vertex is inside triangle and false otherwise
+inline bool Intersect(const Triangle& triangle, const sf::VertexArray& vertices)
+{
+    size_t size = vertices.getVertexCount();
+    for (size_t i = 0; i < size; ++i)
     {
-        if (IsPointInsideTriangle(triangle, car[i]))
+        if (IsPointInsideTriangle(triangle, vertices[i].position))
             return true;
     }
     

@@ -1,6 +1,7 @@
 #pragma once
 #include "StateInterface.hpp"
 #include "DrawableMath.hpp"
+#include "DrawableVariableText.hpp"
 #include "DrawableDoubleText.hpp"
 #include "DrawableTripleText.hpp"
 #include "DrawableFilenameText.hpp"
@@ -41,6 +42,8 @@ class StateANNEditor final : public StateInterface
 	Line m_weightShape;
 
 	// Texts
+	DrawableVariableText m_inputText;
+	DrawableVariableText m_outputText;
 	DrawableTripleText m_currentLayerText;
 	DrawableTripleText m_currentLayerNumberOfNeuronsText;
 	DrawableTripleText m_currentLayerActivationFunctionText;

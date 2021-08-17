@@ -1,18 +1,18 @@
 #pragma once
 #include "DrawableCheckpointMap.hpp"
-#include "DrawableCar.hpp"
+#include "DrawableVehicle.hpp"
 
 Fitness DrawableCheckpointMap::getMaxFitness()
 {
 	return Fitness(m_checkpoints.size());
 }
 
-Fitness DrawableCheckpointMap::calculateFitness(DetailedCar& car)
+Fitness DrawableCheckpointMap::calculateFitness(DetailedVehicle& vehicle)
 {
 	Fitness fitness = 0;
 	for (size_t i = 0; i < m_checkpoints.size(); ++i)
 	{
-		if (IsCarInsideTriangle(m_checkpoints[i], car.first->getPoints()))
+		if (Intersect(m_checkpoints[i], vehicle.first->GetVertices()))
 			fitness = Fitness(i + 1);
 	}
 
@@ -190,12 +190,12 @@ void DrawableCheckpointMap::draw()
 	}
 }
 
-void DrawableCheckpointMap::iterate(DetailedCarFactory& factory)
+void DrawableCheckpointMap::iterate(DetailedVehicleFactory& vehicleFactory)
 {
 	auto maxFitness = getMaxFitness();
-	for (size_t i = 0; i < factory.size(); ++i)
+	for (size_t i = 0; i < vehicleFactory.size(); ++i)
 	{
-		m_fitnessVector[i] = calculateFitness(factory[i]);
+		m_fitnessVector[i] = calculateFitness(vehicleFactory[i]);
 		m_fitnessVector[i] += static_cast<Fitness>(double(maxFitness) / m_timers[i].Value());
 	}
 
@@ -205,18 +205,18 @@ void DrawableCheckpointMap::iterate(DetailedCarFactory& factory)
 		m_highestFitnessOverall = m_highestFitness;
 }
 
-size_t DrawableCheckpointMap::markLeader(DetailedCarFactory& factory)
+size_t DrawableCheckpointMap::markLeader(DetailedVehicleFactory& vehicleFactory)
 {
 	auto maxFitness = getMaxFitness();
-	for (size_t i = 0; i < factory.size(); ++i)
+	for (size_t i = 0; i < vehicleFactory.size(); ++i)
 	{
-		factory[i].first->setFollowerColor();
-		if (!factory[i].second)
+		vehicleFactory[i].first->SetFollowerColor();
+		if (!vehicleFactory[i].second)
 		{
 			m_fitnessVector[i] = 0;
 			continue;
 		}
-		m_fitnessVector[i] = calculateFitness(factory[i]);
+		m_fitnessVector[i] = calculateFitness(vehicleFactory[i]);
 	}
 
 	auto iterator = std::max_element(m_fitnessVector.begin(), m_fitnessVector.end());
@@ -225,24 +225,24 @@ size_t DrawableCheckpointMap::markLeader(DetailedCarFactory& factory)
 		m_highestFitnessOverall = m_highestFitness;
 
 	size_t index = std::distance(m_fitnessVector.begin(), iterator);
-	factory[index].first->setLeaderColor();
+	vehicleFactory[index].first->SetLeaderColor();
 	return index;
 }
 
-void DrawableCheckpointMap::punish(DetailedCarFactory& factory)
+void DrawableCheckpointMap::punish(DetailedVehicleFactory& vehicleFactory)
 {
-	// Check if car has made improvement
-	// If car has made improvement then it is not punished
+	// Check if vehicle has made improvement
+	// If vehicle has made improvement then it is not punished
 	auto maxFitness = getMaxFitness();
-	for (size_t i = 0; i < factory.size(); ++i)
+	for (size_t i = 0; i < vehicleFactory.size(); ++i)
 	{
-		if (!factory[i].second)
+		if (!vehicleFactory[i].second)
 			continue;
-		m_fitnessVector[i] = calculateFitness(factory[i]);
+		m_fitnessVector[i] = calculateFitness(vehicleFactory[i]);
 		Fitness requiredFitness = m_previousFitnessVector[i];
 		requiredFitness += static_cast<Fitness>(double(maxFitness) * m_minFitnessImprovement);
 		if (requiredFitness > m_fitnessVector[i])
-			factory[i].second = false;
+			vehicleFactory[i].second = false;
 		m_previousFitnessVector[i] = m_fitnessVector[i];
 	}
 }

@@ -1,10 +1,11 @@
 #pragma once
 #include "StateInterface.hpp"
-#include "DrawableCar.hpp"
+#include "DrawableVehicle.hpp"
 #include "DrawableDoubleText.hpp"
 #include "DrawableTripleText.hpp"
 #include "DrawableFilenameText.hpp"
 #include "DrawableBuilder.hpp"
+#include "DrawableVehicleBuilder.hpp"
 #include "CycleTimer.hpp"
 #include <functional>
 
@@ -13,7 +14,7 @@ class StateMapEditor final : public StateInterface
 	enum class ActiveMode
 	{
 		EDGE,
-		CAR
+		VEHICLE
 	} m_activeMode;
 	std::map<ActiveMode, std::string> m_activeModeMap;
 
@@ -24,12 +25,12 @@ class StateMapEditor final : public StateInterface
 	} m_edgeSubmode;
 	std::map<EdgeSubmode, std::string> m_edgeSubmodeMap;
 
-	enum class CarSubmode
+	enum class VehicleSubmode
 	{
 		INSERT,
 		REMOVE
-	} m_carSubmode;
-	std::map<CarSubmode, std::string> m_carSubmodeMap;
+	} m_vehicleSubmode;
+	std::map<VehicleSubmode, std::string> m_vehicleSubmodeMap;
 
 	Line m_line;
 	EdgeVector m_edges;
@@ -40,10 +41,11 @@ class StateMapEditor final : public StateInterface
 	CycleTimer m_movementTimer;
 	bool m_upToDate;
 
-	bool m_carPositioned;
-	DrawableCar m_drawableCar;
+	bool m_vehiclePositioned;
+	DrawableVehicle* m_drawableVehicle;
 
-	DrawableBuilder m_builder;
+	DrawableBuilder m_drawableBuilder;
+	DrawableVehicleBuilder m_drawableVehicleBuilder;
 	bool m_spaceKeyPressed;
 
 	DrawableTripleText m_activeModeText;
@@ -53,8 +55,8 @@ class StateMapEditor final : public StateInterface
 	DrawableFilenameText<true, true> m_filenameText;
 	DrawableTripleText m_edgeSubmodeText;
 	DrawableDoubleText m_edgeCountText;
-	DrawableTripleText m_carSubmodeText;
-	DrawableTripleText m_carAngleText;
+	DrawableTripleText m_vehicleSubmodeText;
+	DrawableTripleText m_vehicleAngleText;
 	std::vector<std::function<std::string()>> m_textFunctions;
 
 	void SetActiveMode(ActiveMode);

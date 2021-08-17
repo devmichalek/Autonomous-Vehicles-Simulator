@@ -151,16 +151,23 @@ StateANNEditor::StateANNEditor() :
 	for (size_t i = 0; i < CONTROL_KEYS_COUNT; ++i)
 		m_pressedKeys[i] = false;
 
-	m_totalNumberOfNeurons = 0;
-	m_totalNumberOfWeights = 0;
-	m_currentLayer = 0;
-	m_upToDate = false;
 	m_neuronShape.setFillColor(sf::Color::White);
 	m_neuronShape.setOutlineColor(sf::Color::White);
 	m_neuronShape.setRadius(float(CoreWindow::GetSize().x) * 0.008f);
 	m_weightShape[0].color = sf::Color(255, 255, 255, 128);
 	m_weightShape[1].color = m_weightShape[0].color;
 	m_textFunctions.reserve(16U);
+
+	// Create dummy
+	if (m_builder.CreateDummy())
+	{
+		m_neuronLayerSizes = m_builder.GetNeuronLayerSizes();
+		m_activationFunctionIndexes = m_builder.GetActivationFunctionIndexes();
+		m_biasVector = m_builder.GetBiasVector();
+		m_currentLayer = 0;
+		m_upToDate = false;
+		CalculatePositions();
+	}
 }
 
 StateANNEditor::~StateANNEditor()
@@ -169,15 +176,16 @@ StateANNEditor::~StateANNEditor()
 
 void StateANNEditor::Reload()
 {
-	m_neuronLayerSizes.clear();
-	m_activationFunctionIndexes.clear();
-	m_biasVector.clear();
-	m_totalNumberOfNeurons = 0;
-	m_totalNumberOfWeights = 0;
-	m_currentLayer = 0;
-	m_builder.Clear();
-	m_upToDate = false;
-	CalculatePositions();
+	// Create dummy
+	if (m_builder.CreateDummy())
+	{
+		m_neuronLayerSizes = m_builder.GetNeuronLayerSizes();
+		m_activationFunctionIndexes = m_builder.GetActivationFunctionIndexes();
+		m_biasVector = m_builder.GetBiasVector();
+		m_currentLayer = 0;
+		m_upToDate = false;
+		CalculatePositions();
+	}
 
 	// Reset texts
 	m_currentLayerText.ResetObserverTimer();
@@ -297,9 +305,25 @@ void StateANNEditor::Update()
 	}
 	else if (m_filenameText.IsReading())
 	{
-
+		bool success = m_builder.Load(m_filenameText.GetFilename());
+		auto status = m_builder.GetLastOperationStatus();
+		m_filenameText.ShowStatusText();
+		if (success)
+		{
+			m_filenameText.SetSuccessStatusText(status.second);
+			m_neuronLayerSizes = m_builder.GetNeuronLayerSizes();
+			m_activationFunctionIndexes = m_builder.GetActivationFunctionIndexes();
+			m_biasVector = m_builder.GetBiasVector();
+			m_currentLayer = 0;
+			m_upToDate = true;
+			CalculatePositions();
+		}
+		else
+			m_filenameText.SetErrorStatusText(status.second);
 	}
 
+	m_inputText.Update();
+	m_outputText.Update();
 	m_currentLayerText.Update();
 	m_currentLayerNumberOfNeuronsText.Update();
 	m_currentLayerActivationFunctionText.Update();
@@ -314,6 +338,8 @@ void StateANNEditor::Update()
 bool StateANNEditor::Load()
 {
 	// Set consistent texts
+	m_inputText.SetText("Input");
+	m_outputText.SetText("Output");
 	m_currentLayerText.SetConsistentText("Current layer:");
 	m_currentLayerNumberOfNeuronsText.SetConsistentText("Current layer number of neurons:");
 	m_currentLayerActivationFunctionText.SetConsistentText("Current layer activation function:");
@@ -353,7 +379,15 @@ bool StateANNEditor::Load()
 	m_currentLayerActivationFunctionText.SetInformationText("| [*]");
 	m_currentLayerBiasText.SetInformationText("| [Z] [X]");
 
+	// Set text character size and rotation
+	m_inputText.SetCharacterSize(4);
+	m_outputText.SetCharacterSize(4);
+	m_inputText.SetRotation(270.0f);
+	m_outputText.SetRotation(90.0f);
+
 	// Set text positions
+	m_inputText.SetPosition({ FontContext::Component(2), {26} });
+	m_outputText.SetPosition({ FontContext::Component(2, true), {18} });
 	m_currentLayerText.SetPosition({ FontContext::Component(0), {7}, {14}, {0} });
 	m_currentLayerNumberOfNeuronsText.SetPosition({ FontContext::Component(0), {7}, {14}, {1} });
 	m_currentLayerActivationFunctionText.SetPosition({ FontContext::Component(0), {7}, {14}, {2} });
@@ -387,6 +421,8 @@ void StateANNEditor::Draw()
 		}
 	}
 
+	m_inputText.Draw();
+	m_outputText.Draw();
 	m_currentLayerText.Draw();
 	m_currentLayerNumberOfNeuronsText.Draw();
 	m_currentLayerActivationFunctionText.Draw();

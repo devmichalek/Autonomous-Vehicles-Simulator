@@ -28,21 +28,21 @@ DrawableEdgeManager::~DrawableEdgeManager()
 {
 }
 
-void DrawableEdgeManager::Intersect(DetailedCarFactory& cars)
+void DrawableEdgeManager::Intersect(DetailedVehicleFactory& vehicleFactory)
 {
-	for (auto& car : cars)
+	for (auto& vehicle : vehicleFactory)
 	{
-		if (!car.second)
+		if (!vehicle.second)
 			continue;
 
 		for (auto& edge : m_edges)
 		{
-			if (::Intersect(edge, car.first->getPoints()))
+			if (::Intersect(edge, vehicle.first->GetVertices()))
 			{
-				car.second = false;
+				vehicle.second = false;
 			}
 			else
-				car.first->detect(edge);
+				vehicle.first->Detect(edge);
 		}
 	}
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include "StateInterface.hpp"
 #include "DrawableBuilder.hpp"
+#include "DrawableVehicleBuilder.hpp"
 #include "DrawableEdgeManager.hpp"
 #include "DrawableCheckpointMap.hpp"
 #include "DrawableTripleText.hpp"
@@ -22,7 +23,7 @@ class StateTesting final : public StateInterface
 	{
 		MAP_FILENAME_TYPE,
 		ANN_FILENAME_TYPE,
-		CAR_FILENAME_TYPE,
+		VEHICLE_FILENAME_TYPE,
 		FILENAME_TYPES_COUNT
 	};
 	std::array<std::string, FILENAME_TYPES_COUNT> m_filenameTypeStrings;
@@ -34,9 +35,10 @@ class StateTesting final : public StateInterface
 
 	// Objects of test
 	DrawableBuilder m_drawableBuilder;
+	DrawableVehicleBuilder m_drawableVehicleBuilder;
 	DrawableEdgeManager* m_edgeManager;
-	DrawableCar* m_userCar;
-	DetailedCarFactory m_carFactory;
+	DrawableVehicle* m_userVehicle;
+	DetailedVehicleFactory m_vehicleFactory;
 	DrawableCheckpointMap* m_checkpointMap;
 
 	// Texts

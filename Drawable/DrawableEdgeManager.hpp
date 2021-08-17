@@ -1,5 +1,5 @@
 #pragma once
-#include "DrawableCar.hpp"
+#include "DrawableVehicle.hpp"
 #include "StoppableTimer.hpp"
 #include "Genetic.hpp"
 
@@ -11,7 +11,7 @@ public:
 
 	~DrawableEdgeManager();
 
-	void Intersect(DetailedCarFactory& cars);
+	void Intersect(DetailedVehicleFactory& vehicleFactory);
 
 	void Draw();
 

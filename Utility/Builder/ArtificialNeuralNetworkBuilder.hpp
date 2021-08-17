@@ -22,6 +22,7 @@ class ArtificialNeuralNetworkBuilder
 		ERROR_BIAS_IS_LESS_THAN_MINIMUM_ALLOWED,
 		ERROR_BIAS_IS_GREATER_THAN_MAXIMUM_ALLOWED,
 		ERROR_UNKNOWN_ACTIVATION_FUNCTION_INDEX,
+		ERROR_NUMBER_OF_WEIGHTS_MISMATCH,
 		ERROR_EMPTY_FILENAME_CANNOT_OPEN_FILE_FOR_READING,
 		ERROR_CANNOT_OPEN_FILE_FOR_READING,
 		ERROR_EMPTY_FILENAME_CANNOT_OPEN_FILE_FOR_WRITING,
@@ -36,6 +37,30 @@ class ArtificialNeuralNetworkBuilder
 	size_t m_numberOfNeurons;
 	size_t m_numberOfWeights;
 	bool m_validated;
+
+	// Validates number of layers
+	bool ValidateNumberOfLayers(size_t size);
+
+	// Validates number of neurons in a layer
+	bool ValidateNumberOfNeurons(size_t size);
+
+	// Calculates number of neurons
+	void CalculateNumberOfNeurons();
+
+	// Calculates number of weights
+	void CalculateNumberOfWeights();
+
+	// Validates number of activation function indexes
+	bool ValidateNumberOfActivationFunctionIndexes(size_t size);
+
+	// Validates activation function index
+	bool ValidateActivationFunctionIndex(ActivationFunctionIndex activationFunctionIndex);
+
+	// Validates bias vector length
+	bool ValidateBiasVectorLength(size_t length);
+
+	// Validates bias
+	bool ValidateBias(Bias bias);
 
 	// Validates internal fields
 	bool Validate();
@@ -59,6 +84,9 @@ public:
 	// Returns true in case of success and false in case of failure
 	std::pair<bool, std::string> GetLastOperationStatus();
 
+	// Creates dummy ANN
+	bool CreateDummy();
+
 	// Sets neuron layer sizes
 	void SetNeuronLayerSizes(NeuronLayerSizes neuronLayerSizes);
 
@@ -67,6 +95,15 @@ public:
 
 	// Sets bias vector
 	void SetBiasVector(BiasVector biasVector);
+
+	// Returns intermediate representation of neuron layers
+	NeuronLayerSizes GetNeuronLayerSizes();
+
+	// Returns intermediate representation of activation functions
+	ActivationFunctionIndexes GetActivationFunctionIndexes();
+
+	// Returns bias vector
+	BiasVector GetBiasVector();
 
 	// Returns artificial neural network
 	ArtificialNeuralNetwork* Get();

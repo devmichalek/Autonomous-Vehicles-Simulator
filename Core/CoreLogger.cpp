@@ -1,5 +1,5 @@
 #include "CoreLogger.hpp"
-#include <random>
+#include <algorithm>
 #include <chrono>
 #include <ctime>
 
@@ -27,29 +27,12 @@ void CoreLogger::PrintMessage(std::string message)
 
 void CoreLogger::Initialize()
 {
-	std::random_device device;
-	std::mt19937 engine(device());
-	std::uniform_int_distribution<std::mt19937::result_type> distribution(0, 9);
-
-	// Generate filename
-	size_t attempt = 3;
-	size_t hashLength = 64;
-	while (attempt--)
-	{
-		std::string filename;
-		filename.resize(hashLength);
-		for (auto& character : filename)
-			character = static_cast<char>(distribution(engine) + 48);
-
-		m_output.open(filename + ".log");
-		if (m_output.is_open())
-		{
-			auto now = std::chrono::system_clock::now();
-			std::time_t cnow = std::chrono::system_clock::to_time_t(now);
-			m_output << std::ctime(&cnow) << std::endl;
-			break;
-		}
-	}
+	auto now = std::chrono::system_clock::now();
+	std::time_t cnow = std::chrono::system_clock::to_time_t(now);
+	std::string filename = std::ctime(&cnow);
+	std::replace(filename.begin(), filename.end(), ' ', '_');
+	std::replace(filename.begin(), filename.end(), ':', '_');
+	m_output.open(filename.substr(0, filename.size() - 1) + ".log");
 }
 
 void CoreLogger::PrintInternal(const char* prefix, std::string& message)

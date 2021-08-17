@@ -1,18 +1,18 @@
 #pragma once
-#include "DrawableCar.hpp"
+#include "DrawableVehicle.hpp"
 #include <map>
 
 class DrawableEdgeManager;
-class DrawableCar;
+class DrawableVehicle;
 class DrawableCheckpointMap;
 
 class DrawableBuilder final
 {
 	size_t m_edgesPivot;
 	EdgeVector m_edges;
-	bool m_carSpecified;
-	sf::Vector2f m_carCenter;
-	double m_carAngle;
+	bool m_vehicleSpecified;
+	sf::Vector2f m_vehicleCenter;
+	double m_vehicleAngle;
 	bool m_validated;
 
 	enum
@@ -32,8 +32,8 @@ class DrawableBuilder final
 		ERROR_CANNOT_EXTRACT_DOUBLE_WHILE_READING,
 		ERROR_CANNOT_EXTRACT_POINT_WHILE_READING,
 		ERROR_CANNOT_EXTRACT_EDGE_WHILE_READING,
-		ERROR_CANNOT_FIND_CAR_ANGLE_STRING_WHILE_READING,
-		ERROR_CANNOT_FIND_CAR_CENTER_STRING_WHILE_READING,
+		ERROR_CANNOT_FIND_VEHICLE_ANGLE_STRING_WHILE_READING,
+		ERROR_CANNOT_FIND_VEHICLE_CENTER_STRING_WHILE_READING,
 		ERROR_CANNOT_FIND_EDGE_STRING_WHILE_READING,
 		ERROR_EMPTY_FILENAME_CANNOT_OPEN_FILE_FOR_WRITING,
 		ERROR_CANNOT_OPEN_FILE_FOR_WRITING,
@@ -42,8 +42,8 @@ class DrawableBuilder final
 	size_t m_lastOperationStatus;
 
 	// String constants used for file input/output operations
-	static inline const std::string m_carAngleString = "Car angle: ";
-	static inline const std::string m_carCenterString = "Car center: ";
+	static inline const std::string m_vehicleAngleString = "Vehicle angle: ";
+	static inline const std::string m_vehicleCenterString = "Vehicle center: ";
 	static inline const std::string m_edgeString = "Edge: ";
 
 	// Validates internal fields
@@ -58,8 +58,8 @@ public:
 	// Clears internal fields
 	void Clear();
 
-	// Sets intermediate representation of car
-	void AddCar(double angle, sf::Vector2f center);
+	// Sets intermediate representation of vehicle
+	void AddVehicle(double angle, sf::Vector2f center);
 
 	// Adds edge to the intermediate representation of edges container
 	void AddEdge(Edge edge);
@@ -78,11 +78,9 @@ public:
 	EdgeVector GetEdges();
 
 	// Returns intermediate representation of vehicle
-	std::pair<sf::Vector2f, double> GetCar();
+	std::pair<sf::Vector2f, double> GetVehicle();
 
 	DrawableEdgeManager* GetDrawableManager();
-
-	DrawableCar* GetDrawableCar();
 
 	DrawableCheckpointMap* GetDrawableCheckpointMap();
 };

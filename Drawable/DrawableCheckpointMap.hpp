@@ -10,7 +10,7 @@ class DrawableCheckpointMap final
 {
 	Fitness getMaxFitness();
 
-	Fitness calculateFitness(DetailedCar&);
+	Fitness calculateFitness(DetailedVehicle&);
 
 protected:
 
@@ -31,11 +31,11 @@ public:
 
 	void draw();
 
-	void iterate(DetailedCarFactory& factory);
+	void iterate(DetailedVehicleFactory& vehicleFactory);
 
-	size_t markLeader(DetailedCarFactory& factory);
+	size_t markLeader(DetailedVehicleFactory& vehicleFactory);
 
-	void punish(DetailedCarFactory& factory);
+	void punish(DetailedVehicleFactory& vehicleFactory);
 	
 	void reset();
 
