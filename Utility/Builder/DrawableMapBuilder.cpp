@@ -1,9 +1,9 @@
-#include "DrawableBuilder.hpp"
+#include "DrawableMapBuilder.hpp"
 #include "DrawableEdgeManager.hpp"
 #include "DrawableCheckpointMap.hpp"
 #include <fstream>
 
-DrawableBuilder::DrawableBuilder()
+DrawableMapBuilder::DrawableMapBuilder()
 {
 	Clear();
 
@@ -29,12 +29,12 @@ DrawableBuilder::DrawableBuilder()
 	m_operationsMap[ERROR_CANNOT_OPEN_FILE_FOR_WRITING] = "Error: cannot open file for writing!";
 }
 
-DrawableBuilder::~DrawableBuilder()
+DrawableMapBuilder::~DrawableMapBuilder()
 {
 	Clear();
 }
 
-void DrawableBuilder::Clear()
+void DrawableMapBuilder::Clear()
 {
 	m_edgesPivot = 0;
 	m_edges.clear();
@@ -43,7 +43,7 @@ void DrawableBuilder::Clear()
 	m_lastOperationStatus = UNKNOWN;
 }
 
-bool DrawableBuilder::Validate()
+bool DrawableMapBuilder::Validate()
 {
 	if (m_validated)
 	{
@@ -100,7 +100,7 @@ bool DrawableBuilder::Validate()
 		{
 			for (size_t j = pivot; j < m_edges.size(); ++j)
 			{
-				if (Intersect(m_edges[i], m_edges[j]))
+				if (DrawableMath::Intersect(m_edges[i], m_edges[j]))
 					return true;
 			}
 		}
@@ -117,13 +117,13 @@ bool DrawableBuilder::Validate()
 	// Set number of inner edges, pivot from where outer edges start
 	m_edgesPivot = pivots.front();
 
-	if (m_edgesPivot < MIN_NUMBER_OF_INNER_EDGES)
+	if (m_edgesPivot < m_minNumberOfInnerEdges)
 	{
 		m_lastOperationStatus = ERROR_TOO_LITTLE_INNER_EDGES;
 		return false;
 	}
 
-	if (m_edges.size() - m_edgesPivot < MIN_NUMBER_OF_OUTER_EDGES)
+	if (m_edges.size() - m_edgesPivot < m_maxNumberOfInnerEdges)
 	{
 		m_lastOperationStatus = ERROR_TOO_LITTLE_OUTER_EDGES;
 		return false;
@@ -134,19 +134,19 @@ bool DrawableBuilder::Validate()
 	return true;
 }
 
-void DrawableBuilder::AddVehicle(double angle, sf::Vector2f center)
+void DrawableMapBuilder::AddVehicle(double angle, sf::Vector2f center)
 {
 	m_vehicleSpecified = true;
 	m_vehicleCenter = center;
 	m_vehicleAngle = angle;
 }
 
-void DrawableBuilder::AddEdge(Edge edge)
+void DrawableMapBuilder::AddEdge(Edge edge)
 {
 	m_edges.push_back(edge);
 }
 
-bool DrawableBuilder::Load(std::string filename)
+bool DrawableMapBuilder::Load(std::string filename)
 {
 	Clear();
 
@@ -305,7 +305,7 @@ bool DrawableBuilder::Load(std::string filename)
 	return true;
 }
 
-bool DrawableBuilder::Save(std::string filename)
+bool DrawableMapBuilder::Save(std::string filename)
 {
 	// Check if filename is not empty
 	if (filename.empty())
@@ -340,7 +340,7 @@ bool DrawableBuilder::Save(std::string filename)
 	return true;
 }
 
-std::pair<bool, std::string> DrawableBuilder::GetLastOperationStatus()
+std::pair<bool, std::string> DrawableMapBuilder::GetLastOperationStatus()
 {
 	std::string message = m_operationsMap[m_lastOperationStatus];
 	switch (m_lastOperationStatus)
@@ -356,17 +356,17 @@ std::pair<bool, std::string> DrawableBuilder::GetLastOperationStatus()
 	return std::make_pair(false, message);
 }
 
-EdgeVector DrawableBuilder::GetEdges()
+EdgeVector DrawableMapBuilder::GetEdges()
 {
 	return m_edges;
 }
 
-std::pair<sf::Vector2f, double> DrawableBuilder::GetVehicle()
+std::pair<sf::Vector2f, double> DrawableMapBuilder::GetVehicle()
 {
 	return std::make_pair(m_vehicleCenter, m_vehicleAngle);
 }
 
-DrawableEdgeManager* DrawableBuilder::GetDrawableManager()
+DrawableEdgeManager* DrawableMapBuilder::GetDrawableManager()
 {
 	if (!Validate())
 		return nullptr;
@@ -374,7 +374,7 @@ DrawableEdgeManager* DrawableBuilder::GetDrawableManager()
 	return new DrawableEdgeManager(m_edges, m_edgesPivot);
 }
 
-DrawableCheckpointMap* DrawableBuilder::GetDrawableCheckpointMap()
+DrawableCheckpointMap* DrawableMapBuilder::GetDrawableCheckpointMap()
 {
 	if (!Validate())
 		return nullptr;

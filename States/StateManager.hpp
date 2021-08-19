@@ -50,6 +50,6 @@ private:
 	// String representations of states
 	std::array<std::string, STATE_TABLE_SIZE> m_statesStrings;
 
-	// Control keys allowing to change the state
-	std::map<size_t, std::pair<size_t, bool>> m_controlKeys;
+	// Control key allowing to change the state
+	std::pair<size_t, bool> m_controlKey;
 };

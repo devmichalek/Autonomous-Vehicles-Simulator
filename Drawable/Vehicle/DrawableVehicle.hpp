@@ -11,19 +11,28 @@ class DrawableVehicle final
 	inline static const double m_minSpeed = 0.0;
 	inline static const double m_speedFactor = 300.0;
 
+	static sf::Vector2f m_baseCenter;
+	static double m_baseAngle;
+	static double m_baseSinus;
+	static double m_baseCosinus;
+	static bool m_initialized;
+
 	double m_angle;
+	double m_sinus;
+	double m_cosinus;
 	double m_speed;
 	sf::Vector2f m_center;
 	VehicleBody m_vehicleBody;
 	VehicleSensors m_vehicleSensors;
 	friend DrawableVehicleBuilder;
-
+	
 	DrawableVehicle(VehicleBody vehicleBody, VehicleSensors vehicleSensors);
 
 public:
 
 	~DrawableVehicle();
 
+	// Initializes static fields
 	static void Initialize();
 
 	// Set this vehicle as a leading one
@@ -65,7 +74,7 @@ public:
 	// Returns true if given point is inside vehicle area
 	inline bool Inside(sf::Vector2f point)
 	{
-		return m_vehicleBody.Inside(point, m_center);
+		return m_vehicleBody.Inside(point);
 	}
 
 	// Rotate vehicle by specified value (0; 1)
@@ -100,6 +109,12 @@ public:
 		Brake(layer[2]);
 	}
 
+	inline static size_t GetNumberOfInputs()
+	{
+		// Accelerate(), Rotate(), Brake()
+		return 3;
+	}
+
 	// Return vehicle described in vertices
 	inline const sf::VertexArray& GetVertices()
 	{
@@ -112,3 +127,6 @@ public:
 		m_vehicleSensors.Detect(edge);
 	}
 };
+
+using DetailedVehicle = std::pair<DrawableVehicle*, bool>;
+using DetailedVehicleFactory = std::vector<DetailedVehicle>;

@@ -5,7 +5,7 @@
 
 class ArtificialNeuralNetwork;
 
-class ArtificialNeuralNetworkBuilder
+class ArtificialNeuralNetworkBuilder final
 {
 	enum
 	{
@@ -107,4 +107,31 @@ public:
 
 	// Returns artificial neural network
 	ArtificialNeuralNetwork* Get();
+
+	// Get maximum number of hidden layers
+	inline static size_t GetMaxNumberOfHiddenLayers() { return 4; }
+
+	// Get minimum number of layers
+	inline static size_t GetMinNumberOfLayers() { return 3; }
+
+	// Get maximum number of layers
+	inline static size_t GetMaxNumberOfLayers() { return GetMinNumberOfLayers() + GetMaxNumberOfHiddenLayers(); }
+
+	// Get minimum number of neurons per layer
+	inline static size_t GetMinNumberOfNeuronsPerLayer() { return 1; }
+
+	// Get maximum number of neurons per layer
+	inline static size_t GetMaxNumberOfNeuronsPerLayer() { return 12; }
+
+	// Get minimum bias value
+	inline static double GetMinBiasValue() { return -10.0; }
+
+	// Get maximum bias value
+	inline static double GetMaxBiasValue() { return 10.0; }
+
+	// Get default bias value
+	inline static double GetDefaultBiasValue() { return 0.0; }
+
+	// Get default neuron value
+	inline static double GetDefaultNeuronValue() { return 0.0; }
 };

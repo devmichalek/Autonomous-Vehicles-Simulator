@@ -28,7 +28,13 @@ public:
 
 	static std::string GetString(size_t index);
 
+	static size_t GetMinActivationFunctionIndex() { return STUB_ACTIVATION_FUNCTION; }
+
+	static size_t GetActivationFunctionsCount() { return ACTIVATION_FUNCTIONS_COUNT; }
+
 private:
 
 	static ActivationFunction m_activationFunctionTable[ACTIVATION_FUNCTIONS_COUNT];
+
+	static bool m_initialized;
 };

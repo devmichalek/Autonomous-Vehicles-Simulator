@@ -37,7 +37,7 @@ void DrawableEdgeManager::Intersect(DetailedVehicleFactory& vehicleFactory)
 
 		for (auto& edge : m_edges)
 		{
-			if (::Intersect(edge, vehicle.first->GetVertices()))
+			if (DrawableMath::Intersect(edge, vehicle.first->GetVertices()))
 			{
 				vehicle.second = false;
 			}

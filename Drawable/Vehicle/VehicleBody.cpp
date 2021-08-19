@@ -1,29 +1,65 @@
 #include "VehicleBody.hpp"
 #include "CoreWindow.hpp"
+#include "CoreLogger.hpp"
 
-VehicleBody::VehicleBody()
+sf::Vector2f VehicleBody::m_baseCenter;
+double VehicleBody::m_baseSinus;
+double VehicleBody::m_baseCosinus;
+bool VehicleBody::m_initialized = false;
+
+VehicleBody::VehicleBody() :
+	m_center(&m_baseCenter),
+	m_sinus(&m_baseSinus),
+	m_cosinus(&m_baseCosinus)
 {
-	m_vertices.setPrimitiveType(sf::Quads);
+	if (!m_initialized)
+		CoreLogger::PrintError("Vehicle body constructor has been called before initialization!");
+	m_vertices.setPrimitiveType(sf::TriangleStrip);
 }
 
 VehicleBody::~VehicleBody()
 {
 }
 
-void VehicleBody::Update(const sf::Vector2f& center, const double& angle)
+void VehicleBody::Initialize()
 {
-	double cosValue = cos(angle * M_PI / 180);
-	double sinValue = sin(angle * M_PI / 180);
+	if (!m_initialized)
+	{
+		m_baseCenter = sf::Vector2f(float(CoreWindow::GetSize().x) / 2.0f, float(CoreWindow::GetSize().y) / 2.0f);
+		m_baseSinus = sin(0);
+		m_baseCosinus = cos(0);
+		m_initialized = true;
+	}
+	else
+		CoreLogger::PrintError("Vehicle sensors initialization was performed more than once!");
+}
 
+void VehicleBody::Clear()
+{
+	m_vertices.clear();
+	m_points.clear();
+}
+
+void VehicleBody::SetBase(const sf::Vector2f* center,
+						  const double* sinus,
+						  const double* cosinus)
+{
+	m_center = center;
+	m_sinus = sinus;
+	m_cosinus = cosinus;
+}
+
+void VehicleBody::Update()
+{
 	// Update vertices position
 	size_t count = m_vertices.getVertexCount();
 	for (size_t i = 0; i < count; ++i)
 	{
 		float x = m_points[i].x;
 		float y = m_points[i].y;
-		m_vertices[i].position.x = static_cast<float>(double(x) * cosValue - double(y) * sinValue);
-		m_vertices[i].position.y = static_cast<float>(double(x) * sinValue + double(y) * cosValue);
-		m_vertices[i].position += center;
+		m_vertices[i].position.x = static_cast<float>(double(x) * *m_cosinus - double(y) * *m_sinus);
+		m_vertices[i].position.y = static_cast<float>(double(x) * *m_sinus + double(y) * *m_cosinus);
+		m_vertices[i].position += *m_center;
 	}
 }
 
@@ -46,10 +82,10 @@ void VehicleBody::SetFollowerColor()
 		m_vertices[i].color = sf::Color::Yellow;
 }
 
-bool VehicleBody::Inside(const sf::Vector2f& point, const sf::Vector2f& center)
+bool VehicleBody::Inside(const sf::Vector2f& point)
 {
-	float area = GetFigureArea(m_vertices, point);
-	float correctArea = GetFigureArea(m_vertices, center) + 1;
+	float area = DrawableMath::GetFigureArea(m_vertices, point);
+	float correctArea = DrawableMath::GetFigureArea(m_vertices, *m_center) + 1;
 	return area <= correctArea;
 }
 

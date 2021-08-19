@@ -65,7 +65,7 @@ void StateMapEditor::Reload()
 	m_vehiclePositioned = false;
 	delete m_drawableVehicle;
 	m_drawableVehicle = m_drawableVehicleBuilder.Get();
-	m_drawableBuilder.Clear();
+	m_drawableMapBuilder.Clear();
 	m_spaceKeyPressed = false;
 
 	// Reset texts
@@ -116,17 +116,17 @@ void StateMapEditor::Capture()
 								sf::Vector2f intersectionPoint;
 								for (size_t i = 0; i < size; ++i)
 								{
-									if (GetIntersectionPoint(m_edges[i], temporaryEdge, intersectionPoint))
+									if (DrawableMath::GetIntersectionPoint(m_edges[i], temporaryEdge, intersectionPoint))
 									{
-										auto segment = Distance(m_edges[i][0], intersectionPoint);
-										auto length = Distance(m_edges[i]);
+										auto segment = DrawableMath::Distance(m_edges[i][0], intersectionPoint);
+										auto length = DrawableMath::Distance(m_edges[i]);
 										double percentage = segment / length;
 										if (percentage > 0.01 && percentage < 0.5)
 											correctPosition = m_edges[i][0];
 										else if (percentage > 0.5 && percentage < 0.99)
 											correctPosition = m_edges[i][1];
 										else
-											break;
+											continue;
 										m_insertEdge = false;
 										break;
 									}
@@ -152,7 +152,7 @@ void StateMapEditor::Capture()
 							size_t size = m_edges.size();
 							for (size_t i = 0; i < size; ++i)
 							{
-								if (Intersect(m_edges[i], m_edgeBeggining, correctPosition))
+								if (DrawableMath::Intersect(m_edges[i], m_edgeBeggining, correctPosition))
 								{
 									m_upToDate = false;
 									m_edges.erase(m_edges.begin() + i);
@@ -213,15 +213,15 @@ void StateMapEditor::Update()
 {
 	if (m_filenameText.IsReading())
 	{
-		bool success = m_drawableBuilder.Load(m_filenameText.GetFilename());
-		auto status = m_drawableBuilder.GetLastOperationStatus();
+		bool success = m_drawableMapBuilder.Load(m_filenameText.GetFilename());
+		auto status = m_drawableMapBuilder.GetLastOperationStatus();
 		m_filenameText.ShowStatusText();
 		if (success)
 		{
 			m_filenameText.SetSuccessStatusText(status.second);
-			m_edges = m_drawableBuilder.GetEdges();
+			m_edges = m_drawableMapBuilder.GetEdges();
 			m_vehiclePositioned = true;
-			auto data = m_drawableBuilder.GetVehicle();
+			auto data = m_drawableMapBuilder.GetVehicle();
 			m_drawableVehicle->SetCenter(data.first);
 			m_drawableVehicle->SetAngle(data.second);
 			m_drawableVehicle->Update();
@@ -234,14 +234,14 @@ void StateMapEditor::Update()
 	{
 		if (!m_upToDate)
 		{
-			m_drawableBuilder.Clear();
+			m_drawableMapBuilder.Clear();
 			if (m_vehiclePositioned)
-				m_drawableBuilder.AddVehicle(m_drawableVehicle->GetAngle(), m_drawableVehicle->GetCenter());
+				m_drawableMapBuilder.AddVehicle(m_drawableVehicle->GetAngle(), m_drawableVehicle->GetCenter());
 			for (auto& i : m_edges)
-				m_drawableBuilder.AddEdge(i);
-			bool success = m_drawableBuilder.Save(m_filenameText.GetFilename());
+				m_drawableMapBuilder.AddEdge(i);
+			bool success = m_drawableMapBuilder.Save(m_filenameText.GetFilename());
 			std::string message;
-			auto status = m_drawableBuilder.GetLastOperationStatus();
+			auto status = m_drawableMapBuilder.GetLastOperationStatus();
 			m_filenameText.ShowStatusText();
 			if (success)
 				m_filenameText.SetSuccessStatusText(status.second);
@@ -276,14 +276,14 @@ void StateMapEditor::Update()
 					double distance = std::numeric_limits<double>::max();
 					for (auto& edge : m_edges)
 					{
-						double beginningDistance = Distance(correctPosition, edge[0]);
+						double beginningDistance = DrawableMath::Distance(correctPosition, edge[0]);
 						if (beginningDistance < distance)
 						{
 							distance = beginningDistance;
 							m_edgeBeggining = edge[0];
 						}
 
-						double endDistance = Distance(correctPosition, edge[1]);
+						double endDistance = DrawableMath::Distance(correctPosition, edge[1]);
 						if (endDistance < distance)
 						{
 							distance = endDistance;
@@ -447,7 +447,7 @@ bool StateMapEditor::Load()
 	m_edgeCountText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.5));
 	m_vehicleSubmodeText.SetVariableText(m_vehicleSubmodeMap[m_vehicleSubmode]);
 	m_textFunctions.push_back([&] { double angle = double((long long)(m_drawableVehicle->GetAngle()) % 360);
-									return std::to_string(CastAtan2ToFullAngle(angle)); } );
+									return std::to_string(DrawableMath::CastAtan2ToFullAngle(angle)); } );
 	m_vehicleAngleText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.2));
 
 	// Set information texts
@@ -455,8 +455,8 @@ bool StateMapEditor::Load()
 	m_movementText.SetInformationText("| [+] [-]");
 	m_viewOffsetXText.SetInformationText("| [Left] [Right]");
 	m_viewOffsetYText.SetInformationText("| [Up] [Down]");
-	m_edgeSubmodeText.SetInformationText("| [1] [2] [Alt] [Esc]");
-	m_vehicleSubmodeText.SetInformationText("| [1] [2]");
+	m_edgeSubmodeText.SetInformationText("| [1] [2] [RMB] [Alt] [Esc]");
+	m_vehicleSubmodeText.SetInformationText("| [1] [2] [RMB]");
 	m_vehicleAngleText.SetInformationText("| [Z] [X]");
 	
 	// Set text positions

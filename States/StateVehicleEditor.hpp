@@ -5,6 +5,7 @@
 #include "DrawableDoubleText.hpp"
 #include "DrawableTripleText.hpp"
 #include "DrawableFilenameText.hpp"
+#include "DrawableVehicleBuilder.hpp"
 #include <functional>
 
 class StateVehicleEditor final : public StateInterface
@@ -17,18 +18,41 @@ class StateVehicleEditor final : public StateInterface
 	std::map<size_t, std::string> m_submodeStrings;
 	size_t m_submode;
 
-	EdgeVector m_edges;
-	std::vector<sf::Vector2f> m_sensorPositions;
-	std::vector<double> m_sensorAngles;
+	enum
+	{
+		INSERT,
+		REMOVE
+	};
+	size_t m_submodeState;
+
+	enum
+	{
+		CHANGE_TO_INSERT_STATE,
+		CHANGE_TO_REMOVE_STATE,
+		ESCAPE,
+		FIND_NEAREST_POINT,
+		DEACREASE_SENSOR_ANGLE,
+		INCREASE_SENSOR_ANGLE,
+		CONTROL_KEYS_COUNT
+	};
+	std::map<sf::Keyboard::Key, size_t> m_controlKeys;
+	std::map<size_t, bool> m_pressedKeys;
+
+	// Subjects of change
+	const double m_angleOffset;
+	DrawableVehicleBuilder m_drawableVehicleBuilder;
+	VehicleBody m_vehicleBody;
+	VehicleSensors m_vehicleSensors;
+	bool m_upToDate;
 
 	// Texts
 	DrawableVariableText m_backText;
 	DrawableVariableText m_frontText;
+	DrawableTripleText m_totalNumberOfEdges;
+	DrawableTripleText m_totalNumberOfSensors;
 	DrawableFilenameText<true, true> m_filenameText;
-	DrawableDoubleText m_totalNumberOfEdges;
-	DrawableDoubleText m_totalNumberOfSensors;
-	DrawableDoubleText m_currentSensorAngle;
-	DrawableTripleText m_currentSensorName;
+	DrawableDoubleText m_currentSensorName;
+	DrawableTripleText m_currentSensorAngle;
 	std::vector<std::function<std::string()>> m_textFunctions;
 
 public:

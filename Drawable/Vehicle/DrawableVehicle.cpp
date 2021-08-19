@@ -3,11 +3,15 @@
 
 DrawableVehicle::DrawableVehicle(VehicleBody vehicleBody, VehicleSensors vehicleSensors) :
 	m_angle(0.0),
+	m_sinus(0.0),
+	m_cosinus(0.0),
 	m_speed(0.0),
 	m_center(sf::Vector2f(0.0f, 0.0f)),
 	m_vehicleBody(vehicleBody),
 	m_vehicleSensors(vehicleSensors)
 {
+	m_vehicleBody.SetBase(&m_center, &m_sinus, &m_cosinus);
+	m_vehicleSensors.SetBase(&m_center, &m_angle, &m_sinus, &m_cosinus);
 	Update();
 }
 
@@ -17,6 +21,7 @@ DrawableVehicle::~DrawableVehicle()
 
 void DrawableVehicle::Initialize()
 {
+	VehicleBody::Initialize();
 	VehicleSensors::Initialize();
 }
 
@@ -44,15 +49,15 @@ void DrawableVehicle::Update()
 	else if (m_speed < m_minSpeed)
 		m_speed = m_minSpeed;
 
-	double cosResult = cos(m_angle * M_PI / 180);
-	double sinResult = sin(m_angle * M_PI / 180);
+	m_cosinus = cos(m_angle * M_PI / 180);
+	m_sinus = sin(m_angle * M_PI / 180);
 	double elapsedTime = CoreWindow::GetElapsedTime();
-	m_center.x += static_cast<float>(m_speed * elapsedTime * m_speedFactor * cosResult);
-	m_center.y += static_cast<float>(m_speed * elapsedTime * m_speedFactor * sinResult);
+	m_center.x += static_cast<float>(m_speed * elapsedTime * m_speedFactor * m_cosinus);
+	m_center.y += static_cast<float>(m_speed * elapsedTime * m_speedFactor * m_sinus);
 	m_speed -= elapsedTime;
 
-	m_vehicleBody.Update(m_center, m_angle);
-	m_vehicleSensors.Update(m_center, m_angle);
+	m_vehicleBody.Update();
+	m_vehicleSensors.Update();
 }
 
 void DrawableVehicle::DrawBody()

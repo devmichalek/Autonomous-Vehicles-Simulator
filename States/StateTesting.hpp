@@ -1,6 +1,6 @@
 #pragma once
 #include "StateInterface.hpp"
-#include "DrawableBuilder.hpp"
+#include "DrawableMapBuilder.hpp"
 #include "DrawableVehicleBuilder.hpp"
 #include "DrawableEdgeManager.hpp"
 #include "DrawableCheckpointMap.hpp"
@@ -34,7 +34,7 @@ class StateTesting final : public StateInterface
 	std::pair<sf::Keyboard::Key, bool> m_filenameTypeKey;
 
 	// Objects of test
-	DrawableBuilder m_drawableBuilder;
+	DrawableMapBuilder m_drawableMapBuilder;
 	DrawableVehicleBuilder m_drawableVehicleBuilder;
 	DrawableEdgeManager* m_edgeManager;
 	DrawableVehicle* m_userVehicle;

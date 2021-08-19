@@ -4,7 +4,7 @@
 #include "DrawableDoubleText.hpp"
 #include "DrawableTripleText.hpp"
 #include "DrawableFilenameText.hpp"
-#include "DrawableBuilder.hpp"
+#include "DrawableMapBuilder.hpp"
 #include "DrawableVehicleBuilder.hpp"
 #include "CycleTimer.hpp"
 #include <functional>
@@ -44,7 +44,7 @@ class StateMapEditor final : public StateInterface
 	bool m_vehiclePositioned;
 	DrawableVehicle* m_drawableVehicle;
 
-	DrawableBuilder m_drawableBuilder;
+	DrawableMapBuilder m_drawableMapBuilder;
 	DrawableVehicleBuilder m_drawableVehicleBuilder;
 	bool m_spaceKeyPressed;
 

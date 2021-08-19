@@ -70,14 +70,14 @@ void StateANNEditor::CalculatePositions()
 
 void StateANNEditor::AddLayer()
 {
-	if (m_neuronLayerSizes.size() < NEURAL_MAX_NUMBER_OF_LAYERS)
+	if (m_neuronLayerSizes.size() < ArtificialNeuralNetworkBuilder::GetMaxNumberOfLayers())
 	{
 		m_currentLayer = m_neuronLayerSizes.empty() ? 0 : m_currentLayer + 1;
 		m_neuronLayerSizes.insert(m_neuronLayerSizes.begin() + m_currentLayer, 0);
 		if (m_currentLayer != 0)
 		{
-			m_activationFunctionIndexes.insert(m_activationFunctionIndexes.begin() + (m_currentLayer - 1), ActivationFunctionContext::STUB_ACTIVATION_FUNCTION);
-			m_biasVector.insert(m_biasVector.begin() + (m_currentLayer - 1), NEURAL_DEFAULT_BIAS);
+			m_activationFunctionIndexes.insert(m_activationFunctionIndexes.begin() + (m_currentLayer - 1), ActivationFunctionContext::GetMinActivationFunctionIndex());
+			m_biasVector.insert(m_biasVector.begin() + (m_currentLayer - 1), ArtificialNeuralNetworkBuilder::GetDefaultBiasValue());
 		}
 
 		AddNeuron();
@@ -112,7 +112,7 @@ void StateANNEditor::AddNeuron()
 {
 	if (!m_neuronLayerSizes.empty())
 	{
-		if (m_neuronLayerSizes[m_currentLayer] + 1 <= NEURAL_MAX_NUMBER_OF_NEURONS_PER_LAYER)
+		if (m_neuronLayerSizes[m_currentLayer] + 1 <= ArtificialNeuralNetworkBuilder::GetMaxNumberOfNeuronsPerLayer())
 		{
 			++m_neuronLayerSizes[m_currentLayer];
 		}
@@ -159,11 +159,11 @@ StateANNEditor::StateANNEditor() :
 	m_textFunctions.reserve(16U);
 
 	// Create dummy
-	if (m_builder.CreateDummy())
+	if (m_artificialNeuralNetworkBuilder.CreateDummy())
 	{
-		m_neuronLayerSizes = m_builder.GetNeuronLayerSizes();
-		m_activationFunctionIndexes = m_builder.GetActivationFunctionIndexes();
-		m_biasVector = m_builder.GetBiasVector();
+		m_neuronLayerSizes = m_artificialNeuralNetworkBuilder.GetNeuronLayerSizes();
+		m_activationFunctionIndexes = m_artificialNeuralNetworkBuilder.GetActivationFunctionIndexes();
+		m_biasVector = m_artificialNeuralNetworkBuilder.GetBiasVector();
 		m_currentLayer = 0;
 		m_upToDate = false;
 		CalculatePositions();
@@ -177,15 +177,19 @@ StateANNEditor::~StateANNEditor()
 void StateANNEditor::Reload()
 {
 	// Create dummy
-	if (m_builder.CreateDummy())
+	if (m_artificialNeuralNetworkBuilder.CreateDummy())
 	{
-		m_neuronLayerSizes = m_builder.GetNeuronLayerSizes();
-		m_activationFunctionIndexes = m_builder.GetActivationFunctionIndexes();
-		m_biasVector = m_builder.GetBiasVector();
+		m_neuronLayerSizes = m_artificialNeuralNetworkBuilder.GetNeuronLayerSizes();
+		m_activationFunctionIndexes = m_artificialNeuralNetworkBuilder.GetActivationFunctionIndexes();
+		m_biasVector = m_artificialNeuralNetworkBuilder.GetBiasVector();
 		m_currentLayer = 0;
 		m_upToDate = false;
 		CalculatePositions();
 	}
+
+	// Reset pressed keys
+	for (size_t i = 0; i < CONTROL_KEYS_COUNT; ++i)
+		m_pressedKeys[i] = false;
 
 	// Reset texts
 	m_currentLayerText.ResetObserverTimer();
@@ -245,8 +249,8 @@ void StateANNEditor::Capture()
 						if (!m_activationFunctionIndexes.empty() && m_currentLayer != 0)
 						{
 							++m_activationFunctionIndexes[m_currentLayer - 1];
-							if (m_activationFunctionIndexes[m_currentLayer - 1] >= ActivationFunctionContext::ACTIVATION_FUNCTIONS_COUNT)
-								m_activationFunctionIndexes[m_currentLayer - 1] = ActivationFunctionContext::STUB_ACTIVATION_FUNCTION;
+							if (m_activationFunctionIndexes[m_currentLayer - 1] >= ActivationFunctionContext::GetActivationFunctionsCount())
+								m_activationFunctionIndexes[m_currentLayer - 1] = ActivationFunctionContext::GetMinActivationFunctionIndex();
 							m_upToDate = false;
 						}
 						break;
@@ -254,8 +258,8 @@ void StateANNEditor::Capture()
 						if (!m_biasVector.empty() && m_currentLayer != 0)
 						{
 							m_biasVector[m_currentLayer - 1] += m_biasOffset;
-							if (m_biasVector[m_currentLayer - 1] > NEURAL_MAX_BIAS)
-								m_biasVector[m_currentLayer - 1] = NEURAL_MAX_BIAS;
+							if (m_biasVector[m_currentLayer - 1] > ArtificialNeuralNetworkBuilder::GetMaxBiasValue())
+								m_biasVector[m_currentLayer - 1] = ArtificialNeuralNetworkBuilder::GetMaxBiasValue();
 							m_upToDate = false;
 						}
 						break;
@@ -263,8 +267,8 @@ void StateANNEditor::Capture()
 						if (!m_biasVector.empty() && m_currentLayer != 0)
 						{
 							m_biasVector[m_currentLayer - 1] -= m_biasOffset;
-							if (m_biasVector[m_currentLayer - 1] < NEURAL_MIN_BIAS)
-								m_biasVector[m_currentLayer - 1] = NEURAL_MIN_BIAS;
+							if (m_biasVector[m_currentLayer - 1] < ArtificialNeuralNetworkBuilder::GetMinBiasValue())
+								m_biasVector[m_currentLayer - 1] = ArtificialNeuralNetworkBuilder::GetMinBiasValue();
 							m_upToDate = false;
 						}
 						break;
@@ -288,13 +292,13 @@ void StateANNEditor::Update()
 	{
 		if (!m_upToDate)
 		{
-			m_builder.Clear();
-			m_builder.SetNeuronLayerSizes(m_neuronLayerSizes);
-			m_builder.SetActivationFunctionIndexes(m_activationFunctionIndexes);
-			m_builder.SetBiasVector(m_biasVector);
-			bool success = m_builder.Save(m_filenameText.GetFilename());
+			m_artificialNeuralNetworkBuilder.Clear();
+			m_artificialNeuralNetworkBuilder.SetNeuronLayerSizes(m_neuronLayerSizes);
+			m_artificialNeuralNetworkBuilder.SetActivationFunctionIndexes(m_activationFunctionIndexes);
+			m_artificialNeuralNetworkBuilder.SetBiasVector(m_biasVector);
+			bool success = m_artificialNeuralNetworkBuilder.Save(m_filenameText.GetFilename());
 			std::string message;
-			auto status = m_builder.GetLastOperationStatus();
+			auto status = m_artificialNeuralNetworkBuilder.GetLastOperationStatus();
 			m_filenameText.ShowStatusText();
 			if (success)
 				m_filenameText.SetSuccessStatusText(status.second);
@@ -305,15 +309,15 @@ void StateANNEditor::Update()
 	}
 	else if (m_filenameText.IsReading())
 	{
-		bool success = m_builder.Load(m_filenameText.GetFilename());
-		auto status = m_builder.GetLastOperationStatus();
+		bool success = m_artificialNeuralNetworkBuilder.Load(m_filenameText.GetFilename());
+		auto status = m_artificialNeuralNetworkBuilder.GetLastOperationStatus();
 		m_filenameText.ShowStatusText();
 		if (success)
 		{
 			m_filenameText.SetSuccessStatusText(status.second);
-			m_neuronLayerSizes = m_builder.GetNeuronLayerSizes();
-			m_activationFunctionIndexes = m_builder.GetActivationFunctionIndexes();
-			m_biasVector = m_builder.GetBiasVector();
+			m_neuronLayerSizes = m_artificialNeuralNetworkBuilder.GetNeuronLayerSizes();
+			m_activationFunctionIndexes = m_artificialNeuralNetworkBuilder.GetActivationFunctionIndexes();
+			m_biasVector = m_artificialNeuralNetworkBuilder.GetBiasVector();
 			m_currentLayer = 0;
 			m_upToDate = true;
 			CalculatePositions();

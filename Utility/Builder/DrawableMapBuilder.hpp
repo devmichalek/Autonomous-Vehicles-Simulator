@@ -6,7 +6,7 @@ class DrawableEdgeManager;
 class DrawableVehicle;
 class DrawableCheckpointMap;
 
-class DrawableBuilder final
+class DrawableMapBuilder final
 {
 	size_t m_edgesPivot;
 	EdgeVector m_edges;
@@ -14,6 +14,9 @@ class DrawableBuilder final
 	sf::Vector2f m_vehicleCenter;
 	double m_vehicleAngle;
 	bool m_validated;
+
+	static inline const size_t m_minNumberOfInnerEdges = 4;
+	static inline const size_t m_maxNumberOfInnerEdges = m_minNumberOfInnerEdges;
 
 	enum
 	{
@@ -51,9 +54,9 @@ class DrawableBuilder final
 
 public:
 
-	DrawableBuilder();
+	DrawableMapBuilder();
 
-	~DrawableBuilder();
+	~DrawableMapBuilder();
 
 	// Clears internal fields
 	void Clear();

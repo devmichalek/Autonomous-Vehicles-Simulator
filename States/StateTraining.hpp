@@ -1,7 +1,7 @@
 #pragma once
 #include "StateInterface.hpp"
 #include "ArtificialNeuralNetwork.hpp"
-#include "DrawableBuilder.hpp"
+#include "DrawableMapBuilder.hpp"
 #include "DrawableVehicleBuilder.hpp"
 #include "DrawableDoubleText.hpp"
 #include "CycleTimer.hpp"
@@ -15,7 +15,7 @@ class StateTraining final : public StateInterface
 {
 	GeneticAlgorithmNeuron* m_evolution;
 	std::vector<ArtificialNeuralNetwork> m_brains;
-	DrawableBuilder m_drawableBuilder;
+	DrawableMapBuilder m_drawableMapBuilder;
 	DrawableVehicleBuilder m_drawableVehicleBuilder;
 	DrawableEdgeManager* m_edgeManager;
 	DetailedVehicleFactory m_vehicleFactory;

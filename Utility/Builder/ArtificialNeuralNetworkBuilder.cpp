@@ -5,13 +5,13 @@
 
 bool ArtificialNeuralNetworkBuilder::ValidateNumberOfLayers(size_t size)
 {
-	if (size < NEURAL_MIN_NUMBER_OF_LAYERS)
+	if (size < GetMinNumberOfLayers())
 	{
 		m_lastOperationStatus = ERROR_TOO_LITTLE_NEURON_LAYERS;
 		return false;
 	}
 
-	if (size > NEURAL_MAX_NUMBER_OF_LAYERS)
+	if (size > GetMaxNumberOfLayers())
 	{
 		m_lastOperationStatus = ERROR_TOO_MANY_NEURON_LAYERS;
 		return false;
@@ -22,13 +22,13 @@ bool ArtificialNeuralNetworkBuilder::ValidateNumberOfLayers(size_t size)
 
 bool ArtificialNeuralNetworkBuilder::ValidateNumberOfNeurons(size_t size)
 {
-	if (size < NEURAL_MIN_NUMBER_OF_NEURONS_PER_LAYER)
+	if (size < GetMinNumberOfNeuronsPerLayer())
 	{
 		m_lastOperationStatus = ERROR_TOO_LITTLE_NEURONS_IN_LAYER;
 		return false;
 	}
 
-	if (size > NEURAL_MAX_NUMBER_OF_NEURONS_PER_LAYER)
+	if (size > GetMaxNumberOfNeuronsPerLayer())
 	{
 		m_lastOperationStatus = ERROR_TOO_MANY_NEURONS_IN_LAYER;
 		return false;
@@ -69,8 +69,7 @@ bool ArtificialNeuralNetworkBuilder::ValidateNumberOfActivationFunctionIndexes(s
 
 bool ArtificialNeuralNetworkBuilder::ValidateActivationFunctionIndex(ActivationFunctionIndex activationFunctionIndex)
 {
-	if (activationFunctionIndex < ActivationFunctionContext::STUB_ACTIVATION_FUNCTION ||
-		activationFunctionIndex >= ActivationFunctionContext::ACTIVATION_FUNCTIONS_COUNT)
+	if (activationFunctionIndex >= ActivationFunctionContext::GetActivationFunctionsCount())
 	{
 		m_lastOperationStatus = ERROR_UNKNOWN_ACTIVATION_FUNCTION_INDEX;
 		return false;
@@ -93,13 +92,13 @@ bool ArtificialNeuralNetworkBuilder::ValidateBiasVectorLength(size_t length)
 
 bool ArtificialNeuralNetworkBuilder::ValidateBias(Bias bias)
 {
-	if (bias < NEURAL_MIN_BIAS)
+	if (bias < GetMinBiasValue())
 	{
 		m_lastOperationStatus = ERROR_BIAS_IS_LESS_THAN_MINIMUM_ALLOWED;
 		return false;
 	}
 
-	if (bias > NEURAL_MAX_BIAS)
+	if (bias > GetMaxBiasValue())
 	{
 		m_lastOperationStatus = ERROR_BIAS_IS_GREATER_THAN_MAXIMUM_ALLOWED;
 		return false;
@@ -240,7 +239,7 @@ bool ArtificialNeuralNetworkBuilder::Load(std::string filename, Neuron* rawData)
 	// Read each activation function index
 	while (numberOfActivationFunctionIndexes--)
 	{
-		ActivationFunctionIndex activationFunctionIndex = ActivationFunctionContext::STUB_ACTIVATION_FUNCTION;
+		ActivationFunctionIndex activationFunctionIndex = ActivationFunctionContext::GetMinActivationFunctionIndex();
 		input.read((char*)&activationFunctionIndex, sizeof(activationFunctionIndex));
 		if (!ValidateActivationFunctionIndex(activationFunctionIndex))
 			return false;
@@ -375,12 +374,13 @@ bool ArtificialNeuralNetworkBuilder::CreateDummy()
 	// Rand dummy data
 	std::random_device device;
 	std::mt19937 engine(device());
-	std::uniform_int_distribution<std::mt19937::result_type> ldistribution(NEURAL_MIN_NUMBER_OF_LAYERS,
-																		   NEURAL_MAX_NUMBER_OF_LAYERS);
-	std::uniform_int_distribution<std::mt19937::result_type> nlsdistribution(NEURAL_MIN_NUMBER_OF_NEURONS_PER_LAYER,
-																			 NEURAL_MAX_NUMBER_OF_NEURONS_PER_LAYER);
-	std::uniform_int_distribution<std::mt19937::result_type> afdistribution(ActivationFunctionContext::STUB_ACTIVATION_FUNCTION,
-																			ActivationFunctionContext::ACTIVATION_FUNCTIONS_COUNT - 1);
+	std::uniform_int_distribution<std::mt19937::result_type> ldistribution(GetMinNumberOfLayers(),
+																		   GetMaxNumberOfLayers());
+	std::uniform_int_distribution<std::mt19937::result_type> nlsdistribution(GetMinNumberOfNeuronsPerLayer(),
+																			 GetMaxNumberOfNeuronsPerLayer());
+	std::uniform_int_distribution<std::mt19937::result_type> afdistribution(ActivationFunctionContext::GetMinActivationFunctionIndex(),
+																			(unsigned)ActivationFunctionContext::GetActivationFunctionsCount() - 1);
+
 	// Set dummy data
 	size_t length = ldistribution(engine);
 	m_neuronLayerSizes.resize(length);

@@ -12,7 +12,7 @@ Fitness DrawableCheckpointMap::calculateFitness(DetailedVehicle& vehicle)
 	Fitness fitness = 0;
 	for (size_t i = 0; i < m_checkpoints.size(); ++i)
 	{
-		if (Intersect(m_checkpoints[i], vehicle.first->GetVertices()))
+		if (DrawableMath::Intersect(m_checkpoints[i], vehicle.first->GetVertices()))
 			fitness = Fitness(i + 1);
 	}
 
@@ -45,7 +45,7 @@ DrawableCheckpointMap::DrawableCheckpointMap(const EdgeVector& edges, const size
 				if (k == i || k == j)
 					continue;
 
-				if (Intersect(edge, edges[k]))
+				if (DrawableMath::Intersect(edge, edges[k]))
 				{
 					intersection = true;
 					break;
@@ -56,7 +56,7 @@ DrawableCheckpointMap::DrawableCheckpointMap(const EdgeVector& edges, const size
 			if (!intersection)
 			{
 				// Calculate distance
-				auto distance = Distance(edge);
+				auto distance = DrawableMath::Distance(edge);
 				endPoints.push_back(std::make_pair(j, distance));
 			}
 		}
@@ -91,7 +91,7 @@ DrawableCheckpointMap::DrawableCheckpointMap(const EdgeVector& edges, const size
 			{
 				for (size_t c = 0; c < checkpoints[k].size(); ++c)
 				{
-					if (Intersect(std::get<0>(checkpoints[k][c]), edge))
+					if (DrawableMath::Intersect(std::get<0>(checkpoints[k][c]), edge))
 					{
 						intersection = true;
 						break;
@@ -105,8 +105,8 @@ DrawableCheckpointMap::DrawableCheckpointMap(const EdgeVector& edges, const size
 			if (!intersection)
 			{
 				// Calculate angle
-				auto angle = DifferenceVectorAngle(edge[0], edge[1]);
-				angle = CastAtan2ToFullAngle(angle);
+				auto angle = DrawableMath::DifferenceVectorAngle(edge[0], edge[1]);
+				angle = DrawableMath::CastAtan2ToFullAngle(angle);
 
 				// Push back
 				checkpoints[i].push_back(std::make_pair(edge, angle));
@@ -117,8 +117,8 @@ DrawableCheckpointMap::DrawableCheckpointMap(const EdgeVector& edges, const size
 	// Calculate base angles
 	std::vector<double> angleBordersVector(pivot);
 	for (size_t i = 1; i < pivot; ++i)
-		angleBordersVector[i] = CastAtan2ToFullAngle(DifferenceVectorAngle(edges[i - 1][1], edges[i - 1][0]));
-	angleBordersVector[0] = CastAtan2ToFullAngle(DifferenceVectorAngle(edges[pivot - 1][1], edges[pivot - 1][0]));
+		angleBordersVector[i] = DrawableMath::CastAtan2ToFullAngle(DrawableMath::DifferenceVectorAngle(edges[i - 1][1], edges[i - 1][0]));
+	angleBordersVector[0] = DrawableMath::CastAtan2ToFullAngle(DrawableMath::DifferenceVectorAngle(edges[pivot - 1][1], edges[pivot - 1][0]));
 
 	// Sort checkpoints
 	for (size_t i = 0; i < pivot; ++i)
@@ -168,7 +168,7 @@ DrawableCheckpointMap::DrawableCheckpointMap(const EdgeVector& edges, const size
 	m_checkpoints.erase(m_checkpoints.begin());
 
 	// Set shape point count
-	m_shape.setPointCount(TRIANGLE_NUMBER_OF_POINTS);
+	m_shape.setPointCount(m_checkpoints.back().size());
 }
 
 DrawableCheckpointMap::~DrawableCheckpointMap()
@@ -179,7 +179,7 @@ void DrawableCheckpointMap::draw()
 {
 	for (size_t i = 0; i < m_checkpoints.size(); ++i)
 	{
-		for (size_t j = 0; j < TRIANGLE_NUMBER_OF_POINTS; ++j)
+		for (size_t j = 0; j < m_shape.getPointCount(); ++j)
 			m_shape.setPoint(j, m_checkpoints[i][j]);
 
 		sf::Uint8 red = 255 * (i % 3);

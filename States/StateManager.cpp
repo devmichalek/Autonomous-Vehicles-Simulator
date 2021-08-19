@@ -13,18 +13,14 @@ StateManager::StateManager()
 	m_states[VEHICLE_EDITOR_STATE] = new StateVehicleEditor();
 	m_states[TRAINING_STATE] = new StateTraining();
 	m_states[TESTING_STATE] = new StateTesting();
-	m_currentState = MAP_EDITOR_STATE;
+	m_currentState = TESTING_STATE;
 	m_stateText = new DrawableTripleText;
 	m_statesStrings[MAP_EDITOR_STATE] = "Map Editor";
 	m_statesStrings[ANN_EDITOR_STATE] = "ANN Editor";
 	m_statesStrings[VEHICLE_EDITOR_STATE] = "Vehicle Editor";
 	m_statesStrings[TRAINING_STATE] = "Training";
 	m_statesStrings[TESTING_STATE] = "Testing";
-	m_controlKeys[MAP_EDITOR_STATE] = std::make_pair(sf::Keyboard::F7, false);
-	m_controlKeys[ANN_EDITOR_STATE] = std::make_pair(sf::Keyboard::F8, false);
-	m_controlKeys[VEHICLE_EDITOR_STATE] = std::make_pair(sf::Keyboard::F9, false);
-	m_controlKeys[TRAINING_STATE] = std::make_pair(sf::Keyboard::F10, false);
-	m_controlKeys[TESTING_STATE] = std::make_pair(sf::Keyboard::F11, false);
+	m_controlKey = std::make_pair(sf::Keyboard::Tilde, false);
 }
 
 StateManager::~StateManager()
@@ -44,8 +40,8 @@ bool StateManager::Load()
 
 	m_stateText->SetConsistentText("Active state:");
 	m_stateText->SetVariableText(m_statesStrings[m_currentState]);
-	m_stateText->SetInformationText("[F7] [F8] [F9] [F10] [F11] |");
-	m_stateText->SetPosition({ FontContext::Component(6, true), {3, true}, {12, true}, {1, true} });
+	m_stateText->SetInformationText("| [~]");
+	m_stateText->SetPosition({ FontContext::Component(7, true), {4, true}, {1, true}, {1, true} });
 
 	return true;
 }
@@ -56,42 +52,32 @@ void StateManager::Capture()
 
 	if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
 	{
-		for (auto& controlKey : m_controlKeys)
+		// Check if key is already pressed, if no then continue
+		if (!m_controlKey.second && CoreWindow::GetEvent().key.code == m_controlKey.first)
 		{
-			// Check if key is already pressed, if yes continue
-			if (controlKey.second.second)
-				continue;
+			// Mark control key as pressed
+			m_controlKey.second = true;
 
-			if (CoreWindow::GetEvent().key.code == controlKey.second.first)
-			{
-				// Mark control key as pressed
-				controlKey.second.second = true;
+			// Change state
+			++m_currentState;
+			if (m_currentState >= STATE_TABLE_SIZE)
+				m_currentState = MAP_EDITOR_STATE;
 
-				// Change state
-				m_currentState = controlKey.first;
+			// Change state string representation
+			m_stateText->SetVariableText(m_statesStrings[m_currentState]);
 
-				// Change state string representation
-				m_stateText->SetVariableText(m_statesStrings[m_currentState]);
-
-				// Notify new state that it has to reload its resources
-				m_states[m_currentState]->Reload();
-				break;
-			}
+			// Notify new state that it has to reload its resources
+			m_states[m_currentState]->Reload();
 		}
 	}
-	else if (CoreWindow::GetEvent().type == sf::Event::KeyReleased)
-	{
-		for (auto& controlKey : m_controlKeys)
-		{
-			// Check if key is released, if yes then continue
-			if (!controlKey.second.second)
-				continue;
 
-			if (CoreWindow::GetEvent().key.code == controlKey.second.first)
-			{
-				// Mark control key as released
-				controlKey.second.second = false;
-			}
+	if (CoreWindow::GetEvent().type == sf::Event::KeyReleased)
+	{
+		// Check if key is released, if no then continue
+		if (m_controlKey.second && CoreWindow::GetEvent().key.code == m_controlKey.first)
+		{
+			// Mark control key as released
+			m_controlKey.second = false;
 		}
 	}
 }

@@ -62,7 +62,7 @@ void StateTraining::Update()
 			{
 				delete m_vehicleFactory[i].first;
 				m_vehicleFactory[i] = std::pair(m_drawableVehicleBuilder.Get(), true);
-				auto details = m_drawableBuilder.GetVehicle();
+				auto details = m_drawableMapBuilder.GetVehicle();
 				m_vehicleFactory[i].first->SetCenter(details.first);
 				m_vehicleFactory[i].first->SetAngle(details.second);
 				m_vehicleFactory[i].first->Update();
@@ -92,9 +92,9 @@ void StateTraining::Update()
 
 	auto& view = CoreWindow::GetView();
 	auto currentViewCenter = view.getCenter();
-	auto distance = Distance(currentViewCenter, m_viewCenter);
-	auto angle = DifferenceVectorAngle(currentViewCenter, m_viewCenter);
-	auto newCenter = GetEndPoint(currentViewCenter, angle, float(-distance / m_viewMovementConst));
+	auto distance = DrawableMath::Distance(currentViewCenter, m_viewCenter);
+	auto angle = DrawableMath::DifferenceVectorAngle(currentViewCenter, m_viewCenter);
+	auto newCenter = DrawableMath::GetEndPoint(currentViewCenter, angle, float(-distance / m_viewMovementConst));
 	view.setCenter(newCenter);
 	CoreWindow::GetRenderWindow().setView(view);
 
@@ -106,16 +106,16 @@ void StateTraining::Update()
 
 bool StateTraining::Load()
 {
-	/*if (!m_drawableBuilder.Load())
+	/*if (!m_drawableMapBuilder.Load())
 	{
 
 		return false;
 	}
 
-	m_checkpointMap = m_drawableBuilder.GetDrawableCheckpointMap();
+	m_checkpointMap = m_drawableMapBuilder.GetDrawableCheckpointMap();
 	m_checkpointMap->restart(m_populationSize, 0.02);
 
-	m_edgeManager = m_drawableBuilder.GetDrawableManager();
+	m_edgeManager = m_drawableMapBuilder.GetDrawableManager();
 	
 	for (size_t i = 0; i < m_populationSize; ++i)
 	{
@@ -125,7 +125,7 @@ bool StateTraining::Load()
 	}
 
 	std::vector<size_t> hiddenLayersSizes = { 12, 12 };
-	ArtificialNeuralNetwork ann(m_annNumberOfInputs, VEHICLE_NUMBER_OF_INPUTS, hiddenLayersSizes);
+	ArtificialNeuralNetwork ann(m_annNumberOfInputs, DrawableVehicle::GetNumberOfInputs(), hiddenLayersSizes);
 	ann.setBiasVector({ 0.25, 0.1, 0.05 });
 	ann.setActivationVector({ ActivationLeakyRelu, ActivationTanh, ActivationRelu });
 	m_brains.resize(m_populationSize, ann);

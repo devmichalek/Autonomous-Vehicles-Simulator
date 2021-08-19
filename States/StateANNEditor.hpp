@@ -25,6 +25,7 @@ class StateANNEditor final : public StateInterface
 	std::map<sf::Keyboard::Key, size_t> m_controlKeys;
 	std::map<size_t, bool> m_pressedKeys;
 
+	// Subjects of change
 	NeuronLayerSizes m_neuronLayerSizes;
 	ActivationFunctionIndexes m_activationFunctionIndexes;
 	BiasVector m_biasVector;
@@ -32,7 +33,7 @@ class StateANNEditor final : public StateInterface
 	size_t m_totalNumberOfNeurons;
 	size_t m_totalNumberOfWeights;
 	size_t m_currentLayer;
-	ArtificialNeuralNetworkBuilder m_builder;
+	ArtificialNeuralNetworkBuilder m_artificialNeuralNetworkBuilder;
 	bool m_upToDate;
 
 	// Drawable shapes and their position

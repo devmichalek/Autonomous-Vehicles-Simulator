@@ -35,7 +35,7 @@ void StateTesting::Reload()
 	m_filenameType = MAP_FILENAME_TYPE;
 	m_modeKey.second = false;
 	m_filenameTypeKey.second = false;
-	m_drawableBuilder.Clear();
+	m_drawableMapBuilder.Clear();
 	delete m_edgeManager;
 	m_edgeManager = nullptr;
 	delete m_userVehicle;
@@ -121,19 +121,19 @@ void StateTesting::Update()
 					{
 						case MAP_FILENAME_TYPE:
 						{
-							bool success = m_drawableBuilder.Load(m_filenameText.GetFilename());
-							auto status = m_drawableBuilder.GetLastOperationStatus();
+							bool success = m_drawableMapBuilder.Load(m_filenameText.GetFilename());
+							auto status = m_drawableMapBuilder.GetLastOperationStatus();
 							m_filenameText.ShowStatusText();
 							if (success)
 							{
 								m_filenameText.SetSuccessStatusText(status.second);
 								delete m_edgeManager;
-								m_edgeManager = m_drawableBuilder.GetDrawableManager();
+								m_edgeManager = m_drawableMapBuilder.GetDrawableManager();
 								for (auto& vehicle : m_vehicleFactory)
 								{
 									delete vehicle.first;
 									vehicle = std::pair(m_drawableVehicleBuilder.Get(), true);
-									auto details = m_drawableBuilder.GetVehicle();
+									auto details = m_drawableMapBuilder.GetVehicle();
 									vehicle.first->SetCenter(details.first);
 									vehicle.first->SetAngle(details.second);
 									vehicle.first->Update();
@@ -141,7 +141,7 @@ void StateTesting::Update()
 
 								m_userVehicle = m_vehicleFactory[0].first;
 								delete m_checkpointMap;
-								m_checkpointMap = m_drawableBuilder.GetDrawableCheckpointMap();
+								m_checkpointMap = m_drawableMapBuilder.GetDrawableCheckpointMap();
 								m_checkpointMap->restart(m_vehicleFactory.size(), 0.0);
 
 								for (auto& vehicle : m_vehicleFactory)
@@ -199,17 +199,27 @@ void StateTesting::Update()
 			{
 				m_userVehicle->Brake(1.0);
 			}
-			
-			if (m_edgeManager)
+
+			if (m_userVehicle)
 			{
+				// Update user vehicle even if it is destroyed
 				m_userVehicle->Update();
-				m_edgeManager->Intersect(m_vehicleFactory);
+
+				// Update computer's vehicles only if they are not destroyed
+				for (size_t i = 1; i < m_vehicleFactory.size(); ++i)
+				{
+					if (m_vehicleFactory[i].second)
+						m_vehicleFactory[i].first->Update();
+				}
 
 				// Update view
 				auto& view = CoreWindow::GetView();
 				view.setCenter(m_userVehicle->GetCenter());
 				CoreWindow::GetRenderWindow().setView(view);
 			}
+			
+			if (m_edgeManager)
+				m_edgeManager->Intersect(m_vehicleFactory);
 
 			break;
 		}
