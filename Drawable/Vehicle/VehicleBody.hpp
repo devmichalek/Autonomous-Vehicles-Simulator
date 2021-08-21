@@ -53,21 +53,18 @@ class VehicleBody final
 	// Returns true if given point is inside vehicle body are
 	bool Inside(const sf::Vector2f& point);
 
-	// Adds new descriptive point
+	// Adds new descriptive point relative to the center
 	void AddPoint(sf::Vector2f point);
 
-	// Removes last descriptive point
-	void RemovePoint();
+	// Removes last descriptive point relative to the center
+	void RemovePoint(sf::Vector2f point);
+
+	// Returns number of vertices
+	size_t GetNumberOfPoints();
 
 	// Return vehicle body described in vertices
 	inline const sf::VertexArray& GetVertices()
 	{
 		return m_vertices;
-	}
-
-	// Returns number of vertices
-	inline size_t GetNumberOfPoints()
-	{
-		return m_points.size();
 	}
 };

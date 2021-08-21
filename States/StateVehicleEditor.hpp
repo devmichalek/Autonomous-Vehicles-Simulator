@@ -2,8 +2,6 @@
 #include "StateInterface.hpp"
 #include "DrawableMath.hpp"
 #include "DrawableVariableText.hpp"
-#include "DrawableDoubleText.hpp"
-#include "DrawableTripleText.hpp"
 #include "DrawableFilenameText.hpp"
 #include "DrawableVehicleBuilder.hpp"
 #include <functional>
@@ -12,25 +10,27 @@ class StateVehicleEditor final : public StateInterface
 {
 	enum
 	{
-		SUBMODE_VEHICLE_BODY,
-		SUBMODE_VEHICLE_SENSORS
+		MODE_VEHICLE_BODY,
+		MODE_VEHICLE_SENSORS
 	};
-	std::map<size_t, std::string> m_submodeStrings;
-	size_t m_submode;
+	std::map<size_t, std::string> m_modeStrings;
+	size_t m_mode;
 
 	enum
 	{
 		INSERT,
 		REMOVE
 	};
-	size_t m_submodeState;
+	std::map<size_t, std::string> m_submodeStrings;
+	size_t m_submode;
 
 	enum
 	{
+		CHANGE_TO_VEHICLE_BODY_MODE,
+		CHANGE_TO_VEHICLE_SENSORS_MODE,
 		CHANGE_TO_INSERT_STATE,
 		CHANGE_TO_REMOVE_STATE,
-		ESCAPE,
-		FIND_NEAREST_POINT,
+		CHANGE_SENSOR,
 		DEACREASE_SENSOR_ANGLE,
 		INCREASE_SENSOR_ANGLE,
 		CONTROL_KEYS_COUNT
@@ -39,21 +39,29 @@ class StateVehicleEditor final : public StateInterface
 	std::map<size_t, bool> m_pressedKeys;
 
 	// Subjects of change
-	const double m_angleOffset;
+	sf::RectangleShape m_allowedAreaShape;
+	double m_currentSensorAngle;
+	size_t m_currentSensorIndex;
 	DrawableVehicleBuilder m_drawableVehicleBuilder;
 	VehicleBody m_vehicleBody;
 	VehicleSensors m_vehicleSensors;
 	bool m_upToDate;
+	Line m_xAxis;
+	Line m_yAxis;
 
 	// Texts
 	DrawableVariableText m_backText;
 	DrawableVariableText m_frontText;
-	DrawableTripleText m_totalNumberOfEdges;
-	DrawableTripleText m_totalNumberOfSensors;
+	DrawableTripleText m_activeModeText;
+	DrawableTripleText m_activeSubmodeText;
+	DrawableTripleText m_totalNumberOfEdgesText;
+	DrawableTripleText m_totalNumberOfSensorsText;
 	DrawableFilenameText<true, true> m_filenameText;
-	DrawableDoubleText m_currentSensorName;
-	DrawableTripleText m_currentSensorAngle;
+	DrawableTripleText m_currentSensorText;
+	DrawableTripleText m_currentSensorAngleText;
 	std::vector<std::function<std::string()>> m_textFunctions;
+
+	bool IsInsideAllowedArea(sf::Vector2f position);
 
 public:
 

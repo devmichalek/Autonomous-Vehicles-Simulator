@@ -1,19 +1,16 @@
 #pragma once
+#include "AbstractBuilder.hpp"
 #include "Neural.hpp"
 #include "ActivationFunctionContext.hpp"
-#include <map>
 
 class ArtificialNeuralNetwork;
 
-class ArtificialNeuralNetworkBuilder final
+class ArtificialNeuralNetworkBuilder final :
+	public AbstractBuilder
 {
 	enum
 	{
-		ERROR_UNKNOWN,
-		SUCCESS_LOAD_COMPLETED,
-		SUCCESS_SAVE_COMPLETED,
-		SUCCESS_VALIDATION_PASSED,
-		ERROR_TOO_LITTLE_NEURON_LAYERS,
+		ERROR_TOO_LITTLE_NEURON_LAYERS = LAST_ENUM_OPERATION_INDEX,
 		ERROR_TOO_MANY_NEURON_LAYERS,
 		ERROR_TOO_LITTLE_NEURONS_IN_LAYER,
 		ERROR_TOO_MANY_NEURONS_IN_LAYER,
@@ -23,20 +20,15 @@ class ArtificialNeuralNetworkBuilder final
 		ERROR_BIAS_IS_GREATER_THAN_MAXIMUM_ALLOWED,
 		ERROR_UNKNOWN_ACTIVATION_FUNCTION_INDEX,
 		ERROR_NUMBER_OF_WEIGHTS_MISMATCH,
-		ERROR_EMPTY_FILENAME_CANNOT_OPEN_FILE_FOR_READING,
-		ERROR_CANNOT_OPEN_FILE_FOR_READING,
-		ERROR_EMPTY_FILENAME_CANNOT_OPEN_FILE_FOR_WRITING,
-		ERROR_CANNOT_OPEN_FILE_FOR_WRITING
+		ERROR_RAW_DATA_VECTOR_LENGTH_IS_INCORRECT
 	};
-	std::map<size_t, std::string> m_operationsMap;
-	size_t m_lastOperationStatus;
 
 	NeuronLayerSizes m_neuronLayerSizes;
 	ActivationFunctionIndexes m_activationFunctionIndexes;
 	BiasVector m_biasVector;
+	std::vector<Neuron> m_rawData;
 	size_t m_numberOfNeurons;
 	size_t m_numberOfWeights;
-	bool m_validated;
 
 	// Validates number of layers
 	bool ValidateNumberOfLayers(size_t size);
@@ -62,27 +54,26 @@ class ArtificialNeuralNetworkBuilder final
 	// Validates bias
 	bool ValidateBias(Bias bias);
 
-	// Validates internal fields
-	bool Validate();
+	// Validates raw data vector
+	bool ValidateRawData();
+
+	// Validate internal fields
+	bool ValidateInternal();
+
+	// Clears internal fields
+	void ClearInternal();
+
+	// Loads ANN from file
+	bool LoadInternal(std::ifstream& input);
+
+	// Saves ANN to file
+	bool SaveInternal(std::ofstream& output);
 
 public:
 
 	ArtificialNeuralNetworkBuilder();
 
 	~ArtificialNeuralNetworkBuilder();
-
-	// Clears internal fields
-	void Clear();
-
-	// Loads ANN from file
-	bool Load(std::string filename, Neuron* rawData = nullptr);
-
-	// Saves ANN to file
-	bool Save(std::string filename, Neuron* rawData = nullptr);
-
-	// Returns last operation status
-	// Returns true in case of success and false in case of failure
-	std::pair<bool, std::string> GetLastOperationStatus();
 
 	// Creates dummy ANN
 	bool CreateDummy();
@@ -96,6 +87,9 @@ public:
 	// Sets bias vector
 	void SetBiasVector(BiasVector biasVector);
 
+	// Sets raw neuron data
+	void SetRawNeuronData(std::vector<Neuron> rawNeuronData);
+
 	// Returns intermediate representation of neuron layers
 	NeuronLayerSizes GetNeuronLayerSizes();
 
@@ -104,6 +98,9 @@ public:
 
 	// Returns bias vector
 	BiasVector GetBiasVector();
+
+	// Returns raw neuron data
+	std::vector<Neuron> GetRawNeuronData();
 
 	// Returns artificial neural network
 	ArtificialNeuralNetwork* Get();

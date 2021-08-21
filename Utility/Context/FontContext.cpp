@@ -22,7 +22,7 @@ bool FontContext::Initialize()
 	}
 
 	// Calculate character size
-	m_characterSize = CoreWindow::GetSize().x / 116;
+	m_characterSize = unsigned(CoreWindow::GetSize().x / 116.0f);
 
 	// Font was initialized correctly
 	m_fontInitialized = true;
@@ -46,7 +46,7 @@ unsigned int FontContext::GetCharacterSize(unsigned int multiplier)
 
 float FontContext::CalculateRow(FontContext::Component component, unsigned int multiplier)
 {
-	float screenWidth = float(CoreWindow::GetSize().x);
+	float screenWidth = CoreWindow::GetSize().x;
 	float result = screenWidth * (0.003f + float(component.m_component) * 0.022f * float(multiplier));
 
 	if (component.m_revert)
@@ -57,7 +57,7 @@ float FontContext::CalculateRow(FontContext::Component component, unsigned int m
 
 float FontContext::CalculateColumn(FontContext::Component component, unsigned int multiplier)
 {
-	float screenHeight = float(CoreWindow::GetSize().y);
+	float screenHeight = CoreWindow::GetSize().y;
 	float result = screenHeight * (0.003f + float(component.m_component) * 0.022f * float(multiplier));
 
 	if (component.m_revert)

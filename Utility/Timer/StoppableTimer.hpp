@@ -5,7 +5,7 @@ class StoppableTimer
 {
 public:
 
-	StoppableTimer(double resetValue, double max, double min = 0, double multiplier = 1) :
+	explicit StoppableTimer(double resetValue, double max, double min = 0, double multiplier = 1) :
 		m_value(resetValue),
 		m_resetValue(resetValue),
 		m_max(max),

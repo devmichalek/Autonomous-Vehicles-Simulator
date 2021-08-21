@@ -16,6 +16,7 @@ void StateMapEditor::SetActiveMode(ActiveMode activeMode)
 				m_removeEdge = false;
 				m_edgeSubmodeText.SetVariableText(m_edgeSubmodeMap[m_edgeSubmode]);
 				break;
+
 			case ActiveMode::VEHICLE:
 				m_vehicleSubmode = VehicleSubmode::INSERT;
 				m_vehicleSubmodeText.SetVariableText(m_vehicleSubmodeMap[m_vehicleSubmode]);
@@ -40,8 +41,8 @@ StateMapEditor::StateMapEditor() :
 	m_removeEdge = false;
 	m_upToDate = false;
 	m_vehiclePositioned = false;
-	m_drawableVehicle = m_drawableVehicleBuilder.Get();
-	m_spaceKeyPressed = false;
+	if (m_drawableVehicleBuilder.CreateDummy())
+		m_drawableVehicle = m_drawableVehicleBuilder.Get();
 	m_textFunctions.reserve(16U);
 }
 
@@ -66,7 +67,6 @@ void StateMapEditor::Reload()
 	delete m_drawableVehicle;
 	m_drawableVehicle = m_drawableVehicleBuilder.Get();
 	m_drawableMapBuilder.Clear();
-	m_spaceKeyPressed = false;
 
 	// Reset texts
 	m_activeModeText.SetVariableText(m_activeModeMap[m_activeMode]);
@@ -89,16 +89,9 @@ void StateMapEditor::Reload()
 
 void StateMapEditor::Capture()
 {
-	if ((CoreWindow::GetEvent().type == sf::Event::MouseButtonPressed ||
-		(CoreWindow::GetEvent().type == sf::Event::KeyPressed && CoreWindow::GetEvent().key.code == sf::Keyboard::Space)) && !m_spaceKeyPressed)
+	if (CoreWindow::GetEvent().type == sf::Event::MouseButtonPressed)
 	{
-		m_spaceKeyPressed = true;
-		sf::Vector2i mousePosition = CoreWindow::GetMousePosition();
-		sf::Vector2f viewOffset = CoreWindow::GetViewOffset();
-		sf::Vector2f correctPosition;
-		correctPosition.x = static_cast<float>(mousePosition.x + viewOffset.x);
-		correctPosition.y = static_cast<float>(mousePosition.y + viewOffset.y);
-
+		sf::Vector2f correctPosition = CoreWindow::GetMousePosition() + CoreWindow::GetViewOffset();
 		switch (m_activeMode)
 		{
 			case ActiveMode::EDGE:
@@ -202,9 +195,6 @@ void StateMapEditor::Capture()
 				break;
 		}
 	}
-	else if (CoreWindow::GetEvent().type == sf::Event::MouseButtonReleased ||
-			 (CoreWindow::GetEvent().type == sf::Event::KeyReleased && CoreWindow::GetEvent().key.code == sf::Keyboard::Space))
-		m_spaceKeyPressed = false;
 
 	m_filenameText.Capture();
 }
@@ -263,11 +253,7 @@ void StateMapEditor::Update()
 			{
 				if (!m_edges.empty() && m_edgeSubmode == EdgeSubmode::GLUED_INSERT)
 				{
-					sf::Vector2i mousePosition = CoreWindow::GetMousePosition();
-					sf::Vector2f viewOffset = CoreWindow::GetViewOffset();
-					sf::Vector2f correctPosition;
-					correctPosition.x = static_cast<float>(mousePosition.x + viewOffset.x);
-					correctPosition.y = static_cast<float>(mousePosition.y + viewOffset.y);
+					sf::Vector2f correctPosition = CoreWindow::GetMousePosition() + CoreWindow::GetViewOffset();
 					m_edgeBeggining = correctPosition;
 					m_insertEdge = true;
 
@@ -488,7 +474,7 @@ void StateMapEditor::Draw()
 	{
 		m_line[0].position = i[0];
 		m_line[1].position = i[1];
-		CoreWindow::GetRenderWindow().draw(m_line.data(), 2, sf::Lines);
+		CoreWindow::GetRenderWindow().draw(m_line.data(), m_line.size(), sf::Lines);
 	}
 
 	switch (m_activeMode)
@@ -497,25 +483,19 @@ void StateMapEditor::Draw()
 		{
 			if (m_insertEdge)
 			{
-				sf::Vector2i mousePosition = CoreWindow::GetMousePosition();
 				m_line[0].position = m_edgeBeggining;
-				m_line[1].position.x = static_cast<float>(mousePosition.x);
-				m_line[1].position.y = static_cast<float>(mousePosition.y);
-				m_line[1].position += CoreWindow::GetViewOffset();
+				m_line[1].position = CoreWindow::GetMousePosition() + CoreWindow::GetViewOffset();
 				m_line[0].color = sf::Color::White;
 				m_line[1].color = m_line[0].color;
-				CoreWindow::GetRenderWindow().draw(m_line.data(), 2, sf::Lines);
+				CoreWindow::GetRenderWindow().draw(m_line.data(), m_line.size(), sf::Lines);
 			}
 			else if (m_removeEdge)
 			{
-				sf::Vector2i mousePosition = CoreWindow::GetMousePosition();
 				m_line[0].position = m_edgeBeggining;
-				m_line[1].position.x = static_cast<float>(mousePosition.x);
-				m_line[1].position.y = static_cast<float>(mousePosition.y);
-				m_line[1].position += CoreWindow::GetViewOffset();
+				m_line[1].position = CoreWindow::GetMousePosition() + CoreWindow::GetViewOffset();
 				m_line[0].color = sf::Color::Red;
 				m_line[1].color = m_line[0].color;
-				CoreWindow::GetRenderWindow().draw(m_line.data(), 2, sf::Lines);
+				CoreWindow::GetRenderWindow().draw(m_line.data(), m_line.size(), sf::Lines);
 			}
 
 			m_edgeSubmodeText.Draw();

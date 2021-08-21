@@ -40,7 +40,7 @@ struct Chromosome
 	{
 	}
 
-	inline void resize(size_t length)
+	inline void Resize(size_t length)
 	{
 		m_genes.resize(length);
 	}
@@ -50,14 +50,14 @@ struct Chromosome
 		return m_genes[i].m_data;
 	}
 
-	inline size_t length()
+	inline size_t Length()
 	{
 		return m_genes.size();
 	}
 
 	inline Chromosome<Type>& operator=(Chromosome<Type>& rhs)
 	{
-		std::memcpy(&m_genes[0], &rhs.m_genes[0], sizeof(Type) * length());
+		std::memcpy(&m_genes[0], &rhs.m_genes[0], sizeof(Type) * Length());
 		return *this;
 	}
 
@@ -88,8 +88,11 @@ protected:
 	std::uniform_int_distribution<std::mt19937::result_type> m_coinDistribution;
 	std::uniform_int_distribution<std::mt19937::result_type> m_hundredDistribution;
 
-	virtual void mutate(Type&) = 0; // Mutate gene data
-	virtual void crossover() // Recreate population based on parents
+	// Mutates gene data
+	virtual void Mutate(Type&) = 0;
+
+	// Creates new chromosomes based on parents chromosomes
+	virtual void Crossover() // Recreate population based on parents
 	{
 		Chromosome<Type> newChromosome(m_chromosomeLength);
 		for (size_t i = 0; i < m_chromosomeLength; ++i)
@@ -106,13 +109,14 @@ protected:
 			}
 
 			if (m_hundredDistribution(m_mersenneTwister) < (m_mutationProbability * 100))
-				mutate(newChromosome[i]);
+				Mutate(newChromosome[i]);
 		}
 
 		m_population.push_back(newChromosome);
 	}
 
-	virtual void select(const FitnessVector& points) // Select parents
+	// Selects best chromosomes as parents
+	virtual void Select(const FitnessVector& points)
 	{
 		// Deep copy
 		FitnessVector dummy = points;
@@ -132,6 +136,7 @@ protected:
 	}
 
 public:
+
 	GeneticAlgorithm(const size_t maxNumberOfGenerations,
 					 const size_t chromosomeLength,
 					 size_t populationSize,
@@ -155,14 +160,14 @@ public:
 		m_population.shrink_to_fit();
 	}
 
-	inline Chromosome<Type> getChromosome(const size_t index)
+	inline Chromosome<Type> GetChromosome(const size_t index)
 	{
 		if (index < m_populationSize)
 			return m_population[index];
 		return Chromosome<Type>(m_chromosomeLength); // Error
 	}
 
-	bool iterate(const FitnessVector& points)
+	bool Iterate(const FitnessVector& points)
 	{
 		++m_currentIteration;
 		if (m_currentIteration > m_maxNumberOfGenerations)
@@ -171,22 +176,22 @@ public:
 			return false;
 		}
 
-		select(points);
+		Select(points);
 
 		size_t repeatCount = m_populationSize - m_parentsCount;
 		for (size_t i = 0; i < repeatCount; ++i)
-			crossover();
+			Crossover();
 		m_population.shrink_to_fit();
 
 		return true;
 	}
 
-	inline const size_t getChromosomeLength() const
+	inline const size_t GetChromosomeLength() const
 	{
 		return m_chromosomeLength;
 	}
 
-	inline const size_t getPopulationSize() const
+	inline const size_t GetPopulationSize() const
 	{
 		return m_populationSize;
 	}
@@ -194,7 +199,7 @@ public:
 
 class GeneticAlgorithmBoolean : public GeneticAlgorithm<bool>
 {
-	void mutate(bool& geneData)
+	void Mutate(bool& geneData)
 	{
 		geneData = !geneData;
 	}
@@ -209,7 +214,7 @@ public:
 	{
 		for (auto& j : m_population)
 		{
-			j.resize(m_chromosomeLength);
+			j.Resize(m_chromosomeLength);
 			for (size_t i = 0; i < m_chromosomeLength; ++i)
 				j[i] = static_cast<bool>(m_coinDistribution(m_mersenneTwister));
 		}
@@ -222,7 +227,7 @@ class GeneticAlgorithmCharacter : public GeneticAlgorithm<char>
 	std::string m_alphabet;
 	std::uniform_int_distribution<std::mt19937::result_type> m_alphabetDistribution;
 
-	void mutate(char& geneData)
+	void Mutate(char& geneData)
 	{
 		size_t offset = m_alphabetDistribution(m_mersenneTwister);
 
@@ -242,6 +247,7 @@ class GeneticAlgorithmCharacter : public GeneticAlgorithm<char>
 	}
 
 public:
+
 	GeneticAlgorithmCharacter(const size_t maxNumberOfGenerations,
 							  const size_t chromosomeLength,
 							  const size_t populationSize,
@@ -256,7 +262,7 @@ public:
 		m_alphabetDistribution = std::uniform_int_distribution<std::mt19937::result_type>(0, static_cast<int>((m_alphabet.size() - 1)));
 		for (auto& j : m_population)
 		{
-			j.resize(m_chromosomeLength);
+			j.Resize(m_chromosomeLength);
 			for (size_t i = 0; i < m_chromosomeLength; ++i)
 				j[i] = m_alphabet[m_alphabetDistribution(m_mersenneTwister)];
 		}
@@ -270,7 +276,7 @@ class GeneticAlgorithmFloat : public GeneticAlgorithm<float>
 	std::pair<float, float> m_range;
 	std::uniform_int_distribution<std::mt19937::result_type> m_rangeDistribution;
 
-	void mutate(float& geneData)
+	void Mutate(float& geneData)
 	{
 		size_t offset = m_rangeDistribution(m_mersenneTwister);
 
@@ -306,7 +312,7 @@ public:
 		m_rangeDistribution = std::uniform_int_distribution<std::mt19937::result_type>(0, static_cast<int>(right * m_precision));
 		for (auto& j : m_population)
 		{
-			j.resize(m_chromosomeLength);
+			j.Resize(m_chromosomeLength);
 			for (size_t i = 0; i < m_chromosomeLength; ++i)
 			{
 				float geneData = float(m_rangeDistribution(m_mersenneTwister)) / m_precision;
@@ -326,7 +332,7 @@ class GeneticAlgorithmNeuron : public GeneticAlgorithm<Neuron>
 	std::pair<Neuron, Neuron> m_range;
 	std::uniform_int_distribution<std::mt19937::result_type> m_rangeDistribution;
 
-	void mutate(Neuron& geneData)
+	void Mutate(Neuron& geneData)
 	{
 		size_t offset = m_rangeDistribution(m_mersenneTwister);
 
@@ -343,6 +349,7 @@ class GeneticAlgorithmNeuron : public GeneticAlgorithm<Neuron>
 	}
 
 public:
+
 	GeneticAlgorithmNeuron(const size_t maxNumberOfGenerations,
 						   const size_t chromosomeLength,
 						   const size_t populationSize,
@@ -363,7 +370,7 @@ public:
 		m_rangeDistribution = std::uniform_int_distribution<std::mt19937::result_type>(0, static_cast<int>(right * m_precision));
 		for (auto& j : m_population)
 		{
-			j.resize(m_chromosomeLength);
+			j.Resize(m_chromosomeLength);
 			for (size_t i = 0; i < m_chromosomeLength; ++i)
 			{
 				Neuron geneData = Neuron(m_rangeDistribution(m_mersenneTwister)) / m_precision;
@@ -374,7 +381,7 @@ public:
 		}
 	}
 
-	Neuron* getIndividual(size_t identity)
+	Neuron* GetIndividual(size_t identity)
 	{
 		if (identity >= m_populationSize)
 			return nullptr;

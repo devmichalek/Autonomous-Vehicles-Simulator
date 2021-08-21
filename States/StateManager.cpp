@@ -70,8 +70,7 @@ void StateManager::Capture()
 			m_states[m_currentState]->Reload();
 		}
 	}
-
-	if (CoreWindow::GetEvent().type == sf::Event::KeyReleased)
+	else if (CoreWindow::GetEvent().type == sf::Event::KeyReleased)
 	{
 		// Check if key is released, if no then continue
 		if (m_controlKey.second && CoreWindow::GetEvent().key.code == m_controlKey.first)

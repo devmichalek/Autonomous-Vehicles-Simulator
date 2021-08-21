@@ -81,11 +81,20 @@ class VehicleSensors final
 	// Change sensor's beam angle
 	void SetSensorAngle(size_t index, double angle);
 
+	// Returns sensor's beam angle
+	double GetSensorAngle(size_t index);
+
 	// Adds new sensor
 	void AddSensor(sf::Vector2f offset, double angle);
 
-	// Removes sensor if given point intersects with particular sensor
-	void RemoveSensor(sf::Vector2f point);
+	// Removes particular sensor
+	void RemoveSensor(size_t index);
+
+	// Checks if there is intersection if yes then returns proper sensor index
+	bool GetSensorIndex(size_t& index, sf::Vector2f point);
+
+	// Returns number of sensors
+	size_t GetNumberOfSensors();
 
 	// Returns sensors readings
 	inline const NeuronLayer& GetSensorsReading()

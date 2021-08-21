@@ -16,18 +16,18 @@ class DrawableMath
         return (c.y - a.y) * (b.x - a.x) > (b.y - a.y) * (c.x - a.x);
     }
 
-    // Based on triangle vertices calculate area
-    inline static float GetTriangleArea(const sf::Vector2f& A, const sf::Vector2f& B, const sf::Vector2f& C)
-    {
-        return std::fabs((B.x * A.y - A.x * B.y) + (C.x * B.y - B.x * C.y) + (A.x * C.y - C.x * A.y)) / 2;
-    }
-
     inline static float TriangleSign(sf::Vector2f p1, sf::Vector2f p2, sf::Vector2f p3)
     {
         return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
     }
 
 public:
+
+    // Based on triangle vertices calculate area
+    inline static float GetTriangleArea(const sf::Vector2f& A, const sf::Vector2f& B, const sf::Vector2f& C)
+    {
+        return std::fabs((B.x * A.y - A.x * B.y) + (C.x * B.y - B.x * C.y) + (A.x * C.y - C.x * A.y)) / 2;
+    }
 
     // Returns true if there is intersection between edge and edge described in two points
     inline static bool Intersect(const Edge& s, const sf::Vector2f& x, const sf::Vector2f& y)

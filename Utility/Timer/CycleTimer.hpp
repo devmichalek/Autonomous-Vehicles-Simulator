@@ -5,7 +5,7 @@ class CycleTimer
 {
 public:
 
-	CycleTimer(double resetValue, double max, double min = 0, double multiplier = 1) :
+	explicit CycleTimer(double resetValue, double max, double min = 0, double multiplier = 1) :
 		m_value(resetValue),
 		m_resetValue(resetValue),
 		m_max(max),

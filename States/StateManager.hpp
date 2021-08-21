@@ -6,7 +6,7 @@
 class StateInterface;
 class DrawableTripleText;
 
-class StateManager
+class StateManager final
 {
 public:
 

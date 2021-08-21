@@ -42,9 +42,10 @@ public:
 	}
 
 	// Returns mouse position
-	inline static sf::Vector2i GetMousePosition()
+	inline static sf::Vector2f GetMousePosition()
 	{
-		return sf::Mouse::getPosition(m_renderWindow);
+		auto result = sf::Mouse::getPosition(m_renderWindow);
+		return sf::Vector2f(float(result.x), float(result.y));
 	}
 
 	// Returns window position
@@ -54,9 +55,16 @@ public:
 	}
 
 	// Returns window size
-	inline static sf::Vector2u GetSize()
+	inline static sf::Vector2f GetSize()
 	{
-		return m_renderWindow.getSize();
+		auto result = m_renderWindow.getSize();
+		return sf::Vector2f(float(result.x), float(result.y));
+	}
+
+	// Returns window center
+	inline static sf::Vector2f GetCenter()
+	{
+		return GetSize() / 2.0f;
 	}
 
 	// Closes window

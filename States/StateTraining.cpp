@@ -51,12 +51,12 @@ void StateTraining::Update()
 		m_checkpointMap->iterate(m_vehicleFactory);
 
 		// Generate new generation
-		if (m_evolution->iterate(m_checkpointMap->getFitnessVector()))
+		if (m_evolution->Iterate(m_checkpointMap->getFitnessVector()))
 		{
 			++m_generationNumber;
 
 			for (size_t i = 0; i < m_brains.size(); ++i)
-				m_brains[i].SetFromRawData(m_evolution->getIndividual(i));
+				m_brains[i].SetFromRawData(m_evolution->GetIndividual(i));
 
 			for (size_t i = 0; i < m_vehicleFactory.size(); ++i)
 			{

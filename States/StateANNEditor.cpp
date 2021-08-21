@@ -8,8 +8,9 @@ void StateANNEditor::CalculatePositions()
 	m_layersPositions.clear();
 	m_weightPositions.clear();
 
-	const float screenWidth = float(CoreWindow::GetSize().x);
-	const float screenHeight = float(CoreWindow::GetSize().y);
+	auto windowSize = CoreWindow::GetSize();
+	const float screenWidth = windowSize.x;
+	const float screenHeight = windowSize.y;
 	const float availableWidth = screenWidth * 0.8f;
 	const float availableHeight = screenHeight * 0.8f;
 
@@ -151,12 +152,10 @@ StateANNEditor::StateANNEditor() :
 	for (size_t i = 0; i < CONTROL_KEYS_COUNT; ++i)
 		m_pressedKeys[i] = false;
 
-	m_neuronShape.setFillColor(sf::Color::White);
-	m_neuronShape.setOutlineColor(sf::Color::White);
-	m_neuronShape.setRadius(float(CoreWindow::GetSize().x) * 0.008f);
-	m_weightShape[0].color = sf::Color(255, 255, 255, 128);
-	m_weightShape[1].color = m_weightShape[0].color;
-	m_textFunctions.reserve(16U);
+	m_totalNumberOfNeurons = 0;
+	m_totalNumberOfWeights = 0;
+	m_currentLayer = 0;
+	m_upToDate = false;
 
 	// Create dummy
 	if (m_artificialNeuralNetworkBuilder.CreateDummy())
@@ -164,10 +163,15 @@ StateANNEditor::StateANNEditor() :
 		m_neuronLayerSizes = m_artificialNeuralNetworkBuilder.GetNeuronLayerSizes();
 		m_activationFunctionIndexes = m_artificialNeuralNetworkBuilder.GetActivationFunctionIndexes();
 		m_biasVector = m_artificialNeuralNetworkBuilder.GetBiasVector();
-		m_currentLayer = 0;
-		m_upToDate = false;
 		CalculatePositions();
 	}
+
+	m_neuronShape.setFillColor(sf::Color::White);
+	m_neuronShape.setOutlineColor(sf::Color::White);
+	m_neuronShape.setRadius(CoreWindow::GetSize().x * 0.008f);
+	m_weightShape[0].color = sf::Color(255, 255, 255, 128);
+	m_weightShape[1].color = m_weightShape[0].color;
+	m_textFunctions.reserve(16U);
 }
 
 StateANNEditor::~StateANNEditor()
@@ -275,8 +279,7 @@ void StateANNEditor::Capture()
 				}
 			}
 		}
-
-		if (CoreWindow::GetEvent().type == sf::Event::KeyReleased)
+		else if (CoreWindow::GetEvent().type == sf::Event::KeyReleased)
 		{
 			auto eventKey = CoreWindow::GetEvent().key.code;
 			auto iterator = m_controlKeys.find(eventKey);
@@ -297,7 +300,6 @@ void StateANNEditor::Update()
 			m_artificialNeuralNetworkBuilder.SetActivationFunctionIndexes(m_activationFunctionIndexes);
 			m_artificialNeuralNetworkBuilder.SetBiasVector(m_biasVector);
 			bool success = m_artificialNeuralNetworkBuilder.Save(m_filenameText.GetFilename());
-			std::string message;
 			auto status = m_artificialNeuralNetworkBuilder.GetLastOperationStatus();
 			m_filenameText.ShowStatusText();
 			if (success)
@@ -412,7 +414,7 @@ void StateANNEditor::Draw()
 	{
 		m_weightShape[0].position = position[0];
 		m_weightShape[1].position = position[1];
-		CoreWindow::GetRenderWindow().draw(m_weightShape.data(), 2, sf::Lines);
+		CoreWindow::GetRenderWindow().draw(m_weightShape.data(), m_weightShape.size(), sf::Lines);
 	}
 
 	for (size_t layerNr = 0; layerNr < m_layersPositions.size(); ++layerNr)

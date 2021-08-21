@@ -30,10 +30,11 @@ void VehicleSensors::Initialize()
 {
 	if (!m_initialized)
 	{
-		m_beamLength = double(CoreWindow::GetSize().y) * 0.75;
-		m_sensorSize.x = CoreWindow::GetSize().x / 400.0f;
+		auto windowSize = CoreWindow::GetSize();
+		m_beamLength = double(windowSize.y) * 0.75;
+		m_sensorSize.x = windowSize.x / 400.0f;
 		m_sensorSize.y = m_sensorSize.x;
-		m_baseCenter = sf::Vector2f(float(CoreWindow::GetSize().x) / 2.0f, float(CoreWindow::GetSize().y) / 2.0f);
+		m_baseCenter = CoreWindow::GetCenter();
 		m_baseAngle = 0.0;
 		m_baseSinus = sin(0);
 		m_baseCosinus = cos(0);
@@ -97,7 +98,7 @@ void VehicleSensors::DrawBeams()
 	{
 		m_beamShape[0].position = beam[0];
 		m_beamShape[1].position = beam[1];
-		CoreWindow::GetRenderWindow().draw(m_beamShape.data(), 2, sf::Lines);
+		CoreWindow::GetRenderWindow().draw(m_beamShape.data(), m_beamShape.size(), sf::Lines);
 	}
 }
 
@@ -114,6 +115,17 @@ void VehicleSensors::SetSensorAngle(size_t index, double angle)
 {
 	if (index < m_angleVector.size())
 		m_angleVector[index] = angle;
+	else
+		CoreLogger::PrintError("Requested sensor index is outside of array bound!");
+}
+
+double VehicleSensors::GetSensorAngle(size_t index)
+{
+	if (index < m_angleVector.size())
+		return m_angleVector[index];
+	
+	CoreLogger::PrintError("Requested sensor index is outside of array bound!");
+	return 0.0;
 }
 
 void VehicleSensors::AddSensor(sf::Vector2f offset, double angle)
@@ -131,17 +143,35 @@ void VehicleSensors::AddSensor(sf::Vector2f offset, double angle)
 	m_sensors.shrink_to_fit();
 }
 
-void VehicleSensors::RemoveSensor(sf::Vector2f point)
+void VehicleSensors::RemoveSensor(size_t index)
 {
-	for (size_t i = 0; i < m_beamVector.size(); ++i)
+	if (index < m_beamVector.size())
 	{
-		if (DrawableMath::IsPointInsideCircle(m_beamVector[i][0], m_sensorSize.x, point))
+		m_beamVector.erase(m_beamVector.begin() + index);
+		m_offsetVector.erase(m_offsetVector.begin() + index);
+		m_angleVector.erase(m_angleVector.begin() + index);
+		m_sensors.erase(m_sensors.begin() + index);
+	}
+	else
+		CoreLogger::PrintError("Requested sensor index is outside of array bound!");
+}
+
+bool VehicleSensors::GetSensorIndex(size_t& index, sf::Vector2f point)
+{
+	for (size_t i = 0; i < m_offsetVector.size(); ++i)
+	{
+		if (DrawableMath::IsPointInsideCircle(m_offsetVector[i], m_sensorSize.x, point))
 		{
-			m_beamVector.erase(m_beamVector.begin() + i);
-			m_offsetVector.erase(m_offsetVector.begin() + i);
-			m_angleVector.erase(m_angleVector.begin() + i);
-			m_sensors.erase(m_sensors.begin() + i);
-			--i;
+			index = i;
+			return true;
 		}
 	}
+
+	index = -1;
+	return false;
+}
+
+size_t VehicleSensors::GetNumberOfSensors()
+{
+	return m_sensors.size();
 }

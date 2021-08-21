@@ -53,6 +53,6 @@ void DrawableEdgeManager::Draw()
 	{
 		m_edgeLine[0].position = i[0];
 		m_edgeLine[1].position = i[1];
-		CoreWindow::GetRenderWindow().draw(m_edgeLine.data(), 2, sf::Lines);
+		CoreWindow::GetRenderWindow().draw(m_edgeLine.data(), m_edgeLine.size(), sf::Lines);
 	}
 }

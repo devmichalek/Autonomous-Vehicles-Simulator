@@ -25,7 +25,7 @@ void VehicleBody::Initialize()
 {
 	if (!m_initialized)
 	{
-		m_baseCenter = sf::Vector2f(float(CoreWindow::GetSize().x) / 2.0f, float(CoreWindow::GetSize().y) / 2.0f);
+		m_baseCenter = CoreWindow::GetCenter();
 		m_baseSinus = sin(0);
 		m_baseCosinus = cos(0);
 		m_initialized = true;
@@ -96,9 +96,23 @@ void VehicleBody::AddPoint(sf::Vector2f point)
 	m_vertices.resize(m_points.size());
 }
 
-void VehicleBody::RemovePoint()
+void VehicleBody::RemovePoint(sf::Vector2f point)
 {
-	m_points.pop_back();
-	m_points.shrink_to_fit();
-	m_vertices.resize(m_points.size());
+	for (size_t i = 2; i < m_points.size(); ++i)
+	{
+		Triangle triangle = { m_points[i - 2], m_points[i - 1], m_points[i] };
+		if (DrawableMath::IsPointInsideTriangle(triangle, point))
+		{
+			m_points.erase(m_points.begin() + i);
+			if (m_points.size() < 3)
+				m_points.clear();
+			m_vertices.resize(m_points.size());
+			break;
+		}
+	}
+}
+
+size_t VehicleBody::GetNumberOfPoints()
+{
+	return m_points.size();
 }

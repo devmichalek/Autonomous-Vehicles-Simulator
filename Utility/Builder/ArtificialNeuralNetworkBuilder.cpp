@@ -1,6 +1,5 @@
 #include "ArtificialNeuralNetworkBuilder.hpp"
 #include "ArtificialNeuralNetwork.hpp"
-#include <fstream>
 #include <random>
 
 bool ArtificialNeuralNetworkBuilder::ValidateNumberOfLayers(size_t size)
@@ -107,14 +106,19 @@ bool ArtificialNeuralNetworkBuilder::ValidateBias(Bias bias)
 	return true;
 }
 
-bool ArtificialNeuralNetworkBuilder::Validate()
+bool ArtificialNeuralNetworkBuilder::ValidateRawData()
 {
-	if (m_validated)
+	if (m_rawData.size() != m_numberOfWeights)
 	{
-		m_lastOperationStatus = SUCCESS_VALIDATION_PASSED;
-		return true;
+		m_lastOperationStatus = ERROR_RAW_DATA_VECTOR_LENGTH_IS_INCORRECT;
+		return false;
 	}
 
+	return true;
+}
+
+bool ArtificialNeuralNetworkBuilder::ValidateInternal()
+{
 	if (!ValidateNumberOfLayers(m_neuronLayerSizes.size()))
 		return false;
 
@@ -127,6 +131,12 @@ bool ArtificialNeuralNetworkBuilder::Validate()
 	CalculateNumberOfNeurons();
 
 	CalculateNumberOfWeights();
+
+	if (m_rawData.empty())
+		m_rawData.resize(m_numberOfWeights, GetDefaultNeuronValue());
+
+	if (!ValidateRawData())
+		return false;
 
 	if (!ValidateNumberOfActivationFunctionIndexes(m_activationFunctionIndexes.size()))
 		return false;
@@ -146,70 +156,21 @@ bool ArtificialNeuralNetworkBuilder::Validate()
 			return false;
 	}
 
-	m_lastOperationStatus = SUCCESS_VALIDATION_PASSED;
-	m_validated = true;
 	return true;
 }
 
-ArtificialNeuralNetworkBuilder::ArtificialNeuralNetworkBuilder()
+void ArtificialNeuralNetworkBuilder::ClearInternal()
 {
-	m_operationsMap[ERROR_UNKNOWN] = "Error: last status is unknown!";
-	m_operationsMap[SUCCESS_LOAD_COMPLETED] = "Success: correctly opened file!";
-	m_operationsMap[SUCCESS_SAVE_COMPLETED] = "Success: correctly saved file!";
-	m_operationsMap[SUCCESS_VALIDATION_PASSED] = "Success: validation process has passed with no errors!";
-	m_operationsMap[ERROR_TOO_LITTLE_NEURON_LAYERS] = "Error: There are too little neuron layers!";
-	m_operationsMap[ERROR_TOO_MANY_NEURON_LAYERS] = "Error: There are too many neuron layers!";
-	m_operationsMap[ERROR_TOO_LITTLE_NEURONS_IN_LAYER] = "Error: There are too little neurons in a layer!";
-	m_operationsMap[ERROR_TOO_MANY_NEURONS_IN_LAYER] = "Error: There are too many neurons in a layer!";
-	m_operationsMap[ERROR_INCORRECT_NUMBER_OF_ACTIVATION_FUNCTIONS] = "Error: Incorrect number of activation functions!";
-	m_operationsMap[ERROR_INCORRECT_LENGTH_OF_BIAS_VECTOR] = "Error: Incorrect length of bias vector!";
-	m_operationsMap[ERROR_BIAS_IS_LESS_THAN_MINIMUM_ALLOWED] = "Error: Bias value is less than minimum allowed!";
-	m_operationsMap[ERROR_BIAS_IS_GREATER_THAN_MAXIMUM_ALLOWED] = "Error: Bias value is greater than maximum allowed!";
-	m_operationsMap[ERROR_UNKNOWN_ACTIVATION_FUNCTION_INDEX] = "Error: Unknown activation function index!";
-	m_operationsMap[ERROR_NUMBER_OF_WEIGHTS_MISMATCH] = "Error: Number of weights mismatch!";
-	m_operationsMap[ERROR_EMPTY_FILENAME_CANNOT_OPEN_FILE_FOR_READING] = "Error: filename is empty, cannot open file for reading!";
-	m_operationsMap[ERROR_CANNOT_OPEN_FILE_FOR_READING] = "Error: cannot open file for reading!";
-	m_operationsMap[ERROR_EMPTY_FILENAME_CANNOT_OPEN_FILE_FOR_WRITING] = "Error: filename is empty, cannot open file for writing!";
-	m_operationsMap[ERROR_CANNOT_OPEN_FILE_FOR_WRITING] = "Error: cannot open file for writing!";
-
-	Clear();
-}
-
-ArtificialNeuralNetworkBuilder::~ArtificialNeuralNetworkBuilder()
-{
-}
-
-void ArtificialNeuralNetworkBuilder::Clear()
-{
-	m_lastOperationStatus = ERROR_UNKNOWN;
 	m_neuronLayerSizes.clear();
 	m_activationFunctionIndexes.clear();
 	m_biasVector.clear();
+	m_rawData.clear();
 	m_numberOfNeurons = 0;
 	m_numberOfWeights = 0;
-	m_validated = false;
 }
 
-bool ArtificialNeuralNetworkBuilder::Load(std::string filename, Neuron* rawData)
+bool ArtificialNeuralNetworkBuilder::LoadInternal(std::ifstream& input)
 {
-	// Clear data
-	Clear();
-
-	// Check if filename is not empty
-	if (filename.empty())
-	{
-		m_lastOperationStatus = ERROR_EMPTY_FILENAME_CANNOT_OPEN_FILE_FOR_READING;
-		return false;
-	}
-
-	// Check if file can be opened for reading
-	std::ifstream input(filename, std::ios::in | std::ios::binary);
-	if (!input.is_open())
-	{
-		m_lastOperationStatus = ERROR_CANNOT_OPEN_FILE_FOR_READING;
-		return false;
-	}
-
 	// Read number of neuron layers
 	size_t numberOfLayers = 0;
 	input.read((char*)&numberOfLayers, sizeof(numberOfLayers));
@@ -272,35 +233,15 @@ bool ArtificialNeuralNetworkBuilder::Load(std::string filename, Neuron* rawData)
 	}
 
 	// Read raw data
-	if (rawData)
-		input.read((char*)rawData, m_numberOfWeights * sizeof(Neuron));
+	m_rawData.resize(m_numberOfWeights);
+	for (size_t i = 0; i < m_numberOfWeights; ++i)
+		input.read((char*)&m_rawData[i], sizeof(Neuron));
 
-	m_lastOperationStatus = SUCCESS_LOAD_COMPLETED;
-	m_validated = true;
 	return true;
 }
 
-bool ArtificialNeuralNetworkBuilder::Save(std::string filename, Neuron* rawData)
+bool ArtificialNeuralNetworkBuilder::SaveInternal(std::ofstream& output)
 {
-	// Check if filename is not empty
-	if (filename.empty())
-	{
-		m_lastOperationStatus = ERROR_EMPTY_FILENAME_CANNOT_OPEN_FILE_FOR_WRITING;
-		return false;
-	}
-
-	// Validate
-	if (!Validate())
-		return false;
-
-	// Check if file can be opened for writing
-	std::ofstream output(filename, std::ios::out | std::ios::binary);
-	if (!output.is_open())
-	{
-		m_lastOperationStatus = ERROR_CANNOT_OPEN_FILE_FOR_WRITING;
-		return false;
-	}
-
 	// Save number of neuron layers
 	size_t numberOfLayers = m_neuronLayerSizes.size();
 	output.write((const char*)&numberOfLayers, sizeof(numberOfLayers));
@@ -328,42 +269,34 @@ bool ArtificialNeuralNetworkBuilder::Save(std::string filename, Neuron* rawData)
 	// Save number of weights
 	output.write((const char*)&m_numberOfWeights, sizeof(m_numberOfWeights));
 
-	if (rawData)
-	{
-		// Save raw data
-		output.write((const char*)rawData, m_numberOfWeights * sizeof(Neuron));
-	}
-	else
-	{
-		// Save zeros
-		for (size_t i = 0; i < m_numberOfWeights; ++i)
-		{
-			Neuron neuron = 0.0;
-			output.write((const char*)&neuron, sizeof(neuron));
-		}
-	}
+	// Save raw data
+	for (auto & data : m_rawData)
+		output.write((const char*)&data, sizeof(Neuron));
 
-	// Clear data
-	Clear();
-
-	m_lastOperationStatus = SUCCESS_SAVE_COMPLETED;
 	return true;
 }
 
-std::pair<bool, std::string> ArtificialNeuralNetworkBuilder::GetLastOperationStatus()
+ArtificialNeuralNetworkBuilder::ArtificialNeuralNetworkBuilder() :
+	AbstractBuilder(std::ios::in | std::ios::binary, std::ios::out | std::ios::binary),
+	m_numberOfNeurons(0),
+	m_numberOfWeights(0)
 {
-	std::string message = m_operationsMap[m_lastOperationStatus];
-	switch (m_lastOperationStatus)
-	{
-		case SUCCESS_SAVE_COMPLETED:
-		case SUCCESS_LOAD_COMPLETED:
-		case SUCCESS_VALIDATION_PASSED:
-			return std::make_pair(true, message);
-		default:
-			return std::make_pair(false, message);
-	}
+	m_operationsMap[ERROR_TOO_LITTLE_NEURON_LAYERS] = "Error: There are too little neuron layers!";
+	m_operationsMap[ERROR_TOO_MANY_NEURON_LAYERS] = "Error: There are too many neuron layers!";
+	m_operationsMap[ERROR_TOO_LITTLE_NEURONS_IN_LAYER] = "Error: There are too little neurons in a layer!";
+	m_operationsMap[ERROR_TOO_MANY_NEURONS_IN_LAYER] = "Error: There are too many neurons in a layer!";
+	m_operationsMap[ERROR_INCORRECT_NUMBER_OF_ACTIVATION_FUNCTIONS] = "Error: Incorrect number of activation functions!";
+	m_operationsMap[ERROR_INCORRECT_LENGTH_OF_BIAS_VECTOR] = "Error: Incorrect length of bias vector!";
+	m_operationsMap[ERROR_BIAS_IS_LESS_THAN_MINIMUM_ALLOWED] = "Error: Bias value is less than minimum allowed!";
+	m_operationsMap[ERROR_BIAS_IS_GREATER_THAN_MAXIMUM_ALLOWED] = "Error: Bias value is greater than maximum allowed!";
+	m_operationsMap[ERROR_UNKNOWN_ACTIVATION_FUNCTION_INDEX] = "Error: Unknown activation function index!";
+	m_operationsMap[ERROR_NUMBER_OF_WEIGHTS_MISMATCH] = "Error: Number of weights mismatch!";
+	m_operationsMap[ERROR_RAW_DATA_VECTOR_LENGTH_IS_INCORRECT] = "Error: Raw data vector length is incorrect!";
+	Clear();
+}
 
-	return std::make_pair(false, message);
+ArtificialNeuralNetworkBuilder::~ArtificialNeuralNetworkBuilder()
+{
 }
 
 bool ArtificialNeuralNetworkBuilder::CreateDummy()
@@ -374,11 +307,11 @@ bool ArtificialNeuralNetworkBuilder::CreateDummy()
 	// Rand dummy data
 	std::random_device device;
 	std::mt19937 engine(device());
-	std::uniform_int_distribution<std::mt19937::result_type> ldistribution(GetMinNumberOfLayers(),
-																		   GetMaxNumberOfLayers());
-	std::uniform_int_distribution<std::mt19937::result_type> nlsdistribution(GetMinNumberOfNeuronsPerLayer(),
-																			 GetMaxNumberOfNeuronsPerLayer());
-	std::uniform_int_distribution<std::mt19937::result_type> afdistribution(ActivationFunctionContext::GetMinActivationFunctionIndex(),
+	std::uniform_int_distribution<std::mt19937::result_type> ldistribution((unsigned)GetMinNumberOfLayers(),
+																		   (unsigned)GetMaxNumberOfLayers());
+	std::uniform_int_distribution<std::mt19937::result_type> nlsdistribution((unsigned)GetMinNumberOfNeuronsPerLayer(),
+																			 (unsigned)GetMaxNumberOfNeuronsPerLayer());
+	std::uniform_int_distribution<std::mt19937::result_type> afdistribution((unsigned)ActivationFunctionContext::GetMinActivationFunctionIndex(),
 																			(unsigned)ActivationFunctionContext::GetActivationFunctionsCount() - 1);
 
 	// Set dummy data
@@ -411,6 +344,11 @@ void ArtificialNeuralNetworkBuilder::SetBiasVector(BiasVector biasVector)
 	m_biasVector = biasVector;
 }
 
+void ArtificialNeuralNetworkBuilder::SetRawNeuronData(std::vector<Neuron> rawNeuronData)
+{
+	m_rawData = rawNeuronData;
+}
+
 NeuronLayerSizes ArtificialNeuralNetworkBuilder::GetNeuronLayerSizes()
 {
 	return m_neuronLayerSizes;
@@ -426,13 +364,20 @@ BiasVector ArtificialNeuralNetworkBuilder::GetBiasVector()
 	return m_biasVector;
 }
 
+std::vector<Neuron> ArtificialNeuralNetworkBuilder::GetRawNeuronData()
+{
+	return m_rawData;
+}
+
 ArtificialNeuralNetwork* ArtificialNeuralNetworkBuilder::Get()
 {
 	if (!Validate())
 		return nullptr;
 
+	// Create artifial neural network
 	auto* ann = new ArtificialNeuralNetwork;
 
+	// Get number of layers
 	const size_t layersCount = m_neuronLayerSizes.size();
 
 	// Set neuron layers

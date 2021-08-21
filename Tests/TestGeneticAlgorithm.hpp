@@ -11,7 +11,7 @@ namespace TestGeneticAlgorithm
 		bool m_running;
 		std::chrono::steady_clock::time_point m_start;
 
-		void finish()
+		void Finish()
 		{
 			auto finish = std::chrono::high_resolution_clock::now();
 			std::chrono::duration<double> elapsed = finish - m_start;
@@ -19,29 +19,30 @@ namespace TestGeneticAlgorithm
 		}
 
 	public:
+
 		TestTimer()
 		{
 			m_running = true;
 			m_start = std::chrono::high_resolution_clock::now();
 		}
 
-		void stop()
+		void Stop()
 		{
 			if (m_running)
 			{
 				m_running = false;
-				finish();
+				Finish();
 			}
 		}
 
 		~TestTimer()
 		{
-			stop();
+			Stop();
 		}
 	};
 
 	template<class Type>
-	void printTestStatistics(const size_t numOfGenerations,
+	void PrintTestStatistics(const size_t numOfGenerations,
 							 const double expectedResults,
 							 const double results,
 							 Chromosome<Type>& expectedChromosome,
@@ -67,7 +68,7 @@ namespace TestGeneticAlgorithm
 		SetConsoleTextAttribute(handle, 7);
 	}
 
-	void testBooleans(const size_t chromosomeLength,
+	void TestBooleans(const size_t chromosomeLength,
 					  const size_t populationSize,
 					  const size_t numOfGenerations,
 					  double crossoverProbability,
@@ -100,20 +101,20 @@ namespace TestGeneticAlgorithm
 				fitnessVector[j] = 0;
 				for (size_t k = 0; k < chromosomeLength; ++k)
 				{
-					if (geneticAlgorithm.getChromosome(j)[k] == expectedChromosome[k])
+					if (geneticAlgorithm.GetChromosome(j)[k] == expectedChromosome[k])
 						++fitnessVector[j];
 				}
 			}
-		} while (geneticAlgorithm.iterate(fitnessVector));
-		testTimer.stop();
+		} while (geneticAlgorithm.Iterate(fitnessVector));
+		testTimer.Stop();
 
 		size_t bestResultsIndex = std::distance(fitnessVector.begin(), std::max_element(fitnessVector.begin(), fitnessVector.end()));
 		double bestResults = double(fitnessVector[bestResultsIndex]) / chromosomeLength;
-		auto bestChromosome = geneticAlgorithm.getChromosome(bestResultsIndex);
-		printTestStatistics<bool>(numOfGenerations, expectedResults, bestResults, expectedChromosome, bestChromosome);
+		auto bestChromosome = geneticAlgorithm.GetChromosome(bestResultsIndex);
+		PrintTestStatistics<bool>(numOfGenerations, expectedResults, bestResults, expectedChromosome, bestChromosome);
 	}
 
-	void testCharacters(const size_t chromosomeLength,
+	void TestCharacters(const size_t chromosomeLength,
 						const size_t populationSize,
 						const size_t numOfGenerations,
 						double crossoverProbability,
@@ -144,7 +145,7 @@ namespace TestGeneticAlgorithm
 
 		// Run environment
 		TestTimer testTimer;
-		while (geneticAlgorithm.iterate(fitnessVector))
+		while (geneticAlgorithm.Iterate(fitnessVector))
 		{
 			for (size_t j = 0; j < populationSize; ++j)
 			{
@@ -152,22 +153,22 @@ namespace TestGeneticAlgorithm
 				fitnessVector[j] = 0;
 				for (size_t k = 0; k < chromosomeLength; ++k)
 				{
-					size_t difference = std::abs(geneticAlgorithm.getChromosome(j)[k] - expectedChromosome[k]);
+					size_t difference = std::abs(geneticAlgorithm.GetChromosome(j)[k] - expectedChromosome[k]);
 					difference = size_t(std::pow(difference, 2));
 					long long value = long long(numOfCombinations) - difference;
 					fitnessVector[j] += Fitness(value < 0 ? 0 : value);
 				}
 			}
 		}
-		testTimer.stop();
+		testTimer.Stop();
 
 		size_t bestResultsIndex = std::distance(fitnessVector.begin(), std::max_element(fitnessVector.begin(), fitnessVector.end()));
 		double bestResults = double(fitnessVector[bestResultsIndex]) / chromosomeLength / numOfCombinations;
-		auto bestChromosome = geneticAlgorithm.getChromosome(bestResultsIndex);
-		printTestStatistics<char>(numOfGenerations, expectedResults, bestResults, expectedChromosome, bestChromosome);
+		auto bestChromosome = geneticAlgorithm.GetChromosome(bestResultsIndex);
+		PrintTestStatistics<char>(numOfGenerations, expectedResults, bestResults, expectedChromosome, bestChromosome);
 	}
 
-	void testFloatingPoints(const size_t chromosomeLength,
+	void TestFloatingPoints(const size_t chromosomeLength,
 							const size_t populationSize,
 							const size_t numOfGenerations,
 							double crossoverProbability,
@@ -204,7 +205,7 @@ namespace TestGeneticAlgorithm
 
 		// Run environment
 		TestTimer testTimer;
-		while (geneticAlgorithm.iterate(fitnessVector))
+		while (geneticAlgorithm.Iterate(fitnessVector))
 		{
 			for (size_t j = 0; j < populationSize; ++j)
 			{
@@ -212,7 +213,7 @@ namespace TestGeneticAlgorithm
 				fitnessVector[j] = 0;
 				for (size_t k = 0; k < chromosomeLength; ++k)
 				{
-					float difference = std::abs(geneticAlgorithm.getChromosome(j)[k] - expectedChromosome[k]);
+					float difference = std::abs(geneticAlgorithm.GetChromosome(j)[k] - expectedChromosome[k]);
 					long long longDifference = long long(difference * precision);
 					longDifference = long long(std::pow(longDifference, 1.15));
 					long long value = long long(delta * precision) - longDifference;
@@ -220,15 +221,15 @@ namespace TestGeneticAlgorithm
 				}
 			}
 		}
-		testTimer.stop();
+		testTimer.Stop();
 
 		size_t bestResultsIndex = std::distance(fitnessVector.begin(), std::max_element(fitnessVector.begin(), fitnessVector.end()));
 		double bestResults = double(fitnessVector[bestResultsIndex]) / chromosomeLength / (delta * precision);
-		auto bestChromosome = geneticAlgorithm.getChromosome(bestResultsIndex);
-		printTestStatistics<float>(numOfGenerations, expectedResults, bestResults, expectedChromosome, bestChromosome);
+		auto bestChromosome = geneticAlgorithm.GetChromosome(bestResultsIndex);
+		PrintTestStatistics<float>(numOfGenerations, expectedResults, bestResults, expectedChromosome, bestChromosome);
 	}
 
-	void testNeurons(const size_t chromosomeLength,
+	void TestNeurons(const size_t chromosomeLength,
 					 const size_t populationSize,
 					 const size_t numOfGenerations,
 					 double crossoverProbability,
@@ -267,7 +268,7 @@ namespace TestGeneticAlgorithm
 
 		// Run environment
 		TestTimer testTimer;
-		while (geneticAlgorithm.iterate(fitnessVector))
+		while (geneticAlgorithm.Iterate(fitnessVector))
 		{
 			for (size_t j = 0; j < populationSize; ++j)
 			{
@@ -275,7 +276,7 @@ namespace TestGeneticAlgorithm
 				fitnessVector[j] = 0;
 				for (size_t k = 0; k < chromosomeLength; ++k)
 				{
-					auto data = geneticAlgorithm.getChromosome(j)[k];
+					auto data = geneticAlgorithm.GetChromosome(j)[k];
 					Neuron difference = std::fabs(data - expectedChromosome[k]);
 					long long longDifference = long long(difference * precision);
 					long long value = long long(delta * precision) - longDifference;
@@ -283,20 +284,15 @@ namespace TestGeneticAlgorithm
 				}
 			}
 		}
-		testTimer.stop();
+		testTimer.Stop();
 
 		size_t bestResultsIndex = std::distance(fitnessVector.begin(), std::max_element(fitnessVector.begin(), fitnessVector.end()));
 		double bestResults = (double(fitnessVector[bestResultsIndex]) / chromosomeLength) / (delta * precision);
-		auto bestChromosome = geneticAlgorithm.getChromosome(bestResultsIndex);
-		printTestStatistics<Neuron>(numOfGenerations, expectedResults, bestResults, expectedChromosome, bestChromosome);
+		auto bestChromosome = geneticAlgorithm.GetChromosome(bestResultsIndex);
+		PrintTestStatistics<Neuron>(numOfGenerations, expectedResults, bestResults, expectedChromosome, bestChromosome);
 	}
 
-	void testIntegers()
-	{
-
-	}
-
-	void runTests()
+	void RunTests()
 	{
 		std::cout << "Test title: TestGeneticAlgorithm\n";
 
@@ -308,63 +304,57 @@ namespace TestGeneticAlgorithm
 
 		if (runTestGroupBooleans)
 		{
-			std::cout << "Test group name: testBooleans\n";
-			testBooleans(255, 64, 30, 0.45, 0.1, 0.74);
-			testBooleans(200, 50, 30, 0.5, 0.05, 0.83);
-			testBooleans(128, 32, 40, 0.6, 0.03, 0.94);
-			testBooleans(64, 64, 64, 0.6, 0.03, 1.0);
-			testBooleans(300, 128, 60, 0.5, 0.02, 0.95);
-			testBooleans(2048, 128, 60, 0.5, 0.02, 0.70);
-			testBooleans(1024, 256, 60, 0.5, 0.02, 0.80);
-			testBooleans(512, 128, 60, 0.5, 0.01, 0.92);
-			testBooleans(1024, 256, 50, 0.5, 0.01, 0.83);
-			testBooleans(64, 64, 64, 0.5, 0.01, 1.0);
+			std::cout << "Test group name: TestBooleans\n";
+			TestBooleans(255, 64, 30, 0.45, 0.1, 0.74);
+			TestBooleans(200, 50, 30, 0.5, 0.05, 0.83);
+			TestBooleans(128, 32, 40, 0.6, 0.03, 0.94);
+			TestBooleans(64, 64, 64, 0.6, 0.03, 1.0);
+			TestBooleans(300, 128, 60, 0.5, 0.02, 0.95);
+			TestBooleans(2048, 128, 60, 0.5, 0.02, 0.70);
+			TestBooleans(1024, 256, 60, 0.5, 0.02, 0.80);
+			TestBooleans(512, 128, 60, 0.5, 0.01, 0.92);
+			TestBooleans(1024, 256, 50, 0.5, 0.01, 0.83);
+			TestBooleans(64, 64, 64, 0.5, 0.01, 1.0);
 		}
 		
 		if (runTestGroupCharacters)
 		{
-			std::cout << "Test group name: testCharacters\n";
+			std::cout << "Test group name: TestCharacters\n";
 			const std::string alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890, .-;:_!\"#%&/()=?@${[]}";
-			testCharacters(20, 128, 30, 0.5, 0.1, alphabet, false, 0.9);
-			testCharacters(32, 128, 60, 0.6, 0.08, alphabet, false, 0.9);
-			testCharacters(128, 256, 90, 0.5, 0.05, alphabet, false, 0.8);
-			testCharacters(256, 512, 512, 0.5, 0.03, alphabet, true, 0.94);
-			testCharacters(192, 512, 210, 0.5, 0.03, alphabet, false, 0.92);
-			testCharacters(256, 1024, 512, 0.5, 0.03, alphabet, false, 0.9);
+			TestCharacters(20, 128, 30, 0.5, 0.1, alphabet, false, 0.9);
+			TestCharacters(32, 128, 60, 0.6, 0.08, alphabet, false, 0.9);
+			TestCharacters(128, 256, 90, 0.5, 0.05, alphabet, false, 0.8);
+			TestCharacters(256, 512, 512, 0.5, 0.03, alphabet, true, 0.94);
+			TestCharacters(192, 512, 210, 0.5, 0.03, alphabet, false, 0.92);
+			TestCharacters(256, 1024, 512, 0.5, 0.03, alphabet, false, 0.9);
 		}
 
 		if (runTestGroupFloatingPoints)
 		{
-			std::cout << "Test group name: testFloatingPoints\n";
-			testFloatingPoints(1, 16, 32, 0.5, 0.5, 100, std::pair(-1.0f, 1.0f), false, 0.99);
-			testFloatingPoints(4, 64, 64, 0.5, 0.4, 100, std::pair(-1.0f, 1.0f), true, 0.96);
-			testFloatingPoints(8, 64, 64, 0.5, 0.8, 1000, std::pair(-10.0f, 10.0f), true, 0.98);
-			testFloatingPoints(32, 64, 128, 0.6, 0.05, 100, std::pair(-1.0f, 1.0f), false, 0.99);
-			testFloatingPoints(64, 64, 128, 0.65, 0.04, 100, std::pair(-1.0f, 1.0f), false, 0.95);
-			testFloatingPoints(128, 128, 256, 0.55, 0.06, 100, std::pair(-1.0f, 1.0f), false, 0.92);
-			testFloatingPoints(256, 128, 256, 0.5, 0.06, 100, std::pair(-5.0f, 5.0f), false, 0.8);
+			std::cout << "Test group name: TestFloatingPoints\n";
+			TestFloatingPoints(1, 16, 32, 0.5, 0.5, 100, std::pair(-1.0f, 1.0f), false, 0.99);
+			TestFloatingPoints(4, 64, 64, 0.5, 0.4, 100, std::pair(-1.0f, 1.0f), true, 0.96);
+			TestFloatingPoints(8, 64, 64, 0.5, 0.8, 1000, std::pair(-10.0f, 10.0f), true, 0.98);
+			TestFloatingPoints(32, 64, 128, 0.6, 0.05, 100, std::pair(-1.0f, 1.0f), false, 0.99);
+			TestFloatingPoints(64, 64, 128, 0.65, 0.04, 100, std::pair(-1.0f, 1.0f), false, 0.95);
+			TestFloatingPoints(128, 128, 256, 0.55, 0.06, 100, std::pair(-1.0f, 1.0f), false, 0.92);
+			TestFloatingPoints(256, 128, 256, 0.5, 0.06, 100, std::pair(-5.0f, 5.0f), false, 0.8);
 		}
 
 		if (runTestGroupNeurons)
 		{
-			std::cout << "Test group name: testNeurons\n";
-			testNeurons(1, 16, 32, 0.5, 0.05, 1000, std::pair(-1.0, 1.0), false, false, 0.97);
-			testNeurons(2, 16, 32, 0.5, 0.05, 1000, std::pair(-1.0, 1.0), false, false, 0.97);
-			testNeurons(4, 32, 32, 0.5, 0.05, 1000, std::pair(-1.0, 1.0), false, false, 0.97);
-			testNeurons(8, 32, 64, 0.5, 0.06, 1000, std::pair(-1.0, 1.0), false, true, 0.97);
-			testNeurons(16, 64, 64, 0.5, 0.06, 1000, std::pair(-1.0, 1.0), false, true, 0.97);
-			testNeurons(32, 64, 64, 0.5, 0.06, 1000, std::pair(-1.0, 1.0), false, true, 0.97);
-			testNeurons(64, 128, 128, 0.5, 0.06, 1000, std::pair(-1.0, 1.0), false, true, 0.97);
-			testNeurons(128, 128, 128, 0.5, 0.06, 1000, std::pair(-1.0, 1.0), false, true, 0.93);
-			testNeurons(256, 128, 128, 0.5, 0.06, 1000, std::pair(-1.0, 1.0), false, true, 0.85);
-			testNeurons(512, 256, 256, 0.5, 0.06, 1000, std::pair(-1.0, 1.0), false, false, 0.85); // 1.5min
-			testNeurons(1024, 256, 512, 0.5, 0.06, 1000, std::pair(-5.0, 5.0), false, false, 0.8); // 6min
-		}
-
-		if (runTestGroupIntegers)
-		{
-			std::cout << "Test group name: testIntegers\n";
-			testIntegers();
+			std::cout << "Test group name: TestNeurons\n";
+			TestNeurons(1, 16, 32, 0.5, 0.05, 1000, std::pair(-1.0, 1.0), false, false, 0.97);
+			TestNeurons(2, 16, 32, 0.5, 0.05, 1000, std::pair(-1.0, 1.0), false, false, 0.97);
+			TestNeurons(4, 32, 32, 0.5, 0.05, 1000, std::pair(-1.0, 1.0), false, false, 0.97);
+			TestNeurons(8, 32, 64, 0.5, 0.06, 1000, std::pair(-1.0, 1.0), false, true, 0.97);
+			TestNeurons(16, 64, 64, 0.5, 0.06, 1000, std::pair(-1.0, 1.0), false, true, 0.97);
+			TestNeurons(32, 64, 64, 0.5, 0.06, 1000, std::pair(-1.0, 1.0), false, true, 0.97);
+			TestNeurons(64, 128, 128, 0.5, 0.06, 1000, std::pair(-1.0, 1.0), false, true, 0.97);
+			TestNeurons(128, 128, 128, 0.5, 0.06, 1000, std::pair(-1.0, 1.0), false, true, 0.93);
+			TestNeurons(256, 128, 128, 0.5, 0.06, 1000, std::pair(-1.0, 1.0), false, true, 0.85);
+			TestNeurons(512, 256, 256, 0.5, 0.06, 1000, std::pair(-1.0, 1.0), false, false, 0.85); // 1.5min
+			TestNeurons(1024, 256, 512, 0.5, 0.06, 1000, std::pair(-5.0, 5.0), false, false, 0.8); // 6min
 		}
 	}
 };

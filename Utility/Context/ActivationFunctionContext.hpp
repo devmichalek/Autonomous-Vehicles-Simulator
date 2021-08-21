@@ -9,9 +9,6 @@ using ActivationFunctionIndexes = std::vector<ActivationFunctionIndex>;
 
 class ActivationFunctionContext
 {
-
-public:
-
 	enum
 	{
 		STUB_ACTIVATION_FUNCTION,
@@ -21,6 +18,12 @@ public:
 		TANH_ACTIVATION_FUNCTION,
 		ACTIVATION_FUNCTIONS_COUNT
 	};
+
+	static ActivationFunction m_activationFunctionTable[ACTIVATION_FUNCTIONS_COUNT];
+
+	static bool m_initialized;
+
+public:
 	
 	static void Initialize();
 
@@ -31,10 +34,4 @@ public:
 	static size_t GetMinActivationFunctionIndex() { return STUB_ACTIVATION_FUNCTION; }
 
 	static size_t GetActivationFunctionsCount() { return ACTIVATION_FUNCTIONS_COUNT; }
-
-private:
-
-	static ActivationFunction m_activationFunctionTable[ACTIVATION_FUNCTIONS_COUNT];
-
-	static bool m_initialized;
 };

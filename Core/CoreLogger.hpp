@@ -1,6 +1,6 @@
 #include <fstream>
 
-class CoreLogger
+class CoreLogger final
 {
 public:
 

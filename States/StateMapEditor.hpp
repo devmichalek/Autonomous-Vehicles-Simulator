@@ -1,8 +1,6 @@
 #pragma once
 #include "StateInterface.hpp"
 #include "DrawableVehicle.hpp"
-#include "DrawableDoubleText.hpp"
-#include "DrawableTripleText.hpp"
 #include "DrawableFilenameText.hpp"
 #include "DrawableMapBuilder.hpp"
 #include "DrawableVehicleBuilder.hpp"
@@ -46,7 +44,6 @@ class StateMapEditor final : public StateInterface
 
 	DrawableMapBuilder m_drawableMapBuilder;
 	DrawableVehicleBuilder m_drawableVehicleBuilder;
-	bool m_spaceKeyPressed;
 
 	DrawableTripleText m_activeModeText;
 	DrawableTripleText m_movementText;
