@@ -7,8 +7,8 @@ class DrawableVehicleBuilder final :
 {
 	enum
 	{
-		ERROR_TOO_LITTLE_VEHICLE_BODY_EDGES = LAST_ENUM_OPERATION_INDEX,
-		ERROR_TOO_MANY_VEHICLE_BODY_EDGES,
+		ERROR_TOO_LITTLE_VEHICLE_BODY_POINTS = LAST_ENUM_OPERATION_INDEX,
+		ERROR_TOO_MANY_VEHICLE_BODY_POINTS,
 		ERROR_VEHICLE_BODY_AREA_IS_TOO_SMALL,
 		ERROR_VEHICLE_BODY_BOUNDARIES_ARE_TOO_VAST,
 		ERROR_TOO_LITTLE_SENSORS,
@@ -16,13 +16,14 @@ class DrawableVehicleBuilder final :
 		ERROR_SENSOR_ANGLE_IS_NOT_DIVISIBLE,
 		ERROR_SENSOR_ANGLE_IS_TOO_LITTLE,
 		ERROR_SENSOR_ANGLE_IS_TOO_LARGE,
+		ERROR_SENSOR_IS_OUTSIDE_OF_VEHICLE_BODY
 	};
 
 	VehicleBody m_vehicleBody;
 	VehicleSensors m_vehicleSensors;
 
-	// Validates number of vehicle body edges
-	bool ValidateVehicleBodyNumberOfEdges(size_t count);
+	// Validates number of vehicle body points
+	bool ValidateVehicleBodyNumberOfPoints(size_t count);
 
 	// Calculates vehicle body area by given points representing triangles
 	double CalculateVehicleBodyArea(std::vector<sf::Vector2f> points);
@@ -39,6 +40,9 @@ class DrawableVehicleBuilder final :
 	// Validates sensor's angle
 	bool ValidateSensorAngle(double angle);
 
+	// Validates sensor's position over vehicle body
+	bool ValidateSensorPositionsOverVehicleBody();
+
 	// Validate internal fields
 	bool ValidateInternal();
 
@@ -50,6 +54,9 @@ class DrawableVehicleBuilder final :
 
 	// Saves internal fields into the file
 	bool SaveInternal(std::ofstream& output);
+
+	// Creates drawable vehicle dummy
+	void CreateDummyInternal();
 	
 	// Creates vehicle body dummy
 	VehicleBody CreateVehicleBodyDummy(sf::Vector2f dummySize);
@@ -66,9 +73,6 @@ public:
 	// Add vehicle sensor
 	void AddVehicleSensor(sf::Vector2f point, double angle);
 
-	// Creates drawable vehicle dummy
-	bool CreateDummy();
-
 	// Returns intermediate representation of vehicle body
 	VehicleBody GetVehicleBody();
 
@@ -78,11 +82,11 @@ public:
 	// Returns maximum vehicle body bound
 	static sf::Vector2f GetMaxVehicleBodySize();
 
-	// Returns minimum vehicle body number of edges
-	static size_t GetMinVehicleBodyNumberOfEdges();
+	// Returns minimum vehicle body number of points
+	static size_t GetMinVehicleBodyNumberOfPoints();
 
-	// Returns maximum vehicle body number of edges
-	static size_t GetMaxVehicleBodyNumberOfEdges();
+	// Returns maximum vehicle body number of points
+	static size_t GetMaxVehicleBodyNumberOfPoints();
 
 	// Returns minimum sensor's angle
 	static double GetMinSensorAngle();

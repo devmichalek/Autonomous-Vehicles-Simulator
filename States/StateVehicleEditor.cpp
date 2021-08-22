@@ -152,6 +152,7 @@ void StateVehicleEditor::Capture()
 						if (m_currentSensorIndex >= m_vehicleSensors.GetNumberOfSensors())
 							m_currentSensorIndex = 0;
 						m_currentSensorAngle = m_vehicleSensors.GetSensorAngle(m_currentSensorIndex);
+						m_upToDate = false;
 						break;
 
 					case DEACREASE_SENSOR_ANGLE:
@@ -161,6 +162,7 @@ void StateVehicleEditor::Capture()
 							if (m_currentSensorAngle < DrawableVehicleBuilder::GetMinSensorAngle())
 								m_currentSensorAngle = DrawableVehicleBuilder::GetMaxSensorAngle() - DrawableVehicleBuilder::GetDefaultSensorAngleOffset();
 							m_vehicleSensors.SetSensorAngle(m_currentSensorIndex, m_currentSensorAngle);
+							m_upToDate = false;
 						}
 						break;
 
@@ -173,6 +175,7 @@ void StateVehicleEditor::Capture()
 							else if (m_currentSensorAngle == DrawableVehicleBuilder::GetMaxSensorAngle())
 								m_currentSensorAngle = DrawableVehicleBuilder::GetMinSensorAngle();
 							m_vehicleSensors.SetSensorAngle(m_currentSensorIndex, m_currentSensorAngle);
+							m_upToDate = false;
 						}
 						break;
 				}
@@ -199,10 +202,12 @@ void StateVehicleEditor::Capture()
 						{
 							case INSERT:
 								m_vehicleBody.AddPoint(relativePosition);
+								m_upToDate = false;
 								break;
 
 							case REMOVE:
 								m_vehicleBody.RemovePoint(relativePosition);
+								m_upToDate = false;
 								break;
 						}
 
@@ -216,6 +221,7 @@ void StateVehicleEditor::Capture()
 								m_vehicleSensors.AddSensor(relativePosition, DrawableVehicleBuilder::GetMinSensorAngle());
 								m_currentSensorIndex = m_vehicleSensors.GetNumberOfSensors() - 1;
 								m_currentSensorAngle = m_vehicleSensors.GetSensorAngle(m_currentSensorIndex);
+								m_upToDate = false;
 								break;
 
 							case REMOVE:
@@ -233,6 +239,7 @@ void StateVehicleEditor::Capture()
 											m_currentSensorAngle = m_vehicleSensors.GetSensorAngle(m_currentSensorIndex);
 									}
 									m_vehicleSensors.RemoveSensor(index);
+									m_upToDate = false;
 								}
 								break;
 							}
@@ -257,7 +264,7 @@ void StateVehicleEditor::Update()
 				m_drawableVehicleBuilder.AddVehicleBodyPoint(point);
 			size_t numberOfSensors = m_vehicleSensors.GetNumberOfSensors();
 			for (size_t i = 0; i < numberOfSensors; ++i)
-				m_drawableVehicleBuilder.AddVehicleSensor(m_vehicleSensors.m_offsetVector[i], m_vehicleSensors.m_angleVector[i]);
+				m_drawableVehicleBuilder.AddVehicleSensor(m_vehicleSensors.m_points[i], m_vehicleSensors.m_angleVector[i]);
 
 			bool success = m_drawableVehicleBuilder.Save(m_filenameText.GetFilename());
 			auto status = m_drawableVehicleBuilder.GetLastOperationStatus();
@@ -347,7 +354,7 @@ bool StateVehicleEditor::Load()
 	m_activeSubmodeText.SetPosition({ FontContext::Component(0), {5}, {9}, {1} });
 	m_totalNumberOfEdgesText.SetPosition({ FontContext::Component(0), {5}, {9}, {2} });
 	m_totalNumberOfSensorsText.SetPosition({ FontContext::Component(0), {5}, {9}, {3} });
-	m_filenameText.SetPosition({ FontContext::Component(0), {5}, {9}, {16}, {4} });
+	m_filenameText.SetPosition({ FontContext::Component(0), {5}, {9}, {18}, {4} });
 	m_currentSensorText.SetPosition({ FontContext::Component(0), {5}, {7}, {1, true} });
 	m_currentSensorAngleText.SetPosition({ FontContext::Component(0), {5}, {7}, {2, true} });
 

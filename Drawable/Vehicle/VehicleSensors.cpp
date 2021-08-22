@@ -51,7 +51,7 @@ void VehicleSensors::Initialize()
 void VehicleSensors::Clear()
 {
 	m_beamVector.clear();
-	m_offsetVector.clear();
+	m_points.clear();
 	m_angleVector.clear();
 	m_sensors.clear();
 }
@@ -75,7 +75,7 @@ void VehicleSensors::Update()
 		m_sensors[i] = m_sensorMaxValue;
 
 		// Set base
-		m_beamVector[i][0] = m_offsetVector[i];
+		m_beamVector[i][0] = m_points[i];
 
 		// Set beam start point
 		float x = m_beamVector[i][0].x;
@@ -128,17 +128,17 @@ double VehicleSensors::GetSensorAngle(size_t index)
 	return 0.0;
 }
 
-void VehicleSensors::AddSensor(sf::Vector2f offset, double angle)
+void VehicleSensors::AddSensor(sf::Vector2f point, double angle)
 {
 	// Push back
 	m_beamVector.push_back(Edge());
-	m_offsetVector.push_back(offset);
+	m_points.push_back(point);
 	m_angleVector.push_back(angle);
 	m_sensors.push_back(ArtificialNeuralNetworkBuilder::GetDefaultNeuronValue());
 
 	// Shrink to fit
 	m_beamVector.shrink_to_fit();
-	m_offsetVector.shrink_to_fit();
+	m_points.shrink_to_fit();
 	m_angleVector.shrink_to_fit();
 	m_sensors.shrink_to_fit();
 }
@@ -148,7 +148,7 @@ void VehicleSensors::RemoveSensor(size_t index)
 	if (index < m_beamVector.size())
 	{
 		m_beamVector.erase(m_beamVector.begin() + index);
-		m_offsetVector.erase(m_offsetVector.begin() + index);
+		m_points.erase(m_points.begin() + index);
 		m_angleVector.erase(m_angleVector.begin() + index);
 		m_sensors.erase(m_sensors.begin() + index);
 	}
@@ -158,9 +158,9 @@ void VehicleSensors::RemoveSensor(size_t index)
 
 bool VehicleSensors::GetSensorIndex(size_t& index, sf::Vector2f point)
 {
-	for (size_t i = 0; i < m_offsetVector.size(); ++i)
+	for (size_t i = 0; i < m_points.size(); ++i)
 	{
-		if (DrawableMath::IsPointInsideCircle(m_offsetVector[i], m_sensorSize.x, point))
+		if (DrawableMath::IsPointInsideCircle(m_points[i], m_sensorSize.x, point))
 		{
 			index = i;
 			return true;

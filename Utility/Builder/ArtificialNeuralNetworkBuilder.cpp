@@ -276,6 +276,30 @@ bool ArtificialNeuralNetworkBuilder::SaveInternal(std::ofstream& output)
 	return true;
 }
 
+void ArtificialNeuralNetworkBuilder::CreateDummyInternal()
+{
+	// Rand dummy data
+	std::random_device device;
+	std::mt19937 engine(device());
+	std::uniform_int_distribution<std::mt19937::result_type> ldistribution((unsigned)GetMinNumberOfLayers(),
+		(unsigned)GetMaxNumberOfLayers());
+	std::uniform_int_distribution<std::mt19937::result_type> nlsdistribution((unsigned)GetMinNumberOfNeuronsPerLayer(),
+		(unsigned)GetMaxNumberOfNeuronsPerLayer());
+	std::uniform_int_distribution<std::mt19937::result_type> afdistribution((unsigned)ActivationFunctionContext::GetMinActivationFunctionIndex(),
+		(unsigned)ActivationFunctionContext::GetActivationFunctionsCount() - 1);
+
+	// Set dummy data
+	size_t length = ldistribution(engine);
+	m_neuronLayerSizes.resize(length);
+	for (size_t i = 0; i < length; ++i)
+		m_neuronLayerSizes[i] = nlsdistribution(engine);
+	--length;
+	m_activationFunctionIndexes.resize(length);
+	m_biasVector.resize(length, 0.0);
+	for (size_t i = 0; i < length; ++i)
+		m_activationFunctionIndexes[i] = afdistribution(engine);
+}
+
 ArtificialNeuralNetworkBuilder::ArtificialNeuralNetworkBuilder() :
 	AbstractBuilder(std::ios::in | std::ios::binary, std::ios::out | std::ios::binary),
 	m_numberOfNeurons(0),
@@ -297,36 +321,6 @@ ArtificialNeuralNetworkBuilder::ArtificialNeuralNetworkBuilder() :
 
 ArtificialNeuralNetworkBuilder::~ArtificialNeuralNetworkBuilder()
 {
-}
-
-bool ArtificialNeuralNetworkBuilder::CreateDummy()
-{
-	// Clear data
-	Clear();
-
-	// Rand dummy data
-	std::random_device device;
-	std::mt19937 engine(device());
-	std::uniform_int_distribution<std::mt19937::result_type> ldistribution((unsigned)GetMinNumberOfLayers(),
-																		   (unsigned)GetMaxNumberOfLayers());
-	std::uniform_int_distribution<std::mt19937::result_type> nlsdistribution((unsigned)GetMinNumberOfNeuronsPerLayer(),
-																			 (unsigned)GetMaxNumberOfNeuronsPerLayer());
-	std::uniform_int_distribution<std::mt19937::result_type> afdistribution((unsigned)ActivationFunctionContext::GetMinActivationFunctionIndex(),
-																			(unsigned)ActivationFunctionContext::GetActivationFunctionsCount() - 1);
-
-	// Set dummy data
-	size_t length = ldistribution(engine);
-	m_neuronLayerSizes.resize(length);
-	for (size_t i = 0; i < length; ++i)
-		m_neuronLayerSizes[i] = nlsdistribution(engine);
-	--length;
-	m_activationFunctionIndexes.resize(length);
-	m_biasVector.resize(length, 0.0);
-	for (size_t i = 0; i < length; ++i)
-		m_activationFunctionIndexes[i] = afdistribution(engine);
-
-	// Validate
-	return Validate();
 }
 
 void ArtificialNeuralNetworkBuilder::SetNeuronLayerSizes(NeuronLayerSizes neuronLayerSizes)

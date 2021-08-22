@@ -128,7 +128,7 @@ void StateTesting::Update()
 							{
 								m_filenameText.SetSuccessStatusText(status.second);
 								delete m_edgeManager;
-								m_edgeManager = m_drawableMapBuilder.GetDrawableManager();
+								m_edgeManager = m_drawableMapBuilder.GetDrawableMap();
 								for (auto& vehicle : m_vehicleFactory)
 								{
 									delete vehicle.first;

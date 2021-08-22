@@ -1,17 +1,17 @@
 #include "DrawableVehicleBuilder.hpp"
 #include "ArtificialNeuralNetworkBuilder.hpp"
 
-bool DrawableVehicleBuilder::ValidateVehicleBodyNumberOfEdges(size_t count)
+bool DrawableVehicleBuilder::ValidateVehicleBodyNumberOfPoints(size_t count)
 {
-	if (count < GetMinVehicleBodyNumberOfEdges())
+	if (count < GetMinVehicleBodyNumberOfPoints())
 	{
-		m_lastOperationStatus = ERROR_TOO_LITTLE_VEHICLE_BODY_EDGES;
+		m_lastOperationStatus = ERROR_TOO_LITTLE_VEHICLE_BODY_POINTS;
 		return false;
 	}
 
-	if (count > GetMaxVehicleBodyNumberOfEdges())
+	if (count > GetMaxVehicleBodyNumberOfPoints())
 	{
-		m_lastOperationStatus = ERROR_TOO_MANY_VEHICLE_BODY_EDGES;
+		m_lastOperationStatus = ERROR_TOO_MANY_VEHICLE_BODY_POINTS;
 		return false;
 	}
 
@@ -118,9 +118,34 @@ bool DrawableVehicleBuilder::ValidateSensorAngle(double angle)
 	return true;
 }
 
+bool DrawableVehicleBuilder::ValidateSensorPositionsOverVehicleBody()
+{
+	for (const auto& position : m_vehicleSensors.m_points)
+	{
+		bool success = false;
+		for (size_t i = 2; i < m_vehicleBody.m_points.size(); ++i)
+		{
+			Triangle triangle = { m_vehicleBody.m_points[i - 2], m_vehicleBody.m_points[i - 1], m_vehicleBody.m_points[i] };
+			if (DrawableMath::IsPointInsideTriangle(triangle, position))
+			{
+				success = true;
+				break;
+			}
+		}
+
+		if (!success)
+		{
+			m_lastOperationStatus = ERROR_SENSOR_IS_OUTSIDE_OF_VEHICLE_BODY;
+			return false;
+		}
+	}
+
+	return true;
+}
+
 bool DrawableVehicleBuilder::ValidateInternal()
 {
-	if (!ValidateVehicleBodyNumberOfEdges(m_vehicleBody.GetNumberOfPoints()))
+	if (!ValidateVehicleBodyNumberOfPoints(m_vehicleBody.GetNumberOfPoints()))
 		return false;
 
 	if (!ValidateVehicleBodyArea())
@@ -132,9 +157,12 @@ bool DrawableVehicleBuilder::ValidateInternal()
 	if (!ValidateNumberOfSensors(m_vehicleSensors.GetNumberOfSensors()))
 		return false;
 
-	if (!ValidateRelativePositions(m_vehicleSensors.m_offsetVector))
+	if (!ValidateRelativePositions(m_vehicleSensors.m_points))
 		return false;
 
+	if (!ValidateSensorPositionsOverVehicleBody())
+		return false;
+	
 	for (const auto& angle : m_vehicleSensors.m_angleVector)
 	{
 		if (!ValidateSensorAngle(angle))
@@ -159,7 +187,7 @@ bool DrawableVehicleBuilder::LoadInternal(std::ifstream& input)
 	size_t vehicleBodyNumberOfPoints = 0;
 	input.read((char*)&vehicleBodyNumberOfPoints, sizeof(vehicleBodyNumberOfPoints));
 
-	if (!ValidateVehicleBodyNumberOfEdges(vehicleBodyNumberOfPoints))
+	if (!ValidateVehicleBodyNumberOfPoints(vehicleBodyNumberOfPoints))
 		return false;
 
 	// Read vehicle body points
@@ -188,7 +216,7 @@ bool DrawableVehicleBuilder::LoadInternal(std::ifstream& input)
 		return false;
 
 	// Read vehicle sensor's positions
-	for (size_t i = 0; i < vehicleBodyNumberOfPoints; ++i)
+	for (size_t i = 0; i < numberOfSensors; ++i)
 	{
 		double x = 0.0;
 		double y = 0.0;
@@ -199,7 +227,10 @@ bool DrawableVehicleBuilder::LoadInternal(std::ifstream& input)
 		m_vehicleSensors.AddSensor(sf::Vector2f(float(x), float(y)), 0.0);
 	}
 
-	if (!ValidateRelativePositions(m_vehicleSensors.m_offsetVector))
+	if (!ValidateRelativePositions(m_vehicleSensors.m_points))
+		return false;
+
+	if (!ValidateSensorPositionsOverVehicleBody())
 		return false;
 
 	// Read vehicle sensor's angles
@@ -210,6 +241,8 @@ bool DrawableVehicleBuilder::LoadInternal(std::ifstream& input)
 
 		if (!ValidateSensorAngle(angle))
 			return false;
+
+		m_vehicleSensors.SetSensorAngle(i, angle);
 	}
 
 	return true;
@@ -240,8 +273,8 @@ bool DrawableVehicleBuilder::SaveInternal(std::ofstream& output)
 	// Save vehicle sensor's positions
 	for (size_t i = 0; i < numberOfSensors; ++i)
 	{
-		double x = double(m_vehicleSensors.m_offsetVector[i].x) / double(windowSize.x);
-		double y = double(m_vehicleSensors.m_offsetVector[i].y) / double(windowSize.y);
+		double x = double(m_vehicleSensors.m_points[i].x) / double(windowSize.x);
+		double y = double(m_vehicleSensors.m_points[i].y) / double(windowSize.y);
 		output.write((const char*)&x, sizeof(x));
 		output.write((const char*)&y, sizeof(y));
 	}
@@ -254,6 +287,20 @@ bool DrawableVehicleBuilder::SaveInternal(std::ofstream& output)
 	}
 
 	return true;
+}
+
+void DrawableVehicleBuilder::CreateDummyInternal()
+{
+	sf::Vector2f dummySize = GetMaxVehicleBodySize();
+	dummySize /= 2.0f;
+
+	m_vehicleBody = CreateVehicleBodyDummy(dummySize);
+
+	m_vehicleSensors.AddSensor(sf::Vector2f(0, -dummySize.y / 2), 270.0);
+	m_vehicleSensors.AddSensor(sf::Vector2f(dummySize.x / 2, -dummySize.y / 2), 315.0);
+	m_vehicleSensors.AddSensor(sf::Vector2f(dummySize.x / 2, 0), 0);
+	m_vehicleSensors.AddSensor(sf::Vector2f(dummySize.x / 2, dummySize.y / 2), 45.0);
+	m_vehicleSensors.AddSensor(sf::Vector2f(0, dummySize.y / 2), 90.0);
 }
 
 VehicleBody DrawableVehicleBuilder::CreateVehicleBodyDummy(sf::Vector2f dummySize)
@@ -269,8 +316,8 @@ VehicleBody DrawableVehicleBuilder::CreateVehicleBodyDummy(sf::Vector2f dummySiz
 DrawableVehicleBuilder::DrawableVehicleBuilder() :
 	AbstractBuilder(std::ios::in | std::ios::binary, std::ios::out | std::ios::binary)
 {
-	m_operationsMap[ERROR_TOO_LITTLE_VEHICLE_BODY_EDGES] = "Error: Too little vehicle body edges!";
-	m_operationsMap[ERROR_TOO_MANY_VEHICLE_BODY_EDGES] = "Error: Too many vehicle body edges!";
+	m_operationsMap[ERROR_TOO_LITTLE_VEHICLE_BODY_POINTS] = "Error: Too little vehicle body points!";
+	m_operationsMap[ERROR_TOO_MANY_VEHICLE_BODY_POINTS] = "Error: Too many vehicle body points!";
 	m_operationsMap[ERROR_VEHICLE_BODY_AREA_IS_TOO_SMALL] = "Error: Vehicle body area is too small!";
 	m_operationsMap[ERROR_VEHICLE_BODY_BOUNDARIES_ARE_TOO_VAST] = "Error: Vehicle body boundaries are too vast!";
 	m_operationsMap[ERROR_TOO_LITTLE_SENSORS] = "Error: Too little sensors specified!";
@@ -278,6 +325,7 @@ DrawableVehicleBuilder::DrawableVehicleBuilder() :
 	m_operationsMap[ERROR_SENSOR_ANGLE_IS_NOT_DIVISIBLE] = "Error: Sensor's angle must be divisible by 15.0!";
 	m_operationsMap[ERROR_SENSOR_ANGLE_IS_TOO_LITTLE] = "Error: Sensor's angle is too little!";
 	m_operationsMap[ERROR_SENSOR_ANGLE_IS_TOO_LARGE] = "Error: Sensor's angle is too large!";
+	m_operationsMap[ERROR_SENSOR_IS_OUTSIDE_OF_VEHICLE_BODY] = "Error: One of sensors is outside of vehicle body!";
 	Clear();
 }
 
@@ -293,25 +341,6 @@ void DrawableVehicleBuilder::AddVehicleBodyPoint(sf::Vector2f point)
 void DrawableVehicleBuilder::AddVehicleSensor(sf::Vector2f point, double angle)
 {
 	m_vehicleSensors.AddSensor(point, angle);
-}
-
-bool DrawableVehicleBuilder::CreateDummy()
-{
-	Clear();
-
-	sf::Vector2f dummySize = GetMaxVehicleBodySize();
-	dummySize /= 2.0f;
-
-	m_vehicleBody = CreateVehicleBodyDummy(dummySize);
-
-	m_vehicleSensors.AddSensor(sf::Vector2f(0, -dummySize.y / 2), 270.0);
-	m_vehicleSensors.AddSensor(sf::Vector2f(dummySize.x / 2, -dummySize.y / 2), 315.0);
-	m_vehicleSensors.AddSensor(sf::Vector2f(dummySize.x / 2, 0), 0);
-	m_vehicleSensors.AddSensor(sf::Vector2f(dummySize.x / 2, dummySize.y / 2), 45.0);
-	m_vehicleSensors.AddSensor(sf::Vector2f(0, dummySize.y / 2), 90.0);
-
-	// Validate
-	return Validate();
 }
 
 VehicleBody DrawableVehicleBuilder::GetVehicleBody()
@@ -332,12 +361,12 @@ sf::Vector2f DrawableVehicleBuilder::GetMaxVehicleBodySize()
 	return sf::Vector2f(windowSize.y / heightFactor, windowSize.x / widthFactor);
 }
 
-size_t DrawableVehicleBuilder::GetMinVehicleBodyNumberOfEdges()
+size_t DrawableVehicleBuilder::GetMinVehicleBodyNumberOfPoints()
 {
 	return 3;
 }
 
-size_t DrawableVehicleBuilder::GetMaxVehicleBodyNumberOfEdges()
+size_t DrawableVehicleBuilder::GetMaxVehicleBodyNumberOfPoints()
 {
 	return 12;
 }

@@ -84,9 +84,16 @@ void VehicleBody::SetFollowerColor()
 
 bool VehicleBody::Inside(const sf::Vector2f& point)
 {
-	float area = DrawableMath::GetFigureArea(m_vertices, point);
-	float correctArea = DrawableMath::GetFigureArea(m_vertices, *m_center) + 1;
-	return area <= correctArea;
+	for (size_t i = 2; i < m_vertices.getVertexCount(); ++i)
+	{
+		Triangle triangle = { m_vertices[i - 2].position, m_vertices[i - 1].position, m_vertices[i].position };
+		if (DrawableMath::IsPointInsideTriangle(triangle, point))
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
 
 void VehicleBody::AddPoint(sf::Vector2f point)

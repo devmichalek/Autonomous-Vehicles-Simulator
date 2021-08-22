@@ -1,59 +1,12 @@
 #include "DrawableMapBuilder.hpp"
 #include "DrawableEdgeManager.hpp"
 #include "DrawableCheckpointMap.hpp"
-#include <fstream>
 
-DrawableMapBuilder::DrawableMapBuilder()
+bool DrawableMapBuilder::ValidateInternal()
 {
-	Clear();
-
-	m_operationsMap[UNKNOWN] = "Error: last status is unknown!";
-	m_operationsMap[SUCCESS_LOAD_COMPLETED] = "Success: correctly opened file!";
-	m_operationsMap[SUCCESS_SAVE_COMPLETED] = "Success: correctly saved file!";
-	m_operationsMap[SUCCESS_VALIDATION_PASSED] = "Success: validation process has passed with no errors!";
-	m_operationsMap[ERROR_VEHICLE_IS_NOT_SPECIFIED] = "Error: vehicle is not specified!";
-	m_operationsMap[ERROR_EDGES_ARE_NOT_SPECIFIED] = "Error: edges are not specified!";
-	m_operationsMap[ERROR_INCORRECT_EDGE_SEQUENCE_COUNT] = "Error: there should be only two edge sequences!";
-	m_operationsMap[ERROR_EDGE_SEQUENCE_INTERSECTION] = "Error: found intersection between edge sequences!";
-	m_operationsMap[ERROR_TOO_LITTLE_INNER_EDGES] = "Error: too little inner edges specified!";
-	m_operationsMap[ERROR_TOO_LITTLE_OUTER_EDGES] = "Error: too little outer edges specified!";
-	m_operationsMap[ERROR_EMPTY_FILENAME_CANNOT_OPEN_FILE_FOR_READING] = "Error: filename is empty, cannot open file for reading!";
-	m_operationsMap[ERROR_CANNOT_OPEN_FILE_FOR_READING] = "Error: cannot open file for reading!";
-	m_operationsMap[ERROR_CANNOT_EXTRACT_DOUBLE_WHILE_READING] = "Error: cannot extract floating point value from string while reading!";
-	m_operationsMap[ERROR_CANNOT_EXTRACT_POINT_WHILE_READING] = "Error: cannot extract point from string while reading!";
-	m_operationsMap[ERROR_CANNOT_EXTRACT_EDGE_WHILE_READING] = "Error: cannot extract edge from string while reading!";
-	m_operationsMap[ERROR_CANNOT_FIND_VEHICLE_ANGLE_STRING_WHILE_READING] = "Error: cannot extract vehicle angle string line while reading!";
-	m_operationsMap[ERROR_CANNOT_FIND_VEHICLE_CENTER_STRING_WHILE_READING] = "Error: cannot extract vehicle center string line while reading!";
-	m_operationsMap[ERROR_CANNOT_FIND_EDGE_STRING_WHILE_READING] = "Error: cannot extract edge string line while reading!";
-	m_operationsMap[ERROR_EMPTY_FILENAME_CANNOT_OPEN_FILE_FOR_WRITING] = "Error: filename is empty, cannot open file for writing!";
-	m_operationsMap[ERROR_CANNOT_OPEN_FILE_FOR_WRITING] = "Error: cannot open file for writing!";
-}
-
-DrawableMapBuilder::~DrawableMapBuilder()
-{
-	Clear();
-}
-
-void DrawableMapBuilder::Clear()
-{
-	m_edgesPivot = 0;
-	m_edges.clear();
-	m_vehicleSpecified = false;
-	m_validated = false;
-	m_lastOperationStatus = UNKNOWN;
-}
-
-bool DrawableMapBuilder::Validate()
-{
-	if (m_validated)
+	if (!m_vehiclePositioned)
 	{
-		m_lastOperationStatus = SUCCESS_VALIDATION_PASSED;
-		return true;
-	}
-
-	if (!m_vehicleSpecified)
-	{
-		m_lastOperationStatus = ERROR_VEHICLE_IS_NOT_SPECIFIED;
+		m_lastOperationStatus = ERROR_VEHICLE_IS_NOT_POSITIONED;
 		return false;
 	}
 
@@ -117,54 +70,30 @@ bool DrawableMapBuilder::Validate()
 	// Set number of inner edges, pivot from where outer edges start
 	m_edgesPivot = pivots.front();
 
-	if (m_edgesPivot < m_minNumberOfInnerEdges)
+	if (m_edgesPivot < GetMinNumberOfInnerEdges())
 	{
 		m_lastOperationStatus = ERROR_TOO_LITTLE_INNER_EDGES;
 		return false;
 	}
 
-	if (m_edges.size() - m_edgesPivot < m_maxNumberOfInnerEdges)
+	if (m_edges.size() - m_edgesPivot < GetMaxNumberOfInnerEdges())
 	{
 		m_lastOperationStatus = ERROR_TOO_LITTLE_OUTER_EDGES;
 		return false;
 	}
 
-	m_lastOperationStatus = SUCCESS_VALIDATION_PASSED;
-	m_validated = true;
 	return true;
 }
 
-void DrawableMapBuilder::AddVehicle(double angle, sf::Vector2f center)
+void DrawableMapBuilder::ClearInternal()
 {
-	m_vehicleSpecified = true;
-	m_vehicleCenter = center;
-	m_vehicleAngle = angle;
+	m_edgesPivot = 0;
+	m_edges.clear();
+	m_vehiclePositioned = false;
 }
 
-void DrawableMapBuilder::AddEdge(Edge edge)
+bool DrawableMapBuilder::LoadInternal(std::ifstream& input)
 {
-	m_edges.push_back(edge);
-}
-
-bool DrawableMapBuilder::Load(std::string filename)
-{
-	Clear();
-
-	// Check if filename is not empty
-	if (filename.empty())
-	{
-		m_lastOperationStatus = ERROR_EMPTY_FILENAME_CANNOT_OPEN_FILE_FOR_READING;
-		return false;
-	}
-
-	// Check if file can be opened for reading
-	std::ifstream input(filename);
-	if (!input.is_open())
-	{
-		m_lastOperationStatus = ERROR_CANNOT_OPEN_FILE_FOR_READING;
-		return false;
-	}
-
 	auto ExtractDoubleFromString = [&](std::string input, double& output)
 	{
 		if (input.empty())
@@ -269,7 +198,7 @@ bool DrawableMapBuilder::Load(std::string filename)
 	line.erase(0, m_vehicleAngleString.size());
 	if (!ExtractDoubleFromString(line, m_vehicleAngle))
 		return false;
-	
+
 	// Get vehicle center
 	std::getline(input, line);
 	if (line.find(m_vehicleCenterString) != 0)
@@ -280,7 +209,7 @@ bool DrawableMapBuilder::Load(std::string filename)
 	line.erase(0, m_vehicleCenterString.size());
 	if (!ExtractPointFromString(line, m_vehicleCenter))
 		return false;
-	m_vehicleSpecified = true;
+	m_vehiclePositioned = true;
 
 	// Get edges
 	Edge edge;
@@ -301,59 +230,89 @@ bool DrawableMapBuilder::Load(std::string filename)
 	if (!Validate())
 		return false;
 
-	m_lastOperationStatus = SUCCESS_LOAD_COMPLETED;
 	return true;
 }
 
-bool DrawableMapBuilder::Save(std::string filename)
+bool DrawableMapBuilder::SaveInternal(std::ofstream& output)
 {
-	// Check if filename is not empty
-	if (filename.empty())
-	{
-		m_lastOperationStatus = ERROR_EMPTY_FILENAME_CANNOT_OPEN_FILE_FOR_WRITING;
-		return false;
-	}
-
-	// Validate
-	if (!Validate())
-		return false;
-
-	// Check if file can be opened for writing
-	std::ofstream output(filename);
-	if (!output.is_open())
-	{
-		m_lastOperationStatus = ERROR_CANNOT_OPEN_FILE_FOR_WRITING;
-		return false;
-	}
-
 	// Save vehicle
 	output << m_vehicleAngleString << m_vehicleAngle << std::endl;
 	output << m_vehicleCenterString << m_vehicleCenter.x << " " << m_vehicleCenter.y << std::endl;
-	
+
 	// Save edges
 	for (auto& i : m_edges)
 		output << m_edgeString << i[0].x << " " << i[0].y << " " << i[1].x << " " << i[1].y << std::endl;
 
-	Clear();
-
-	m_lastOperationStatus = SUCCESS_SAVE_COMPLETED;
 	return true;
 }
 
-std::pair<bool, std::string> DrawableMapBuilder::GetLastOperationStatus()
+void DrawableMapBuilder::CreateDummyInternal()
 {
-	std::string message = m_operationsMap[m_lastOperationStatus];
-	switch (m_lastOperationStatus)
-	{
-		case SUCCESS_SAVE_COMPLETED:
-		case SUCCESS_LOAD_COMPLETED:
-		case SUCCESS_VALIDATION_PASSED:
-			return std::make_pair(true, message);
-		default:
-			return std::make_pair(false, message);
-	}
+	auto windowSize = CoreWindow::GetSize();
+	float xOffset = windowSize.x / 5.0f;
+	float yOffset = windowSize.y / 5.0f;
 
-	return std::make_pair(false, message);
+	auto innerPoint1 = sf::Vector2f(xOffset * 2, yOffset * 2);
+	auto innerPoint2 = sf::Vector2f(xOffset * 3, innerPoint1.y);
+	auto innerPoint3 = sf::Vector2f(innerPoint2.x, yOffset * 3);
+	auto innerPoint4 = sf::Vector2f(innerPoint1.x, innerPoint3.y);
+
+	auto outerPoint1 = sf::Vector2f(xOffset, yOffset);
+	auto outerPoint2 = sf::Vector2f(xOffset * 4, outerPoint1.y);
+	auto outerPoint3 = sf::Vector2f(outerPoint2.x, yOffset * 4);
+	auto outerPoint4 = sf::Vector2f(outerPoint1.x, outerPoint3.y);
+
+	m_edges.push_back({ innerPoint1, innerPoint2 });
+	m_edges.push_back({ innerPoint2, innerPoint3 });
+	m_edges.push_back({ innerPoint3, innerPoint4 });
+	m_edges.push_back({ innerPoint4, innerPoint1 });
+
+	m_edges.push_back({ outerPoint1, outerPoint2 });
+	m_edges.push_back({ outerPoint2, outerPoint3 });
+	m_edges.push_back({ outerPoint3, outerPoint4 });
+	m_edges.push_back({ outerPoint4, outerPoint1 });
+
+	m_edgesPivot = 4;
+	m_vehiclePositioned = true;
+	m_vehicleCenter = sf::Vector2f(xOffset * 1.5, yOffset * 2.5);
+	m_vehicleAngle = 270.0;
+}
+
+DrawableMapBuilder::DrawableMapBuilder() :
+	AbstractBuilder(std::ios::in, std::ios::out),
+	m_edgesPivot(0),
+	m_vehiclePositioned(false),
+	m_vehicleAngle(0.0)
+{
+	m_operationsMap[ERROR_VEHICLE_IS_NOT_POSITIONED] = "Error: vehicle is not positioned!";
+	m_operationsMap[ERROR_EDGES_ARE_NOT_SPECIFIED] = "Error: edges are not specified!";
+	m_operationsMap[ERROR_INCORRECT_EDGE_SEQUENCE_COUNT] = "Error: there should be only two edge sequences!";
+	m_operationsMap[ERROR_EDGE_SEQUENCE_INTERSECTION] = "Error: found intersection between edge sequences!";
+	m_operationsMap[ERROR_TOO_LITTLE_INNER_EDGES] = "Error: too little inner edges specified!";
+	m_operationsMap[ERROR_TOO_LITTLE_OUTER_EDGES] = "Error: too little outer edges specified!";
+	m_operationsMap[ERROR_CANNOT_EXTRACT_DOUBLE_WHILE_READING] = "Error: cannot extract floating point value from string while reading!";
+	m_operationsMap[ERROR_CANNOT_EXTRACT_POINT_WHILE_READING] = "Error: cannot extract point from string while reading!";
+	m_operationsMap[ERROR_CANNOT_EXTRACT_EDGE_WHILE_READING] = "Error: cannot extract edge from string while reading!";
+	m_operationsMap[ERROR_CANNOT_FIND_VEHICLE_ANGLE_STRING_WHILE_READING] = "Error: cannot extract vehicle angle string line while reading!";
+	m_operationsMap[ERROR_CANNOT_FIND_VEHICLE_CENTER_STRING_WHILE_READING] = "Error: cannot extract vehicle center string line while reading!";
+	m_operationsMap[ERROR_CANNOT_FIND_EDGE_STRING_WHILE_READING] = "Error: cannot extract edge string line while reading!";
+	Clear();
+}
+
+DrawableMapBuilder::~DrawableMapBuilder()
+{
+}
+
+void DrawableMapBuilder::AddVehicle(double angle, sf::Vector2f center)
+{
+	m_vehiclePositioned = true;
+	m_vehicleCenter = center;
+	m_vehicleAngle = angle;
+}
+
+void DrawableMapBuilder::AddEdge(Edge edge)
+{
+	m_edges.push_back(edge);
 }
 
 EdgeVector DrawableMapBuilder::GetEdges()
@@ -366,7 +325,7 @@ std::pair<sf::Vector2f, double> DrawableMapBuilder::GetVehicle()
 	return std::make_pair(m_vehicleCenter, m_vehicleAngle);
 }
 
-DrawableEdgeManager* DrawableMapBuilder::GetDrawableManager()
+DrawableEdgeManager* DrawableMapBuilder::GetDrawableMap()
 {
 	if (!Validate())
 		return nullptr;
@@ -380,4 +339,14 @@ DrawableCheckpointMap* DrawableMapBuilder::GetDrawableCheckpointMap()
 		return nullptr;
 	
 	return new DrawableCheckpointMap(m_edges, m_edgesPivot);
+}
+
+size_t DrawableMapBuilder::GetMinNumberOfInnerEdges() const
+{
+	return 4;
+}
+
+size_t DrawableMapBuilder::GetMaxNumberOfInnerEdges() const
+{
+	return GetMinNumberOfInnerEdges();
 }

@@ -69,14 +69,14 @@ class ArtificialNeuralNetworkBuilder final :
 	// Saves ANN to file
 	bool SaveInternal(std::ofstream& output);
 
+	// Creates dummy ANN
+	void CreateDummyInternal();
+
 public:
 
 	ArtificialNeuralNetworkBuilder();
 
 	~ArtificialNeuralNetworkBuilder();
-
-	// Creates dummy ANN
-	bool CreateDummy();
 
 	// Sets neuron layer sizes
 	void SetNeuronLayerSizes(NeuronLayerSizes neuronLayerSizes);

@@ -50,13 +50,13 @@ class VehicleBody final
 	// Set this vehicle body with "following" color
 	void SetFollowerColor();
 
-	// Returns true if given point is inside vehicle body are
+	// Returns true if given point is inside vehicle body area
 	bool Inside(const sf::Vector2f& point);
 
 	// Adds new descriptive point relative to the center
 	void AddPoint(sf::Vector2f point);
 
-	// Removes last descriptive point relative to the center
+	// Removes part of vehicle body if the given point relative to the center is inside triangle
 	void RemovePoint(sf::Vector2f point);
 
 	// Returns number of vertices

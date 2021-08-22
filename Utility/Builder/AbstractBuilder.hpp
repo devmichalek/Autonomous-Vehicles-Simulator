@@ -16,6 +16,9 @@ class AbstractBuilder
 	// Saves internal fields into the file
 	virtual bool SaveInternal(std::ofstream& output) = 0;
 
+	// Create specific builder's dummy object
+	virtual void CreateDummyInternal() = 0;
+
 	// File reading mode
 	std::ios_base::openmode m_inputMode;
 
@@ -78,6 +81,19 @@ public:
 
 	virtual ~AbstractBuilder()
 	{
+	}
+
+	// Creates dummy
+	bool CreateDummy()
+	{
+		// Clear data
+		Clear();
+
+		// Call internal implementation
+		CreateDummyInternal();
+
+		// Validate
+		return Validate();
 	}
 
 	// Clears internal fields
@@ -166,7 +182,4 @@ public:
 
 		return std::make_pair(false, message);
 	}
-
-	// Creates dummy ANN
-	virtual bool CreateDummy() = 0;
 };

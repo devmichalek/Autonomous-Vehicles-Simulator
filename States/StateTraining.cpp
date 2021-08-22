@@ -115,7 +115,7 @@ bool StateTraining::Load()
 	m_checkpointMap = m_drawableMapBuilder.GetDrawableCheckpointMap();
 	m_checkpointMap->restart(m_populationSize, 0.02);
 
-	m_edgeManager = m_drawableMapBuilder.GetDrawableManager();
+	m_edgeManager = m_drawableMapBuilder.GetDrawableMap();
 	
 	for (size_t i = 0; i < m_populationSize; ++i)
 	{

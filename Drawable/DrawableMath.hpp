@@ -58,17 +58,6 @@ public:
         return false;
     }
 
-    // Calculates figure area by calculating n triangles
-    inline static float GetFigureArea(const sf::VertexArray& vertices, const sf::Vector2f& center)
-    {
-        float area = 0;
-        size_t lastIndex = vertices.getVertexCount() - 1;
-        for (size_t index = 0; index < lastIndex; ++index)
-            area += GetTriangleArea(vertices[index].position, vertices[index + 1].position, center);
-        area += GetTriangleArea(vertices[lastIndex].position, vertices[0].position, center);
-        return area;
-    }
-
     // Calculates end point
     inline static sf::Vector2f GetEndPoint(sf::Vector2f point, double angle, float length)
     {

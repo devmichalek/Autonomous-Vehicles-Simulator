@@ -11,14 +11,13 @@ class StateVehicleEditor;
 class VehicleSensors final
 {
 	using BeamVector = EdgeVector;
-	using OffsetVector = std::vector<sf::Vector2f>;
 	using AngleVector = std::vector<double>;
 	friend DrawableVehicle;
 	friend DrawableVehicleBuilder;
 	friend StateVehicleEditor;
 
 	BeamVector m_beamVector;
-	OffsetVector m_offsetVector;
+	std::vector<sf::Vector2f> m_points;
 	AngleVector m_angleVector;
 	NeuronLayer m_sensors;
 
@@ -85,7 +84,7 @@ class VehicleSensors final
 	double GetSensorAngle(size_t index);
 
 	// Adds new sensor
-	void AddSensor(sf::Vector2f offset, double angle);
+	void AddSensor(sf::Vector2f point, double angle);
 
 	// Removes particular sensor
 	void RemoveSensor(size_t index);

@@ -29,7 +29,8 @@ void StateMapEditor::SetActiveMode(ActiveMode activeMode)
 }
 
 StateMapEditor::StateMapEditor() :
-	m_movementTimer(600.0, 1800.0, 1.0, 200.0)
+	m_movementTimer(600.0, 1800.0, 1.0, 200.0),
+	m_drawableVehicle(nullptr)
 {
 	m_activeMode = ActiveMode::EDGE;
 	m_edgeSubmode = EdgeSubmode::GLUED_INSERT;
@@ -41,8 +42,24 @@ StateMapEditor::StateMapEditor() :
 	m_removeEdge = false;
 	m_upToDate = false;
 	m_vehiclePositioned = false;
+	
 	if (m_drawableVehicleBuilder.CreateDummy())
 		m_drawableVehicle = m_drawableVehicleBuilder.Get();
+	else
+		CoreLogger::PrintError("Cannot create Drawable Vehicle dummy!");
+
+	if (m_drawableMapBuilder.CreateDummy())
+	{
+		m_edges = m_drawableMapBuilder.GetEdges();
+		m_vehiclePositioned = true;
+		auto data = m_drawableMapBuilder.GetVehicle();
+		m_drawableVehicle->SetCenter(data.first);
+		m_drawableVehicle->SetAngle(data.second);
+		m_drawableVehicle->Update();
+	}
+	else
+		CoreLogger::PrintError("Cannot create Drawable Map dummy!");
+
 	m_textFunctions.reserve(16U);
 }
 
@@ -57,16 +74,32 @@ void StateMapEditor::Reload()
 	m_activeMode = ActiveMode::EDGE;
 	m_edgeSubmode = EdgeSubmode::GLUED_INSERT;
 	m_vehicleSubmode = VehicleSubmode::INSERT;
-	m_edges.clear();
 	m_insertEdge = false;
 	m_removeEdge = false;
 	m_edgeBeggining = sf::Vector2f(0.0, 0.0);
 	m_movementTimer.Reset();
 	m_upToDate = false;
-	m_vehiclePositioned = false;
 	delete m_drawableVehicle;
 	m_drawableVehicle = m_drawableVehicleBuilder.Get();
-	m_drawableMapBuilder.Clear();
+
+	if (m_drawableMapBuilder.CreateDummy())
+	{
+		m_edges = m_drawableMapBuilder.GetEdges();
+		m_vehiclePositioned = true;
+		auto data = m_drawableMapBuilder.GetVehicle();
+		if (m_drawableVehicle)
+		{
+			m_drawableVehicle->SetCenter(data.first);
+			m_drawableVehicle->SetAngle(data.second);
+			m_drawableVehicle->Update();
+		}
+	}
+	else
+	{
+		m_edges.clear();
+		m_vehiclePositioned = false;
+		CoreLogger::PrintError("Cannot create Drawable Map dummy!");
+	}
 
 	// Reset texts
 	m_activeModeText.SetVariableText(m_activeModeMap[m_activeMode]);

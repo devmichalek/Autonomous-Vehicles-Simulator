@@ -165,6 +165,8 @@ StateANNEditor::StateANNEditor() :
 		m_biasVector = m_artificialNeuralNetworkBuilder.GetBiasVector();
 		CalculatePositions();
 	}
+	else
+		CoreLogger::PrintError("Cannot create Artificial Neural Network dummy!");
 
 	m_neuronShape.setFillColor(sf::Color::White);
 	m_neuronShape.setOutlineColor(sf::Color::White);
@@ -190,6 +192,8 @@ void StateANNEditor::Reload()
 		m_upToDate = false;
 		CalculatePositions();
 	}
+	else
+		CoreLogger::PrintError("Cannot create Artificial Neural Network dummy!");
 
 	// Reset pressed keys
 	for (size_t i = 0; i < CONTROL_KEYS_COUNT; ++i)
