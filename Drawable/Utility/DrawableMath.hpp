@@ -138,6 +138,24 @@ public:
         return false;
     }
 
+    // Returns true if point is inside rectangle (rectangle must have angle equal to 0 relative to x axis)
+    inline static bool IsPointInsideRectangle(sf::Vector2f rectangleSize, sf::Vector2f rectanglePosition, const sf::Vector2f& point)
+    {
+        if (point.x < rectanglePosition.x)
+            return false;
+
+        if (point.x > rectanglePosition.x + rectangleSize.x)
+            return false;
+
+        if (point.y < rectanglePosition.y)
+            return false;
+
+        if (point.y > rectanglePosition.y + rectangleSize.y)
+            return false;
+
+        return true;
+    }
+
     // Returns true if any vertex is inside triangle and false otherwise
     inline static bool Intersect(const Triangle& triangle, const sf::VertexArray& vertices)
     {

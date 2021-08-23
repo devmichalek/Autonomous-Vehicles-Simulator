@@ -78,7 +78,7 @@ public:
 		}
 	}
 
-	NeuronLayer Update(NeuronLayer inputLayer)
+	const NeuronLayer& Update(const NeuronLayer& inputLayer)
 	{
 		m_neuronLayers.front() = inputLayer;
 		UpdateInternal();

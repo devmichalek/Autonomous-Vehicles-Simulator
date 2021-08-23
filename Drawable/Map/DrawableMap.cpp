@@ -1,7 +1,7 @@
 #pragma once
-#include "DrawableEdgeManager.hpp"
+#include "DrawableMap.hpp"
 
-DrawableEdgeManager::DrawableEdgeManager(EdgeVector edges, size_t pivot)
+DrawableMap::DrawableMap(EdgeVector edges, size_t pivot)
 {
 	m_edgeLine[0].color = sf::Color::White;
 	m_edgeLine[1].color = m_edgeLine[0].color;
@@ -24,30 +24,30 @@ DrawableEdgeManager::DrawableEdgeManager(EdgeVector edges, size_t pivot)
 	m_edges.erase(m_edges.begin() + 1);
 }
 
-DrawableEdgeManager::~DrawableEdgeManager()
+DrawableMap::~DrawableMap()
 {
 }
 
-void DrawableEdgeManager::Intersect(DetailedVehicleFactory& vehicleFactory)
+void DrawableMap::Intersect(DrawableVehicleFactory& drawableVehicleFactory)
 {
-	for (auto& vehicle : vehicleFactory)
+	for (auto& vehicle : drawableVehicleFactory)
 	{
-		if (!vehicle.second)
+		if (!vehicle->IsActive())
 			continue;
 
 		for (auto& edge : m_edges)
 		{
-			if (DrawableMath::Intersect(edge, vehicle.first->GetVertices()))
+			if (DrawableMath::Intersect(edge, vehicle->GetVertices()))
 			{
-				vehicle.second = false;
+				vehicle->SetInactive();
 			}
 			else
-				vehicle.first->Detect(edge);
+				vehicle->Detect(edge);
 		}
 	}
 }
 
-void DrawableEdgeManager::Draw()
+void DrawableMap::Draw()
 {
 	for (const auto& i : m_edges)
 	{

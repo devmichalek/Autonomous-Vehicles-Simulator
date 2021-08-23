@@ -3,15 +3,15 @@
 #include "StoppableTimer.hpp"
 #include "Genetic.hpp"
 
-class DrawableEdgeManager
+class DrawableMap
 {
 public:
 
-	DrawableEdgeManager(EdgeVector edges, size_t pivot);
+	DrawableMap(EdgeVector edges, size_t pivot);
 
-	~DrawableEdgeManager();
+	~DrawableMap();
 
-	void Intersect(DetailedVehicleFactory& vehicleFactory);
+	void Intersect(DrawableVehicleFactory& drawableVehicleFactory);
 
 	void Draw();
 

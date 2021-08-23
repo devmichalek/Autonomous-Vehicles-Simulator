@@ -12,3 +12,5 @@ using WeightLayer = std::vector<Weights>;
 using WeightLayers = std::vector<WeightLayer>;
 using Bias = double;
 using BiasVector = std::vector<Bias>;
+class ArtificialNeuralNetwork;
+using ArtificialNeuralNetworks = std::vector<ArtificialNeuralNetwork*>;

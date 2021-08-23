@@ -15,18 +15,18 @@ StateTesting::StateTesting()
 	m_modeKey = std::make_pair(sf::Keyboard::M, false);
 	m_filenameTypeKey = std::make_pair(sf::Keyboard::F, false);
 	m_drawableVehicleBuilder.CreateDummy();
-	m_edgeManager = nullptr;
+	m_drawableMap = nullptr;
 	m_userVehicle = nullptr;
-	m_vehicleFactory.resize(2U);
-	m_checkpointMap = nullptr;
+	m_drawableVehicleFactory.resize(2U);
+	m_drawableCheckpointMap = nullptr;
 	m_textFunctions.reserve(16U);
 }
 
 StateTesting::~StateTesting()
 {
-	delete m_edgeManager;
+	delete m_drawableMap;
 	delete m_userVehicle;
-	delete m_checkpointMap;
+	delete m_drawableCheckpointMap;
 }
 
 void StateTesting::Reload()
@@ -36,12 +36,12 @@ void StateTesting::Reload()
 	m_modeKey.second = false;
 	m_filenameTypeKey.second = false;
 	m_drawableMapBuilder.Clear();
-	delete m_edgeManager;
-	m_edgeManager = nullptr;
+	delete m_drawableMap;
+	m_drawableMap = nullptr;
 	delete m_userVehicle;
 	m_userVehicle = nullptr;
-	delete m_checkpointMap;
-	m_checkpointMap = nullptr;
+	delete m_drawableCheckpointMap;
+	m_drawableCheckpointMap = nullptr;
 }
 
 void StateTesting::Capture()
@@ -127,25 +127,25 @@ void StateTesting::Update()
 							if (success)
 							{
 								m_filenameText.SetSuccessStatusText(status.second);
-								delete m_edgeManager;
-								m_edgeManager = m_drawableMapBuilder.GetDrawableMap();
-								for (auto& vehicle : m_vehicleFactory)
+								delete m_drawableMap;
+								m_drawableMap = m_drawableMapBuilder.GetDrawableMap();
+								for (auto& vehicle : m_drawableVehicleFactory)
 								{
-									delete vehicle.first;
-									vehicle = std::pair(m_drawableVehicleBuilder.Get(), true);
+									delete vehicle;
+									vehicle = m_drawableVehicleBuilder.Get();
 									auto details = m_drawableMapBuilder.GetVehicle();
-									vehicle.first->SetCenter(details.first);
-									vehicle.first->SetAngle(details.second);
-									vehicle.first->Update();
+									vehicle->SetCenter(details.first);
+									vehicle->SetAngle(details.second);
+									vehicle->Update();
 								}
 
-								m_userVehicle = m_vehicleFactory[0].first;
-								delete m_checkpointMap;
-								m_checkpointMap = m_drawableMapBuilder.GetDrawableCheckpointMap();
-								m_checkpointMap->restart(m_vehicleFactory.size(), 0.0);
+								m_userVehicle = m_drawableVehicleFactory[0];
+								delete m_drawableCheckpointMap;
+								m_drawableCheckpointMap = m_drawableMapBuilder.GetDrawableCheckpointMap();
+								m_drawableCheckpointMap->Init(m_drawableVehicleFactory.size(), 0.0);
 
-								for (auto& vehicle : m_vehicleFactory)
-									vehicle.first->Update();
+								for (auto& vehicle : m_drawableVehicleFactory)
+									vehicle->Update();
 
 								// Update view
 								auto& view = CoreWindow::GetView();
@@ -177,8 +177,8 @@ void StateTesting::Update()
 		{
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
 			{
-				m_vehicleFactory.front().second = true;
-				m_checkpointMap->iterate(m_vehicleFactory);
+				m_drawableVehicleFactory.front()->SetActive();
+				m_drawableCheckpointMap->Iterate(m_drawableVehicleFactory);
 			}
 
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
@@ -206,10 +206,10 @@ void StateTesting::Update()
 				m_userVehicle->Update();
 
 				// Update computer's vehicles only if they are not destroyed
-				for (size_t i = 1; i < m_vehicleFactory.size(); ++i)
+				for (size_t i = 1; i < m_drawableVehicleFactory.size(); ++i)
 				{
-					if (m_vehicleFactory[i].second)
-						m_vehicleFactory[i].first->Update();
+					if (m_drawableVehicleFactory[i]->IsActive())
+						m_drawableVehicleFactory[i]->Update();
 				}
 
 				// Update view
@@ -218,8 +218,8 @@ void StateTesting::Update()
 				CoreWindow::GetRenderWindow().setView(view);
 			}
 			
-			if (m_edgeManager)
-				m_edgeManager->Intersect(m_vehicleFactory);
+			if (m_drawableMap)
+				m_drawableMap->Intersect(m_drawableVehicleFactory);
 
 			break;
 		}
@@ -249,7 +249,7 @@ bool StateTesting::Load()
 	// Set variable texts
 	m_textFunctions.push_back([&] { return m_modeStrings[m_mode]; });
 	m_modeText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.05));
-	m_textFunctions.push_back([&] { return m_checkpointMap ? std::to_string(m_checkpointMap->getHighestFitness()) : "0"; });
+	m_textFunctions.push_back([&] { return m_drawableCheckpointMap ? std::to_string(m_drawableCheckpointMap->GetHighestFitness()) : "0"; });
 	m_fitnessText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.05));
 	m_textFunctions.push_back([&] { return m_filenameTypeStrings[m_filenameType]; });
 	m_filenameTypeText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.2));
@@ -283,18 +283,18 @@ void StateTesting::Draw()
 			break;
 	}
 	
-	for (auto& vehicle : m_vehicleFactory)
+	for (auto& vehicle : m_drawableVehicleFactory)
 	{
-		if (!vehicle.second)
+		if (!vehicle || !vehicle->IsActive())
 			continue;
-		vehicle.first->DrawBody();
-		vehicle.first->DrawBeams();
+		vehicle->DrawBody();
+		vehicle->DrawBeams();
 	}
 
-	if (m_edgeManager)
+	if (m_drawableMap)
 	{
-		m_edgeManager->Draw();
-		m_checkpointMap->draw();
+		m_drawableMap->Draw();
+		m_drawableCheckpointMap->Draw();
 	}
 	
 	m_modeText.Draw();

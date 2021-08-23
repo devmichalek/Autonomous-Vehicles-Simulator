@@ -2,13 +2,14 @@
 #include "StateInterface.hpp"
 #include "DrawableMapBuilder.hpp"
 #include "DrawableVehicleBuilder.hpp"
-#include "DrawableEdgeManager.hpp"
+#include "DrawableMap.hpp"
 #include "DrawableCheckpointMap.hpp"
 #include "DrawableTripleText.hpp"
 #include "DrawableFilenameText.hpp"
 #include <functional>
 
-class StateTesting final : public StateInterface
+class StateTesting final :
+	public StateInterface
 {
 	enum
 	{
@@ -36,10 +37,10 @@ class StateTesting final : public StateInterface
 	// Objects of test
 	DrawableMapBuilder m_drawableMapBuilder;
 	DrawableVehicleBuilder m_drawableVehicleBuilder;
-	DrawableEdgeManager* m_edgeManager;
+	DrawableMap* m_drawableMap;
 	DrawableVehicle* m_userVehicle;
-	DetailedVehicleFactory m_vehicleFactory;
-	DrawableCheckpointMap* m_checkpointMap;
+	DrawableVehicleFactory m_drawableVehicleFactory;
+	DrawableCheckpointMap* m_drawableCheckpointMap;
 
 	// Texts
 	DrawableTripleText m_modeText;

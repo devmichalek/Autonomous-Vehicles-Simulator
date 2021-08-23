@@ -2,6 +2,7 @@
 #include "CoreWindow.hpp"
 
 DrawableVehicle::DrawableVehicle(VehicleBody vehicleBody, VehicleSensors vehicleSensors) :
+	m_active(true),
 	m_angle(0.0),
 	m_sinus(0.0),
 	m_cosinus(0.0),

@@ -11,12 +11,7 @@ class DrawableVehicle final
 	inline static const double m_minSpeed = 0.0;
 	inline static const double m_speedFactor = 300.0;
 
-	static sf::Vector2f m_baseCenter;
-	static double m_baseAngle;
-	static double m_baseSinus;
-	static double m_baseCosinus;
-	static bool m_initialized;
-
+	bool m_active;
 	double m_angle;
 	double m_sinus;
 	double m_cosinus;
@@ -31,6 +26,24 @@ class DrawableVehicle final
 public:
 
 	~DrawableVehicle();
+
+	// Returns true if vehicle is active
+	inline bool IsActive()
+	{
+		return m_active;
+	}
+
+	// Makes vehicle inactive
+	inline void SetInactive()
+	{
+		m_active = false;
+	}
+
+	// Makes vehicle active
+	inline void SetActive()
+	{
+		m_active = true;
+	}
 
 	// Initializes static fields
 	static void Initialize();
@@ -128,5 +141,4 @@ public:
 	}
 };
 
-using DetailedVehicle = std::pair<DrawableVehicle*, bool>;
-using DetailedVehicleFactory = std::vector<DetailedVehicle>;
+using DrawableVehicleFactory = std::vector<DrawableVehicle*>;

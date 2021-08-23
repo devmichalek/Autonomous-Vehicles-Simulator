@@ -8,7 +8,8 @@
 #include "ArtificialNeuralNetworkBuilder.hpp"
 #include <SFML/Graphics/CircleShape.hpp>
 
-class StateANNEditor final : public StateInterface
+class StateANNEditor final :
+	public StateInterface
 {
 	enum
 	{

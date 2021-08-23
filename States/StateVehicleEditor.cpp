@@ -2,26 +2,6 @@
 #include "FunctionTimerObserver.hpp"
 #include "CoreLogger.hpp"
 
-bool StateVehicleEditor::IsInsideAllowedArea(sf::Vector2f position)
-{
-	auto allowedAreaPosition = m_allowedAreaShape.getPosition();
-	auto allowedArea = m_allowedAreaShape.getSize();
-	
-	if (position.x < allowedAreaPosition.x)
-		return false;
-
-	if (position.x > allowedAreaPosition.x + allowedArea.x)
-		return false;
-
-	if (position.y < allowedAreaPosition.y)
-		return false;
-
-	if (position.y > allowedAreaPosition.y + allowedArea.y)
-		return false;
-
-	return true;
-}
-
 StateVehicleEditor::StateVehicleEditor()
 {
 	m_modeStrings[MODE_VEHICLE_BODY] = "Vehicle body";
@@ -191,7 +171,7 @@ void StateVehicleEditor::Capture()
 		else if (CoreWindow::GetEvent().type == sf::Event::MouseButtonPressed)
 		{
 			auto relativePosition = CoreWindow::GetMousePosition();
-			if (IsInsideAllowedArea(relativePosition))
+			if (DrawableMath::IsPointInsideRectangle(m_allowedAreaShape.getSize(), m_allowedAreaShape.getPosition(), relativePosition))
 			{
 				relativePosition -= CoreWindow::GetCenter();
 				switch (m_mode)

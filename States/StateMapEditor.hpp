@@ -7,7 +7,8 @@
 #include "CycleTimer.hpp"
 #include <functional>
 
-class StateMapEditor final : public StateInterface
+class StateMapEditor final :
+	public StateInterface
 {
 	enum class ActiveMode
 	{
@@ -35,13 +36,12 @@ class StateMapEditor final : public StateInterface
 	bool m_insertEdge;
 	bool m_removeEdge;
 	sf::Vector2f m_edgeBeggining;
-
 	CycleTimer m_movementTimer;
 	bool m_upToDate;
-
 	bool m_vehiclePositioned;
 	DrawableVehicle* m_drawableVehicle;
-
+	sf::RectangleShape m_allowedAreaShape;
+	sf::RectangleShape m_allowedViewAreaShape;
 	DrawableMapBuilder m_drawableMapBuilder;
 	DrawableVehicleBuilder m_drawableVehicleBuilder;
 

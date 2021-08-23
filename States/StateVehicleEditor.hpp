@@ -6,7 +6,8 @@
 #include "DrawableVehicleBuilder.hpp"
 #include <functional>
 
-class StateVehicleEditor final : public StateInterface
+class StateVehicleEditor final :
+	public StateInterface
 {
 	enum
 	{
@@ -60,8 +61,6 @@ class StateVehicleEditor final : public StateInterface
 	DrawableTripleText m_currentSensorText;
 	DrawableTripleText m_currentSensorAngleText;
 	std::vector<std::function<std::string()>> m_textFunctions;
-
-	bool IsInsideAllowedArea(sf::Vector2f position);
 
 public:
 

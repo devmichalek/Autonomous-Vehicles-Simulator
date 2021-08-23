@@ -29,7 +29,7 @@ void StateMapEditor::SetActiveMode(ActiveMode activeMode)
 }
 
 StateMapEditor::StateMapEditor() :
-	m_movementTimer(600.0, 1800.0, 1.0, 200.0),
+	m_movementTimer(800.0, 1800.0, 1.0, 200.0),
 	m_drawableVehicle(nullptr)
 {
 	m_activeMode = ActiveMode::EDGE;
@@ -42,6 +42,18 @@ StateMapEditor::StateMapEditor() :
 	m_removeEdge = false;
 	m_upToDate = false;
 	m_vehiclePositioned = false;
+
+	auto windowSize = CoreWindow::GetSize();
+	auto maxSize = m_drawableMapBuilder.GetMaxAllowedMapArea();
+	auto allowedShapePosition = sf::Vector2f(windowSize.x / 20.0f, windowSize.y / 20.0f);
+	auto maxViewSize = m_drawableMapBuilder.GetMaxAllowedViewArea();
+	m_allowedAreaShape.setFillColor(sf::Color(255, 255, 255, 0));
+	m_allowedAreaShape.setOutlineColor(sf::Color(255, 255, 255, 64));
+	m_allowedAreaShape.setOutlineThickness(2);
+	m_allowedAreaShape.setSize(maxSize);
+	m_allowedAreaShape.setPosition(allowedShapePosition);
+	m_allowedViewAreaShape.setSize(maxViewSize);
+	m_allowedViewAreaShape.setPosition(allowedShapePosition.x - (maxViewSize.x - maxSize.x) / 2, allowedShapePosition.y - (maxViewSize.y - maxSize.y) / 2);
 	
 	if (m_drawableVehicleBuilder.CreateDummy())
 		m_drawableVehicle = m_drawableVehicleBuilder.Get();
@@ -125,8 +137,10 @@ void StateMapEditor::Capture()
 	if (CoreWindow::GetEvent().type == sf::Event::MouseButtonPressed)
 	{
 		sf::Vector2f correctPosition = CoreWindow::GetMousePosition() + CoreWindow::GetViewOffset();
-		switch (m_activeMode)
+		if (DrawableMath::IsPointInsideRectangle(m_allowedAreaShape.getSize(), m_allowedAreaShape.getPosition(), correctPosition))
 		{
+			switch (m_activeMode)
+			{
 			case ActiveMode::EDGE:
 			{
 				switch (m_edgeSubmode)
@@ -193,13 +207,13 @@ void StateMapEditor::Capture()
 						m_removeEdge = !m_removeEdge;
 						break;
 					}
+					}
+					break;
 				}
-				break;
-			}
-			case ActiveMode::VEHICLE:
-			{
-				switch (m_vehicleSubmode)
+				case ActiveMode::VEHICLE:
 				{
+					switch (m_vehicleSubmode)
+					{
 					case VehicleSubmode::INSERT:
 					{
 						m_vehiclePositioned = true;
@@ -219,13 +233,14 @@ void StateMapEditor::Capture()
 					}
 					default:
 						break;
+					}
+
+					break;
 				}
 
-				break;
+				default:
+					break;
 			}
-			
-			default:
-				break;
 		}
 	}
 
@@ -277,112 +292,112 @@ void StateMapEditor::Update()
 	{
 		switch (m_activeMode)
 		{
-		case ActiveMode::EDGE:
-		{
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::F2))
-				SetActiveMode(ActiveMode::VEHICLE);
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::LAlt) ||
-				sf::Keyboard::isKeyPressed(sf::Keyboard::RAlt))
+			case ActiveMode::EDGE:
 			{
-				if (!m_edges.empty() && m_edgeSubmode == EdgeSubmode::GLUED_INSERT)
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::F2))
+					SetActiveMode(ActiveMode::VEHICLE);
+				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::LAlt) ||
+					sf::Keyboard::isKeyPressed(sf::Keyboard::RAlt))
 				{
-					sf::Vector2f correctPosition = CoreWindow::GetMousePosition() + CoreWindow::GetViewOffset();
-					m_edgeBeggining = correctPosition;
-					m_insertEdge = true;
-
-					// Find closest point to mouse position
-					size_t index = 0;
-					double distance = std::numeric_limits<double>::max();
-					for (auto& edge : m_edges)
+					if (!m_edges.empty() && m_edgeSubmode == EdgeSubmode::GLUED_INSERT)
 					{
-						double beginningDistance = DrawableMath::Distance(correctPosition, edge[0]);
-						if (beginningDistance < distance)
-						{
-							distance = beginningDistance;
-							m_edgeBeggining = edge[0];
-						}
+						sf::Vector2f correctPosition = CoreWindow::GetMousePosition() + CoreWindow::GetViewOffset();
+						m_edgeBeggining = correctPosition;
+						m_insertEdge = true;
 
-						double endDistance = DrawableMath::Distance(correctPosition, edge[1]);
-						if (endDistance < distance)
+						// Find closest point to mouse position
+						size_t index = 0;
+						double distance = std::numeric_limits<double>::max();
+						for (auto& edge : m_edges)
 						{
-							distance = endDistance;
-							m_edgeBeggining = edge[1];
+							double beginningDistance = DrawableMath::Distance(correctPosition, edge[0]);
+							if (beginningDistance < distance)
+							{
+								distance = beginningDistance;
+								m_edgeBeggining = edge[0];
+							}
+
+							double endDistance = DrawableMath::Distance(correctPosition, edge[1]);
+							if (endDistance < distance)
+							{
+								distance = endDistance;
+								m_edgeBeggining = edge[1];
+							}
 						}
 					}
 				}
-			}
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
-			{
-				m_insertEdge = false;
-				m_removeEdge = false;
-			}
-			else
-			{
-				EdgeSubmode mode = m_edgeSubmode;
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1) ||
-					sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad1))
+				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
 				{
-					mode = EdgeSubmode::GLUED_INSERT;
-				}
-				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2) ||
-					sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad2))
-				{
-					mode = EdgeSubmode::REMOVE;
-				}
-
-				if (m_edgeSubmode != mode)
-				{
-					m_edgeSubmode = mode;
 					m_insertEdge = false;
 					m_removeEdge = false;
-					m_edgeSubmodeText.SetVariableText(m_edgeSubmodeMap[m_edgeSubmode]);
 				}
-			}
+				else
+				{
+					EdgeSubmode mode = m_edgeSubmode;
+					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1) ||
+						sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad1))
+					{
+						mode = EdgeSubmode::GLUED_INSERT;
+					}
+					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2) ||
+						sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad2))
+					{
+						mode = EdgeSubmode::REMOVE;
+					}
 
-			break;
-		}
-		case ActiveMode::VEHICLE:
-		{
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::F1))
-				SetActiveMode(ActiveMode::EDGE);
-			else
+					if (m_edgeSubmode != mode)
+					{
+						m_edgeSubmode = mode;
+						m_insertEdge = false;
+						m_removeEdge = false;
+						m_edgeSubmodeText.SetVariableText(m_edgeSubmodeMap[m_edgeSubmode]);
+					}
+				}
+
+				break;
+			}
+			case ActiveMode::VEHICLE:
 			{
-				VehicleSubmode mode = m_vehicleSubmode;
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1) ||
-					sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad1))
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::F1))
+					SetActiveMode(ActiveMode::EDGE);
+				else
 				{
-					mode = VehicleSubmode::INSERT;
-				}
-				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2) ||
-					sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad2))
-				{
-					mode = VehicleSubmode::REMOVE;
-				}
-				else if (m_vehiclePositioned)
-				{
-					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z))
+					VehicleSubmode mode = m_vehicleSubmode;
+					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1) ||
+						sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad1))
 					{
-						m_drawableVehicle->Rotate(0.0);
-						m_drawableVehicle->Update();
+						mode = VehicleSubmode::INSERT;
 					}
-					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::X))
+					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2) ||
+						sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad2))
 					{
-						m_drawableVehicle->Rotate(1.0);
-						m_drawableVehicle->Update();
+						mode = VehicleSubmode::REMOVE;
+					}
+					else if (m_vehiclePositioned)
+					{
+						if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z))
+						{
+							m_drawableVehicle->Rotate(0.0);
+							m_drawableVehicle->Update();
+						}
+						else if (sf::Keyboard::isKeyPressed(sf::Keyboard::X))
+						{
+							m_drawableVehicle->Rotate(1.0);
+							m_drawableVehicle->Update();
+						}
+					}
+
+					if (m_vehicleSubmode != mode)
+					{
+						m_vehicleSubmode = mode;
+						m_vehicleSubmodeText.SetVariableText(m_vehicleSubmodeMap[m_vehicleSubmode]);
 					}
 				}
 
-				if (m_vehicleSubmode != mode)
-				{
-					m_vehicleSubmode = mode;
-					m_vehicleSubmodeText.SetVariableText(m_vehicleSubmodeMap[m_vehicleSubmode]);
-				}
+				break;
 			}
-
-			break;
-		}
-		default:
-			break;
+			default:
+				break;
 		}
 
 		float elapsedTime = float(CoreWindow::GetElapsedTime());
@@ -395,31 +410,37 @@ void StateMapEditor::Update()
 			m_movementTimer.Decrement();
 		}
 
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
-		{
-			auto& view = CoreWindow::GetView();
-			view.move(sf::Vector2f(static_cast<float>(-m_movementTimer.Value() * elapsedTime), 0));
-			CoreWindow::GetRenderWindow().setView(view);
-		}
-		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
-		{
-			auto& view = CoreWindow::GetView();
-			view.move(sf::Vector2f(static_cast<float>(m_movementTimer.Value() * elapsedTime), 0));
-			CoreWindow::GetRenderWindow().setView(view);
-		}
+		auto& view = CoreWindow::GetView();
+		auto viewPosition = view.getCenter() - (CoreWindow::GetSize() / 2.0f);
+		float moveOffset = static_cast<float>(m_movementTimer.Value() * elapsedTime);
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+			view.move(sf::Vector2f(-moveOffset, 0));
+		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+			view.move(sf::Vector2f(moveOffset, 0));
 
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
-		{
-			auto& view = CoreWindow::GetView();
-			view.move(sf::Vector2f(0, static_cast<float>(-m_movementTimer.Value() * elapsedTime)));
-			CoreWindow::GetRenderWindow().setView(view);
-		}
-		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
-		{
-			auto& view = CoreWindow::GetView();
-			view.move(sf::Vector2f(0, static_cast<float>(m_movementTimer.Value() * elapsedTime)));
-			CoreWindow::GetRenderWindow().setView(view);
-		}
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+			view.move(sf::Vector2f(0, -moveOffset));
+		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+			view.move(sf::Vector2f(0, moveOffset));
+
+		view = CoreWindow::GetView();
+		viewPosition = view.getCenter() - (CoreWindow::GetSize() / 2.0f);
+		float left = m_allowedViewAreaShape.getPosition().x;
+		float right = m_allowedViewAreaShape.getPosition().x + m_allowedViewAreaShape.getSize().x;
+		float top = m_allowedViewAreaShape.getPosition().y;
+		float bot = m_allowedViewAreaShape.getPosition().y + m_allowedViewAreaShape.getSize().y;
+
+		if (viewPosition.x < left)
+			view.move(sf::Vector2f(left - viewPosition.x, 0));
+		else if (viewPosition.x + CoreWindow::GetSize().x > right)
+			view.move(sf::Vector2f(-(viewPosition.x + CoreWindow::GetSize().x - right), 0));
+
+		if (viewPosition.y < top)
+			view.move(sf::Vector2f(0, top - viewPosition.y));
+		else if (viewPosition.y + CoreWindow::GetSize().y > bot)
+			view.move(sf::Vector2f(0, -(viewPosition.y + CoreWindow::GetSize().y - bot)));
+
+		CoreWindow::GetRenderWindow().setView(view);
 	}
 
 	m_activeModeText.Update();
@@ -472,8 +493,8 @@ bool StateMapEditor::Load()
 	// Set information texts
 	m_activeModeText.SetInformationText("| [F1] [F2]");
 	m_movementText.SetInformationText("| [+] [-]");
-	m_viewOffsetXText.SetInformationText("| [Left] [Right]");
-	m_viewOffsetYText.SetInformationText("| [Up] [Down]");
+	m_viewOffsetXText.SetInformationText("| [A] [D]");
+	m_viewOffsetYText.SetInformationText("| [W] [S]");
 	m_edgeSubmodeText.SetInformationText("| [1] [2] [RMB] [Alt] [Esc]");
 	m_vehicleSubmodeText.SetInformationText("| [1] [2] [RMB]");
 	m_vehicleAngleText.SetInformationText("| [Z] [X]");
@@ -509,6 +530,8 @@ void StateMapEditor::Draw()
 		m_line[1].position = i[1];
 		CoreWindow::GetRenderWindow().draw(m_line.data(), m_line.size(), sf::Lines);
 	}
+
+	CoreWindow::GetRenderWindow().draw(m_allowedAreaShape);
 
 	switch (m_activeMode)
 	{

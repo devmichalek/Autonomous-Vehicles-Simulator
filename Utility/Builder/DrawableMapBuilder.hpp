@@ -2,7 +2,7 @@
 #include "DrawableVehicle.hpp"
 #include "AbstractBuilder.hpp"
 
-class DrawableEdgeManager;
+class DrawableMap;
 class DrawableVehicle;
 class DrawableCheckpointMap;
 
@@ -70,7 +70,7 @@ public:
 	std::pair<sf::Vector2f, double> GetVehicle();
 
 	// Returns drawable manager
-	DrawableEdgeManager* GetDrawableMap();
+	DrawableMap* GetDrawableMap();
 
 	// Returns drawable checkpoint map
 	DrawableCheckpointMap* GetDrawableCheckpointMap();
@@ -80,4 +80,10 @@ public:
 
 	// Returns maximum required number of inner edges
 	size_t GetMaxNumberOfInnerEdges() const;
+
+	// Returns maximum allowed map area
+	sf::Vector2f GetMaxAllowedMapArea() const;
+
+	// Returns maximum allowed view area
+	sf::Vector2f GetMaxAllowedViewArea() const;
 };
