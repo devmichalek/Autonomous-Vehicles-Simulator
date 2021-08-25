@@ -1,8 +1,11 @@
 #include "StateMapEditor.hpp"
 #include "CoreWindow.hpp"
+#include "DrawableFilenameText.hpp"
 #include "TypeTimerObserver.hpp"
 #include "FunctionTimerObserver.hpp"
+#include "FunctionEventObserver.hpp"
 #include "CoreLogger.hpp"
+#include <functional>
 
 void StateMapEditor::SetActiveMode(ActiveMode activeMode)
 {
@@ -14,23 +17,27 @@ void StateMapEditor::SetActiveMode(ActiveMode activeMode)
 				m_edgeSubmode = EdgeSubmode::GLUED_INSERT;
 				m_insertEdge = false;
 				m_removeEdge = false;
-				m_edgeSubmodeText.SetVariableText(m_edgeSubmodeMap[m_edgeSubmode]);
+				m_textObservers[EDGE_SUBMODE_TEXT]->Notify();
 				break;
 
 			case ActiveMode::VEHICLE:
 				m_vehicleSubmode = VehicleSubmode::INSERT;
-				m_vehicleSubmodeText.SetVariableText(m_vehicleSubmodeMap[m_vehicleSubmode]);
+				m_textObservers[VEHICLE_SUBMODE_TEXT]->Notify();
 				break;
 		}
 
 		m_activeMode = activeMode;
-		m_activeModeText.SetVariableText(m_activeModeMap[m_activeMode]);
+		m_textObservers[ACTIVE_MODE_TEXT]->Notify();
 	}
 }
 
 StateMapEditor::StateMapEditor() :
-	m_movementTimer(800.0, 1800.0, 1.0, 200.0),
-	m_drawableVehicle(nullptr)
+	m_drawableVehicle(nullptr),
+	m_viewMovementTimer(0.0, 0.1),
+	m_viewMovementOffset(20.0),
+	m_viewMovement(800.0),
+	m_viewMinMovement(200.0),
+	m_viewMaxMovement(1800.0)
 {
 	m_activeMode = ActiveMode::EDGE;
 	m_edgeSubmode = EdgeSubmode::GLUED_INSERT;
@@ -72,12 +79,17 @@ StateMapEditor::StateMapEditor() :
 	else
 		CoreLogger::PrintError("Cannot create Drawable Map dummy!");
 
-	m_textFunctions.reserve(16U);
+	m_texts.resize(TEXT_COUNT, nullptr);
+	m_textObservers.resize(TEXT_COUNT, nullptr);
 }
 
 StateMapEditor::~StateMapEditor()
 {
 	delete m_drawableVehicle;
+	for (auto& text : m_texts)
+		delete text;
+	for (auto& observer : m_textObservers)
+		delete observer;
 }
 
 void StateMapEditor::Reload()
@@ -89,10 +101,10 @@ void StateMapEditor::Reload()
 	m_insertEdge = false;
 	m_removeEdge = false;
 	m_edgeBeggining = sf::Vector2f(0.0, 0.0);
-	m_movementTimer.Reset();
 	m_upToDate = false;
 	delete m_drawableVehicle;
 	m_drawableVehicle = m_drawableVehicleBuilder.Get();
+	m_viewMovementTimer.Reset();
 
 	if (m_drawableMapBuilder.CreateDummy())
 	{
@@ -114,16 +126,12 @@ void StateMapEditor::Reload()
 	}
 
 	// Reset texts
-	m_activeModeText.SetVariableText(m_activeModeMap[m_activeMode]);
-	m_movementText.ResetObserverTimer();
-	m_viewOffsetXText.ResetObserverTimer();
-	m_viewOffsetYText.ResetObserverTimer();
-	m_filenameText.Reset();
-	m_filenameText.ResetObserverTimer();
-	m_edgeSubmodeText.SetVariableText(m_edgeSubmodeMap[m_edgeSubmode]);
-	m_edgeCountText.ResetObserverTimer();
-	m_vehicleSubmodeText.SetVariableText(m_vehicleSubmodeMap[m_vehicleSubmode]);
-	m_vehicleAngleText.ResetObserverTimer();
+	for (size_t i = 0; i < TEXT_COUNT; ++i)
+	{
+		if (m_textObservers[i])
+			m_textObservers[i]->Notify();
+		m_texts[i]->Reset();
+	}
 
 	// Reset view
 	auto& view = CoreWindow::GetView();
@@ -244,19 +252,20 @@ void StateMapEditor::Capture()
 		}
 	}
 
-	m_filenameText.Capture();
+	m_texts[FILENAME_TEXT]->Capture();
 }
 
 void StateMapEditor::Update()
 {
-	if (m_filenameText.IsReading())
+	auto* filenameText = static_cast<DrawableFilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
+	if (filenameText->IsReading())
 	{
-		bool success = m_drawableMapBuilder.Load(m_filenameText.GetFilename());
+		bool success = m_drawableMapBuilder.Load(filenameText->GetFilename());
 		auto status = m_drawableMapBuilder.GetLastOperationStatus();
-		m_filenameText.ShowStatusText();
+		filenameText->ShowStatusText();
 		if (success)
 		{
-			m_filenameText.SetSuccessStatusText(status.second);
+			filenameText->SetSuccessStatusText(status.second);
 			m_edges = m_drawableMapBuilder.GetEdges();
 			m_vehiclePositioned = true;
 			auto data = m_drawableMapBuilder.GetVehicle();
@@ -266,9 +275,9 @@ void StateMapEditor::Update()
 			m_upToDate = true;
 		}
 		else
-			m_filenameText.SetErrorStatusText(status.second);
+			filenameText->SetErrorStatusText(status.second);
 	}
-	else if (m_filenameText.IsWriting())
+	else if (filenameText->IsWriting())
 	{
 		if (!m_upToDate)
 		{
@@ -277,18 +286,18 @@ void StateMapEditor::Update()
 				m_drawableMapBuilder.AddVehicle(m_drawableVehicle->GetAngle(), m_drawableVehicle->GetCenter());
 			for (auto& i : m_edges)
 				m_drawableMapBuilder.AddEdge(i);
-			bool success = m_drawableMapBuilder.Save(m_filenameText.GetFilename());
+			bool success = m_drawableMapBuilder.Save(filenameText->GetFilename());
 			std::string message;
 			auto status = m_drawableMapBuilder.GetLastOperationStatus();
-			m_filenameText.ShowStatusText();
+			filenameText->ShowStatusText();
 			if (success)
-				m_filenameText.SetSuccessStatusText(status.second);
+				filenameText->SetSuccessStatusText(status.second);
 			else
-				m_filenameText.SetErrorStatusText(status.second);
+				filenameText->SetErrorStatusText(status.second);
 			m_upToDate = success;
 		}
 	}
-	else if (!m_filenameText.IsRenaming())
+	else if (!filenameText->IsRenaming())
 	{
 		switch (m_activeMode)
 		{
@@ -350,7 +359,7 @@ void StateMapEditor::Update()
 						m_edgeSubmode = mode;
 						m_insertEdge = false;
 						m_removeEdge = false;
-						m_edgeSubmodeText.SetVariableText(m_edgeSubmodeMap[m_edgeSubmode]);
+						m_textObservers[EDGE_SUBMODE_TEXT]->Notify();
 					}
 				}
 
@@ -390,7 +399,7 @@ void StateMapEditor::Update()
 					if (m_vehicleSubmode != mode)
 					{
 						m_vehicleSubmode = mode;
-						m_vehicleSubmodeText.SetVariableText(m_vehicleSubmodeMap[m_vehicleSubmode]);
+						m_textObservers[VEHICLE_SUBMODE_TEXT]->Notify();
 					}
 				}
 
@@ -403,16 +412,26 @@ void StateMapEditor::Update()
 		float elapsedTime = float(CoreWindow::GetElapsedTime());
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Add))
 		{
-			m_movementTimer.Increment();
+			if (m_viewMovementTimer.Update())
+			{
+				m_viewMovement += m_viewMovementOffset;
+				if (m_viewMovement > m_viewMaxMovement)
+					m_viewMovement = m_viewMaxMovement;
+			}
 		}
 		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Subtract))
 		{
-			m_movementTimer.Decrement();
+			if (m_viewMovementTimer.Update())
+			{
+				m_viewMovement -= m_viewMovementOffset;
+				if (m_viewMovement < m_viewMinMovement)
+					m_viewMovement = m_viewMinMovement;
+			}
 		}
 
 		auto& view = CoreWindow::GetView();
 		auto viewPosition = view.getCenter() - (CoreWindow::GetSize() / 2.0f);
-		float moveOffset = static_cast<float>(m_movementTimer.Value() * elapsedTime);
+		float moveOffset = static_cast<float>(m_viewMovement * elapsedTime);
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
 			view.move(sf::Vector2f(-moveOffset, 0));
 		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
@@ -443,72 +462,69 @@ void StateMapEditor::Update()
 		CoreWindow::GetRenderWindow().setView(view);
 	}
 
-	m_activeModeText.Update();
-	m_viewOffsetXText.Update();
-	m_viewOffsetYText.Update();
-	m_movementText.Update();
-	m_filenameText.Update();
-	m_edgeSubmodeText.Update();
-	m_edgeCountText.Update();
-	m_vehicleSubmodeText.Update();
-	m_vehicleAngleText.Update();
+	for (const auto& text : m_texts)
+		text->Update();
 }
 
 bool StateMapEditor::Load()
 {
+	// Set strigs map
 	m_activeModeMap[ActiveMode::EDGE] = "Edge mode";
 	m_activeModeMap[ActiveMode::VEHICLE] = "Vehicle mode";
-
 	m_edgeSubmodeMap[EdgeSubmode::GLUED_INSERT] = "Glued insert mode";
 	m_edgeSubmodeMap[EdgeSubmode::REMOVE] = "Remove mode";
-
 	m_vehicleSubmodeMap[VehicleSubmode::INSERT] = "Insert mode";
 	m_vehicleSubmodeMap[VehicleSubmode::REMOVE] = "Remove mode";
 
-	// Set consistent texts
-	m_activeModeText.SetConsistentText("Active mode:");
-	m_movementText.SetConsistentText("Movement:");
-	m_viewOffsetXText.SetConsistentText("View offset x:");
-	m_viewOffsetYText.SetConsistentText("View offset y:");
-	m_edgeSubmodeText.SetConsistentText("Current mode:");
-	m_edgeCountText.SetConsistentText("Edge count:");
-	m_vehicleSubmodeText.SetConsistentText("Current mode:");
-	m_vehicleAngleText.SetConsistentText("Vehicle angle:");
+	// Create texts
+	m_texts[ACTIVE_MODE_TEXT] = new DrawableTripleText;
+	m_texts[MOVEMENT_TEXT] = new DrawableTripleText;
+	m_texts[VIEW_OFFSET_X_TEXT] = new DrawableTripleText;
+	m_texts[VIEW_OFFSET_Y_TEXT] = new DrawableTripleText;
+	m_texts[FILENAME_TEXT] = new DrawableFilenameText<true, true>;
+	m_texts[EDGE_SUBMODE_TEXT] = new DrawableTripleText;
+	m_texts[EDGE_COUNT_TEXT] = new DrawableDoubleText;
+	m_texts[VEHICLE_SUBMODE_TEXT] = new DrawableTripleText;
+	m_texts[VEHICLE_ANGLE_TEXT] = new DrawableTripleText;
 
-	// Set variable texts
-	m_activeModeText.SetVariableText(m_activeModeMap[m_activeMode]);
-	m_movementText.SetObserver(new TypeTimerObserver<double, int>(m_movementTimer.Value(), 0.05));
-	m_textFunctions.push_back([&] { return std::to_string(int(CoreWindow::GetViewOffset().x)); });
-	m_viewOffsetXText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.05));
-	m_textFunctions.push_back([&] { return std::to_string(int(CoreWindow::GetViewOffset().y)); });
-	m_viewOffsetYText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.05));
-	m_edgeSubmodeText.SetVariableText(m_edgeSubmodeMap[m_edgeSubmode]);
-	m_textFunctions.push_back([&] { return std::to_string(m_edges.size()); });
-	m_edgeCountText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.5));
-	m_vehicleSubmodeText.SetVariableText(m_vehicleSubmodeMap[m_vehicleSubmode]);
-	m_textFunctions.push_back([&] { double angle = double((long long)(m_drawableVehicle->GetAngle()) % 360);
-									return std::to_string(DrawableMath::CastAtan2ToFullAngle(angle)); } );
-	m_vehicleAngleText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.2));
+	// Create observers
+	m_textObservers[ACTIVE_MODE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_activeModeMap[m_activeMode]; });
+	m_textObservers[MOVEMENT_TEXT] = new TypeTimerObserver<double, int>(m_viewMovement, 0.05);
+	m_textObservers[VIEW_OFFSET_X_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(int(CoreWindow::GetViewOffset().x)); }, 0.05);
+	m_textObservers[VIEW_OFFSET_Y_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(int(CoreWindow::GetViewOffset().y)); }, 0.05);
+	m_textObservers[FILENAME_TEXT] = nullptr;
+	m_textObservers[EDGE_SUBMODE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_edgeSubmodeMap[m_edgeSubmode]; });
+	m_textObservers[EDGE_COUNT_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(m_edges.size()); }, 0.5);
+	m_textObservers[VEHICLE_SUBMODE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_vehicleSubmodeMap[m_vehicleSubmode]; });
+	m_textObservers[VEHICLE_ANGLE_TEXT] = new FunctionTimerObserver<std::string>([&] {
+											double angle = double((long long)(m_drawableVehicle->GetAngle()) % 360);
+											return std::to_string(DrawableMath::CastAtan2ToFullAngle(angle)); },
+											0.2);
 
-	// Set information texts
-	m_activeModeText.SetInformationText("| [F1] [F2]");
-	m_movementText.SetInformationText("| [+] [-]");
-	m_viewOffsetXText.SetInformationText("| [A] [D]");
-	m_viewOffsetYText.SetInformationText("| [W] [S]");
-	m_edgeSubmodeText.SetInformationText("| [1] [2] [RMB] [Alt] [Esc]");
-	m_vehicleSubmodeText.SetInformationText("| [1] [2] [RMB]");
-	m_vehicleAngleText.SetInformationText("| [Z] [X]");
+	// Set texts strings
+	m_texts[ACTIVE_MODE_TEXT]->SetStrings({ "Active mode:", "",  "| [F1] [F2]" });
+	m_texts[MOVEMENT_TEXT]->SetStrings({ "Movement:", "", "| [+] [-]" });
+	m_texts[VIEW_OFFSET_X_TEXT]->SetStrings({ "View offset x:", "", "| [A] [D]" });
+	m_texts[VIEW_OFFSET_Y_TEXT]->SetStrings({ "View offset y:", "", "| [W] [S]" });
+	m_texts[EDGE_SUBMODE_TEXT]->SetStrings({ "Current mode:", "", "| [1] [2] [RMB] [Alt] [Esc]" });
+	m_texts[EDGE_COUNT_TEXT]->SetStrings({ "Edge count:" });
+	m_texts[VEHICLE_SUBMODE_TEXT]->SetStrings({ "Current mode:", "", "| [1] [2] [RMB]" });
+	m_texts[VEHICLE_ANGLE_TEXT]->SetStrings({ "Vehicle angle:", "", "| [Z] [X]" });
+
+	// Set text observers
+	for (size_t i = 0; i < TEXT_COUNT; ++i)
+		m_texts[i]->SetObserver(m_textObservers[i]);
 	
 	// Set text positions
-	m_activeModeText.SetPosition({ FontContext::Component(0), {3}, {7}, {0} });
-	m_movementText.SetPosition({ FontContext::Component(0), {3}, {7}, {1} });
-	m_viewOffsetXText.SetPosition({ FontContext::Component(0), {3}, {7}, {2} });
-	m_viewOffsetYText.SetPosition({ FontContext::Component(0), {3}, {7}, {3} });
-	m_filenameText.SetPosition({ FontContext::Component(0), {3}, {7}, {16}, {4} });
-	m_edgeSubmodeText.SetPosition({ FontContext::Component(0), {3}, {7}, {1, true} });
-	m_edgeCountText.SetPosition({ FontContext::Component(0), {3}, {2, true} });
-	m_vehicleSubmodeText.SetPosition({ FontContext::Component(0), {3}, {7}, {1, true} });
-	m_vehicleAngleText.SetPosition({ FontContext::Component(0), {3}, {7}, {2, true} });
+	m_texts[ACTIVE_MODE_TEXT]->SetPosition({ FontContext::Component(0), {0}, {3}, {7} });
+	m_texts[MOVEMENT_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {7} });
+	m_texts[VIEW_OFFSET_X_TEXT]->SetPosition({ FontContext::Component(2), {0}, {3}, {7} });
+	m_texts[VIEW_OFFSET_Y_TEXT]->SetPosition({ FontContext::Component(3), {0}, {3}, {7} });
+	m_texts[FILENAME_TEXT]->SetPosition({ FontContext::Component(4), {0}, {3}, {7}, {16} });
+	m_texts[EDGE_SUBMODE_TEXT]->SetPosition({ FontContext::Component(1, true), {0}, {3}, {7} });
+	m_texts[EDGE_COUNT_TEXT]->SetPosition({ FontContext::Component(2, true), {0}, {3} });
+	m_texts[VEHICLE_SUBMODE_TEXT]->SetPosition({ FontContext::Component(1, true), {0}, {3}, {7} });
+	m_texts[VEHICLE_ANGLE_TEXT]->SetPosition({ FontContext::Component(2, true), {0}, {3}, {7} });
 
 	CoreLogger::PrintSuccess("State \"Map Editor\" dependencies loaded correctly");
 	return true;
@@ -554,23 +570,24 @@ void StateMapEditor::Draw()
 				CoreWindow::GetRenderWindow().draw(m_line.data(), m_line.size(), sf::Lines);
 			}
 
-			m_edgeSubmodeText.Draw();
-			m_edgeCountText.Draw();
+			m_texts[EDGE_SUBMODE_TEXT]->Draw();
+			m_texts[EDGE_COUNT_TEXT]->Draw();
 			break;
 		}
 		case ActiveMode::VEHICLE:
 		{
-			m_vehicleSubmodeText.Draw();
-			m_vehicleAngleText.Draw();
+			m_texts[VEHICLE_SUBMODE_TEXT]->Draw();
+			m_texts[VEHICLE_ANGLE_TEXT]->Draw();
 			break;
 		}
 		default:
 			break;
 	}
 
-	m_activeModeText.Draw();
-	m_movementText.Draw();
-	m_viewOffsetXText.Draw();
-	m_viewOffsetYText.Draw();
-	m_filenameText.Draw();
+
+	m_texts[ACTIVE_MODE_TEXT]->Draw();
+	m_texts[MOVEMENT_TEXT]->Draw();
+	m_texts[VIEW_OFFSET_X_TEXT]->Draw();
+	m_texts[VIEW_OFFSET_Y_TEXT]->Draw();
+	m_texts[FILENAME_TEXT]->Draw();
 }

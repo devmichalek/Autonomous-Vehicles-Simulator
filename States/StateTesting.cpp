@@ -46,53 +46,59 @@ void StateTesting::Reload()
 
 void StateTesting::Capture()
 {
-	if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
+	if (m_filenameText.IsRenaming())
+		m_filenameText.Capture();
+	else
 	{
-		auto eventKey = CoreWindow::GetEvent().key.code;
-		switch (m_mode)
+		if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
 		{
-			case STOPPED_MODE:
+			auto eventKey = CoreWindow::GetEvent().key.code;
+			switch (m_mode)
 			{
-				if (m_filenameTypeKey.first == eventKey)
-					m_filenameTypeKey.second = true;
-				else
-					m_filenameText.Capture();
-				break;
-			}
-			case RUNNING_MODE:
-			{
-				break;
-			}
-			default:
-				break;
-		}
+				case STOPPED_MODE:
+				{
+					if (m_filenameTypeKey.first == eventKey)
+						m_filenameTypeKey.second = true;
+					else
+						m_filenameText.Capture();
 
-		if (m_modeKey.first == eventKey)
-			m_modeKey.second = true;
-	}
-	else if (CoreWindow::GetEvent().type == sf::Event::KeyReleased)
-	{
-		auto eventKey = CoreWindow::GetEvent().key.code;
-		switch (m_mode)
+					break;
+				}
+				case RUNNING_MODE:
+				{
+					break;
+				}
+				default:
+					break;
+			}
+
+			if (m_modeKey.first == eventKey)
+				m_modeKey.second = true;
+		}
+		else if (CoreWindow::GetEvent().type == sf::Event::KeyReleased)
 		{
-			case STOPPED_MODE:
+			auto eventKey = CoreWindow::GetEvent().key.code;
+			switch (m_mode)
 			{
-				if (m_filenameTypeKey.first == eventKey)
-					m_filenameTypeKey.second = false;
-				else
-					m_filenameText.Capture();
-				break;
+				case STOPPED_MODE:
+				{
+					if (m_filenameTypeKey.first == eventKey)
+						m_filenameTypeKey.second = false;
+					else
+						m_filenameText.Capture();
+					break;
+				}
+				case RUNNING_MODE:
+				{
+					break;
+				}
+				default:
+					break;
 			}
-			case RUNNING_MODE:
-			{
-				break;
-			}
-			default:
-				break;
-		}
 
-		if (m_modeKey.first == eventKey)
-			m_modeKey.second = false;
+			if (m_modeKey.first == eventKey)
+				m_modeKey.second = false;
+		}
 	}
 }
 
@@ -241,10 +247,10 @@ void StateTesting::Update()
 
 bool StateTesting::Load()
 {
-	// Set consistent texts
-	m_modeText.SetConsistentText("Mode:");
-	m_fitnessText.SetConsistentText("Highest fitness:");
-	m_filenameTypeText.SetConsistentText("Filename type:");
+	// Set texts strings
+	m_modeText.SetStrings({ "Mode:", "", "| [M]" });
+	m_fitnessText.SetStrings({ "Highest fitness:", "", "| [Enter]" });
+	m_filenameTypeText.SetStrings({ "Filename type:", "", "| [F]" });
 
 	// Set variable texts
 	m_textFunctions.push_back([&] { return m_modeStrings[m_mode]; });
@@ -254,16 +260,11 @@ bool StateTesting::Load()
 	m_textFunctions.push_back([&] { return m_filenameTypeStrings[m_filenameType]; });
 	m_filenameTypeText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.2));
 
-	// Set information texts
-	m_modeText.SetInformationText("| [M]");
-	m_fitnessText.SetInformationText("| [Enter]");
-	m_filenameTypeText.SetInformationText("| [F]");
-	
 	// Set texts positions
-	m_modeText.SetPosition({ FontContext::Component(0), {3}, {7}, {0} });
-	m_fitnessText.SetPosition({ FontContext::Component(0), {4}, {7}, {1, true} });
-	m_filenameTypeText.SetPosition({ FontContext::Component(0), {3}, {7}, {1} });
-	m_filenameText.SetPosition({ FontContext::Component(0), {3}, {7}, {13}, {2} });
+	m_modeText.SetPosition({ FontContext::Component(0), {0}, {3}, {7} });
+	m_fitnessText.SetPosition({ FontContext::Component(1, true), {0}, {4}, {7} });
+	m_filenameTypeText.SetPosition({ FontContext::Component(1), {0}, {3}, {7} });
+	m_filenameText.SetPosition({ FontContext::Component(2), {0}, {3}, {7}, {13} });
 
 	CoreLogger::PrintSuccess("State \"Testing\" dependencies loaded correctly");
 	return true;
@@ -271,18 +272,6 @@ bool StateTesting::Load()
 
 void StateTesting::Draw()
 {
-	switch (m_mode)
-	{
-		case STOPPED_MODE:
-			m_filenameTypeText.Draw();
-			m_filenameText.Draw();
-			break;
-		case RUNNING_MODE:
-			break;
-		default:
-			break;
-	}
-	
 	for (auto& vehicle : m_drawableVehicleFactory)
 	{
 		if (!vehicle || !vehicle->IsActive())
@@ -295,6 +284,18 @@ void StateTesting::Draw()
 	{
 		m_drawableMap->Draw();
 		m_drawableCheckpointMap->Draw();
+	}
+
+	switch (m_mode)
+	{
+		case STOPPED_MODE:
+			m_filenameTypeText.Draw();
+			m_filenameText.Draw();
+			break;
+		case RUNNING_MODE:
+			break;
+		default:
+			break;
 	}
 	
 	m_modeText.Draw();

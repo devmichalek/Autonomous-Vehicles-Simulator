@@ -5,6 +5,7 @@
 #include "StateTraining.hpp"
 #include "StateTesting.hpp"
 #include "DrawableTripleText.hpp"
+#include "FunctionEventObserver.hpp"
 
 StateManager::StateManager()
 {
@@ -15,6 +16,7 @@ StateManager::StateManager()
 	m_states[TESTING_STATE] = new StateTesting();
 	m_currentState = TESTING_STATE;
 	m_stateText = new DrawableTripleText;
+	m_stateTextObserver = new FunctionEventObserver<std::string>([&] { return m_statesStrings[m_currentState]; });
 	m_statesStrings[MAP_EDITOR_STATE] = "Map Editor";
 	m_statesStrings[ANN_EDITOR_STATE] = "ANN Editor";
 	m_statesStrings[VEHICLE_EDITOR_STATE] = "Vehicle Editor";
@@ -28,6 +30,7 @@ StateManager::~StateManager()
 	for (const auto& state : m_states)
 		delete state;
 	delete m_stateText;
+	delete m_stateTextObserver;
 }
 
 bool StateManager::Load()
@@ -38,10 +41,9 @@ bool StateManager::Load()
 			return false;
 	}
 
-	m_stateText->SetConsistentText("Active state:");
-	m_stateText->SetVariableText(m_statesStrings[m_currentState]);
-	m_stateText->SetInformationText("| [~]");
-	m_stateText->SetPosition({ FontContext::Component(7, true), {4, true}, {1, true}, {1, true} });
+	m_stateText->SetStrings({ "Active state:", m_statesStrings[m_currentState], "| [~]" });
+	m_stateText->SetPosition({ FontContext::Component(1, true), {7, true}, {4, true}, {1, true} });
+	m_stateText->SetObserver(m_stateTextObserver);
 
 	return true;
 }
@@ -64,7 +66,7 @@ void StateManager::Capture()
 				m_currentState = MAP_EDITOR_STATE;
 
 			// Change state string representation
-			m_stateText->SetVariableText(m_statesStrings[m_currentState]);
+			m_stateTextObserver->Notify();
 
 			// Notify new state that it has to reload its resources
 			m_states[m_currentState]->Reload();

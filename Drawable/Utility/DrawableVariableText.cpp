@@ -2,57 +2,41 @@
 #include "FontContext.hpp"
 #include "CoreWindow.hpp"
 
-DrawableVariableText::DrawableVariableText()
+DrawableVariableText::DrawableVariableText() :
+	DrawableTextAbstract(1)
 {
-	// Set font
-	m_text.setFont(FontContext::GetFont());
-
-	// Set text color
-	SetTextColor();
-
-	// Set text character size
-	SetCharacterSize();
 }
 
 DrawableVariableText::~DrawableVariableText()
 {
 }
 
-void DrawableVariableText::SetText(std::string text)
+void DrawableVariableText::Reset()
 {
-	m_text.setString(text);
-}
 
-void DrawableVariableText::SetTextColor(sf::Color color)
-{
-	m_text.setFillColor(color);
 }
 
 void DrawableVariableText::SetCharacterSize(unsigned int multiplier)
 {
-	m_text.setCharacterSize(FontContext::GetCharacterSize(multiplier));
+	m_texts[0].setCharacterSize(FontContext::GetCharacterSize(multiplier));
 }
 
 void DrawableVariableText::SetRotation(float rotation)
 {
-	m_text.setRotation(rotation);
+	m_texts[0].setRotation(rotation);
 }
 
-void DrawableVariableText::SetPosition(std::array<FontContext::Component, 2> components)
+void DrawableVariableText::SetPosition(std::vector<FontContext::Component> components)
 {
-	float x = FontContext::CalculateRow(components[0]);
-	float y = FontContext::CalculateColumn(components[1]);
-	m_position = sf::Vector2f(x, y);
+	ValidateNumberOfComponents(components, 2);
+
+	float x = FontContext::CalculateRow(components[1]);
+	float y = FontContext::CalculateColumn(components[0]);
+	m_textPositions[0] = sf::Vector2f(x, y);
+
 	Update();
 }
 
-void DrawableVariableText::Update()
+void DrawableVariableText::UpdateInternal()
 {
-	sf::Vector2f viewOffset = CoreWindow::GetViewOffset();
-	m_text.setPosition(m_position + viewOffset);
-}
-
-void DrawableVariableText::Draw()
-{
-	CoreWindow::GetRenderWindow().draw(m_text);
 }

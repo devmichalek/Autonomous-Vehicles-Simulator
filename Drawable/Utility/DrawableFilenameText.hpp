@@ -8,10 +8,12 @@ template<bool ReadOperations, bool WriteOperations>
 class DrawableFilenameText :
 	public DrawableTripleText
 {
-	sf::Text m_statusText;
-	sf::Vector2f m_statusPosition;
+	enum
+	{
+		STATUS_TEXT = INFORMATION_TEXT + 1
+	};
+
 	StoppableTimer m_alphaTimer;
-	DrawableTripleText m_drawableTripleText;
 
 	// Actions
 	enum
@@ -39,7 +41,7 @@ class DrawableFilenameText :
 
 public:
 
-	DrawableFilenameText();
+	DrawableFilenameText(size_t size = 5);
 
 	~DrawableFilenameText();
 
@@ -52,12 +54,12 @@ public:
 	void ShowStatusText();
 
 	// Sets consistent text, variable text information text and status text positions
-	// First component is used as x position for consistent text
-	// Second component is used as x position for variable text
-	// Third component is used as x position for information text
-	// Fourth component is used as x position for status text
-	// Fifth component is used as y position for all texts
-	void SetPosition(std::array<FontContext::Component, 5> components);
+	// First component is used as y position for all texts
+	// Second component is used as x position for consistent text
+	// Third component is used as x position for variable text
+	// Fourth component is used as x position for information text
+	// Fifth component is used as x position for status text
+	void SetPosition(std::vector<FontContext::Component> components);
 
 	bool IsReading();
 
@@ -69,7 +71,5 @@ public:
 
 	void Capture();
 
-	void Update();
-
-	void Draw();
+	void UpdateInternal();
 };

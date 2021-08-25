@@ -1,16 +1,14 @@
 #pragma once
+#include "TimerAbstract.hpp"
 #include "CoreWindow.hpp"
 
-class StoppableTimer
+class StoppableTimer final :
+	public TimerAbstract
 {
 public:
 
-	explicit StoppableTimer(double resetValue, double max, double min = 0, double multiplier = 1) :
-		m_value(resetValue),
-		m_resetValue(resetValue),
-		m_max(max),
-		m_min(min),
-		m_multiplier(multiplier)
+	explicit StoppableTimer(double resetValue, double timeout, double multiplier = 1) :
+		TimerAbstract(resetValue, timeout, multiplier)
 	{
 	}
 
@@ -18,41 +16,14 @@ public:
 	{
 	}
 
-	bool Increment()
+	bool Update() override
 	{
-		if (m_value < m_max)
-			m_value += CoreWindow::GetElapsedTime() * m_multiplier;
-		else
+		double elapsedTime = CoreWindow::GetElapsedTime() * m_multiplier;
+
+		if (m_value + elapsedTime >= m_timeout)
 			return true;
 
+		m_value += elapsedTime;
 		return false;
 	}
-
-	bool Decrement()
-	{
-		if (m_value > m_min)
-			m_value -= CoreWindow::GetElapsedTime() * m_multiplier;
-		else
-			return true;
-
-		return false;
-	}
-
-	void Reset()
-	{
-		m_value = m_resetValue;
-	}
-
-	inline double& Value()
-	{
-		return m_value;
-	}
-
-private:
-
-	double m_value;
-	const double m_resetValue;
-	const double m_max;
-	const double m_min;
-	const double m_multiplier;
 };

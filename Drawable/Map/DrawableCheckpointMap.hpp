@@ -32,8 +32,8 @@ public:
 	// Checks if drawable vehicle has made improvement, if not then drawable vehicle is set as inactive
 	void Punish(DrawableVehicleFactory& drawableVehicleFactory);
 
-	// Increments timers
-	void IncrementTimers();
+	// Update timers
+	void UpdateTimers();
 
 	// Returns fitness vector
 	const FitnessVector& GetFitnessVector() const;

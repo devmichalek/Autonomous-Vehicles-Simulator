@@ -1,42 +1,41 @@
 #pragma once
-#include "FontContext.hpp"
-#include <array>
+#include "DrawableTextAbstract.hpp"
 
 class ObserverIf;
 
-class DrawableDoubleText
+class DrawableDoubleText :
+	public DrawableTextAbstract
 {
 public:
 
-	DrawableDoubleText();
+	DrawableDoubleText(size_t size = 2);
 
 	virtual ~DrawableDoubleText();
 
-	void SetConsistentText(std::string text);
-
-	void SetVariableText(std::string text);
-
-	void SetVariableTextColor(sf::Color color = sf::Color(0xC0, 0xC0, 0xC0, 0xFF));
+	void Reset() override;
 
 	// Sets consistent text and variable text positions
-	// First component is used as x position for consistent text
-	// Second component is used as x position for variable text
-	// Third component is used as y position for both texts
-	virtual void SetPosition(std::array<FontContext::Component, 3> components);
+	// First component is used as y position for both texts
+	// Second component is used as x position for consistent text
+	// Third component is used as x position for variable text
+	virtual void SetPosition(std::vector<FontContext::Component> components) override;
 
+	// Sets observer
 	void SetObserver(ObserverIf* observer);
 
-	void ResetObserverTimer();
+private:
 
-	virtual void Update();
-
-	virtual void Draw();
+	virtual void UpdateInternal() override;
 
 protected:
 
-	sf::Text m_consistentText;
-	sf::Text m_variableText;
-	sf::Vector2f m_consistentPosition;
-	sf::Vector2f m_variablePosition;
+	void SetVariableTextColor(sf::Color color = sf::Color(0xC0, 0xC0, 0xC0, 0xFF));
+
+	enum
+	{
+		CONSISTENT_TEXT,
+		VARIABLE_TEXT
+	};
+
 	ObserverIf* m_observer;
 };

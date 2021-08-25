@@ -59,13 +59,13 @@ public:
 
 	~StateTesting();
 
-	void Reload();
+	void Reload() override;
 
-	void Capture();
+	void Capture() override;
 
-	void Update();
+	void Update() override;
 
-	bool Load();
+	bool Load() override;
 
-	void Draw();
+	void Draw() override;
 };

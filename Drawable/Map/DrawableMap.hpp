@@ -11,8 +11,10 @@ public:
 
 	~DrawableMap();
 
+	// Checks if there is an intersection of vehicles against map (edges)
 	void Intersect(DrawableVehicleFactory& drawableVehicleFactory);
 
+	// Draws map (edges)
 	void Draw();
 
 private:

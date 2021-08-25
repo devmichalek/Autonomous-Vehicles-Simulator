@@ -200,16 +200,15 @@ void StateANNEditor::Reload()
 		m_pressedKeys[i] = false;
 
 	// Reset texts
-	m_currentLayerText.ResetObserverTimer();
-	m_currentLayerNumberOfNeuronsText.ResetObserverTimer();
-	m_currentLayerActivationFunctionText.ResetObserverTimer();
-	m_currentLayerBiasText.ResetObserverTimer();
+	m_currentLayerText.Reset();
+	m_currentLayerNumberOfNeuronsText.Reset();
+	m_currentLayerActivationFunctionText.Reset();
+	m_currentLayerBiasText.Reset();
 	m_filenameText.Reset();
-	m_filenameText.ResetObserverTimer();
-	m_totalNumberOfLayersText.ResetObserverTimer();
-	m_totalNumberOfNeuronsText.ResetObserverTimer();
-	m_totalNumberOfWeightsText.ResetObserverTimer();
-	m_totalNumberOfActivationFunctionsText.ResetObserverTimer();
+	m_totalNumberOfLayersText.Reset();
+	m_totalNumberOfNeuronsText.Reset();
+	m_totalNumberOfWeightsText.Reset();
+	m_totalNumberOfActivationFunctionsText.Reset();
 
 	// Reset view
 	auto& view = CoreWindow::GetView();
@@ -347,17 +346,17 @@ void StateANNEditor::Update()
 
 bool StateANNEditor::Load()
 {
-	// Set consistent texts
-	m_inputText.SetText("Input");
-	m_outputText.SetText("Output");
-	m_currentLayerText.SetConsistentText("Current layer:");
-	m_currentLayerNumberOfNeuronsText.SetConsistentText("Current layer number of neurons:");
-	m_currentLayerActivationFunctionText.SetConsistentText("Current layer activation function:");
-	m_currentLayerBiasText.SetConsistentText("Current layer bias:");
-	m_totalNumberOfLayersText.SetConsistentText("Total number of layers:");
-	m_totalNumberOfNeuronsText.SetConsistentText("Total number of neurons:");
-	m_totalNumberOfWeightsText.SetConsistentText("Total number of weights:");
-	m_totalNumberOfActivationFunctionsText.SetConsistentText("Total number of activation functions:");
+	// Set texts strings
+	m_inputText.SetStrings({ "Input" });
+	m_outputText.SetStrings({ "Output" });
+	m_currentLayerText.SetStrings({ "Current layer:", "", "| [Tab] [Enter] [Backspace]" });
+	m_currentLayerNumberOfNeuronsText.SetStrings({ "Current layer number of neurons:", "", "| [+] [-]" });
+	m_currentLayerActivationFunctionText.SetStrings({ "Current layer activation function:", "", "| [*]" });
+	m_currentLayerBiasText.SetStrings({ "Current layer bias:", "| [Z] [X]" });
+	m_totalNumberOfLayersText.SetStrings({ "Total number of layers:" });
+	m_totalNumberOfNeuronsText.SetStrings({ "Total number of neurons:" });
+	m_totalNumberOfWeightsText.SetStrings({ "Total number of weights:" });
+	m_totalNumberOfActivationFunctionsText.SetStrings({"Total number of activation functions:"});
 
 	// Set variable texts
 	m_textFunctions.push_back([&] { return m_neuronLayerSizes.empty() ? "None" : ("L" + std::to_string(m_currentLayer)); });
@@ -383,12 +382,6 @@ bool StateANNEditor::Load()
 	m_textFunctions.push_back([&] { return std::to_string(m_activationFunctionIndexes.size()); });
 	m_totalNumberOfActivationFunctionsText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.5));
 
-	// Set information texts
-	m_currentLayerText.SetInformationText("| [Tab] [Enter] [Backspace]");
-	m_currentLayerNumberOfNeuronsText.SetInformationText("| [+] [-]");
-	m_currentLayerActivationFunctionText.SetInformationText("| [*]");
-	m_currentLayerBiasText.SetInformationText("| [Z] [X]");
-
 	// Set text character size and rotation
 	m_inputText.SetCharacterSize(4);
 	m_outputText.SetCharacterSize(4);
@@ -396,17 +389,17 @@ bool StateANNEditor::Load()
 	m_outputText.SetRotation(90.0f);
 
 	// Set text positions
-	m_inputText.SetPosition({ FontContext::Component(2), {26} });
-	m_outputText.SetPosition({ FontContext::Component(2, true), {18} });
-	m_currentLayerText.SetPosition({ FontContext::Component(0), {7}, {14}, {0} });
-	m_currentLayerNumberOfNeuronsText.SetPosition({ FontContext::Component(0), {7}, {14}, {1} });
-	m_currentLayerActivationFunctionText.SetPosition({ FontContext::Component(0), {7}, {14}, {2} });
-	m_currentLayerBiasText.SetPosition({ FontContext::Component(0), {7}, {14}, {3} });
-	m_filenameText.SetPosition({ FontContext::Component(0), {7}, {14}, {23}, {4} });
-	m_totalNumberOfLayersText.SetPosition({ FontContext::Component(0), {8}, {4, true} });
-	m_totalNumberOfNeuronsText.SetPosition({ FontContext::Component(0), {8}, {3, true} });
-	m_totalNumberOfWeightsText.SetPosition({ FontContext::Component(0), {8}, {2, true} });
-	m_totalNumberOfActivationFunctionsText.SetPosition({ FontContext::Component(0), {8}, {1, true} });
+	m_inputText.SetPosition({ FontContext::Component(26), {2} });
+	m_outputText.SetPosition({ FontContext::Component(18), {2, true} });
+	m_currentLayerText.SetPosition({ FontContext::Component(0), {0}, {7}, {14} });
+	m_currentLayerNumberOfNeuronsText.SetPosition({ FontContext::Component(1), {0}, {7}, {14} });
+	m_currentLayerActivationFunctionText.SetPosition({ FontContext::Component(2), {0}, {7}, {14} });
+	m_currentLayerBiasText.SetPosition({ FontContext::Component(3), {0}, {7}, {14} });
+	m_filenameText.SetPosition({ FontContext::Component(4), {0}, {7}, {14}, {23} });
+	m_totalNumberOfLayersText.SetPosition({ FontContext::Component(4, true), {0}, {8} });
+	m_totalNumberOfNeuronsText.SetPosition({ FontContext::Component(3, true), {0}, {8} });
+	m_totalNumberOfWeightsText.SetPosition({ FontContext::Component(2, true), {0}, {8} });
+	m_totalNumberOfActivationFunctionsText.SetPosition({ FontContext::Component(1, true), {0}, {8} });
 
 	CoreLogger::PrintSuccess("State \"Artificial Neural Network Editor\" dependencies loaded correctly");
 	return true;

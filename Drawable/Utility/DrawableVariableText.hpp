@@ -1,8 +1,8 @@
 #pragma once
-#include "FontContext.hpp"
-#include <array>
+#include "DrawableTextAbstract.hpp"
 
-class DrawableVariableText
+class DrawableVariableText :
+	public DrawableTextAbstract
 {
 public:
 
@@ -10,25 +10,18 @@ public:
 
 	virtual ~DrawableVariableText();
 
-	void SetText(std::string text);
-
-	void SetTextColor(sf::Color color = sf::Color::White);
+	void Reset();
 
 	void SetCharacterSize(unsigned int multiplier = 1);
 
 	void SetRotation(float rotation);
 
 	// Sets consistent text and variable text positions
-	// First component is used as x position for the text
-	// Second component is used as y position for the text
-	virtual void SetPosition(std::array<FontContext::Component, 2> components);
+	// First component is used as y position for the text
+	// Second component is used as x position for the text
+	virtual void SetPosition(std::vector<FontContext::Component> components);
 
-	virtual void Update();
+private:
 
-	virtual void Draw();
-
-protected:
-
-	sf::Text m_text;
-	sf::Vector2f m_position;
+	virtual void UpdateInternal();
 };

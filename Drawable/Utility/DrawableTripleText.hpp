@@ -8,25 +8,21 @@ class DrawableTripleText :
 {
 public:
 
-	DrawableTripleText();
+	DrawableTripleText(size_t size = 3);
 
 	virtual ~DrawableTripleText();
 
-	void SetInformationText(std::string text);
-
 	// Sets consistent text, variable text and information text positions
-	// First component is used as x position for consistent text
-	// Second component is used as x position for variable text
-	// Third component is used as x position for information text
-	// Fourth component is used as y position for all texts
-	virtual void SetPosition(std::array<FontContext::Component, 4> components);
+	// First component is used as y position for all texts
+	// Second component is used as x position for consistent text
+	// Third component is used as x position for variable text
+	// Fourth component is used as x position for information text
+	virtual void SetPosition(std::vector<FontContext::Component> components);
 
-	virtual void Update();
+protected:
 
-	virtual void Draw();
-
-private:
-
-	sf::Text m_informationText;
-	sf::Vector2f m_informationPosition;
+	enum
+	{
+		INFORMATION_TEXT = VARIABLE_TEXT + 1
+	};
 };

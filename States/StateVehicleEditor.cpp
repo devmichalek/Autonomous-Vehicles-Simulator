@@ -77,12 +77,11 @@ void StateVehicleEditor::Reload()
 	m_upToDate = false;
 
 	// Reset texts
-	m_totalNumberOfEdgesText.ResetObserverTimer();
-	m_totalNumberOfSensorsText.ResetObserverTimer();
+	m_totalNumberOfEdgesText.Reset();
+	m_totalNumberOfSensorsText.Reset();
 	m_filenameText.Reset();
-	m_filenameText.ResetObserverTimer();
-	m_currentSensorText.ResetObserverTimer();
-	m_currentSensorAngleText.ResetObserverTimer();
+	m_currentSensorText.Reset();
+	m_currentSensorAngleText.Reset();
 
 	// Reset view
 	auto& view = CoreWindow::GetView();
@@ -289,15 +288,15 @@ void StateVehicleEditor::Update()
 
 bool StateVehicleEditor::Load()
 {
-	// Set consistent texts
-	m_backText.SetText("Back");
-	m_frontText.SetText("Front");
-	m_activeModeText.SetConsistentText("Active mode:");
-	m_activeSubmodeText.SetConsistentText("Active submode:");
-	m_totalNumberOfEdgesText.SetConsistentText("Total number of edges:");
-	m_totalNumberOfSensorsText.SetConsistentText("Total number of sensors:");
-	m_currentSensorText.SetConsistentText("Current sensor:");
-	m_currentSensorAngleText.SetConsistentText("Current sensor angle:");
+	// Set texts strings
+	m_backText.SetStrings({ "Back" });
+	m_frontText.SetStrings({ "Front" });
+	m_activeModeText.SetStrings({ "Active mode:", "", "| [F1] [F2]" });
+	m_activeSubmodeText.SetStrings({ "Active submode:", "", "| [1] [2]" });
+	m_totalNumberOfEdgesText.SetStrings({ "Total number of edges:", "", "| [RMB]" });
+	m_totalNumberOfSensorsText.SetStrings({ "Total number of sensors:", "", "| [RMB]" });
+	m_currentSensorText.SetStrings({ "Current sensor:", "", "| [Alt]" });
+	m_currentSensorAngleText.SetStrings({ "Current sensor angle:", "", "| [Z] [X]" });
 
 	// Set variable texts
 	m_textFunctions.push_back([&] { return m_modeStrings[m_mode]; });
@@ -313,14 +312,6 @@ bool StateVehicleEditor::Load()
 	m_textFunctions.push_back([&] { return std::to_string(size_t(m_currentSensorAngle)); });
 	m_currentSensorAngleText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.1));
 
-	// Set information texts
-	m_activeModeText.SetInformationText("| [F1] [F2]");
-	m_activeSubmodeText.SetInformationText("| [1] [2]");
-	m_totalNumberOfEdgesText.SetInformationText("| [RMB]");
-	m_totalNumberOfSensorsText.SetInformationText("| [RMB]");
-	m_currentSensorText.SetInformationText("| [Alt]");
-	m_currentSensorAngleText.SetInformationText("| [Z] [X]");
-
 	// Set text character size and rotation
 	m_backText.SetCharacterSize(4);
 	m_frontText.SetCharacterSize(4);
@@ -328,15 +319,15 @@ bool StateVehicleEditor::Load()
 	m_frontText.SetRotation(90.0f);
 
 	// Set text positions
-	m_backText.SetPosition({ FontContext::Component(2), {25} });
-	m_frontText.SetPosition({ FontContext::Component(2, true), {18} });
-	m_activeModeText.SetPosition({ FontContext::Component(0), {5}, {9}, {0} });
-	m_activeSubmodeText.SetPosition({ FontContext::Component(0), {5}, {9}, {1} });
-	m_totalNumberOfEdgesText.SetPosition({ FontContext::Component(0), {5}, {9}, {2} });
-	m_totalNumberOfSensorsText.SetPosition({ FontContext::Component(0), {5}, {9}, {3} });
-	m_filenameText.SetPosition({ FontContext::Component(0), {5}, {9}, {18}, {4} });
-	m_currentSensorText.SetPosition({ FontContext::Component(0), {5}, {7}, {1, true} });
-	m_currentSensorAngleText.SetPosition({ FontContext::Component(0), {5}, {7}, {2, true} });
+	m_backText.SetPosition({ FontContext::Component(25), {2} });
+	m_frontText.SetPosition({ FontContext::Component(18), {2, true} });
+	m_activeModeText.SetPosition({ FontContext::Component(0), {0}, {5}, {9} });
+	m_activeSubmodeText.SetPosition({ FontContext::Component(1), {0}, {5}, {9} });
+	m_totalNumberOfEdgesText.SetPosition({ FontContext::Component(2), {0}, {5}, {9} });
+	m_totalNumberOfSensorsText.SetPosition({ FontContext::Component(3), {0}, {5}, {9} });
+	m_filenameText.SetPosition({ FontContext::Component(4), {0}, {5}, {9}, {18} });
+	m_currentSensorText.SetPosition({ FontContext::Component(1, true), {0}, {5}, {7} });
+	m_currentSensorAngleText.SetPosition({ FontContext::Component(2, true), {0}, {5}, {7} });
 
 	CoreLogger::PrintSuccess("State \"Vehicle Editor\" dependencies loaded correctly");
 	return true;

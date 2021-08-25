@@ -3,12 +3,12 @@
 #include <functional>
 
 template<class Type>
-class FunctionTimerObserver :
+class FunctionTimerObserver final :
 	public TimerObserver
 {
 public:
 
-	FunctionTimerObserver(std::function<Type()>& function, double timeout = 0.2, std::string prefix = "", std::string postfix = "") :
+	FunctionTimerObserver(std::function<Type()> function, double timeout = 0.2, std::string prefix = "", std::string postfix = "") :
 		TimerObserver(timeout), m_function(function)
 	{
 		m_prefix = prefix;
@@ -19,7 +19,7 @@ public:
 	{
 	}
 
-	std::string Read()
+	std::string Read() override
 	{
 		if constexpr (std::is_same<Type, std::string>::value)
 			return m_prefix + m_function() + m_postfix;
@@ -29,7 +29,7 @@ public:
 
 private:
 
-	std::function<Type()>& m_function;
+	std::function<Type()> m_function;
 	std::string m_prefix;
 	std::string m_postfix;
 };

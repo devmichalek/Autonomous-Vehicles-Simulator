@@ -10,16 +10,19 @@ public:
 	{
 	}
 
-	virtual std::string Read() = 0;
-
-	inline bool Ready()
+	inline bool Ready() override
 	{
 		bool ready = m_ready;
 		m_ready = false;
 		return ready;
 	}
 
-	inline void Notify()
+	inline void Reset() override
+	{
+		m_ready = false;
+	}
+
+	inline void Notify() override
 	{
 		m_ready = true;
 	}

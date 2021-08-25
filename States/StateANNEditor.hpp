@@ -11,6 +11,7 @@
 class StateANNEditor final :
 	public StateInterface
 {
+	// Control states
 	enum
 	{
 		SWITCH_LAYER,
@@ -57,14 +58,19 @@ class StateANNEditor final :
 	DrawableDoubleText m_totalNumberOfActivationFunctionsText;
 	std::vector<std::function<std::string()>> m_textFunctions;
 
+	// Calculates positions of neuron shapes and weight shapes
 	void CalculatePositions();
 
+	// Adds neuron layer to the container
 	void AddLayer();
 
+	// Removes neuron layer from the container
 	void RemoveLayer();
 
+	// Adds neuron to the current active neuron layer
 	void AddNeuron();
 
+	// Removes neuron from the current active neruon layer
 	void RemoveNeuron();
 
 public:
@@ -77,13 +83,13 @@ public:
 
 	~StateANNEditor();
 
-	void Reload();
+	void Reload() override;
 
-	void Capture();
+	void Capture() override;
 
-	void Update();
+	void Update() override;
 
-	bool Load();
+	bool Load() override;
 
-	void Draw();
+	void Draw() override;
 };

@@ -1,20 +1,20 @@
 #pragma once
-#include "TimerObserver.hpp"
+#include "EventObserver.hpp"
 
 template<class Type, class CastType = Type>
-class TypeTimerObserver final :
-	public TimerObserver
+class TypeEventObserver final :
+	public EventObserver
 {
 public:
 
-	TypeTimerObserver(const Type& data, double timeout = 0.2, std::string prefix = "", std::string postfix = "") :
-		TimerObserver(timeout), m_data(data)
+	TypeEventObserver(const Type& data, std::string prefix = "", std::string postfix = "") :
+		m_data(data)
 	{
 		m_prefix = prefix;
 		m_postfix = postfix;
 	}
 
-	~TypeTimerObserver()
+	~TypeEventObserver()
 	{
 	}
 

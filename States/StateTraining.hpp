@@ -5,11 +5,11 @@
 #include "DrawableVehicleBuilder.hpp"
 #include "DrawableFilenameText.hpp"
 #include "CycleTimer.hpp"
-#include "StoppableTimer.hpp"
 
 class GeneticAlgorithmNeuron;
 class DrawableMap;
 class DrawableCheckpointMap;
+class EventObserver;
 
 class StateTraining final :
 	public StateInterface
@@ -49,24 +49,32 @@ class StateTraining final :
 	// Simulation parameters
 	size_t m_populationSize = 30;
 	size_t m_numberOfGenerations = 1000;
+	size_t m_population;
 	size_t m_generation;
 
-	// Timers and offsets
+	// Timers, offsets and value boundaries
 	CycleTimer m_waveTimer;
 	CycleTimer m_viewTimer;
 	sf::Vector2f m_viewCenter;
 	const double m_viewMovementOffset;
+	const size_t m_minPopulationSize;
+	const size_t m_maxPopulationSize;
+	const size_t m_minNumberOfGenerations;
+	const size_t m_maxNumberOfGenerations;
 
 	// Texts
 	DrawableTripleText m_modeText;
-	DrawableFilenameText<true, false> m_filenameText;
+	DrawableFilenameText<true, true> m_filenameText;
+	DrawableTripleText m_populationSizeText;
+	DrawableTripleText m_numberOfGenerationsText;
 	DrawableDoubleText m_populationText;
 	DrawableDoubleText m_generationText;
 	DrawableDoubleText m_highestFitnessText;
 	DrawableDoubleText m_highestFitnessOverallText;
-	std::vector<std::function<std::string()>> m_textFunctions;
+	std::vector<EventObserver*> m_eventObservers;
 
 public:
+
 	StateTraining(const StateTraining&) = delete;
 
 	const StateTraining& operator=(const StateTraining&) = delete;
@@ -75,13 +83,13 @@ public:
 
 	~StateTraining();
 
-	void Reload();
+	void Reload() override;
 
-	void Capture();
+	void Capture() override;
 
-	void Update();
+	void Update() override;
 
-	bool Load();
+	bool Load() override;
 
-	void Draw();
+	void Draw() override;
 };

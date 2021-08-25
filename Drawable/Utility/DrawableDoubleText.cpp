@@ -1,52 +1,35 @@
 #include "DrawableDoubleText.hpp"
-#include "FontContext.hpp"
-#include "CoreWindow.hpp"
 #include "ObserverIf.hpp"
+#include "CoreLogger.hpp"
 
-DrawableDoubleText::DrawableDoubleText()
+DrawableDoubleText::DrawableDoubleText(size_t size) :
+	DrawableTextAbstract(size),
+	m_observer(nullptr)
 {
-	// Set fonts
-	m_consistentText.setFont(FontContext::GetFont());
-	m_variableText.setFont(FontContext::GetFont());
-
-	// Set text colors
-	m_consistentText.setFillColor(sf::Color::White);
 	SetVariableTextColor();
-
-	// Set texts character size
-	m_consistentText.setCharacterSize(FontContext::GetCharacterSize());
-	m_variableText.setCharacterSize(FontContext::GetCharacterSize());
-
-	m_observer = nullptr;
 }
 
 DrawableDoubleText::~DrawableDoubleText()
 {
-	delete m_observer;
 }
 
-void DrawableDoubleText::SetConsistentText(std::string text)
+void DrawableDoubleText::Reset()
 {
-	m_consistentText.setString(text);
+	UpdateInternal();
+	if (m_observer)
+		m_observer->Reset();
 }
 
-void DrawableDoubleText::SetVariableText(std::string text)
+void DrawableDoubleText::SetPosition(std::vector<FontContext::Component> components)
 {
-	m_variableText.setString(text);
-}
+	ValidateNumberOfComponents(components, 3);
 
-void DrawableDoubleText::SetVariableTextColor(sf::Color color)
-{
-	m_variableText.setFillColor(color);
-}
+	float consistentX = FontContext::CalculateRow(components[1]), consistentY = 0;
+	float variableX = FontContext::CalculateRow(components[2]), variableY = 0;
+	consistentY = variableY = FontContext::CalculateColumn(components[0]);
+	m_textPositions[CONSISTENT_TEXT] = sf::Vector2f(consistentX, consistentY);
+	m_textPositions[VARIABLE_TEXT] = sf::Vector2f(variableX, variableY);
 
-void DrawableDoubleText::SetPosition(std::array<FontContext::Component, 3> components)
-{
-	float consistentX = FontContext::CalculateRow(components[0]), consistentY = 0;
-	float variableX = FontContext::CalculateRow(components[1]), variableY = 0;
-	consistentY = variableY = FontContext::CalculateColumn(components[2]);
-	m_consistentPosition = sf::Vector2f(consistentX, consistentY);
-	m_variablePosition = sf::Vector2f(variableX, variableY);
 	Update();
 }
 
@@ -56,24 +39,13 @@ void DrawableDoubleText::SetObserver(ObserverIf* observer)
 	Update();
 }
 
-void DrawableDoubleText::ResetObserverTimer()
-{
-	if (m_observer)
-		m_observer->Reset();
-}
-
-void DrawableDoubleText::Update()
+void DrawableDoubleText::UpdateInternal()
 {
 	if (m_observer && m_observer->Ready())
-		m_variableText.setString(m_observer->Read());
-
-	sf::Vector2f viewOffset = CoreWindow::GetViewOffset();
-	m_consistentText.setPosition(m_consistentPosition + viewOffset);
-	m_variableText.setPosition(m_variablePosition + viewOffset);
+		m_texts[VARIABLE_TEXT].setString(m_observer->Read());
 }
 
-void DrawableDoubleText::Draw()
+void DrawableDoubleText::SetVariableTextColor(sf::Color color)
 {
-	CoreWindow::GetRenderWindow().draw(m_consistentText);
-	CoreWindow::GetRenderWindow().draw(m_variableText);
+	m_texts[VARIABLE_TEXT].setFillColor(color);
 }

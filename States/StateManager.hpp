@@ -5,6 +5,7 @@
 
 class StateInterface;
 class DrawableTripleText;
+class EventObserver;
 
 class StateManager final
 {
@@ -44,8 +45,9 @@ private:
 	// Current state
 	size_t m_currentState;
 
-	// Texts representation of a state
+	// Texts representation of a state and its observer
 	DrawableTripleText* m_stateText;
+	EventObserver* m_stateTextObserver;
 
 	// String representations of states
 	std::array<std::string, STATE_TABLE_SIZE> m_statesStrings;

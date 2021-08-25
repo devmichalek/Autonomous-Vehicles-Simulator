@@ -11,16 +11,19 @@ public:
 	{
 	}
 
-	virtual std::string Read() = 0;
-
-	inline bool Ready()
+	inline bool Ready() override
 	{
-		return m_timer.Increment();
+		return m_timer.Update();
 	}
 
-	inline void Reset()
+	inline void Reset() override
 	{
 		m_timer.Reset();
+	}
+
+	inline void Notify() override
+	{
+		m_timer.SetTimeout();
 	}
 
 protected:

@@ -258,10 +258,10 @@ void DrawableCheckpointMap::Punish(DrawableVehicleFactory& drawableVehicleFactor
 	}
 }
 
-void DrawableCheckpointMap::IncrementTimers()
+void DrawableCheckpointMap::UpdateTimers()
 {
 	for (auto& timer : m_timers)
-		timer.Increment();
+		timer.Update();
 }
 
 const FitnessVector& DrawableCheckpointMap::GetFitnessVector() const

@@ -1,11 +1,12 @@
 #pragma once
 #include "StateInterface.hpp"
 #include "DrawableVehicle.hpp"
-#include "DrawableFilenameText.hpp"
 #include "DrawableMapBuilder.hpp"
 #include "DrawableVehicleBuilder.hpp"
 #include "CycleTimer.hpp"
-#include <functional>
+
+class DrawableDoubleText;
+class ObserverIf;
 
 class StateMapEditor final :
 	public StateInterface
@@ -36,25 +37,39 @@ class StateMapEditor final :
 	bool m_insertEdge;
 	bool m_removeEdge;
 	sf::Vector2f m_edgeBeggining;
-	CycleTimer m_movementTimer;
 	bool m_upToDate;
 	bool m_vehiclePositioned;
 	DrawableVehicle* m_drawableVehicle;
 	sf::RectangleShape m_allowedAreaShape;
 	sf::RectangleShape m_allowedViewAreaShape;
+
+	// View movement
+	CycleTimer m_viewMovementTimer;
+	const double m_viewMovementOffset;
+	double m_viewMovement;
+	const double m_viewMinMovement;
+	const double m_viewMaxMovement;
+
+	// Builders
 	DrawableMapBuilder m_drawableMapBuilder;
 	DrawableVehicleBuilder m_drawableVehicleBuilder;
 
-	DrawableTripleText m_activeModeText;
-	DrawableTripleText m_movementText;
-	DrawableTripleText m_viewOffsetXText;
-	DrawableTripleText m_viewOffsetYText;
-	DrawableFilenameText<true, true> m_filenameText;
-	DrawableTripleText m_edgeSubmodeText;
-	DrawableDoubleText m_edgeCountText;
-	DrawableTripleText m_vehicleSubmodeText;
-	DrawableTripleText m_vehicleAngleText;
-	std::vector<std::function<std::string()>> m_textFunctions;
+	// Texts and text observers
+	enum
+	{
+		ACTIVE_MODE_TEXT,
+		MOVEMENT_TEXT,
+		VIEW_OFFSET_X_TEXT,
+		VIEW_OFFSET_Y_TEXT,
+		FILENAME_TEXT,
+		EDGE_SUBMODE_TEXT,
+		EDGE_COUNT_TEXT,
+		VEHICLE_SUBMODE_TEXT,
+		VEHICLE_ANGLE_TEXT,
+		TEXT_COUNT
+	};
+	std::vector<DrawableDoubleText*> m_texts;
+	std::vector<ObserverIf*> m_textObservers;
 
 	void SetActiveMode(ActiveMode);
 
@@ -68,13 +83,13 @@ public:
 
 	~StateMapEditor();
 
-	void Reload();
+	void Reload() override;
 
-	void Capture();
+	void Capture() override;
 
-	void Update();
+	void Update() override;
 
-	bool Load();
+	bool Load() override;
 
-	void Draw();
+	void Draw() override;
 };
