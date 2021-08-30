@@ -2,11 +2,11 @@
 #include "StateInterface.hpp"
 #include "DrawableMapBuilder.hpp"
 #include "DrawableVehicleBuilder.hpp"
+#include "ArtificialNeuralNetworkBuilder.hpp"
 #include "DrawableMap.hpp"
-#include "DrawableCheckpointMap.hpp"
-#include "DrawableTripleText.hpp"
-#include "DrawableFilenameText.hpp"
-#include <functional>
+
+class DrawableTripleText;
+class ObserverIf;
 
 class StateTesting final :
 	public StateInterface
@@ -35,19 +35,26 @@ class StateTesting final :
 	std::pair<sf::Keyboard::Key, bool> m_filenameTypeKey;
 
 	// Objects of test
-	DrawableMapBuilder m_drawableMapBuilder;
-	DrawableVehicleBuilder m_drawableVehicleBuilder;
 	DrawableMap* m_drawableMap;
 	DrawableVehicle* m_userVehicle;
 	DrawableVehicleFactory m_drawableVehicleFactory;
-	DrawableCheckpointMap* m_drawableCheckpointMap;
 
-	// Texts
-	DrawableTripleText m_modeText;
-	DrawableTripleText m_fitnessText;
-	DrawableTripleText m_filenameTypeText;
-	DrawableFilenameText<true, false> m_filenameText;
-	std::vector<std::function<std::string()>> m_textFunctions;
+	// Builders
+	DrawableMapBuilder m_drawableMapBuilder;
+	DrawableVehicleBuilder m_drawableVehicleBuilder;
+	ArtificialNeuralNetworkBuilder m_artificialNeuralNetworkBuilder;
+
+	// Texts and text observers
+	enum
+	{
+		ACTIVE_MODE_TEXT,
+		FITNESS_TEXT,
+		FILENAME_TYPE_TEXT,
+		FILENAME_TEXT,
+		TEXT_COUNT
+	};
+	std::vector<DrawableTripleText*> m_texts;
+	std::vector<ObserverIf*> m_textObservers;
 
 public:
 

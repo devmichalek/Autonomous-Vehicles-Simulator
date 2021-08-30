@@ -63,16 +63,19 @@ public:
 	{
 	}
 
-	void SetFromRawData(Neuron* data)
+	void SetFromRawData(const Neuron* data)
 	{
-		size_t index = 0;
-		for (auto& weightLayer : m_weightLayers)
+		if (data)
 		{
-			for (auto& weights : weightLayer)
+			size_t index = 0;
+			for (auto& weightLayer : m_weightLayers)
 			{
-				for (auto& weight : weights)
+				for (auto& weights : weightLayer)
 				{
-					weight = data[index++];
+					for (auto& weight : weights)
+					{
+						weight = data[index++];
+					}
 				}
 			}
 		}
@@ -93,5 +96,19 @@ public:
 	size_t GetNumberOfWeights() const
 	{
 		return m_numberOfWeights;
+	}
+
+	size_t GetNumberOfInputNeurons() const
+	{
+		if (m_neuronLayers.empty())
+			return 0;
+		return m_neuronLayers.front().size();
+	}
+
+	size_t GetNumberOfOutputNeurons() const
+	{
+		if (m_neuronLayers.empty())
+			return 0;
+		return m_neuronLayers.back().size();
 	}
 };

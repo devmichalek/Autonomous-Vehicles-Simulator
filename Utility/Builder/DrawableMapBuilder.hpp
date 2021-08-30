@@ -66,14 +66,14 @@ public:
 	// Returns intermediate representation of edges
 	EdgeVector GetEdges();
 
-	// Returns intermediate representation of vehicle
-	std::pair<sf::Vector2f, double> GetVehicle();
+	// Updates vehicle position and its angle
+	void UpdateVehicle(DrawableVehicle* drawableVehicle);
 
-	// Returns drawable manager
-	DrawableMap* GetDrawableMap();
+	// Returns drawable map
+	DrawableMap* Get();
 
-	// Returns drawable checkpoint map
-	DrawableCheckpointMap* GetDrawableCheckpointMap();
+	// Copies drawable map
+	static DrawableMap* Copy(const DrawableMap* drawableMap);
 
 	// Returns minimum required number of inner edges
 	size_t GetMinNumberOfInnerEdges() const;
@@ -86,4 +86,7 @@ public:
 
 	// Returns maximum allowed view area
 	sf::Vector2f GetMaxAllowedViewArea() const;
+
+	// Checks if dummy can be created
+	static bool Initialize();
 };

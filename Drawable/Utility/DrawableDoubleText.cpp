@@ -2,8 +2,8 @@
 #include "ObserverIf.hpp"
 #include "CoreLogger.hpp"
 
-DrawableDoubleText::DrawableDoubleText(size_t size) :
-	DrawableTextAbstract(size),
+DrawableDoubleText::DrawableDoubleText(std::vector<std::string> strings, size_t size) :
+	DrawableTextAbstract(strings, size),
 	m_observer(nullptr)
 {
 	SetVariableTextColor();

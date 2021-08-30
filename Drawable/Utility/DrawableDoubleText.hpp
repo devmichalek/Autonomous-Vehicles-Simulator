@@ -8,7 +8,7 @@ class DrawableDoubleText :
 {
 public:
 
-	DrawableDoubleText(size_t size = 2);
+	DrawableDoubleText(std::vector<std::string> strings, size_t size = 2);
 
 	virtual ~DrawableDoubleText();
 
@@ -23,11 +23,9 @@ public:
 	// Sets observer
 	void SetObserver(ObserverIf* observer);
 
-private:
+protected:
 
 	virtual void UpdateInternal() override;
-
-protected:
 
 	void SetVariableTextColor(sf::Color color = sf::Color(0xC0, 0xC0, 0xC0, 0xFF));
 

@@ -35,6 +35,11 @@ public:
 		m_value = m_timeout;
 	}
 
+	inline double GetTimeout()
+	{
+		return m_timeout;
+	}
+
 	inline double Value()
 	{
 		return m_value;

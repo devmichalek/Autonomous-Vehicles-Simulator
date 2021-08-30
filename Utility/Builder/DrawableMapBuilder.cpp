@@ -1,6 +1,6 @@
 #include "DrawableMapBuilder.hpp"
 #include "DrawableMap.hpp"
-#include "DrawableCheckpointMap.hpp"
+#include "CoreLogger.hpp"
 
 bool DrawableMapBuilder::ValidateInternal()
 {
@@ -320,12 +320,17 @@ EdgeVector DrawableMapBuilder::GetEdges()
 	return m_edges;
 }
 
-std::pair<sf::Vector2f, double> DrawableMapBuilder::GetVehicle()
+void DrawableMapBuilder::UpdateVehicle(DrawableVehicle* drawableVehicle)
 {
-	return std::make_pair(m_vehicleCenter, m_vehicleAngle);
+	if (drawableVehicle)
+	{
+		drawableVehicle->SetCenter(m_vehicleCenter);
+		drawableVehicle->SetAngle(m_vehicleAngle);
+		drawableVehicle->Update();
+	}
 }
 
-DrawableMap* DrawableMapBuilder::GetDrawableMap()
+DrawableMap* DrawableMapBuilder::Get()
 {
 	if (!Validate())
 		return nullptr;
@@ -333,12 +338,12 @@ DrawableMap* DrawableMapBuilder::GetDrawableMap()
 	return new DrawableMap(m_edges, m_edgesPivot);
 }
 
-DrawableCheckpointMap* DrawableMapBuilder::GetDrawableCheckpointMap()
+DrawableMap* DrawableMapBuilder::Copy(const DrawableMap* drawableMap)
 {
-	if (!Validate())
+	if (!drawableMap)
 		return nullptr;
-	
-	return new DrawableCheckpointMap(m_edges, m_edgesPivot);
+
+	return new DrawableMap(drawableMap->m_edges, drawableMap->m_pivot);
 }
 
 size_t DrawableMapBuilder::GetMinNumberOfInnerEdges() const
@@ -360,4 +365,20 @@ sf::Vector2f DrawableMapBuilder::GetMaxAllowedMapArea() const
 sf::Vector2f DrawableMapBuilder::GetMaxAllowedViewArea() const
 {
 	return GetMaxAllowedMapArea() * 1.05f;
+}
+
+bool DrawableMapBuilder::Initialize()
+{
+	DrawableMapBuilder builder;
+
+	// Call internal implementation
+	builder.CreateDummy();
+
+	if (!builder.Validate())
+	{
+		CoreLogger::PrintError("Cannot create Drawable Map dummy!");
+		return false;
+	}
+
+	return true;
 }

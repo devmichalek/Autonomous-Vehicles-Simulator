@@ -5,6 +5,9 @@
 #include "FontContext.hpp"
 #include "StateManager.hpp"
 #include "CoreLogger.hpp"
+#include "DrawableVehicleBuilder.hpp"
+#include "DrawableMapBuilder.hpp"
+#include "ArtificialNeuralNetworkBuilder.hpp"
 #include <limits>
 
 CoreEngine::CoreEngine()
@@ -65,6 +68,15 @@ bool CoreEngine::Load()
 	CoreWindow::Initialize();
 	ActivationFunctionContext::Initialize();
 	DrawableVehicle::Initialize();
+	
+	if (!DrawableVehicleBuilder::Initialize())
+		return false;
+
+	if (!DrawableMapBuilder::Initialize())
+		return false;
+
+	if (!ArtificialNeuralNetworkBuilder::Initialize())
+		return false;
 
 	if (!FontContext::Initialize())
 		return false;

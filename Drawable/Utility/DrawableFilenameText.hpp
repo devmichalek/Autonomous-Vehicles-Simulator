@@ -1,20 +1,12 @@
 #pragma once
-#include "DrawableTripleText.hpp"
-#include "StoppableTimer.hpp"
+#include "DrawableStatusText.hpp"
 #include "CycleTimer.hpp"
 #include <array>
 
 template<bool ReadOperations, bool WriteOperations>
 class DrawableFilenameText :
-	public DrawableTripleText
+	public DrawableStatusText
 {
-	enum
-	{
-		STATUS_TEXT = INFORMATION_TEXT + 1
-	};
-
-	StoppableTimer m_alphaTimer;
-
 	// Actions
 	enum
 	{
@@ -39,27 +31,15 @@ class DrawableFilenameText :
 
 	void OnControlKeyReleasedEvent(sf::Keyboard::Key eventKey);
 
+	std::string GetInformationString();
+
 public:
 
-	DrawableFilenameText(size_t size = 5);
+	DrawableFilenameText();
 
 	~DrawableFilenameText();
 
 	void Reset();
-
-	void SetErrorStatusText(std::string text);
-
-	void SetSuccessStatusText(std::string text);
-
-	void ShowStatusText();
-
-	// Sets consistent text, variable text information text and status text positions
-	// First component is used as y position for all texts
-	// Second component is used as x position for consistent text
-	// Third component is used as x position for variable text
-	// Fourth component is used as x position for information text
-	// Fifth component is used as x position for status text
-	void SetPosition(std::vector<FontContext::Component> components);
 
 	bool IsReading();
 
@@ -70,6 +50,4 @@ public:
 	std::string GetFilename();
 
 	void Capture();
-
-	void UpdateInternal();
 };

@@ -6,7 +6,7 @@ class DrawableVariableText :
 {
 public:
 
-	DrawableVariableText();
+	DrawableVariableText(std::vector<std::string> strings);
 
 	virtual ~DrawableVariableText();
 

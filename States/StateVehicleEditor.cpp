@@ -1,6 +1,9 @@
 #include "StateVehicleEditor.hpp"
 #include "FunctionTimerObserver.hpp"
+#include "DrawableVariableText.hpp"
+#include "DrawableFilenameText.hpp"
 #include "CoreLogger.hpp"
+#include <functional>
 
 StateVehicleEditor::StateVehicleEditor()
 {
@@ -33,11 +36,10 @@ StateVehicleEditor::StateVehicleEditor()
 	m_allowedAreaShape.setSize(maxVehicleSize);
 	m_allowedAreaShape.setPosition((windowSize.x / 2.0f - maxVehicleSize.x / 2.0f), (windowSize.y / 2.0f - maxVehicleSize.y / 2.0f));
 	
-	if (m_drawableVehicleBuilder.CreateDummy())
-	{
-		m_vehicleBody = m_drawableVehicleBuilder.GetVehicleBody();
-		m_vehicleSensors = m_drawableVehicleBuilder.GetVehicleSensors();
-	}
+	m_drawableVehicleBuilder.CreateDummy();
+	m_vehicleBody = m_drawableVehicleBuilder.GetVehicleBody();
+	m_vehicleSensors = m_drawableVehicleBuilder.GetVehicleSensors();
+
 	m_currentSensorIndex = m_vehicleSensors.GetNumberOfSensors() - 1;
 	m_currentSensorAngle = m_vehicleSensors.GetSensorAngle(m_currentSensorIndex);
 	m_upToDate = false;
@@ -50,11 +52,16 @@ StateVehicleEditor::StateVehicleEditor()
 	m_yAxis[0].position = sf::Vector2f(0, windowCenter.y);
 	m_yAxis[1].position = sf::Vector2f(windowSize.x, windowCenter.y);
 
-	m_textFunctions.reserve(16U);
+	m_texts.resize(TEXT_COUNT, nullptr);
+	m_textObservers.resize(TEXT_COUNT, nullptr);
 }
 
 StateVehicleEditor::~StateVehicleEditor()
 {
+	for (auto& text : m_texts)
+		delete text;
+	for (auto& observer : m_textObservers)
+		delete observer;
 }
 
 void StateVehicleEditor::Reload()
@@ -67,21 +74,21 @@ void StateVehicleEditor::Reload()
 		m_pressedKeys[i] = false;
 
 	// Reset subjects of change
-	if (m_drawableVehicleBuilder.CreateDummy())
-	{
-		m_vehicleBody = m_drawableVehicleBuilder.GetVehicleBody();
-		m_vehicleSensors = m_drawableVehicleBuilder.GetVehicleSensors();
-	}
+	m_drawableVehicleBuilder.CreateDummy();
+	m_vehicleBody = m_drawableVehicleBuilder.GetVehicleBody();
+	m_vehicleSensors = m_drawableVehicleBuilder.GetVehicleSensors();
+
 	m_currentSensorIndex = m_vehicleSensors.GetNumberOfSensors() - 1;
 	m_currentSensorAngle = m_vehicleSensors.GetSensorAngle(m_currentSensorIndex);
 	m_upToDate = false;
 
-	// Reset texts
-	m_totalNumberOfEdgesText.Reset();
-	m_totalNumberOfSensorsText.Reset();
-	m_filenameText.Reset();
-	m_currentSensorText.Reset();
-	m_currentSensorAngleText.Reset();
+	// Reset texts and text observers
+	for (size_t i = 0; i < TEXT_COUNT; ++i)
+	{
+		if (m_textObservers[i])
+			m_textObservers[i]->Notify();
+		m_texts[i]->Reset();
+	}
 
 	// Reset view
 	auto& view = CoreWindow::GetView();
@@ -92,8 +99,9 @@ void StateVehicleEditor::Reload()
 
 void StateVehicleEditor::Capture()
 {
-	m_filenameText.Capture();
-	if (!m_filenameText.IsRenaming())
+	auto* filenameText = static_cast<DrawableFilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
+	filenameText->Capture();
+	if (!filenameText->IsRenaming())
 	{
 		if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
 		{
@@ -234,7 +242,8 @@ void StateVehicleEditor::Capture()
 
 void StateVehicleEditor::Update()
 {
-	if (m_filenameText.IsWriting())
+	auto* filenameText = static_cast<DrawableFilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
+	if (filenameText->IsWriting())
 	{
 		if (!m_upToDate)
 		{
@@ -245,24 +254,24 @@ void StateVehicleEditor::Update()
 			for (size_t i = 0; i < numberOfSensors; ++i)
 				m_drawableVehicleBuilder.AddVehicleSensor(m_vehicleSensors.m_points[i], m_vehicleSensors.m_angleVector[i]);
 
-			bool success = m_drawableVehicleBuilder.Save(m_filenameText.GetFilename());
+			bool success = m_drawableVehicleBuilder.Save(filenameText->GetFilename());
 			auto status = m_drawableVehicleBuilder.GetLastOperationStatus();
-			m_filenameText.ShowStatusText();
+			filenameText->ShowStatusText();
 			if (success)
-				m_filenameText.SetSuccessStatusText(status.second);
+				filenameText->SetSuccessStatusText(status.second);
 			else
-				m_filenameText.SetErrorStatusText(status.second);
+				filenameText->SetErrorStatusText(status.second);
 			m_upToDate = success;
 		}
 	}
-	else if (m_filenameText.IsReading())
+	else if (filenameText->IsReading())
 	{
-		bool success = m_drawableVehicleBuilder.Load(m_filenameText.GetFilename());
+		bool success = m_drawableVehicleBuilder.Load(filenameText->GetFilename());
 		auto status = m_drawableVehicleBuilder.GetLastOperationStatus();
-		m_filenameText.ShowStatusText();
+		filenameText->ShowStatusText();
 		if (success)
 		{
-			m_filenameText.SetSuccessStatusText(status.second);
+			filenameText->SetSuccessStatusText(status.second);
 			m_vehicleBody = m_drawableVehicleBuilder.GetVehicleBody();
 			m_vehicleSensors = m_drawableVehicleBuilder.GetVehicleSensors();
 			m_currentSensorIndex = 0;
@@ -270,64 +279,59 @@ void StateVehicleEditor::Update()
 			m_upToDate = true;
 		}
 		else
-			m_filenameText.SetErrorStatusText(status.second);
+			filenameText->SetErrorStatusText(status.second);
 	}
 
 	m_vehicleBody.Update();
 	m_vehicleSensors.Update();
-	m_backText.Update();
-	m_frontText.Update();
-	m_activeModeText.Update();
-	m_activeSubmodeText.Update();
-	m_totalNumberOfEdgesText.Update();
-	m_totalNumberOfSensorsText.Update();
-	m_filenameText.Update();
-	m_currentSensorText.Update();
-	m_currentSensorAngleText.Update();
+
+	for (const auto& text : m_texts)
+		text->Update();
 }
 
 bool StateVehicleEditor::Load()
 {
-	// Set texts strings
-	m_backText.SetStrings({ "Back" });
-	m_frontText.SetStrings({ "Front" });
-	m_activeModeText.SetStrings({ "Active mode:", "", "| [F1] [F2]" });
-	m_activeSubmodeText.SetStrings({ "Active submode:", "", "| [1] [2]" });
-	m_totalNumberOfEdgesText.SetStrings({ "Total number of edges:", "", "| [RMB]" });
-	m_totalNumberOfSensorsText.SetStrings({ "Total number of sensors:", "", "| [RMB]" });
-	m_currentSensorText.SetStrings({ "Current sensor:", "", "| [Alt]" });
-	m_currentSensorAngleText.SetStrings({ "Current sensor angle:", "", "| [Z] [X]" });
+	// Create texts
+	m_texts[BACK_TEXT] = new DrawableVariableText({ "Back" });
+	m_texts[FRONT_TEXT] = new DrawableVariableText({ "Front" });
+	m_texts[ACTIVE_MODE_TEXT] = new DrawableTripleText({ "Active mode:", "", "| [F1] [F2]" });
+	m_texts[ACTIVE_SUBMODE_TEXT] = new DrawableTripleText({ "Active submode:", "", "| [1] [2]" });
+	m_texts[TOTAL_NUMBER_OF_EDGES_TEXT] = new DrawableTripleText({ "Total number of edges:", "", "| [RMB]" });
+	m_texts[TOTAL_NUMBER_OF_SENSORS_TEXT] = new DrawableTripleText({ "Total number of sensors:", "", "| [RMB]" });
+	m_texts[FILENAME_TEXT] = new DrawableFilenameText<true, true>;
+	m_texts[CURRENT_SENSOR_TEXT] = new DrawableTripleText({ "Current sensor:", "", "| [Alt]" });
+	m_texts[CURRENT_SENSOR_ANGLE_TEXT] = new DrawableTripleText({ "Current sensor angle:", "", "| [Z] [X]" });
 
-	// Set variable texts
-	m_textFunctions.push_back([&] { return m_modeStrings[m_mode]; });
-	m_activeModeText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.2));
-	m_textFunctions.push_back([&] { return m_submodeStrings[m_submode]; });
-	m_activeSubmodeText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.2));
-	m_textFunctions.push_back([&] { return std::to_string(m_vehicleBody.GetNumberOfPoints()); });
-	m_totalNumberOfEdgesText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.1));
-	m_textFunctions.push_back([&] { return std::to_string(m_vehicleSensors.GetNumberOfSensors()); });
-	m_totalNumberOfSensorsText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.1));
-	m_textFunctions.push_back([&] { return m_vehicleSensors.GetNumberOfSensors() > 0 ? "S" + std::to_string(m_currentSensorIndex) : "None"; });
-	m_currentSensorText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.1));
-	m_textFunctions.push_back([&] { return std::to_string(size_t(m_currentSensorAngle)); });
-	m_currentSensorAngleText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.1));
+	// Create observers
+	m_textObservers[ACTIVE_MODE_TEXT] = new FunctionTimerObserver<std::string>([&] { return m_modeStrings[m_mode]; }, 0.2);
+	m_textObservers[ACTIVE_SUBMODE_TEXT] = new FunctionTimerObserver<std::string>([&] { return m_submodeStrings[m_submode]; }, 0.2);
+	m_textObservers[TOTAL_NUMBER_OF_EDGES_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(m_vehicleBody.GetNumberOfPoints()); }, 0.1);
+	m_textObservers[TOTAL_NUMBER_OF_SENSORS_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(m_vehicleSensors.GetNumberOfSensors()); }, 0.1);
+	m_textObservers[CURRENT_SENSOR_TEXT] = new FunctionTimerObserver<std::string>([&] { return m_vehicleSensors.GetNumberOfSensors() > 0 ? "S" + std::to_string(m_currentSensorIndex) : "None"; }, 0.1);
+	m_textObservers[CURRENT_SENSOR_ANGLE_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(size_t(m_currentSensorAngle)); }, 0.1);
+
+	// Set text observers
+	for (size_t i = ACTIVE_MODE_TEXT; i < TEXT_COUNT; ++i)
+		((DrawableDoubleText*)m_texts[i])->SetObserver(m_textObservers[i]);
 
 	// Set text character size and rotation
-	m_backText.SetCharacterSize(4);
-	m_frontText.SetCharacterSize(4);
-	m_backText.SetRotation(270.0f);
-	m_frontText.SetRotation(90.0f);
+	auto* backText = static_cast<DrawableVariableText*>(m_texts[BACK_TEXT]);
+	auto* frontText = static_cast<DrawableVariableText*>(m_texts[FRONT_TEXT]);
+	backText->SetCharacterSize(4);
+	frontText->SetCharacterSize(4);
+	backText->SetRotation(270.0f);
+	frontText->SetRotation(90.0f);
 
 	// Set text positions
-	m_backText.SetPosition({ FontContext::Component(25), {2} });
-	m_frontText.SetPosition({ FontContext::Component(18), {2, true} });
-	m_activeModeText.SetPosition({ FontContext::Component(0), {0}, {5}, {9} });
-	m_activeSubmodeText.SetPosition({ FontContext::Component(1), {0}, {5}, {9} });
-	m_totalNumberOfEdgesText.SetPosition({ FontContext::Component(2), {0}, {5}, {9} });
-	m_totalNumberOfSensorsText.SetPosition({ FontContext::Component(3), {0}, {5}, {9} });
-	m_filenameText.SetPosition({ FontContext::Component(4), {0}, {5}, {9}, {18} });
-	m_currentSensorText.SetPosition({ FontContext::Component(1, true), {0}, {5}, {7} });
-	m_currentSensorAngleText.SetPosition({ FontContext::Component(2, true), {0}, {5}, {7} });
+	m_texts[BACK_TEXT]->SetPosition({ FontContext::Component(25), {2} });
+	m_texts[FRONT_TEXT]->SetPosition({ FontContext::Component(18), {2, true} });
+	m_texts[ACTIVE_MODE_TEXT]->SetPosition({ FontContext::Component(0), {0}, {5}, {9} });
+	m_texts[ACTIVE_SUBMODE_TEXT]->SetPosition({ FontContext::Component(1), {0}, {5}, {9} });
+	m_texts[TOTAL_NUMBER_OF_EDGES_TEXT]->SetPosition({ FontContext::Component(2), {0}, {5}, {9} });
+	m_texts[TOTAL_NUMBER_OF_SENSORS_TEXT]->SetPosition({ FontContext::Component(3), {0}, {5}, {9} });
+	m_texts[FILENAME_TEXT]->SetPosition({ FontContext::Component(4), {0}, {5}, {9}, {18} });
+	m_texts[CURRENT_SENSOR_TEXT]->SetPosition({ FontContext::Component(1, true), {0}, {5}, {7} });
+	m_texts[CURRENT_SENSOR_ANGLE_TEXT]->SetPosition({ FontContext::Component(2, true), {0}, {5}, {7} });
 
 	CoreLogger::PrintSuccess("State \"Vehicle Editor\" dependencies loaded correctly");
 	return true;
@@ -343,17 +347,17 @@ void StateVehicleEditor::Draw()
 	CoreWindow::GetRenderWindow().draw(m_yAxis.data(), m_xAxis.size(), sf::Lines);
 	CoreWindow::GetRenderWindow().draw(m_allowedAreaShape);
 
-	m_backText.Draw();
-	m_frontText.Draw();
-	m_activeModeText.Draw();
-	m_activeSubmodeText.Draw();
-	m_totalNumberOfEdgesText.Draw();
-	m_totalNumberOfSensorsText.Draw();
-	m_filenameText.Draw();
-
+	m_texts[BACK_TEXT]->Draw();
+	m_texts[FRONT_TEXT]->Draw();
+	m_texts[ACTIVE_MODE_TEXT]->Draw();
+	m_texts[ACTIVE_SUBMODE_TEXT]->Draw();
+	m_texts[TOTAL_NUMBER_OF_EDGES_TEXT]->Draw();
+	m_texts[TOTAL_NUMBER_OF_SENSORS_TEXT]->Draw();
+	m_texts[FILENAME_TEXT]->Draw();
+	
 	if (m_mode == MODE_VEHICLE_SENSORS)
 	{
-		m_currentSensorText.Draw();
-		m_currentSensorAngleText.Draw();
+		m_texts[CURRENT_SENSOR_TEXT]->Draw();
+		m_texts[CURRENT_SENSOR_ANGLE_TEXT]->Draw();
 	}
 }

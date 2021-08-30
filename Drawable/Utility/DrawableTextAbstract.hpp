@@ -21,9 +21,7 @@ protected:
 		}
 	}
 
-public:
-
-	DrawableTextAbstract(size_t size) :
+	DrawableTextAbstract(std::vector<std::string>& strings, size_t size) :
 		m_size(size)
 	{
 		m_texts.resize(m_size);
@@ -35,7 +33,19 @@ public:
 			text.setFillColor(sf::Color::White);
 			text.setCharacterSize(FontContext::GetCharacterSize());
 		}
+
+		strings.resize(m_size, "");
+		for (size_t i = 0; i < m_size; ++i)
+		{
+			if (!strings[i].empty())
+				m_texts[i].setString(strings[i]);
+		}
 	}
+
+	// Update internal implementation
+	virtual void UpdateInternal() = 0;
+
+public:
 
 	virtual ~DrawableTextAbstract()
 	{
@@ -47,22 +57,6 @@ public:
 	// Sets positions of texts
 	virtual void SetPosition(std::vector<FontContext::Component> components) = 0;
 	
-	// Sets texts strings
-	void SetStrings(std::vector<std::string> strings)
-	{
-		strings.resize(m_size, "");
-		for (size_t i = 0; i < m_size; ++i)
-		{
-			if (!strings[i].empty())
-				m_texts[i].setString(strings[i]);
-		}
-	}
-
-	// Capture events
-	virtual void Capture()
-	{
-	}
-
 	// Updates texts positions and calls internal update implementation
 	void Update()
 	{
@@ -78,9 +72,4 @@ public:
 		for (size_t i = 0; i < m_size; ++i)
 			CoreWindow::GetRenderWindow().draw(m_texts[i]);
 	}
-
-private:
-
-	// Update internal implementation
-	virtual void UpdateInternal() = 0;
 };

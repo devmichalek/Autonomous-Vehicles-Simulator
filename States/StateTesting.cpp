@@ -2,6 +2,7 @@
 #include "StateTesting.hpp"
 #include "CoreLogger.hpp"
 #include "FunctionTimerObserver.hpp"
+#include "DrawableFilenameText.hpp"
 
 StateTesting::StateTesting()
 {
@@ -18,15 +19,18 @@ StateTesting::StateTesting()
 	m_drawableMap = nullptr;
 	m_userVehicle = nullptr;
 	m_drawableVehicleFactory.resize(2U);
-	m_drawableCheckpointMap = nullptr;
-	m_textFunctions.reserve(16U);
+	m_texts.resize(TEXT_COUNT, nullptr);
+	m_textObservers.resize(TEXT_COUNT, nullptr);
 }
 
 StateTesting::~StateTesting()
 {
 	delete m_drawableMap;
 	delete m_userVehicle;
-	delete m_drawableCheckpointMap;
+	for (auto& text : m_texts)
+		delete text;
+	for (auto& observer : m_textObservers)
+		delete observer;
 }
 
 void StateTesting::Reload()
@@ -35,19 +39,38 @@ void StateTesting::Reload()
 	m_filenameType = MAP_FILENAME_TYPE;
 	m_modeKey.second = false;
 	m_filenameTypeKey.second = false;
-	m_drawableMapBuilder.Clear();
+
+	// Delete objects of test
 	delete m_drawableMap;
 	m_drawableMap = nullptr;
 	delete m_userVehicle;
 	m_userVehicle = nullptr;
-	delete m_drawableCheckpointMap;
-	m_drawableCheckpointMap = nullptr;
+
+	// Clear builders
+	m_drawableMapBuilder.Clear();
+	m_drawableVehicleBuilder.Clear();
+	m_artificialNeuralNetworkBuilder.Clear();
+
+	// Reset texts and text observers
+	for (size_t i = 0; i < TEXT_COUNT; ++i)
+	{
+		if (m_textObservers[i])
+			m_textObservers[i]->Notify();
+		m_texts[i]->Reset();
+	}
+
+	// Reset view
+	auto& view = CoreWindow::GetView();
+	auto viewOffset = CoreWindow::GetViewOffset();
+	view.move(-viewOffset);
+	CoreWindow::GetRenderWindow().setView(view);
 }
 
 void StateTesting::Capture()
 {
-	if (m_filenameText.IsRenaming())
-		m_filenameText.Capture();
+	auto* filenameText = static_cast<DrawableFilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
+	if (filenameText->IsRenaming())
+		filenameText->Capture();
 	else
 	{
 		if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
@@ -60,7 +83,7 @@ void StateTesting::Capture()
 					if (m_filenameTypeKey.first == eventKey)
 						m_filenameTypeKey.second = true;
 					else
-						m_filenameText.Capture();
+						filenameText->Capture();
 
 					break;
 				}
@@ -85,7 +108,7 @@ void StateTesting::Capture()
 					if (m_filenameTypeKey.first == eventKey)
 						m_filenameTypeKey.second = false;
 					else
-						m_filenameText.Capture();
+						filenameText->Capture();
 					break;
 				}
 				case RUNNING_MODE:
@@ -108,72 +131,62 @@ void StateTesting::Update()
 	{
 		case STOPPED_MODE:
 		{
-			if (m_filenameTypeKey.second)
+			auto* filenameText = static_cast<DrawableFilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
+			if (filenameText->IsReading())
 			{
-				++m_filenameType;
-				if (m_filenameType >= FILENAME_TYPES_COUNT)
-					m_filenameType = MAP_FILENAME_TYPE;
-				m_filenameTypeKey.second = false;
-			}
-
-			m_filenameTypeText.Update();
-			m_filenameText.Update();
-
-			if (!m_filenameText.IsRenaming())
-			{
-				if (m_filenameText.IsReading())
+				switch (m_filenameType)
 				{
-					switch (m_filenameType)
+					case MAP_FILENAME_TYPE:
 					{
-						case MAP_FILENAME_TYPE:
+						bool success = m_drawableMapBuilder.Load(filenameText->GetFilename());
+						auto status = m_drawableMapBuilder.GetLastOperationStatus();
+						filenameText->ShowStatusText();
+						if (success)
 						{
-							bool success = m_drawableMapBuilder.Load(m_filenameText.GetFilename());
-							auto status = m_drawableMapBuilder.GetLastOperationStatus();
-							m_filenameText.ShowStatusText();
-							if (success)
+							filenameText->SetSuccessStatusText(status.second);
+							delete m_drawableMap;
+							m_drawableMap = m_drawableMapBuilder.Get();
+							m_drawableMap->Init(m_drawableVehicleFactory.size(), 0.0);
+
+							for (auto& vehicle : m_drawableVehicleFactory)
 							{
-								m_filenameText.SetSuccessStatusText(status.second);
-								delete m_drawableMap;
-								m_drawableMap = m_drawableMapBuilder.GetDrawableMap();
-								for (auto& vehicle : m_drawableVehicleFactory)
-								{
-									delete vehicle;
-									vehicle = m_drawableVehicleBuilder.Get();
-									auto details = m_drawableMapBuilder.GetVehicle();
-									vehicle->SetCenter(details.first);
-									vehicle->SetAngle(details.second);
-									vehicle->Update();
-								}
-
-								m_userVehicle = m_drawableVehicleFactory[0];
-								delete m_drawableCheckpointMap;
-								m_drawableCheckpointMap = m_drawableMapBuilder.GetDrawableCheckpointMap();
-								m_drawableCheckpointMap->Init(m_drawableVehicleFactory.size(), 0.0);
-
-								for (auto& vehicle : m_drawableVehicleFactory)
-									vehicle->Update();
-
-								// Update view
-								auto& view = CoreWindow::GetView();
-								view.setCenter(m_userVehicle->GetCenter());
-								CoreWindow::GetRenderWindow().setView(view);
+								delete vehicle;
+								vehicle = m_drawableVehicleBuilder.Get();
+								m_drawableMapBuilder.UpdateVehicle(vehicle);
 							}
-							else
-								m_filenameText.SetErrorStatusText(status.second);
-							break;
+
+							m_userVehicle = m_drawableVehicleFactory[0];
+
+							// Update view
+							auto& view = CoreWindow::GetView();
+							view.setCenter(m_userVehicle->GetCenter());
+							CoreWindow::GetRenderWindow().setView(view);
 						}
-
-						case ANN_FILENAME_TYPE:
-
-							break;
-
-						case VEHICLE_FILENAME_TYPE:
-
-							break;
-
-						default:
-							break;
+						else
+							filenameText->SetErrorStatusText(status.second);
+						break;
 					}
+
+					case ANN_FILENAME_TYPE:
+
+						break;
+
+					case VEHICLE_FILENAME_TYPE:
+
+						break;
+
+					default:
+						break;
+				}
+			}
+			else if (!filenameText->IsRenaming())
+			{
+				if (m_filenameTypeKey.second)
+				{
+					++m_filenameType;
+					if (m_filenameType >= FILENAME_TYPES_COUNT)
+						m_filenameType = MAP_FILENAME_TYPE;
+					m_filenameTypeKey.second = false;
 				}
 			}
 
@@ -184,7 +197,7 @@ void StateTesting::Update()
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
 			{
 				m_drawableVehicleFactory.front()->SetActive();
-				m_drawableCheckpointMap->Iterate(m_drawableVehicleFactory);
+				m_drawableMap->Iterate(m_drawableVehicleFactory);
 			}
 
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
@@ -241,30 +254,32 @@ void StateTesting::Update()
 		m_modeKey.second = false;
 	}
 
-	m_modeText.Update();
-	m_fitnessText.Update();
+	for (auto& text : m_texts)
+		text->Update();
 }
 
 bool StateTesting::Load()
 {
-	// Set texts strings
-	m_modeText.SetStrings({ "Mode:", "", "| [M]" });
-	m_fitnessText.SetStrings({ "Highest fitness:", "", "| [Enter]" });
-	m_filenameTypeText.SetStrings({ "Filename type:", "", "| [F]" });
+	// Create texts
+	m_texts[ACTIVE_MODE_TEXT] = new DrawableTripleText({ "Mode:", "", "| [M]" });
+	m_texts[FITNESS_TEXT] = new DrawableTripleText({ "Highest fitness:", "", "| [Enter]" });
+	m_texts[FILENAME_TYPE_TEXT] = new DrawableTripleText({ "Filename type:", "", "| [F]" });
+	m_texts[FILENAME_TEXT] = new DrawableFilenameText<true, false>;
 
-	// Set variable texts
-	m_textFunctions.push_back([&] { return m_modeStrings[m_mode]; });
-	m_modeText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.05));
-	m_textFunctions.push_back([&] { return m_drawableCheckpointMap ? std::to_string(m_drawableCheckpointMap->GetHighestFitness()) : "0"; });
-	m_fitnessText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.05));
-	m_textFunctions.push_back([&] { return m_filenameTypeStrings[m_filenameType]; });
-	m_filenameTypeText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.2));
+	// Create observers
+	m_textObservers[ACTIVE_MODE_TEXT] = new FunctionTimerObserver<std::string>([&] { return m_modeStrings[m_mode]; }, 0.05);
+	m_textObservers[FITNESS_TEXT] = new FunctionTimerObserver<std::string>([&] { return m_drawableMap ? std::to_string(m_drawableMap->GetHighestFitness()) : "0"; }, 0.05);
+	m_textObservers[FILENAME_TYPE_TEXT] = new FunctionTimerObserver<std::string>([&] { return m_filenameTypeStrings[m_filenameType]; }, 0.2);
+
+	// Set text observers
+	for (size_t i = 0; i < TEXT_COUNT; ++i)
+		m_texts[i]->SetObserver(m_textObservers[i]);
 
 	// Set texts positions
-	m_modeText.SetPosition({ FontContext::Component(0), {0}, {3}, {7} });
-	m_fitnessText.SetPosition({ FontContext::Component(1, true), {0}, {4}, {7} });
-	m_filenameTypeText.SetPosition({ FontContext::Component(1), {0}, {3}, {7} });
-	m_filenameText.SetPosition({ FontContext::Component(2), {0}, {3}, {7}, {13} });
+	m_texts[ACTIVE_MODE_TEXT]->SetPosition({ FontContext::Component(0), {0}, {3}, {7} });
+	m_texts[FITNESS_TEXT]->SetPosition({ FontContext::Component(1, true), {0}, {4}, {7} });
+	m_texts[FILENAME_TYPE_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {7} });
+	m_texts[FILENAME_TEXT]->SetPosition({ FontContext::Component(2), {0}, {3}, {7}, {13} });
 
 	CoreLogger::PrintSuccess("State \"Testing\" dependencies loaded correctly");
 	return true;
@@ -283,14 +298,14 @@ void StateTesting::Draw()
 	if (m_drawableMap)
 	{
 		m_drawableMap->Draw();
-		m_drawableCheckpointMap->Draw();
+		m_drawableMap->DrawDebug();
 	}
 
 	switch (m_mode)
 	{
 		case STOPPED_MODE:
-			m_filenameTypeText.Draw();
-			m_filenameText.Draw();
+			m_texts[FILENAME_TYPE_TEXT]->Draw();
+			m_texts[FILENAME_TEXT]->Draw();
 			break;
 		case RUNNING_MODE:
 			break;
@@ -298,6 +313,6 @@ void StateTesting::Draw()
 			break;
 	}
 	
-	m_modeText.Draw();
-	m_fitnessText.Draw();
+	m_texts[ACTIVE_MODE_TEXT]->Draw();
+	m_texts[FITNESS_TEXT]->Draw();
 }

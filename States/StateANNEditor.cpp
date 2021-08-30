@@ -2,6 +2,8 @@
 #include "CoreLogger.hpp"
 #include "FunctionTimerObserver.hpp"
 #include "TypeTimerObserver.hpp"
+#include "DrawableVariableText.hpp"
+#include "DrawableFilenameText.hpp"
 
 void StateANNEditor::CalculatePositions()
 {
@@ -148,9 +150,7 @@ StateANNEditor::StateANNEditor() :
 	m_controlKeys[sf::Keyboard::Multiply] = SWITCH_ACTIVATION_FUNCTION;
 	m_controlKeys[sf::Keyboard::Z] = INCREASE_BIAS;
 	m_controlKeys[sf::Keyboard::X] = DECREASE_BIAS;
-
-	for (size_t i = 0; i < CONTROL_KEYS_COUNT; ++i)
-		m_pressedKeys[i] = false;
+	m_pressedKeys.resize(CONTROLS_COUNT, false);
 
 	m_totalNumberOfNeurons = 0;
 	m_totalNumberOfWeights = 0;
@@ -158,57 +158,52 @@ StateANNEditor::StateANNEditor() :
 	m_upToDate = false;
 
 	// Create dummy
-	if (m_artificialNeuralNetworkBuilder.CreateDummy())
-	{
-		m_neuronLayerSizes = m_artificialNeuralNetworkBuilder.GetNeuronLayerSizes();
-		m_activationFunctionIndexes = m_artificialNeuralNetworkBuilder.GetActivationFunctionIndexes();
-		m_biasVector = m_artificialNeuralNetworkBuilder.GetBiasVector();
-		CalculatePositions();
-	}
-	else
-		CoreLogger::PrintError("Cannot create Artificial Neural Network dummy!");
+	m_artificialNeuralNetworkBuilder.CreateDummy();
+	m_neuronLayerSizes = m_artificialNeuralNetworkBuilder.GetNeuronLayerSizes();
+	m_activationFunctionIndexes = m_artificialNeuralNetworkBuilder.GetActivationFunctionIndexes();
+	m_biasVector = m_artificialNeuralNetworkBuilder.GetBiasVector();
+	CalculatePositions();
 
 	m_neuronShape.setFillColor(sf::Color::White);
 	m_neuronShape.setOutlineColor(sf::Color::White);
 	m_neuronShape.setRadius(CoreWindow::GetSize().x * 0.008f);
 	m_weightShape[0].color = sf::Color(255, 255, 255, 128);
 	m_weightShape[1].color = m_weightShape[0].color;
-	m_textFunctions.reserve(16U);
+
+	m_texts.resize(TEXT_COUNT, nullptr);
+	m_textObservers.resize(TEXT_COUNT, nullptr);
 }
 
 StateANNEditor::~StateANNEditor()
 {
+	for (auto& text : m_texts)
+		delete text;
+	for (auto& observer : m_textObservers)
+		delete observer;
 }
 
 void StateANNEditor::Reload()
 {
 	// Create dummy
-	if (m_artificialNeuralNetworkBuilder.CreateDummy())
-	{
-		m_neuronLayerSizes = m_artificialNeuralNetworkBuilder.GetNeuronLayerSizes();
-		m_activationFunctionIndexes = m_artificialNeuralNetworkBuilder.GetActivationFunctionIndexes();
-		m_biasVector = m_artificialNeuralNetworkBuilder.GetBiasVector();
-		m_currentLayer = 0;
-		m_upToDate = false;
-		CalculatePositions();
-	}
-	else
-		CoreLogger::PrintError("Cannot create Artificial Neural Network dummy!");
+	m_artificialNeuralNetworkBuilder.CreateDummy();
+	m_neuronLayerSizes = m_artificialNeuralNetworkBuilder.GetNeuronLayerSizes();
+	m_activationFunctionIndexes = m_artificialNeuralNetworkBuilder.GetActivationFunctionIndexes();
+	m_biasVector = m_artificialNeuralNetworkBuilder.GetBiasVector();
+	m_currentLayer = 0;
+	m_upToDate = false;
+	CalculatePositions();
 
 	// Reset pressed keys
-	for (size_t i = 0; i < CONTROL_KEYS_COUNT; ++i)
+	for (size_t i = 0; i < CONTROLS_COUNT; ++i)
 		m_pressedKeys[i] = false;
 
-	// Reset texts
-	m_currentLayerText.Reset();
-	m_currentLayerNumberOfNeuronsText.Reset();
-	m_currentLayerActivationFunctionText.Reset();
-	m_currentLayerBiasText.Reset();
-	m_filenameText.Reset();
-	m_totalNumberOfLayersText.Reset();
-	m_totalNumberOfNeuronsText.Reset();
-	m_totalNumberOfWeightsText.Reset();
-	m_totalNumberOfActivationFunctionsText.Reset();
+	// Reset texts and text observers
+	for (size_t i = 0; i < TEXT_COUNT; ++i)
+	{
+		if (m_textObservers[i])
+			m_textObservers[i]->Notify();
+		m_texts[i]->Reset();
+	}
 
 	// Reset view
 	auto& view = CoreWindow::GetView();
@@ -219,8 +214,9 @@ void StateANNEditor::Reload()
 
 void StateANNEditor::Capture()
 {
-	m_filenameText.Capture();
-	if (!m_filenameText.IsRenaming())
+	auto* filenameText = static_cast<DrawableFilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
+	filenameText->Capture();
+	if (!filenameText->IsRenaming())
 	{
 		if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
 		{
@@ -294,7 +290,8 @@ void StateANNEditor::Capture()
 
 void StateANNEditor::Update()
 {
-	if (m_filenameText.IsWriting())
+	auto* filenameText = static_cast<DrawableFilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
+	if (filenameText->IsWriting())
 	{
 		if (!m_upToDate)
 		{
@@ -302,24 +299,24 @@ void StateANNEditor::Update()
 			m_artificialNeuralNetworkBuilder.SetNeuronLayerSizes(m_neuronLayerSizes);
 			m_artificialNeuralNetworkBuilder.SetActivationFunctionIndexes(m_activationFunctionIndexes);
 			m_artificialNeuralNetworkBuilder.SetBiasVector(m_biasVector);
-			bool success = m_artificialNeuralNetworkBuilder.Save(m_filenameText.GetFilename());
+			bool success = m_artificialNeuralNetworkBuilder.Save(filenameText->GetFilename());
 			auto status = m_artificialNeuralNetworkBuilder.GetLastOperationStatus();
-			m_filenameText.ShowStatusText();
+			filenameText->ShowStatusText();
 			if (success)
-				m_filenameText.SetSuccessStatusText(status.second);
+				filenameText->SetSuccessStatusText(status.second);
 			else
-				m_filenameText.SetErrorStatusText(status.second);
+				filenameText->SetErrorStatusText(status.second);
 			m_upToDate = success;
 		}
 	}
-	else if (m_filenameText.IsReading())
+	else if (filenameText->IsReading())
 	{
-		bool success = m_artificialNeuralNetworkBuilder.Load(m_filenameText.GetFilename());
+		bool success = m_artificialNeuralNetworkBuilder.Load(filenameText->GetFilename());
 		auto status = m_artificialNeuralNetworkBuilder.GetLastOperationStatus();
-		m_filenameText.ShowStatusText();
+		filenameText->ShowStatusText();
 		if (success)
 		{
-			m_filenameText.SetSuccessStatusText(status.second);
+			filenameText->SetSuccessStatusText(status.second);
 			m_neuronLayerSizes = m_artificialNeuralNetworkBuilder.GetNeuronLayerSizes();
 			m_activationFunctionIndexes = m_artificialNeuralNetworkBuilder.GetActivationFunctionIndexes();
 			m_biasVector = m_artificialNeuralNetworkBuilder.GetBiasVector();
@@ -328,78 +325,73 @@ void StateANNEditor::Update()
 			CalculatePositions();
 		}
 		else
-			m_filenameText.SetErrorStatusText(status.second);
+			filenameText->SetErrorStatusText(status.second);
 	}
 
-	m_inputText.Update();
-	m_outputText.Update();
-	m_currentLayerText.Update();
-	m_currentLayerNumberOfNeuronsText.Update();
-	m_currentLayerActivationFunctionText.Update();
-	m_currentLayerBiasText.Update();
-	m_filenameText.Update();
-	m_totalNumberOfLayersText.Update();
-	m_totalNumberOfNeuronsText.Update();
-	m_totalNumberOfWeightsText.Update();
-	m_totalNumberOfActivationFunctionsText.Update();
+	for (const auto& text : m_texts)
+		text->Update();
 }
 
 bool StateANNEditor::Load()
 {
-	// Set texts strings
-	m_inputText.SetStrings({ "Input" });
-	m_outputText.SetStrings({ "Output" });
-	m_currentLayerText.SetStrings({ "Current layer:", "", "| [Tab] [Enter] [Backspace]" });
-	m_currentLayerNumberOfNeuronsText.SetStrings({ "Current layer number of neurons:", "", "| [+] [-]" });
-	m_currentLayerActivationFunctionText.SetStrings({ "Current layer activation function:", "", "| [*]" });
-	m_currentLayerBiasText.SetStrings({ "Current layer bias:", "| [Z] [X]" });
-	m_totalNumberOfLayersText.SetStrings({ "Total number of layers:" });
-	m_totalNumberOfNeuronsText.SetStrings({ "Total number of neurons:" });
-	m_totalNumberOfWeightsText.SetStrings({ "Total number of weights:" });
-	m_totalNumberOfActivationFunctionsText.SetStrings({"Total number of activation functions:"});
+	// Create texts
+	m_texts[INPUT_TEXT] = new DrawableVariableText({ "Input" });
+	m_texts[OUTPUT_TEXT] = new DrawableVariableText({ "Output" });
+	m_texts[CURRENT_LAYER_TEXT] = new DrawableTripleText({ "Current layer:", "", "| [Tab] [Enter] [Backspace]" });
+	m_texts[CURRENT_LAYER_NUMBER_OF_NEURONS_TEXT] = new DrawableTripleText({ "Current layer number of neurons:", "", "| [+] [-]" });
+	m_texts[CURRENT_LAYER_ACTIVATION_FUNCTION_TEXT] = new DrawableTripleText({ "Current layer activation function:", "", "| [*]" });
+	m_texts[CURRENT_LAYER_BIAS_TEXT] = new DrawableTripleText({ "Current layer bias:", "", "| [Z] [X]" });
+	m_texts[FILENAME_TEXT] = new DrawableFilenameText<true, true>;
+	m_texts[NUMBER_OF_LAYERS_TEXT] = new DrawableDoubleText({ "Total number of layers:" });
+	m_texts[NUMBER_OF_NEURONS_TEXT] = new DrawableDoubleText({ "Total number of neurons:" });
+	m_texts[NUMBER_OF_WEIGHTS_TEXT] = new DrawableDoubleText({ "Total number of weights:" });
+	m_texts[NUMBER_OF_ACTIVATION_FUNCTIONS_TEXT] = new DrawableDoubleText({ "Total number of activation functions:" });
 
-	// Set variable texts
-	m_textFunctions.push_back([&] { return m_neuronLayerSizes.empty() ? "None" : ("L" + std::to_string(m_currentLayer)); });
-	m_currentLayerText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.1));
-	m_textFunctions.push_back([&] { return m_neuronLayerSizes.empty() ? "None" : std::to_string(m_neuronLayerSizes[m_currentLayer]); });
-	m_currentLayerNumberOfNeuronsText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.1));
-	m_textFunctions.push_back([&] {
-		if (m_activationFunctionIndexes.empty() || m_currentLayer == 0)
-			return std::string("None");
-		return ActivationFunctionContext::GetString(m_activationFunctionIndexes[m_currentLayer - 1]);
-	});
-	m_currentLayerActivationFunctionText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.3));
-	m_textFunctions.push_back([&] {
-		if (m_biasVector.empty() || m_currentLayer == 0)
-			return std::string("None");
-		return std::to_string(m_biasVector[m_currentLayer - 1]);
-	});
-	m_currentLayerBiasText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.05));
-	m_textFunctions.push_back([&] { return std::to_string(m_neuronLayerSizes.size()); });
-	m_totalNumberOfLayersText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.5));
-	m_totalNumberOfNeuronsText.SetObserver(new TypeTimerObserver<size_t>(m_totalNumberOfNeurons, 0.2));
-	m_totalNumberOfWeightsText.SetObserver(new TypeTimerObserver<size_t>(m_totalNumberOfWeights, 0.2));
-	m_textFunctions.push_back([&] { return std::to_string(m_activationFunctionIndexes.size()); });
-	m_totalNumberOfActivationFunctionsText.SetObserver(new FunctionTimerObserver<std::string>(m_textFunctions.back(), 0.5));
+	// Create observers
+	m_textObservers[INPUT_TEXT] = nullptr;
+	m_textObservers[OUTPUT_TEXT] = nullptr;
+	m_textObservers[CURRENT_LAYER_TEXT] = new FunctionTimerObserver<std::string>([&] { return m_neuronLayerSizes.empty() ? "None" : ("L" + std::to_string(m_currentLayer)); }, 0.1);
+	m_textObservers[CURRENT_LAYER_NUMBER_OF_NEURONS_TEXT] = new FunctionTimerObserver<std::string>([&] { return m_neuronLayerSizes.empty() ? "None" : std::to_string(m_neuronLayerSizes[m_currentLayer]); }, 0.1);
+	m_textObservers[CURRENT_LAYER_ACTIVATION_FUNCTION_TEXT] = new FunctionTimerObserver<std::string>([&] {
+			if (m_activationFunctionIndexes.empty() || m_currentLayer == 0)
+				return std::string("None");
+			return ActivationFunctionContext::GetString(m_activationFunctionIndexes[m_currentLayer - 1]);
+		}, 0.3);
+	m_textObservers[CURRENT_LAYER_BIAS_TEXT] = new FunctionTimerObserver<std::string>([&] {
+			if (m_biasVector.empty() || m_currentLayer == 0)
+				return std::string("None");
+			return std::to_string(m_biasVector[m_currentLayer - 1]);
+		}, 0.05);
+	m_textObservers[FILENAME_TEXT] = nullptr;
+	m_textObservers[NUMBER_OF_LAYERS_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(m_neuronLayerSizes.size()); }, 0.5);
+	m_textObservers[NUMBER_OF_NEURONS_TEXT] = new TypeTimerObserver<size_t>(m_totalNumberOfNeurons, 0.2);
+	m_textObservers[NUMBER_OF_WEIGHTS_TEXT] = new TypeTimerObserver<size_t>(m_totalNumberOfWeights, 0.2);
+	m_textObservers[NUMBER_OF_ACTIVATION_FUNCTIONS_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(m_activationFunctionIndexes.size()); }, 0.5);
+
+	// Set text observers
+	for (size_t i = CURRENT_LAYER_TEXT; i < TEXT_COUNT; ++i)
+		((DrawableDoubleText*)m_texts[i])->SetObserver(m_textObservers[i]);
 
 	// Set text character size and rotation
-	m_inputText.SetCharacterSize(4);
-	m_outputText.SetCharacterSize(4);
-	m_inputText.SetRotation(270.0f);
-	m_outputText.SetRotation(90.0f);
+	auto* inputText = static_cast<DrawableVariableText*>(m_texts[INPUT_TEXT]);
+	auto* outputText = static_cast<DrawableVariableText*>(m_texts[OUTPUT_TEXT]);
+	inputText->SetCharacterSize(4);
+	outputText->SetCharacterSize(4);
+	inputText->SetRotation(270.0f);
+	outputText->SetRotation(90.0f);
 
 	// Set text positions
-	m_inputText.SetPosition({ FontContext::Component(26), {2} });
-	m_outputText.SetPosition({ FontContext::Component(18), {2, true} });
-	m_currentLayerText.SetPosition({ FontContext::Component(0), {0}, {7}, {14} });
-	m_currentLayerNumberOfNeuronsText.SetPosition({ FontContext::Component(1), {0}, {7}, {14} });
-	m_currentLayerActivationFunctionText.SetPosition({ FontContext::Component(2), {0}, {7}, {14} });
-	m_currentLayerBiasText.SetPosition({ FontContext::Component(3), {0}, {7}, {14} });
-	m_filenameText.SetPosition({ FontContext::Component(4), {0}, {7}, {14}, {23} });
-	m_totalNumberOfLayersText.SetPosition({ FontContext::Component(4, true), {0}, {8} });
-	m_totalNumberOfNeuronsText.SetPosition({ FontContext::Component(3, true), {0}, {8} });
-	m_totalNumberOfWeightsText.SetPosition({ FontContext::Component(2, true), {0}, {8} });
-	m_totalNumberOfActivationFunctionsText.SetPosition({ FontContext::Component(1, true), {0}, {8} });
+	m_texts[INPUT_TEXT]->SetPosition({ FontContext::Component(26), {2} });
+	m_texts[OUTPUT_TEXT]->SetPosition({ FontContext::Component(18), {2, true} });
+	m_texts[CURRENT_LAYER_TEXT]->SetPosition({ FontContext::Component(0), {0}, {7}, {14} });
+	m_texts[CURRENT_LAYER_NUMBER_OF_NEURONS_TEXT]->SetPosition({ FontContext::Component(1), {0}, {7}, {14} });
+	m_texts[CURRENT_LAYER_ACTIVATION_FUNCTION_TEXT]->SetPosition({ FontContext::Component(2), {0}, {7}, {14} });
+	m_texts[CURRENT_LAYER_BIAS_TEXT]->SetPosition({ FontContext::Component(3), {0}, {7}, {14} });
+	m_texts[FILENAME_TEXT]->SetPosition({ FontContext::Component(4), {0}, {7}, {14}, {23} });
+	m_texts[NUMBER_OF_LAYERS_TEXT]->SetPosition({ FontContext::Component(4, true), {0}, {8} });
+	m_texts[NUMBER_OF_NEURONS_TEXT]->SetPosition({ FontContext::Component(3, true), {0}, {8} });
+	m_texts[NUMBER_OF_WEIGHTS_TEXT]->SetPosition({ FontContext::Component(2, true), {0}, {8} });
+	m_texts[NUMBER_OF_ACTIVATION_FUNCTIONS_TEXT]->SetPosition({ FontContext::Component(1, true), {0}, {8} });
 
 	CoreLogger::PrintSuccess("State \"Artificial Neural Network Editor\" dependencies loaded correctly");
 	return true;
@@ -424,15 +416,6 @@ void StateANNEditor::Draw()
 		}
 	}
 
-	m_inputText.Draw();
-	m_outputText.Draw();
-	m_currentLayerText.Draw();
-	m_currentLayerNumberOfNeuronsText.Draw();
-	m_currentLayerActivationFunctionText.Draw();
-	m_currentLayerBiasText.Draw();
-	m_filenameText.Draw();
-	m_totalNumberOfLayersText.Draw();
-	m_totalNumberOfNeuronsText.Draw();
-	m_totalNumberOfWeightsText.Draw();
-	m_totalNumberOfActivationFunctionsText.Draw();
+	for (const auto& text : m_texts)
+		text->Draw();
 }

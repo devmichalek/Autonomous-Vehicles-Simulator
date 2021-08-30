@@ -8,7 +8,7 @@ class DrawableTripleText :
 {
 public:
 
-	DrawableTripleText(size_t size = 3);
+	DrawableTripleText(std::vector<std::string> strings, size_t size = 3);
 
 	virtual ~DrawableTripleText();
 

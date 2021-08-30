@@ -62,22 +62,13 @@ StateMapEditor::StateMapEditor() :
 	m_allowedViewAreaShape.setSize(maxViewSize);
 	m_allowedViewAreaShape.setPosition(allowedShapePosition.x - (maxViewSize.x - maxSize.x) / 2, allowedShapePosition.y - (maxViewSize.y - maxSize.y) / 2);
 	
-	if (m_drawableVehicleBuilder.CreateDummy())
-		m_drawableVehicle = m_drawableVehicleBuilder.Get();
-	else
-		CoreLogger::PrintError("Cannot create Drawable Vehicle dummy!");
+	m_drawableVehicleBuilder.CreateDummy();
+	m_drawableVehicle = m_drawableVehicleBuilder.Get();
 
-	if (m_drawableMapBuilder.CreateDummy())
-	{
-		m_edges = m_drawableMapBuilder.GetEdges();
-		m_vehiclePositioned = true;
-		auto data = m_drawableMapBuilder.GetVehicle();
-		m_drawableVehicle->SetCenter(data.first);
-		m_drawableVehicle->SetAngle(data.second);
-		m_drawableVehicle->Update();
-	}
-	else
-		CoreLogger::PrintError("Cannot create Drawable Map dummy!");
+	m_drawableMapBuilder.CreateDummy();
+	m_edges = m_drawableMapBuilder.GetEdges();
+	m_vehiclePositioned = true;
+	m_drawableMapBuilder.UpdateVehicle(m_drawableVehicle);
 
 	m_texts.resize(TEXT_COUNT, nullptr);
 	m_textObservers.resize(TEXT_COUNT, nullptr);
@@ -106,26 +97,12 @@ void StateMapEditor::Reload()
 	m_drawableVehicle = m_drawableVehicleBuilder.Get();
 	m_viewMovementTimer.Reset();
 
-	if (m_drawableMapBuilder.CreateDummy())
-	{
-		m_edges = m_drawableMapBuilder.GetEdges();
-		m_vehiclePositioned = true;
-		auto data = m_drawableMapBuilder.GetVehicle();
-		if (m_drawableVehicle)
-		{
-			m_drawableVehicle->SetCenter(data.first);
-			m_drawableVehicle->SetAngle(data.second);
-			m_drawableVehicle->Update();
-		}
-	}
-	else
-	{
-		m_edges.clear();
-		m_vehiclePositioned = false;
-		CoreLogger::PrintError("Cannot create Drawable Map dummy!");
-	}
+	m_drawableMapBuilder.CreateDummy();
+	m_edges = m_drawableMapBuilder.GetEdges();
+	m_vehiclePositioned = true;
+	m_drawableMapBuilder.UpdateVehicle(m_drawableVehicle);
 
-	// Reset texts
+	// Reset texts and text observers
 	for (size_t i = 0; i < TEXT_COUNT; ++i)
 	{
 		if (m_textObservers[i])
@@ -252,7 +229,7 @@ void StateMapEditor::Capture()
 		}
 	}
 
-	m_texts[FILENAME_TEXT]->Capture();
+	static_cast<DrawableFilenameText<true, true>*>(m_texts[FILENAME_TEXT])->Capture();
 }
 
 void StateMapEditor::Update()
@@ -268,10 +245,7 @@ void StateMapEditor::Update()
 			filenameText->SetSuccessStatusText(status.second);
 			m_edges = m_drawableMapBuilder.GetEdges();
 			m_vehiclePositioned = true;
-			auto data = m_drawableMapBuilder.GetVehicle();
-			m_drawableVehicle->SetCenter(data.first);
-			m_drawableVehicle->SetAngle(data.second);
-			m_drawableVehicle->Update();
+			m_drawableMapBuilder.UpdateVehicle(m_drawableVehicle);
 			m_upToDate = true;
 		}
 		else
@@ -461,6 +435,8 @@ void StateMapEditor::Update()
 
 		CoreWindow::GetRenderWindow().setView(view);
 	}
+	else
+		m_upToDate = false;
 
 	for (const auto& text : m_texts)
 		text->Update();
@@ -477,15 +453,15 @@ bool StateMapEditor::Load()
 	m_vehicleSubmodeMap[VehicleSubmode::REMOVE] = "Remove mode";
 
 	// Create texts
-	m_texts[ACTIVE_MODE_TEXT] = new DrawableTripleText;
-	m_texts[MOVEMENT_TEXT] = new DrawableTripleText;
-	m_texts[VIEW_OFFSET_X_TEXT] = new DrawableTripleText;
-	m_texts[VIEW_OFFSET_Y_TEXT] = new DrawableTripleText;
+	m_texts[ACTIVE_MODE_TEXT] = new DrawableTripleText({ "Active mode:", "",  "| [F1] [F2]" });
+	m_texts[MOVEMENT_TEXT] = new DrawableTripleText({ "Movement:", "", "| [+] [-]" });
+	m_texts[VIEW_OFFSET_X_TEXT] = new DrawableTripleText({ "View offset x:", "", "| [A] [D]" });
+	m_texts[VIEW_OFFSET_Y_TEXT] = new DrawableTripleText({ "View offset y:", "", "| [W] [S]" });
 	m_texts[FILENAME_TEXT] = new DrawableFilenameText<true, true>;
-	m_texts[EDGE_SUBMODE_TEXT] = new DrawableTripleText;
-	m_texts[EDGE_COUNT_TEXT] = new DrawableDoubleText;
-	m_texts[VEHICLE_SUBMODE_TEXT] = new DrawableTripleText;
-	m_texts[VEHICLE_ANGLE_TEXT] = new DrawableTripleText;
+	m_texts[EDGE_SUBMODE_TEXT] = new DrawableTripleText({ "Current mode:", "", "| [1] [2] [RMB] [Alt] [Esc]" });
+	m_texts[EDGE_COUNT_TEXT] = new DrawableDoubleText({ "Edge count:" });
+	m_texts[VEHICLE_SUBMODE_TEXT] = new DrawableTripleText({ "Current mode:", "", "| [1] [2] [RMB]" });
+	m_texts[VEHICLE_ANGLE_TEXT] = new DrawableTripleText({ "Vehicle angle:", "", "| [Z] [X]" });
 
 	// Create observers
 	m_textObservers[ACTIVE_MODE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_activeModeMap[m_activeMode]; });
@@ -500,16 +476,6 @@ bool StateMapEditor::Load()
 											double angle = double((long long)(m_drawableVehicle->GetAngle()) % 360);
 											return std::to_string(DrawableMath::CastAtan2ToFullAngle(angle)); },
 											0.2);
-
-	// Set texts strings
-	m_texts[ACTIVE_MODE_TEXT]->SetStrings({ "Active mode:", "",  "| [F1] [F2]" });
-	m_texts[MOVEMENT_TEXT]->SetStrings({ "Movement:", "", "| [+] [-]" });
-	m_texts[VIEW_OFFSET_X_TEXT]->SetStrings({ "View offset x:", "", "| [A] [D]" });
-	m_texts[VIEW_OFFSET_Y_TEXT]->SetStrings({ "View offset y:", "", "| [W] [S]" });
-	m_texts[EDGE_SUBMODE_TEXT]->SetStrings({ "Current mode:", "", "| [1] [2] [RMB] [Alt] [Esc]" });
-	m_texts[EDGE_COUNT_TEXT]->SetStrings({ "Edge count:" });
-	m_texts[VEHICLE_SUBMODE_TEXT]->SetStrings({ "Current mode:", "", "| [1] [2] [RMB]" });
-	m_texts[VEHICLE_ANGLE_TEXT]->SetStrings({ "Vehicle angle:", "", "| [Z] [X]" });
 
 	// Set text observers
 	for (size_t i = 0; i < TEXT_COUNT; ++i)
@@ -583,7 +549,6 @@ void StateMapEditor::Draw()
 		default:
 			break;
 	}
-
 
 	m_texts[ACTIVE_MODE_TEXT]->Draw();
 	m_texts[MOVEMENT_TEXT]->Draw();

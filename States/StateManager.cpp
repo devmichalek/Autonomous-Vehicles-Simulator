@@ -15,8 +15,8 @@ StateManager::StateManager()
 	m_states[TRAINING_STATE] = new StateTraining();
 	m_states[TESTING_STATE] = new StateTesting();
 	m_currentState = TESTING_STATE;
-	m_stateText = new DrawableTripleText;
-	m_stateTextObserver = new FunctionEventObserver<std::string>([&] { return m_statesStrings[m_currentState]; });
+	m_stateText = nullptr;
+	m_stateTextObserver = nullptr;
 	m_statesStrings[MAP_EDITOR_STATE] = "Map Editor";
 	m_statesStrings[ANN_EDITOR_STATE] = "ANN Editor";
 	m_statesStrings[VEHICLE_EDITOR_STATE] = "Vehicle Editor";
@@ -41,8 +41,9 @@ bool StateManager::Load()
 			return false;
 	}
 
-	m_stateText->SetStrings({ "Active state:", m_statesStrings[m_currentState], "| [~]" });
+	m_stateText = new DrawableTripleText({ "Active state:", "", "| [~]" });
 	m_stateText->SetPosition({ FontContext::Component(1, true), {7, true}, {4, true}, {1, true} });
+	m_stateTextObserver = new FunctionEventObserver<std::string>([&] { return m_statesStrings[m_currentState]; });
 	m_stateText->SetObserver(m_stateTextObserver);
 
 	return true;

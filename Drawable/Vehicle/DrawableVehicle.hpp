@@ -122,10 +122,16 @@ public:
 		Brake(layer[2]);
 	}
 
-	inline static size_t GetNumberOfInputs()
+	// Returns number of inputs
+	inline size_t GetNumberOfInputs()
 	{
 		// Accelerate(), Rotate(), Brake()
 		return 3;
+	}
+
+	inline size_t GetNumberOfOutputs()
+	{
+		return m_vehicleSensors.GetNumberOfSensors();
 	}
 
 	// Return vehicle described in vertices

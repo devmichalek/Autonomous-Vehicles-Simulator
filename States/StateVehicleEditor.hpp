@@ -1,10 +1,10 @@
 #pragma once
 #include "StateInterface.hpp"
 #include "DrawableMath.hpp"
-#include "DrawableVariableText.hpp"
-#include "DrawableFilenameText.hpp"
 #include "DrawableVehicleBuilder.hpp"
-#include <functional>
+
+class DrawableTextAbstract;
+class ObserverIf;
 
 class StateVehicleEditor final :
 	public StateInterface
@@ -50,17 +50,22 @@ class StateVehicleEditor final :
 	Line m_xAxis;
 	Line m_yAxis;
 
-	// Texts
-	DrawableVariableText m_backText;
-	DrawableVariableText m_frontText;
-	DrawableTripleText m_activeModeText;
-	DrawableTripleText m_activeSubmodeText;
-	DrawableTripleText m_totalNumberOfEdgesText;
-	DrawableTripleText m_totalNumberOfSensorsText;
-	DrawableFilenameText<true, true> m_filenameText;
-	DrawableTripleText m_currentSensorText;
-	DrawableTripleText m_currentSensorAngleText;
-	std::vector<std::function<std::string()>> m_textFunctions;
+	// Texts and text observers
+	enum
+	{
+		BACK_TEXT,
+		FRONT_TEXT,
+		ACTIVE_MODE_TEXT,
+		ACTIVE_SUBMODE_TEXT,
+		TOTAL_NUMBER_OF_EDGES_TEXT,
+		TOTAL_NUMBER_OF_SENSORS_TEXT,
+		FILENAME_TEXT,
+		CURRENT_SENSOR_TEXT,
+		CURRENT_SENSOR_ANGLE_TEXT,
+		TEXT_COUNT
+	};
+	std::vector<DrawableTextAbstract*> m_texts;
+	std::vector<ObserverIf*> m_textObservers;
 
 public:
 

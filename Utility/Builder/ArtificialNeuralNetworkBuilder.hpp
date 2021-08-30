@@ -88,7 +88,7 @@ public:
 	void SetBiasVector(BiasVector biasVector);
 
 	// Sets raw neuron data
-	void SetRawNeuronData(std::vector<Neuron> rawNeuronData);
+	void SetRawNeuronData(NeuronLayer rawNeuronData);
 
 	// Returns intermediate representation of neuron layers
 	NeuronLayerSizes GetNeuronLayerSizes();
@@ -100,10 +100,13 @@ public:
 	BiasVector GetBiasVector();
 
 	// Returns raw neuron data
-	std::vector<Neuron> GetRawNeuronData();
+	const Neuron* GetRawNeuronData();
 
 	// Returns artificial neural network
 	ArtificialNeuralNetwork* Get();
+
+	// Creates a copy of artificial neural network
+	static ArtificialNeuralNetwork* Copy(const ArtificialNeuralNetwork* artificialNeuralNetwork);
 
 	// Get maximum number of hidden layers
 	inline static size_t GetMaxNumberOfHiddenLayers() { return 4; }
@@ -131,4 +134,7 @@ public:
 
 	// Get default neuron value
 	inline static double GetDefaultNeuronValue() { return 0.0; }
+
+	// Checks if dummy can be created
+	static bool Initialize();
 };

@@ -30,7 +30,7 @@ public:
 protected:
 
 	EventObserver() :
-		m_ready(false)
+		m_ready(true)
 	{
 	}
 

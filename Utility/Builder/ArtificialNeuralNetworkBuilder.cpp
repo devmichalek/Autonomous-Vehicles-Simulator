@@ -1,5 +1,6 @@
 #include "ArtificialNeuralNetworkBuilder.hpp"
 #include "ArtificialNeuralNetwork.hpp"
+#include "CoreLogger.hpp"
 #include <random>
 
 bool ArtificialNeuralNetworkBuilder::ValidateNumberOfLayers(size_t size)
@@ -338,7 +339,7 @@ void ArtificialNeuralNetworkBuilder::SetBiasVector(BiasVector biasVector)
 	m_biasVector = biasVector;
 }
 
-void ArtificialNeuralNetworkBuilder::SetRawNeuronData(std::vector<Neuron> rawNeuronData)
+void ArtificialNeuralNetworkBuilder::SetRawNeuronData(NeuronLayer rawNeuronData)
 {
 	m_rawData = rawNeuronData;
 }
@@ -358,9 +359,9 @@ BiasVector ArtificialNeuralNetworkBuilder::GetBiasVector()
 	return m_biasVector;
 }
 
-std::vector<Neuron> ArtificialNeuralNetworkBuilder::GetRawNeuronData()
+const Neuron* ArtificialNeuralNetworkBuilder::GetRawNeuronData()
 {
-	return m_rawData;
+	return &m_rawData[0];
 }
 
 ArtificialNeuralNetwork* ArtificialNeuralNetworkBuilder::Get()
@@ -368,7 +369,7 @@ ArtificialNeuralNetwork* ArtificialNeuralNetworkBuilder::Get()
 	if (!Validate())
 		return nullptr;
 
-	// Create artifial neural network
+	// Create artificial neural network
 	auto* ann = new ArtificialNeuralNetwork;
 
 	// Get number of layers
@@ -386,7 +387,7 @@ ArtificialNeuralNetwork* ArtificialNeuralNetworkBuilder::Get()
 	ann->m_weightLayers.resize(layersCount - 1);
 	for (size_t i = 1; i < layersCount; ++i)
 	{
-		ann->m_weightLayers[i - 1].resize(m_neuronLayerSizes[i - 1]);
+		ann->m_weightLayers[i - 1].resize(m_neuronLayerSizes[i]);
 		size_t connectionsCount = ann->m_neuronLayers[i - 1].size();
 		for (auto& weights : ann->m_weightLayers[i - 1])
 			weights.resize(connectionsCount, 0.0);
@@ -404,4 +405,35 @@ ArtificialNeuralNetwork* ArtificialNeuralNetworkBuilder::Get()
 		ann->m_activationFunctions[i] = ActivationFunctionContext::Get(m_activationFunctionIndexes[i]);
 
 	return ann;
+}
+
+ArtificialNeuralNetwork* ArtificialNeuralNetworkBuilder::Copy(const ArtificialNeuralNetwork* artificialNeuralNetwork)
+{
+	if (!artificialNeuralNetwork)
+		return nullptr;
+
+	auto* result = new ArtificialNeuralNetwork;
+	result->m_neuronLayers = artificialNeuralNetwork->m_neuronLayers;
+	result->m_weightLayers = artificialNeuralNetwork->m_weightLayers;
+	result->m_biasVector = artificialNeuralNetwork->m_biasVector;
+	result->m_activationFunctions = artificialNeuralNetwork->m_activationFunctions;
+	result->m_numberOfNeurons = artificialNeuralNetwork->m_numberOfNeurons;
+	result->m_numberOfWeights = artificialNeuralNetwork->m_numberOfWeights;
+	return result;
+}
+
+bool ArtificialNeuralNetworkBuilder::Initialize()
+{
+	ArtificialNeuralNetworkBuilder builder;
+
+	// Call internal implementation
+	builder.CreateDummy();
+
+	if (!builder.Validate())
+	{
+		CoreLogger::PrintError("Cannot create Artificial Neural Network dummy!");
+		return false;
+	}
+
+	return true;
 }

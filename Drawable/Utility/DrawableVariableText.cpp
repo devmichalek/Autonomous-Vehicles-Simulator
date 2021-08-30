@@ -2,8 +2,8 @@
 #include "FontContext.hpp"
 #include "CoreWindow.hpp"
 
-DrawableVariableText::DrawableVariableText() :
-	DrawableTextAbstract(1)
+DrawableVariableText::DrawableVariableText(std::vector<std::string> strings) :
+	DrawableTextAbstract(strings, 1)
 {
 }
 

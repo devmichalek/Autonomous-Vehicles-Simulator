@@ -1,5 +1,6 @@
 #include "DrawableVehicleBuilder.hpp"
 #include "ArtificialNeuralNetworkBuilder.hpp"
+#include "CoreLogger.hpp"
 
 bool DrawableVehicleBuilder::ValidateVehicleBodyNumberOfPoints(size_t count)
 {
@@ -404,3 +405,29 @@ DrawableVehicle* DrawableVehicleBuilder::Get()
 	return new DrawableVehicle(m_vehicleBody, m_vehicleSensors);
 }
 
+DrawableVehicle* DrawableVehicleBuilder::Copy(const DrawableVehicle* drawableVehicle)
+{
+	if (!drawableVehicle)
+		return nullptr;
+
+	auto* result = new DrawableVehicle(drawableVehicle->m_vehicleBody, drawableVehicle->m_vehicleSensors);
+	result->SetCenter(drawableVehicle->m_center);
+	result->SetAngle(drawableVehicle->m_angle);
+	return result;
+}
+
+bool DrawableVehicleBuilder::Initialize()
+{
+	DrawableVehicleBuilder builder;
+
+	// Call internal implementation
+	builder.CreateDummy();
+
+	if (!builder.Validate())
+	{
+		CoreLogger::PrintError("Cannot create Drawable Vehicle dummy!");
+		return false;
+	}
+
+	return true;
+}

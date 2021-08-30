@@ -118,11 +118,7 @@ void DrawableFilenameText<ReadOperations, WriteOperations>::OnControlKeyReleased
 }
 
 template<bool ReadOperations, bool WriteOperations>
-DrawableFilenameText<ReadOperations, WriteOperations>::DrawableFilenameText(size_t size) :
-	DrawableTripleText(size),
-	m_alphaTimer(0.0, 255.0, 75.0),
-	m_maxFilenameLength(18),
-	m_pressedBackspaceKeyTimer(0.0, 1.0, 5000.0)
+std::string DrawableFilenameText<ReadOperations, WriteOperations>::GetInformationString()
 {
 	std::string informationString = "| ";
 	if (WriteOperations)
@@ -130,7 +126,15 @@ DrawableFilenameText<ReadOperations, WriteOperations>::DrawableFilenameText(size
 	if (ReadOperations)
 		informationString += "[Ctrl]+[O] ";
 	informationString += "[Ctrl]+[R] [Esc]";
+	return informationString;
+}
 
+template<bool ReadOperations, bool WriteOperations>
+DrawableFilenameText<ReadOperations, WriteOperations>::DrawableFilenameText() :
+	DrawableStatusText({ "Filename:", m_filenameDummy, GetInformationString() }),
+	m_maxFilenameLength(18),
+	m_pressedBackspaceKeyTimer(0.0, 1.0, 5000.0)
+{
 	for (size_t i = 0; i < ACTION_COUNT; ++i)
 		m_activeActions[i] = false;
 
@@ -152,9 +156,6 @@ DrawableFilenameText<ReadOperations, WriteOperations>::DrawableFilenameText(size
 
 	// Reset filename
 	m_filename = m_filenameDummy;
-
-	// Set strings
-	SetStrings({ "Filename:", m_filename, informationString });
 }
 
 template<bool ReadOperations, bool WriteOperations>
@@ -175,44 +176,7 @@ void DrawableFilenameText<ReadOperations, WriteOperations>::Reset()
 	m_texts[VARIABLE_TEXT].setString(m_filename);
 
 	// Reset status text
-	m_alphaTimer.SetTimeout();
-	DrawableTripleText::Reset();
-}
-
-template<bool ReadOperations, bool WriteOperations>
-void DrawableFilenameText<ReadOperations, WriteOperations>::SetErrorStatusText(std::string text)
-{
-	m_texts[STATUS_TEXT].setString(text);
-	m_texts[STATUS_TEXT].setFillColor(sf::Color::Red);
-}
-
-template<bool ReadOperations, bool WriteOperations>
-void DrawableFilenameText<ReadOperations, WriteOperations>::SetSuccessStatusText(std::string text)
-{
-	m_texts[STATUS_TEXT].setString(text);
-	m_texts[STATUS_TEXT].setFillColor(sf::Color::Green);
-}
-
-template<bool ReadOperations, bool WriteOperations>
-void DrawableFilenameText<ReadOperations, WriteOperations>::ShowStatusText()
-{
-	m_alphaTimer.Reset();
-	DrawableTripleText::Reset();
-}
-
-template<bool ReadOperations, bool WriteOperations>
-void DrawableFilenameText<ReadOperations, WriteOperations>::SetPosition(std::vector<FontContext::Component> components)
-{
-	ValidateNumberOfComponents(components, 5);
-
-	float statusX = FontContext::CalculateRow(components[4]);
-	float statusY = FontContext::CalculateColumn(components[0]);
-	m_textPositions[STATUS_TEXT] = sf::Vector2f(statusX, statusY);
-	components.pop_back();
-
-	DrawableTripleText::SetPosition(components);
-	
-	Update();
+	DrawableStatusText::Reset();
 }
 
 template<bool ReadOperations, bool WriteOperations>
@@ -254,15 +218,6 @@ void DrawableFilenameText<ReadOperations, WriteOperations>::Capture()
 		OnControlKeyPressedEvent(CoreWindow::GetEvent().key.code);
 	else if (CoreWindow::GetEvent().type == sf::Event::KeyReleased)
 		OnControlKeyReleasedEvent(CoreWindow::GetEvent().key.code);
-}
-
-template<bool ReadOperations, bool WriteOperations>
-void DrawableFilenameText<ReadOperations, WriteOperations>::UpdateInternal()
-{
-	m_alphaTimer.Update();
-	sf::Color color = m_texts[STATUS_TEXT].getFillColor();
-	color.a = static_cast<sf::Uint8>(255.0 - m_alphaTimer.Value());
-	m_texts[STATUS_TEXT].setFillColor(color);
 }
 
 template DrawableFilenameText<true, false>;

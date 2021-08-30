@@ -1,12 +1,11 @@
 #pragma once
 #include "StateInterface.hpp"
 #include "DrawableMath.hpp"
-#include "DrawableVariableText.hpp"
-#include "DrawableDoubleText.hpp"
-#include "DrawableTripleText.hpp"
-#include "DrawableFilenameText.hpp"
 #include "ArtificialNeuralNetworkBuilder.hpp"
+#include "DrawableTextAbstract.hpp"
 #include <SFML/Graphics/CircleShape.hpp>
+
+class ObserverIf;
 
 class StateANNEditor final :
 	public StateInterface
@@ -22,10 +21,10 @@ class StateANNEditor final :
 		SWITCH_ACTIVATION_FUNCTION,
 		INCREASE_BIAS,
 		DECREASE_BIAS,
-		CONTROL_KEYS_COUNT
+		CONTROLS_COUNT
 	};
 	std::map<sf::Keyboard::Key, size_t> m_controlKeys;
-	std::map<size_t, bool> m_pressedKeys;
+	std::vector<bool> m_pressedKeys;
 
 	// Subjects of change
 	NeuronLayerSizes m_neuronLayerSizes;
@@ -44,19 +43,24 @@ class StateANNEditor final :
 	sf::CircleShape m_neuronShape;
 	Line m_weightShape;
 
-	// Texts
-	DrawableVariableText m_inputText;
-	DrawableVariableText m_outputText;
-	DrawableTripleText m_currentLayerText;
-	DrawableTripleText m_currentLayerNumberOfNeuronsText;
-	DrawableTripleText m_currentLayerActivationFunctionText;
-	DrawableTripleText m_currentLayerBiasText;
-	DrawableFilenameText<true, true> m_filenameText;
-	DrawableDoubleText m_totalNumberOfLayersText;
-	DrawableDoubleText m_totalNumberOfNeuronsText;
-	DrawableDoubleText m_totalNumberOfWeightsText;
-	DrawableDoubleText m_totalNumberOfActivationFunctionsText;
-	std::vector<std::function<std::string()>> m_textFunctions;
+	// Texts and text observers
+	enum
+	{
+		INPUT_TEXT,
+		OUTPUT_TEXT,
+		CURRENT_LAYER_TEXT,
+		CURRENT_LAYER_NUMBER_OF_NEURONS_TEXT,
+		CURRENT_LAYER_ACTIVATION_FUNCTION_TEXT,
+		CURRENT_LAYER_BIAS_TEXT,
+		FILENAME_TEXT,
+		NUMBER_OF_LAYERS_TEXT,
+		NUMBER_OF_NEURONS_TEXT,
+		NUMBER_OF_WEIGHTS_TEXT,
+		NUMBER_OF_ACTIVATION_FUNCTIONS_TEXT,
+		TEXT_COUNT
+	};
+	std::vector<DrawableTextAbstract*> m_texts;
+	std::vector<ObserverIf*> m_textObservers;
 
 	// Calculates positions of neuron shapes and weight shapes
 	void CalculatePositions();

@@ -3,9 +3,14 @@
 
 int main()
 {
-    TestEngine testEngine;
-
-    CoreEngine coreEngine;
+    try
+    {
+        TestEngine testEngine;
+        CoreEngine coreEngine;
+    }
+    catch (...)
+    {
+    }
 
     return 0;
 }

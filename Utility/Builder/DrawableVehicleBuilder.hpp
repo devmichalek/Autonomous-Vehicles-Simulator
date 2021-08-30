@@ -105,4 +105,10 @@ public:
 
 	// Returns drawable vehicle
 	DrawableVehicle* Get();
+
+	// Creates a copy of drawable vehicle
+	static DrawableVehicle* Copy(const DrawableVehicle* drawableVehicle);
+
+	// Checks if dummy can be created
+	static bool Initialize();
 };

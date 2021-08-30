@@ -381,7 +381,7 @@ public:
 		}
 	}
 
-	Neuron* GetIndividual(size_t identity)
+	const Neuron* GetIndividual(size_t identity)
 	{
 		if (identity >= m_populationSize)
 			return nullptr;

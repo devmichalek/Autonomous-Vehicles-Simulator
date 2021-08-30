@@ -2,8 +2,8 @@
 #include "ObserverIf.hpp"
 #include "CoreLogger.hpp"
 
-DrawableTripleText::DrawableTripleText(size_t size) :
-	DrawableDoubleText(size)
+DrawableTripleText::DrawableTripleText(std::vector<std::string> strings, size_t size) :
+	DrawableDoubleText(strings, size)
 {
 }
 
