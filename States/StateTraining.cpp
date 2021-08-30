@@ -609,6 +609,7 @@ void StateTraining::Update()
 			if (!activity)
 			{
 				m_drawableMap->Iterate(m_drawableVehicleFactory);
+				m_textObservers[HIGHEST_FITNESS_OVERALL_TEXT]->Notify();
 
 				// Generate new generation
 				if (m_geneticAlgorithm->Iterate(m_drawableMap->GetFitnessVector()))
@@ -640,6 +641,8 @@ void StateTraining::Update()
 				if (m_viewTimer.Update())
 				{
 					auto index = m_drawableMap->MarkLeader(m_drawableVehicleFactory);
+					m_textObservers[HIGHEST_FITNESS_TEXT]->Notify();
+					m_textObservers[HIGHEST_FITNESS_OVERALL_TEXT]->Notify();
 					m_viewCenter = m_drawableVehicleFactory[index]->GetCenter();
 				}
 

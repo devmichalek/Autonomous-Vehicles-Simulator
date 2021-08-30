@@ -127,8 +127,20 @@ DrawableMap::DrawableMap(const EdgeVector& edges, const size_t pivot) :
 		std::sort(checkpoints[i].begin(), checkpoints[i].end(), Compare);
 	}
 
-	// Add checkpoints, make triangles
+	// Remove local checkpoints equal to 0
 	size_t checkpointCount = checkpoints.size();
+	for (size_t i = 0; i < checkpointCount; ++i)
+	{
+		if (checkpoints[i].empty())
+		{
+			checkpoints.erase(checkpoints.begin() + i);
+			--i;
+			--checkpointCount;
+		}
+	}
+
+	// Add checkpoints, make triangles
+	checkpointCount = checkpoints.size();
 	for (size_t i = 0; i < checkpointCount; ++i)
 	{
 		size_t lastIndex = checkpoints[i].size() - 1;
@@ -151,12 +163,15 @@ DrawableMap::DrawableMap(const EdgeVector& edges, const size_t pivot) :
 		m_checkpoints.push_back(triangle);
 	}
 
-	// Erase continuity
-	m_checkpoints.erase(m_checkpoints.begin());
-	m_checkpoints.erase(m_checkpoints.begin());
+	if (!m_checkpoints.empty())
+	{
+		// Erase continuity
+		m_checkpoints.erase(m_checkpoints.begin());
+		m_checkpoints.erase(m_checkpoints.begin());
 
-	// Set shape point count
-	m_shape.setPointCount(m_checkpoints.back().size());
+		// Set shape point count
+		m_shape.setPointCount(m_checkpoints.back().size());
+	}
 
 	// Set edges
 	m_edgeLine[0].color = sf::Color::White;
