@@ -29,11 +29,11 @@ DrawableMap::DrawableMap(const EdgeVector& edges, const size_t pivot) :
 			Edge edge = { edges[i][0], edges[j][0] };
 			for (size_t k = 0; k < edgesCount; ++k)
 			{
-				// Check if there is no intersection with any edge
 				if (k == i || k == j)
 					continue;
 
-				if (DrawableMath::Intersect(edge, edges[k]))
+				// Check if there is no intersection with any edge
+				if (DrawableMath::IntersectLoose(edge, edges[k]))
 				{
 					intersection = true;
 					break;
@@ -79,7 +79,7 @@ DrawableMap::DrawableMap(const EdgeVector& edges, const size_t pivot) :
 			{
 				for (size_t c = 0; c < checkpoints[k].size(); ++c)
 				{
-					if (DrawableMath::Intersect(std::get<0>(checkpoints[k][c]), edge))
+					if (DrawableMath::IntersectLoose(std::get<0>(checkpoints[k][c]), edge))
 					{
 						intersection = true;
 						break;
@@ -127,20 +127,8 @@ DrawableMap::DrawableMap(const EdgeVector& edges, const size_t pivot) :
 		std::sort(checkpoints[i].begin(), checkpoints[i].end(), Compare);
 	}
 
-	// Remove local checkpoints equal to 0
-	size_t checkpointCount = checkpoints.size();
-	for (size_t i = 0; i < checkpointCount; ++i)
-	{
-		if (checkpoints[i].empty())
-		{
-			checkpoints.erase(checkpoints.begin() + i);
-			--i;
-			--checkpointCount;
-		}
-	}
-
-	// Add checkpoints, make triangles
-	checkpointCount = checkpoints.size();
+	// Add checkpoints as triangles
+	auto checkpointCount = checkpoints.size();
 	for (size_t i = 0; i < checkpointCount; ++i)
 	{
 		size_t lastIndex = checkpoints[i].size() - 1;
@@ -355,11 +343,6 @@ const Fitness& DrawableMap::GetHighestFitnessOverall() const
 	return m_highestFitnessOverall;
 }
 
-Fitness DrawableMap::GetMaxFitness()
-{
-	return Fitness(m_checkpoints.size());
-}
-
 Fitness DrawableMap::CalculateFitness(DrawableVehicle* drawableVehicle)
 {
 	Fitness fitness = 0;
@@ -370,4 +353,9 @@ Fitness DrawableMap::CalculateFitness(DrawableVehicle* drawableVehicle)
 	}
 
 	return fitness;
+}
+
+Fitness DrawableMap::GetMaxFitness()
+{
+	return Fitness(m_checkpoints.size());
 }

@@ -41,6 +41,13 @@ public:
         return Intersect(a, b[0], b[1]);
     }
 
+    // Returns true if there is intersection between two edges in case of the same beggining returns false
+    inline static bool IntersectLoose(const Edge& a, const Edge& b)
+    {
+
+        return Intersect(a, b[0], b[1]);
+    }
+
     // Checks if edge intersects with any vertex
     // This function does not work with collinear points!
     inline static bool Intersect(const Edge& edge, const sf::VertexArray& vertices)

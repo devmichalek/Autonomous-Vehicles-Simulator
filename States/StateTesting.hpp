@@ -31,13 +31,43 @@ class StateTesting final :
 	size_t m_filenameType;
 
 	// Control keys
-	std::pair<sf::Keyboard::Key, bool> m_modeKey;
-	std::pair<sf::Keyboard::Key, bool> m_filenameTypeKey;
+	enum
+	{
+		CHANGE_MODE,
+		CHANGE_FILENAME_TYPE,
+		SWITCH_VEHICLE,
+		ADD_VEHICLE,
+		REMOVE_VEHICLE,
+		CONTROLS_COUNT
+	};
+	std::map<sf::Keyboard::Key, size_t> m_controlKeys;
+	std::array<bool, CONTROLS_COUNT> m_pressedKeys;
 
-	// Objects of test
+	// Internal erros
+	enum
+	{
+		NO_ARTIFICIAL_NEURAL_NETWORK_SPECIFIED,
+		NO_DRAWABLE_MAP_SPECIFIED,
+		NO_DRAWABLE_VEHICLE_SPECIFIED,
+		ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH,
+		ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH,
+		INTERNAL_ERRORS_COUNT
+	};
+	std::array<std::string, INTERNAL_ERRORS_COUNT> m_internalErrorsStrings;
+
+	// Testing parameters
+	size_t m_numberOfVehicles;
+	size_t m_currentVehicle;
+	Fitness m_lastUserCalculatedFitness;
+	const size_t m_maxNumberOfVehicles;
+
+	// Objects of environment
 	DrawableMap* m_drawableMap;
 	DrawableVehicle* m_userVehicle;
+	DrawableVehicle* m_dummyVehicle;
 	DrawableVehicleFactory m_drawableVehicleFactory;
+	DrawableVehicleFactory m_drawableVehicleBackup;
+	ArtificialNeuralNetworks m_artificialNeuralNetworks;
 
 	// Builders
 	DrawableMapBuilder m_drawableMapBuilder;
@@ -48,13 +78,21 @@ class StateTesting final :
 	enum
 	{
 		ACTIVE_MODE_TEXT,
-		FITNESS_TEXT,
 		FILENAME_TYPE_TEXT,
 		FILENAME_TEXT,
+		NUMBER_OF_VEHICLES_TEXT,
+		CURRENT_VEHICLE_TEXT,
+		USER_FITNESS,
 		TEXT_COUNT
 	};
 	std::vector<DrawableTripleText*> m_texts;
 	std::vector<ObserverIf*> m_textObservers;
+
+	// Called when new vehicle is being added
+	void OnAddVehicle();
+
+	// Called when vehicle is beign deleted
+	void OnRemoveVehicle();
 
 public:
 

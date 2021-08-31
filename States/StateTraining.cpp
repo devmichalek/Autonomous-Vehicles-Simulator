@@ -210,9 +210,9 @@ void StateTraining::Capture()
 								else if (m_mode == RUNNING_MODE)
 								{
 									DrawableStatusText* activeModeText = static_cast<DrawableStatusText*>(m_texts[ACTIVE_MODE_TEXT]);
-									activeModeText->ShowStatusText();
 									if (!m_artificialNeuralNetworkBackup)
 									{
+										activeModeText->ShowStatusText();
 										activeModeText->SetErrorStatusText(m_internalErrorsStrings[NO_ARTIFICIAL_NEURAL_NETWORK_SPECIFIED]);
 										m_mode = STOPPED_MODE;
 										break;
@@ -220,6 +220,7 @@ void StateTraining::Capture()
 
 									if (!m_drawableVehicleBackup)
 									{
+										activeModeText->ShowStatusText();
 										activeModeText->SetErrorStatusText(m_internalErrorsStrings[NO_DRAWABLE_VEHICLE_SPECIFIED]);
 										m_mode = STOPPED_MODE;
 										break;
@@ -227,6 +228,7 @@ void StateTraining::Capture()
 
 									if (!m_drawableMapBackup)
 									{
+										activeModeText->ShowStatusText();
 										activeModeText->SetErrorStatusText(m_internalErrorsStrings[NO_DRAWABLE_MAP_SPECIFIED]);
 										m_mode = STOPPED_MODE;
 										break;
@@ -234,6 +236,7 @@ void StateTraining::Capture()
 
 									if (m_artificialNeuralNetworkBackup->GetNumberOfInputNeurons() != m_drawableVehicleBackup->GetNumberOfOutputs())
 									{
+										activeModeText->ShowStatusText();
 										activeModeText->SetErrorStatusText(m_internalErrorsStrings[ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH]);
 										m_mode = STOPPED_MODE;
 										break;
@@ -241,6 +244,7 @@ void StateTraining::Capture()
 
 									if (m_artificialNeuralNetworkBackup->GetNumberOfOutputNeurons() != m_drawableVehicleBackup->GetNumberOfInputs())
 									{
+										activeModeText->ShowStatusText();
 										activeModeText->SetErrorStatusText(m_internalErrorsStrings[ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH]);
 										m_mode = STOPPED_MODE;
 										break;
@@ -453,14 +457,14 @@ void StateTraining::Capture()
 			default:
 				break;
 		}
+	}
 
-		if (CoreWindow::GetEvent().type == sf::Event::KeyReleased)
-		{
-			auto eventKey = CoreWindow::GetEvent().key.code;
-			auto iterator = m_controlKeys.find(eventKey);
-			if (iterator != m_controlKeys.end())
-				m_pressedKeys[iterator->second] = false;
-		}
+	if (CoreWindow::GetEvent().type == sf::Event::KeyReleased)
+	{
+		auto eventKey = CoreWindow::GetEvent().key.code;
+		auto iterator = m_controlKeys.find(eventKey);
+		if (iterator != m_controlKeys.end())
+			m_pressedKeys[iterator->second] = false;
 	}
 }
 
@@ -521,7 +525,6 @@ void StateTraining::Update()
 						delete m_artificialNeuralNetworkBackup;
 						m_artificialNeuralNetworkBackup = m_artificialNeuralNetworkBuilder.Get();
 						m_artificialNeuralNetworkBackup->SetFromRawData(m_artificialNeuralNetworkBuilder.GetRawNeuronData());
-
 						break;
 					}
 					case VEHICLE_FILENAME_TYPE:

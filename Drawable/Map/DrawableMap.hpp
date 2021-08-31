@@ -53,13 +53,13 @@ public:
 	// Returns highest fitness that has been recorded so far
 	const Fitness& GetHighestFitnessOverall() const;
 
+	// Calculates fitness of drawable vehicle
+	Fitness CalculateFitness(DrawableVehicle* drawableVehicle);
+
 private:
 
 	// Returns maximum fitness
 	Fitness GetMaxFitness();
-
-	// Calculates fitness of drawable vehicle
-	Fitness CalculateFitness(DrawableVehicle* drawableVehicle);
 
 	// Fitness data
 	FitnessVector m_fitnessVector;
