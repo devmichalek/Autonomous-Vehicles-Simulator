@@ -184,14 +184,13 @@ void StateTraining::Reload()
 void StateTraining::Capture()
 {
 	auto* filenameText = static_cast<DrawableFilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
-	filenameText->Capture();
-
 	if (!filenameText->IsRenaming())
 	{
 		switch (m_mode)
 		{
 			case STOPPED_MODE:
 			{
+				filenameText->Capture();
 				if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
 				{
 					auto eventKey = CoreWindow::GetEvent().key.code;
@@ -458,6 +457,8 @@ void StateTraining::Capture()
 				break;
 		}
 	}
+	else
+		filenameText->Capture();
 
 	if (CoreWindow::GetEvent().type == sf::Event::KeyReleased)
 	{

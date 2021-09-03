@@ -41,10 +41,16 @@ public:
         return Intersect(a, b[0], b[1]);
     }
 
-    // Returns true if there is intersection between two edges in case of the same beggining returns false
-    inline static bool IntersectLoose(const Edge& a, const Edge& b)
+    inline static bool IntersectNonCollinear(const Edge& a, const Edge& b)
     {
-
+        if (a[0] == b[0])
+            return a[1] == b[1];
+        if (a[1] == b[0])
+            return a[0] == b[1];
+        if (a[0] == b[1])
+            return a[1] == b[0];
+        if (a[1] == b[1])
+            return a[0] == b[0];
         return Intersect(a, b[0], b[1]);
     }
 

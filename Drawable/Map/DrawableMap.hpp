@@ -11,6 +11,8 @@ class DrawableMap final
 {
 	friend DrawableMapBuilder;
 
+	std::vector<std::pair<size_t, size_t>> GetAvailableEndPoints(size_t index);
+
 	DrawableMap(const EdgeVector& edges, const size_t pivot);
 
 public:
@@ -61,6 +63,11 @@ private:
 	// Returns maximum fitness
 	Fitness GetMaxFitness();
 
+	// Map data
+	size_t m_pivot;
+	Line m_edgeLine;
+	EdgeVector m_edges;
+
 	// Fitness data
 	FitnessVector m_fitnessVector;
 	std::vector<double> m_previousFitnessVector;
@@ -70,11 +77,8 @@ private:
 	double m_minFitnessImprovement;
 
 	// Checkpoints data
-	sf::ConvexShape m_shape;
-	std::vector<Triangle> m_checkpoints;
-
-	// Map data
-	Line m_edgeLine;
-	EdgeVector m_edges;
-	const size_t m_pivot;
+	sf::ConvexShape m_triangleCheckpointShape;
+	Line m_lineCheckpointShape;
+	std::vector<Triangle> m_triangleCheckpoints;
+	std::vector<Edge> m_lineCheckpoints;
 };

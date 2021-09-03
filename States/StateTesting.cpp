@@ -147,10 +147,6 @@ void StateTesting::Reload()
 	// Reset objects of environment
 	delete m_drawableMap;
 	m_drawableMap = nullptr;
-	delete m_userVehicle;
-	m_userVehicle = nullptr;
-	delete m_dummyVehicle;
-	m_dummyVehicle = nullptr;
 	for (auto& vehicle : m_drawableVehicleFactory)
 	{
 		delete vehicle;
@@ -185,14 +181,13 @@ void StateTesting::Reload()
 void StateTesting::Capture()
 {
 	auto* filenameText = static_cast<DrawableFilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
-	filenameText->Capture();
-
 	if (!filenameText->IsRenaming())
 	{
 		switch (m_mode)
 		{
 			case STOPPED_MODE:
 			{
+				filenameText->Capture();
 				if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
 				{
 					auto eventKey = CoreWindow::GetEvent().key.code;
@@ -339,6 +334,9 @@ void StateTesting::Capture()
 				break;
 		}
 	}
+	else
+		filenameText->Capture();
+
 
 	if (CoreWindow::GetEvent().type == sf::Event::KeyReleased)
 	{
