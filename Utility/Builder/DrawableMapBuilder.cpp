@@ -82,6 +82,13 @@ bool DrawableMapBuilder::ValidateInternal()
 		return false;
 	}
 
+	auto checkpoints = DrawableMap::GenerateTriangleCheckpoints(m_edges, m_edgesPivot);
+	if (checkpoints.empty())
+	{
+		m_lastOperationStatus = ERROR_CANNOT_GENERATE_ALL_CHECKPOINTS;
+		return false;
+	}
+
 	return true;
 }
 
@@ -284,18 +291,19 @@ DrawableMapBuilder::DrawableMapBuilder() :
 	m_vehiclePositioned(false),
 	m_vehicleAngle(0.0)
 {
-	m_operationsMap[ERROR_VEHICLE_IS_NOT_POSITIONED] = "Error: vehicle is not positioned!";
-	m_operationsMap[ERROR_EDGES_ARE_NOT_SPECIFIED] = "Error: edges are not specified!";
-	m_operationsMap[ERROR_INCORRECT_EDGE_SEQUENCE_COUNT] = "Error: there should be only two edge sequences!";
-	m_operationsMap[ERROR_EDGE_SEQUENCE_INTERSECTION] = "Error: found intersection between edge sequences!";
-	m_operationsMap[ERROR_TOO_LITTLE_INNER_EDGES] = "Error: too little inner edges specified!";
-	m_operationsMap[ERROR_TOO_LITTLE_OUTER_EDGES] = "Error: too little outer edges specified!";
-	m_operationsMap[ERROR_CANNOT_EXTRACT_DOUBLE_WHILE_READING] = "Error: cannot extract floating point value from string while reading!";
-	m_operationsMap[ERROR_CANNOT_EXTRACT_POINT_WHILE_READING] = "Error: cannot extract point from string while reading!";
-	m_operationsMap[ERROR_CANNOT_EXTRACT_EDGE_WHILE_READING] = "Error: cannot extract edge from string while reading!";
-	m_operationsMap[ERROR_CANNOT_FIND_VEHICLE_ANGLE_STRING_WHILE_READING] = "Error: cannot extract vehicle angle string line while reading!";
-	m_operationsMap[ERROR_CANNOT_FIND_VEHICLE_CENTER_STRING_WHILE_READING] = "Error: cannot extract vehicle center string line while reading!";
-	m_operationsMap[ERROR_CANNOT_FIND_EDGE_STRING_WHILE_READING] = "Error: cannot extract edge string line while reading!";
+	m_operationsMap[ERROR_VEHICLE_IS_NOT_POSITIONED] = "Error: Vehicle is not positioned!";
+	m_operationsMap[ERROR_EDGES_ARE_NOT_SPECIFIED] = "Error: Edges are not specified!";
+	m_operationsMap[ERROR_INCORRECT_EDGE_SEQUENCE_COUNT] = "Error: There should be only two edge sequences!";
+	m_operationsMap[ERROR_EDGE_SEQUENCE_INTERSECTION] = "Error: Found intersection between edge sequences!";
+	m_operationsMap[ERROR_TOO_LITTLE_INNER_EDGES] = "Error: Too little inner edges specified!";
+	m_operationsMap[ERROR_TOO_LITTLE_OUTER_EDGES] = "Error: Too little outer edges specified!";
+	m_operationsMap[ERROR_CANNOT_EXTRACT_DOUBLE_WHILE_READING] = "Error: Cannot extract floating point value from string while reading!";
+	m_operationsMap[ERROR_CANNOT_EXTRACT_POINT_WHILE_READING] = "Error: Cannot extract point from string while reading!";
+	m_operationsMap[ERROR_CANNOT_EXTRACT_EDGE_WHILE_READING] = "Error: Cannot extract edge from string while reading!";
+	m_operationsMap[ERROR_CANNOT_FIND_VEHICLE_ANGLE_STRING_WHILE_READING] = "Error: Cannot extract vehicle angle string line while reading!";
+	m_operationsMap[ERROR_CANNOT_FIND_VEHICLE_CENTER_STRING_WHILE_READING] = "Error: Cannot extract vehicle center string line while reading!";
+	m_operationsMap[ERROR_CANNOT_FIND_EDGE_STRING_WHILE_READING] = "Error: Cannot extract edge string line while reading!";
+	m_operationsMap[ERROR_CANNOT_GENERATE_ALL_CHECKPOINTS] = "Error: Cannot generate all checkpoints! Check if edges are reasonable positioned.";
 	Clear();
 }
 

@@ -9,9 +9,6 @@ class DrawableMapBuilder;
 
 class DrawableMap final
 {
-	friend DrawableMapBuilder;
-
-	std::vector<std::pair<size_t, size_t>> GetAvailableEndPoints(size_t index);
 
 	DrawableMap(const EdgeVector& edges, const size_t pivot);
 
@@ -58,13 +55,29 @@ public:
 	// Calculates fitness of drawable vehicle
 	Fitness CalculateFitness(DrawableVehicle* drawableVehicle);
 
+	static TriangleVector GenerateTriangleCheckpoints(const EdgeVector& edges, const size_t pivot);
+
 private:
 
 	// Returns maximum fitness
 	Fitness GetMaxFitness();
 
+	using EndPoint = std::pair<size_t, size_t>;
+	using EndPoints = std::vector<EndPoint>;
+	using EndPointsVector = std::vector<EndPoints>;
+	using EdgePrecedence = std::pair<Edge, size_t>;
+	using EdgePrecedences = std::vector<EdgePrecedence>;
+	using EdgePrecedencesVector = std::vector<EdgePrecedences>;
+	friend DrawableMapBuilder;
+
+	static EndPoints GetEndPoints(const EdgeVector& edges, const size_t pivot, const size_t index);
+
+	static EdgePrecedencesVector GetEdgePrecedencesVector(const EdgeVector& edges, const size_t pivot, EndPointsVector& endPointsVector);
+
+	static TriangleVector GetTriangleCheckpoints(const EdgeVector& edges, const EdgePrecedencesVector& edgePrecedencesVector);
+
 	// Map data
-	size_t m_pivot;
+	const size_t m_pivot;
 	Line m_edgeLine;
 	EdgeVector m_edges;
 
@@ -78,7 +91,5 @@ private:
 
 	// Checkpoints data
 	sf::ConvexShape m_triangleCheckpointShape;
-	Line m_lineCheckpointShape;
-	std::vector<Triangle> m_triangleCheckpoints;
-	std::vector<Edge> m_lineCheckpoints;
+	TriangleVector m_triangleCheckpoints;
 };

@@ -113,7 +113,11 @@ void DrawableFilenameText<ReadOperations, WriteOperations>::OnControlKeyReleased
 	{
 		result = m_pressedControlKeys.find(eventKey);
 		if (result != m_pressedControlKeys.end())
+		{
 			result->second = false;
+			if (result->first == sf::Keyboard::BackSpace)
+				m_pressedBackspaceKeyTimer.SetTimeout();
+		}
 	}
 }
 
@@ -133,7 +137,7 @@ template<bool ReadOperations, bool WriteOperations>
 DrawableFilenameText<ReadOperations, WriteOperations>::DrawableFilenameText() :
 	DrawableStatusText({ "Filename:", m_filenameDummy, GetInformationString() }),
 	m_maxFilenameLength(18),
-	m_pressedBackspaceKeyTimer(0.0, 1.0, 5000.0)
+	m_pressedBackspaceKeyTimer(0.0, 1.0, 2500.0)
 {
 	for (size_t i = 0; i < ACTION_COUNT; ++i)
 		m_activeActions[i] = false;

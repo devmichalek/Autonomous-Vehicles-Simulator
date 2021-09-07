@@ -1,57 +1,6 @@
 #pragma once
 #include "DrawableMap.hpp"
 
-std::vector<std::pair<size_t, size_t>> DrawableMap::GetAvailableEndPoints(size_t index)
-{
-	auto edgesCount = m_edges.size();
-	using EndPoint = std::tuple<size_t, size_t, double>; // Consists of index of an edge and distance to its first point
-	std::vector<EndPoint> endPoints;
-	for (size_t j = m_pivot; j < edgesCount; ++j)
-	{
-		bool intersection = false;
-		Edge edge = { m_edges[index][0], m_edges[j][0] };
-		for (size_t k = 0; k < edgesCount; ++k)
-		{
-			// Skip
-			if (index == k || j == k)
-				continue;
-
-			// Check if there is no intersection with any edge
-			if (DrawableMath::IntersectNonCollinear(edge, m_edges[k]))
-			{
-				intersection = true;
-				break;
-			}
-		}
-
-		// There was no intersection
-		if (!intersection)
-		{
-			// Get proper precedence
-			size_t precedence = endPoints.empty() ? 0 : (std::get<1>(endPoints.back()) + 1);
-
-			// Calculate distance
-			auto distance = DrawableMath::Distance(edge);
-			endPoints.push_back(std::make_tuple(j, precedence, distance));
-		}
-	}
-
-	// Sort from the smallest distance to the greatest
-	auto Compare = [&](const EndPoint& a, const EndPoint& b)
-	{
-		return std::get<2>(a) > std::get<2>(b);
-	};
-	std::sort(endPoints.begin(), endPoints.end(), Compare);
-
-	std::vector<std::pair<size_t, size_t>> result(endPoints.size());
-	for (size_t i = 0; i < result.size(); ++i)
-	{
-		result[i].first = std::get<0>(endPoints[i]);
-		result[i].second = std::get<1>(endPoints[i]);
-	}
-	return result;
-}
-
 DrawableMap::DrawableMap(const EdgeVector& edges, const size_t pivot) :
 	m_pivot(pivot)
 {
@@ -65,108 +14,9 @@ DrawableMap::DrawableMap(const EdgeVector& edges, const size_t pivot) :
 	m_highestFitnessOverall = 0;
 	m_timers.clear();
 	m_minFitnessImprovement = 0.0;
-	m_triangleCheckpoints.clear();
 
-	// Gather available end points for each point from inner edge sequence
-	std::vector<std::vector<std::pair<size_t, size_t>>> availableEndPoints(pivot);
-	for (size_t i = 0; i < pivot; ++i)
-		availableEndPoints[i] = GetAvailableEndPoints(i);
-
-	// Start adding checkpoints, add checkpoint only if there is no intersection with other checkpoint
-	using EdgePrecedence = std::pair<Edge, size_t>; // Edge + Precedence
-	using LocalCheckpoints = std::vector<EdgePrecedence>;
-	std::vector<LocalCheckpoints> checkpoints(pivot, LocalCheckpoints());
-	bool process = true;
-	while (process)
-	{
-		process = false;
-		for (size_t i = 0; i < pivot; ++i)
-		{
-			if (availableEndPoints[i].empty())
-				continue;
-			process = true;
-
-			auto endPointIndex = availableEndPoints[i].back().first;
-			auto endPointPrecedence = availableEndPoints[i].back().second;
-			Edge edge = { edges[i][0], edges[endPointIndex][0] };
-
-			bool intersection = false;
-			for (size_t k = 0; k < checkpoints.size(); ++k)
-			{
-				if (k == i)
-					continue;
-
-				for (size_t c = 0; c < checkpoints[k].size(); ++c)
-				{
-					if (DrawableMath::IntersectNonCollinear(edge, checkpoints[k][c].first))
-					{
-						intersection = true;
-						break;
-					}
-				}
-
-				if (intersection)
-					break;
-			}
-
-			// Remove last end point
-			availableEndPoints[i].pop_back();
-
-			// Add local checkpoint if there was no intersection
-			if (!intersection)
-				checkpoints[i].push_back(std::make_pair(edge, endPointPrecedence));
-		}
-	}
-
-	// Sort checkpoints
-	auto Compare = [&](const EdgePrecedence& a, const EdgePrecedence& b)
-	{
-		return a.second < b.second;
-	};
-
-	for (size_t i = 0; i < pivot; ++i)
-		std::sort(checkpoints[i].begin(), checkpoints[i].end(), Compare);
-
-	// Add checkpoints as triangles
-	auto checkpointCount = checkpoints.size();
-	for (size_t i = 1; i < checkpointCount; ++i)
-	{
-		size_t lastIndex = checkpoints[i].size() - 1;
-		for (size_t j = 0; j < lastIndex; ++j)
-		{
-			Triangle triangle;
-			triangle[0] = checkpoints[i][j].first[0];
-			triangle[1] = checkpoints[i][j].first[1];
-			triangle[2] = checkpoints[i][j + 1].first[1];
-			m_triangleCheckpoints.push_back(triangle);
-			m_lineCheckpoints.push_back(checkpoints[i][j].first);
-		}
-
-		Triangle triangle;
-		triangle[0] = checkpoints[i][lastIndex].first[0];
-		triangle[1] = checkpoints[i][lastIndex].first[1];
-		if (i + 1 >= checkpointCount)
-		{
-			triangle[2] = m_edges[0][0];
-			m_triangleCheckpoints.push_back(triangle);
-
-			Triangle triangle;
-			triangle[0] = m_edges.back()[0];
-			triangle[1] = m_edges.back()[1];
-			triangle[2] = m_edges.front()[0];
-			m_triangleCheckpoints.push_back(triangle);
-		}
-		else
-		{
-			triangle[2] = m_edges[i + 1][0];
-			m_triangleCheckpoints.push_back(triangle);
-		}
-		
-		m_lineCheckpoints.push_back(checkpoints[i][lastIndex].first);
-	}
-
-	m_lineCheckpointShape[0].color = sf::Color::Red;
-	m_lineCheckpointShape[1].color = m_lineCheckpointShape[0].color;
+	// Generate triangle checkpoints
+	m_triangleCheckpoints = GenerateTriangleCheckpoints(edges, pivot);
 
 	// Set shape point count
 	m_triangleCheckpointShape.setPointCount(m_triangleCheckpoints.back().size());
@@ -178,8 +28,8 @@ DrawableMap::DrawableMap(const EdgeVector& edges, const size_t pivot) :
 	m_edges.push_back({ m_edges.front()[1], m_edges[pivot][1] });
 
 	// Erase continuity
-	//m_edges.erase(m_edges.begin() + pivot);
-	//m_edges.erase(m_edges.begin());
+	m_edges.erase(m_edges.begin() + pivot);
+	m_edges.erase(m_edges.begin());
 }
 
 DrawableMap::~DrawableMap()
@@ -361,7 +211,161 @@ Fitness DrawableMap::CalculateFitness(DrawableVehicle* drawableVehicle)
 	return fitness;
 }
 
+TriangleVector DrawableMap::GenerateTriangleCheckpoints(const EdgeVector& edges, const size_t pivot)
+{
+	// Gather available end points for each point from inner edge sequence
+	EndPointsVector endPointsVector(pivot);
+	for (size_t i = 0; i < pivot; ++i)
+	{
+		endPointsVector[i] = GetEndPoints(edges, pivot, i);
+		if (endPointsVector[i].empty())
+			return {};
+	}
+
+	// Start adding edge precendences
+	auto edgePrecedencesVector = GetEdgePrecedencesVector(edges, pivot, endPointsVector);
+
+	// Generate triangle checkpoints
+	return GetTriangleCheckpoints(edges, edgePrecedencesVector);
+}
+
 Fitness DrawableMap::GetMaxFitness()
 {
 	return Fitness(m_triangleCheckpoints.size());
+}
+
+std::vector<std::pair<size_t, size_t>> DrawableMap::GetEndPoints(const EdgeVector& edges, const size_t pivot, const size_t index)
+{
+	auto edgesCount = edges.size();
+	using EndPoint = std::tuple<size_t, size_t, double>; // Consists of index of an edge and distance to its first point
+	std::vector<EndPoint> endPoints;
+	for (size_t j = pivot + 1; j < edgesCount; ++j)
+	{
+		bool intersection = false;
+		Edge edge = { edges[index][0], edges[j][0] };
+		for (size_t k = 0; k < edgesCount; ++k)
+		{
+			// Skip
+			if (index == k || j == k)
+				continue;
+
+			// Check if there is no intersection with any edge
+			if (DrawableMath::IntersectNonCollinear(edge, edges[k]))
+			{
+				intersection = true;
+				break;
+			}
+		}
+
+		// There was no intersection
+		if (!intersection)
+		{
+			// Get proper precedence
+			size_t precedence = endPoints.empty() ? 0 : (std::get<1>(endPoints.back()) + 1);
+
+			// Calculate distance
+			auto distance = DrawableMath::Distance(edge);
+			endPoints.push_back(std::make_tuple(j, precedence, distance));
+		}
+	}
+
+	// Sort from the smallest distance to the greatest
+	auto Compare = [&](const EndPoint& a, const EndPoint& b)
+	{
+		return std::get<2>(a) > std::get<2>(b);
+	};
+	std::sort(endPoints.begin(), endPoints.end(), Compare);
+
+	std::vector<std::pair<size_t, size_t>> result(endPoints.size());
+	for (size_t i = 0; i < result.size(); ++i)
+	{
+		result[i].first = std::get<0>(endPoints[i]);
+		result[i].second = std::get<1>(endPoints[i]);
+	}
+	return result;
+}
+
+DrawableMap::EdgePrecedencesVector DrawableMap::GetEdgePrecedencesVector(const EdgeVector& edges, const size_t pivot, EndPointsVector& endPointsVector)
+{
+	EdgePrecedencesVector result(pivot, EdgePrecedences());
+
+	bool process = true;
+	while (process)
+	{
+		process = false;
+		for (size_t i = 0; i < pivot; ++i)
+		{
+			if (endPointsVector[i].empty())
+				continue;
+			process = true;
+
+			auto endPointIndex = endPointsVector[i].back().first;
+			auto endPointPrecedence = endPointsVector[i].back().second;
+			Edge edge = { edges[i][0], edges[endPointIndex][0] };
+
+			bool intersection = false;
+			for (size_t k = 0; k < result.size(); ++k)
+			{
+				if (k == i)
+					continue;
+
+				for (size_t c = 0; c < result[k].size(); ++c)
+				{
+					if (DrawableMath::IntersectNonCollinear(edge, result[k][c].first))
+					{
+						intersection = true;
+						break;
+					}
+				}
+
+				if (intersection)
+					break;
+			}
+
+			// Remove last end point
+			endPointsVector[i].pop_back();
+
+			// Add EdgePrecedence if there was no intersection
+			if (!intersection)
+				result[i].push_back(std::make_pair(edge, endPointPrecedence));
+		}
+	}
+
+	auto Compare = [&](const EdgePrecedence& a, const EdgePrecedence& b)
+	{
+		return a.second < b.second;
+	};
+
+	for (auto& edgePrecedences : result)
+		std::sort(edgePrecedences.begin(), edgePrecedences.end(), Compare);
+
+	return result;
+}
+
+TriangleVector DrawableMap::GetTriangleCheckpoints(const EdgeVector& edges, const EdgePrecedencesVector& edgePrecedencesVector)
+{
+	TriangleVector result;
+	auto checkpointCount = edgePrecedencesVector.size();
+	for (size_t i = 1; i < checkpointCount; ++i)
+	{
+		auto& edgePrecedences = edgePrecedencesVector[i];
+		if (edgePrecedences.empty())
+			return {};
+
+		size_t lastIndex = edgePrecedences.size() - 1;
+		for (size_t j = 0; j < lastIndex; ++j)
+		{
+			Triangle triangle = { edgePrecedences[j].first[0], edgePrecedences[j].first[1], edgePrecedences[j + 1].first[1] };
+			result.push_back(triangle);
+		}
+
+		size_t nextIndex = (i + 1 >= checkpointCount) ? 0 : (i + 1);
+		Triangle triangle = { edgePrecedences[lastIndex].first[0], edgePrecedences[lastIndex].first[1], edges[nextIndex][0] };
+		result.push_back(triangle);
+	}
+
+	result.push_back({ edges.back()[0], edges.back()[1], edges.front()[0] });
+	result.shrink_to_fit();
+
+	return result;
 }

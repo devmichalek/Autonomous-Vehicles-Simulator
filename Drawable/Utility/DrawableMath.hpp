@@ -5,6 +5,7 @@
 #include <cmath>
 
 using Triangle = std::array<sf::Vector2f, 3>;
+using TriangleVector = std::vector<Triangle>;
 using Line = std::array<sf::Vertex, 2>;
 using Edge = std::array<sf::Vector2f, 2>;
 using EdgeVector = std::vector<Edge>;
