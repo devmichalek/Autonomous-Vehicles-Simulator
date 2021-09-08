@@ -465,7 +465,7 @@ bool StateTesting::Load()
 	// Create texts
 	m_texts[ACTIVE_MODE_TEXT] = new DrawableStatusText({ "Mode:", "", "| [M]" });
 	m_texts[FILENAME_TYPE_TEXT] = new DrawableTripleText({ "Filename type:", "", "| [F]" });
-	m_texts[FILENAME_TEXT] = new DrawableFilenameText<true, false>;
+	m_texts[FILENAME_TEXT] = new DrawableFilenameText<true, false>("map.bin");
 	m_texts[NUMBER_OF_VEHICLES_TEXT] = new DrawableTripleText({ "Number of vehicles:", "", "| [+] [-]" });
 	m_texts[CURRENT_VEHICLE_TEXT] = new DrawableTripleText({ "Current vehicle:", "", "| [Tab]" });
 	m_texts[USER_FITNESS] = new DrawableTripleText({ "User fitness:", "", "| [Enter]" });

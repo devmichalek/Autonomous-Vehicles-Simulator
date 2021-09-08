@@ -22,7 +22,7 @@ class DrawableFilenameText :
 	
 	std::map<sf::Keyboard::Key, bool> m_pressedFilenameKeys;
 	std::string m_filename;
-	static inline const std::string m_filenameDummy = "dummy.txt";
+	std::string m_filenameDummy;
 	const size_t m_maxFilenameLength;
 
 	std::pair<bool, char> ConvertKeyToAscii(sf::Keyboard::Key eventKey);
@@ -35,7 +35,7 @@ class DrawableFilenameText :
 
 public:
 
-	DrawableFilenameText();
+	DrawableFilenameText(std::string filenameDummy = "dummy.bin");
 
 	~DrawableFilenameText();
 

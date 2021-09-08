@@ -12,6 +12,8 @@ class DrawableMap final
 
 	DrawableMap(const EdgeVector& edges, const size_t pivot);
 
+	DrawableMap(const DrawableMap& drawableMap);
+
 public:
 
 	~DrawableMap();
@@ -47,10 +49,10 @@ public:
 	const FitnessVector& GetFitnessVector() const;
 
 	// Return highest fitness in the current iteration
-	const Fitness& GetHighestFitness() const;
+	double GetHighestFitness();
 
 	// Returns highest fitness that has been recorded so far
-	const Fitness& GetHighestFitnessOverall() const;
+	double GetHighestFitnessOverall();
 
 	// Calculates fitness of drawable vehicle
 	Fitness CalculateFitness(DrawableVehicle* drawableVehicle);
@@ -77,7 +79,7 @@ private:
 	static TriangleVector GetTriangleCheckpoints(const EdgeVector& edges, const EdgePrecedencesVector& edgePrecedencesVector);
 
 	// Map data
-	const size_t m_pivot;
+	const size_t m_edgesPivot;
 	Line m_edgeLine;
 	EdgeVector m_edges;
 

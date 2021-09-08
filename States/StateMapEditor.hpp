@@ -40,7 +40,7 @@ class StateMapEditor final :
 	bool m_upToDate;
 	bool m_vehiclePositioned;
 	DrawableVehicle* m_drawableVehicle;
-	sf::RectangleShape m_allowedAreaShape;
+	sf::RectangleShape m_allowedMapAreaShape;
 	sf::RectangleShape m_allowedViewAreaShape;
 
 	// View movement

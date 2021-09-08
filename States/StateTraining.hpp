@@ -19,6 +19,7 @@ class StateTraining final :
 	{
 		STOPPED_MODE,
 		RUNNING_MODE,
+		PAUSED_MODE,
 		MODES_COUNT
 	};
 	std::array<std::string, MODES_COUNT> m_modeStrings;
@@ -44,6 +45,7 @@ class StateTraining final :
 		MUTATION_PROBABILITY,
 		DECREASE_MUTATION_OVER_GENERATIONS,
 		SINGLE_POINT_CROSSOVER,
+		REQUIRED_FITNESS_IMPROVEMENT_RISE,
 		REQUIRED_FITNESS_IMPROVEMENT,
 		PARAMETERS_COUNT
 	};
@@ -56,6 +58,7 @@ class StateTraining final :
 		CHANGE_MODE,
 		CHANGE_FILENAME_TYPE,
 		CHANGE_SIMULATION_PARAMETER,
+		PAUSED_CHANGE_MODE = CHANGE_SIMULATION_PARAMETER,
 		INCREASE_PARAMETER,
 		DECREASE_PARAMETER,
 		CONTROLS_COUNT
@@ -106,8 +109,8 @@ class StateTraining final :
 
 	// Timers, offsets and value boundaries
 	CycleTimer m_pressedKeyTimer;
-	CycleTimer m_waveTimer;
 	CycleTimer m_viewTimer;
+	CycleTimer m_requiredFitnessImprovementRiseTimer;
 	sf::Vector2f m_viewCenter;
 	const double m_viewMovementOffset;
 	const size_t m_minPopulationSize;
@@ -128,11 +131,15 @@ class StateTraining final :
 	const double m_maxRequiredFitnessImprovement;
 	const double m_requiredFitnessImprovementResetValue;
 	const double m_requiredFitnessImprovementOffset;
+	const double m_minRequiredFitnessImprovementRise;
+	const double m_maxRequiredFitnessImprovementRise;
+	const double m_requiredFitnessImprovementRiseResetValue;
+	const double m_requiredFitnessImprovementRiseOffset;
 
 	// Texts and text observers
 	enum
 	{
-		ACTIVE_MODE_TEXT,
+		MODE_TEXT,
 		FILENAME_TYPE_TEXT,
 		FILENAME_TEXT,
 		PARAMETER_TYPE_TEXT,
@@ -142,9 +149,10 @@ class StateTraining final :
 		MUTATION_PROBABILITY_TEXT,
 		DECREASE_MUTATION_OVER_GENERATION_TEXT,
 		SINGLE_POINT_CROSSOVER_TEXT,
+		REQUIRED_FITNESS_IMPROVEMENT_RISE_TEXT,
 		REQUIRED_FITNESS_IMPROVEMENT_TEXT,
-		POPULATION_TEXT,
-		GENERATION_TEXT,
+		CURRENT_POPULATION_TEXT,
+		CURRENT_GENERATION_TEXT,
 		HIGHEST_FITNESS_TEXT,
 		HIGHEST_FITNESS_OVERALL_TEXT,
 		RAISING_REQUIRED_FITNESS_IMPROVEMENT_TEXT,

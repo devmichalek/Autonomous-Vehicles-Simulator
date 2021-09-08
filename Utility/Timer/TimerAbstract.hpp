@@ -6,7 +6,7 @@ protected:
 
 	double m_value;
 	const double m_resetValue;
-	const double m_timeout;
+	double m_timeout;
 	const double m_multiplier;
 
 	explicit TimerAbstract(double resetValue, double timeout, double multiplier = 1) :
@@ -28,6 +28,11 @@ public:
 	inline void Reset()
 	{
 		m_value = m_resetValue;
+	}
+
+	inline void ResetTimeout(double timeout)
+	{
+		m_timeout = timeout;
 	}
 
 	inline void SetTimeout()

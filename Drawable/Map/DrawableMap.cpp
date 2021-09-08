@@ -2,7 +2,7 @@
 #include "DrawableMap.hpp"
 
 DrawableMap::DrawableMap(const EdgeVector& edges, const size_t pivot) :
-	m_pivot(pivot)
+	m_edgesPivot(pivot)
 {
 	m_edgeLine[0].color = sf::Color::White;
 	m_edgeLine[1].color = m_edgeLine[0].color;
@@ -16,7 +16,7 @@ DrawableMap::DrawableMap(const EdgeVector& edges, const size_t pivot) :
 	m_minFitnessImprovement = 0.0;
 
 	// Generate triangle checkpoints
-	m_triangleCheckpoints = GenerateTriangleCheckpoints(edges, pivot);
+	m_triangleCheckpoints = GenerateTriangleCheckpoints(m_edges, m_edgesPivot);
 
 	// Set shape point count
 	m_triangleCheckpointShape.setPointCount(m_triangleCheckpoints.back().size());
@@ -32,6 +32,27 @@ DrawableMap::DrawableMap(const EdgeVector& edges, const size_t pivot) :
 	m_edges.erase(m_edges.begin());
 }
 
+DrawableMap::DrawableMap(const DrawableMap& drawableMap) : 
+	m_edgesPivot(drawableMap.m_edgesPivot)
+{
+	m_edgeLine[0].color = sf::Color::White;
+	m_edgeLine[1].color = m_edgeLine[0].color;
+	m_edges = drawableMap.m_edges;
+
+	m_fitnessVector.clear();
+	m_previousFitnessVector.clear();
+	m_highestFitness = 0;
+	m_highestFitnessOverall = 0;
+	m_timers.clear();
+	m_minFitnessImprovement = 0.0;
+
+	// Generate triangle checkpoints
+	m_triangleCheckpoints = drawableMap.m_triangleCheckpoints;
+
+	// Set shape point count
+	m_triangleCheckpointShape.setPointCount(m_triangleCheckpoints.back().size());
+}
+
 DrawableMap::~DrawableMap()
 {
 }
@@ -40,7 +61,6 @@ void DrawableMap::Reset()
 {
 	m_highestFitness = 0;
 	m_highestFitnessOverall = 0;
-	m_minFitnessImprovement = 0.0;
 
 	for (size_t i = 0; i < m_fitnessVector.size(); ++i)
 	{
@@ -127,7 +147,6 @@ void DrawableMap::Iterate(DrawableVehicleFactory& drawableVehicleFactory)
 
 size_t DrawableMap::MarkLeader(DrawableVehicleFactory& drawableVehicleFactory)
 {
-	auto maxFitness = GetMaxFitness();
 	for (size_t i = 0; i < drawableVehicleFactory.size(); ++i)
 	{
 		drawableVehicleFactory[i]->SetFollowerColor();
@@ -159,13 +178,14 @@ std::pair<size_t, double> DrawableMap::Punish(DrawableVehicleFactory& drawableVe
 	{
 		if (!drawableVehicleFactory[i]->IsActive())
 			continue;
-
-		++population;
+		
 		m_fitnessVector[i] = CalculateFitness(drawableVehicleFactory[i]);
 		auto requiredFitness = m_previousFitnessVector[i];
 		requiredFitness += double(maxFitness) * m_minFitnessImprovement;
 		if (Fitness(requiredFitness) > m_fitnessVector[i])
 			drawableVehicleFactory[i]->SetInactive();
+		else
+			++population;
 
 		if (requiredFitness > double(m_fitnessVector[i]))
 			m_previousFitnessVector[i] = requiredFitness;
@@ -175,7 +195,7 @@ std::pair<size_t, double> DrawableMap::Punish(DrawableVehicleFactory& drawableVe
 		meanRequiredFitness += m_previousFitnessVector[i];
 	}
 
-	return std::pair(population, meanRequiredFitness / population);
+	return std::pair(population, meanRequiredFitness / maxFitness / double(population));
 }
 
 void DrawableMap::UpdateTimers()
@@ -189,14 +209,14 @@ const FitnessVector& DrawableMap::GetFitnessVector() const
 	return m_fitnessVector;
 }
 
-const Fitness& DrawableMap::GetHighestFitness() const
+double DrawableMap::GetHighestFitness()
 {
-	return m_highestFitness;
+	return double(m_highestFitness) / double(GetMaxFitness());
 }
 
-const Fitness& DrawableMap::GetHighestFitnessOverall() const
+double DrawableMap::GetHighestFitnessOverall()
 {
-	return m_highestFitnessOverall;
+	return double(m_highestFitnessOverall) / double(GetMaxFitness());
 }
 
 Fitness DrawableMap::CalculateFitness(DrawableVehicle* drawableVehicle)

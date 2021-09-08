@@ -134,10 +134,11 @@ std::string DrawableFilenameText<ReadOperations, WriteOperations>::GetInformatio
 }
 
 template<bool ReadOperations, bool WriteOperations>
-DrawableFilenameText<ReadOperations, WriteOperations>::DrawableFilenameText() :
-	DrawableStatusText({ "Filename:", m_filenameDummy, GetInformationString() }),
-	m_maxFilenameLength(18),
-	m_pressedBackspaceKeyTimer(0.0, 1.0, 2500.0)
+DrawableFilenameText<ReadOperations, WriteOperations>::DrawableFilenameText(std::string filenameDummy) :
+	DrawableStatusText({ "Filename:", filenameDummy, GetInformationString() }),
+	m_pressedBackspaceKeyTimer(0.0, 1.0, 7500.0),
+	m_filenameDummy(filenameDummy),
+	m_maxFilenameLength(18)
 {
 	for (size_t i = 0; i < ACTION_COUNT; ++i)
 		m_activeActions[i] = false;

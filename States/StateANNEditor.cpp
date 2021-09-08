@@ -341,7 +341,7 @@ bool StateANNEditor::Load()
 	m_texts[CURRENT_LAYER_NUMBER_OF_NEURONS_TEXT] = new DrawableTripleText({ "Current layer number of neurons:", "", "| [+] [-]" });
 	m_texts[CURRENT_LAYER_ACTIVATION_FUNCTION_TEXT] = new DrawableTripleText({ "Current layer activation function:", "", "| [*]" });
 	m_texts[CURRENT_LAYER_BIAS_TEXT] = new DrawableTripleText({ "Current layer bias:", "", "| [Z] [X]" });
-	m_texts[FILENAME_TEXT] = new DrawableFilenameText<true, true>;
+	m_texts[FILENAME_TEXT] = new DrawableFilenameText<true, true>("ann.bin");
 	m_texts[NUMBER_OF_LAYERS_TEXT] = new DrawableDoubleText({ "Total number of layers:" });
 	m_texts[NUMBER_OF_NEURONS_TEXT] = new DrawableDoubleText({ "Total number of neurons:" });
 	m_texts[NUMBER_OF_WEIGHTS_TEXT] = new DrawableDoubleText({ "Total number of weights:" });

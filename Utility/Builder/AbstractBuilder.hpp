@@ -19,12 +19,6 @@ class AbstractBuilder
 	// Create dummy internal implementation
 	virtual void CreateDummyInternal() = 0;
 
-	// File reading mode
-	std::ios_base::openmode m_inputMode;
-
-	// File writing mode
-	std::ios_base::openmode m_outputMode;
-
 protected:
 
 	enum
@@ -61,9 +55,7 @@ protected:
 		return true;
 	}
 
-	AbstractBuilder(std::ios_base::openmode inputMode, std::ios_base::openmode outputMode) :
-		m_inputMode(inputMode),
-		m_outputMode(outputMode)
+	AbstractBuilder()
 	{
 		m_operationsMap[ERROR_UNKNOWN] = "Error: last status is unknown!";
 		m_operationsMap[SUCCESS_LOAD_COMPLETED] = "Success: correctly opened file!";
@@ -114,7 +106,7 @@ public:
 		}
 
 		// Check if file can be opened for reading
-		std::ifstream input(filename, m_inputMode);
+		std::ifstream input(filename, std::ios::in | std::ios::binary);
 		if (!input.is_open())
 		{
 			m_lastOperationStatus = ERROR_CANNOT_OPEN_FILE_FOR_READING;
@@ -144,7 +136,7 @@ public:
 			return false;
 
 		// Check if file can be opened for writing
-		std::ofstream output(filename, m_outputMode);
+		std::ofstream output(filename, std::ios::out | std::ios::binary);
 		if (!output.is_open())
 		{
 			m_lastOperationStatus = ERROR_CANNOT_OPEN_FILE_FOR_WRITING;

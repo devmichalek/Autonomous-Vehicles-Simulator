@@ -2,6 +2,148 @@
 #include "DrawableMap.hpp"
 #include "CoreLogger.hpp"
 
+bool DrawableMapBuilder::ValidateAllowedAreaVehiclePosition()
+{
+	auto allowedMapArea = GetMaxAllowedMapArea();
+	if (!DrawableMath::IsPointInsideRectangle(allowedMapArea.second, allowedMapArea.first, m_vehicleCenter))
+	{
+		m_lastOperationStatus = ERROR_VEHICLE_OUTSIDE_ALLOWED_MAP_AREA;
+		return false;
+	}
+
+	return true;
+}
+
+bool DrawableMapBuilder::ValidateRoadAreaVehiclePosition()
+{
+
+	return true;
+}
+
+bool DrawableMapBuilder::ValidateVehicleAngle()
+{
+	if (m_vehicleAngle < GetMinVehicleAngle())
+	{
+		m_lastOperationStatus = ERROR_VEHICLE_ANGLE_IS_TOO_LITTLE;
+		return false;
+	}
+
+	if (m_vehicleAngle > GetMaxVehicleAngle())
+	{
+		m_lastOperationStatus = ERROR_VEHICLE_ANGLE_IS_TOO_LARGE;
+		return false;
+	}
+
+	return true;
+}
+
+bool DrawableMapBuilder::ValidateTotalNumberOfEdges(size_t count)
+{
+	if (count == 0)
+	{
+		m_lastOperationStatus = ERROR_EDGES_ARE_NOT_SPECIFIED;
+		return false;
+	}
+
+	return true;
+}
+
+bool DrawableMapBuilder::ValidateEdgesPivot(size_t pivot, size_t count)
+{
+	if (pivot < GetMinNumberOfInnerEdges())
+	{
+		m_lastOperationStatus = ERROR_TOO_LITTLE_INNER_EDGES;
+		return false;
+	}
+
+	if (pivot > GetMaxNumberOfInnerEdges())
+	{
+		m_lastOperationStatus = ERROR_TOO_MANY_INNER_EDGES;
+		return false;
+	}
+
+	if (count < pivot)
+		count = 0;
+	else
+		count -= pivot;
+
+	if (count < GetMinNumberOfOuterEdges())
+	{
+		m_lastOperationStatus = ERROR_TOO_LITTLE_OUTER_EDGES;
+		return false;
+	}
+
+	if (count > GetMaxNumberOfOuterEdges())
+	{
+		m_lastOperationStatus = ERROR_TOO_MANY_OUTER_EDGES;
+		return false;
+	}
+
+	return true;
+}
+
+bool DrawableMapBuilder::ValidateNumberOfEdgeSequences()
+{
+	Edge edge = m_edges.front();
+	std::vector<size_t> result;
+	for (size_t i = 1; i < m_edges.size(); ++i)
+	{
+		if (m_edges[i - 1][1] == m_edges[i][0])
+		{
+			// If the end of the previous edge is the beggining of the current edge
+			// It meanse there is no gap
+			if (edge[0] == m_edges[i][1])
+			{
+				result.push_back(i + 1);
+				if (i + 1 >= m_edges.size())
+					break;
+				edge = m_edges[i + 1];
+				++i;
+			}
+		}
+	}
+
+	if (result.size() != 2)
+	{
+		m_lastOperationStatus = ERROR_INCORRECT_EDGE_SEQUENCE_COUNT;
+		return false;
+	}
+
+	// Set number of inner edges, pivot from where outer edges start
+	m_edgesPivot = result.front();
+
+	return true;
+}
+
+bool DrawableMapBuilder::ValidateEdgeSequenceIntersection()
+{
+	for (size_t i = 0; i < m_edgesPivot; ++i)
+	{
+		for (size_t j = m_edgesPivot; j < m_edges.size(); ++j)
+		{
+			if (DrawableMath::Intersect(m_edges[i], m_edges[j]))
+			{
+				m_lastOperationStatus = ERROR_EDGE_SEQUENCE_INTERSECTION;
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+bool DrawableMapBuilder::ValidateTriangleCheckpoints()
+{
+	auto checkpoints = DrawableMap::GenerateTriangleCheckpoints(m_edges, m_edgesPivot);
+	if (checkpoints.empty())
+	{
+		m_lastOperationStatus = ERROR_CANNOT_GENERATE_ALL_CHECKPOINTS;
+		return false;
+	}
+
+	return true;
+}
+
 bool DrawableMapBuilder::ValidateInternal()
 {
 	if (!m_vehiclePositioned)
@@ -10,84 +152,29 @@ bool DrawableMapBuilder::ValidateInternal()
 		return false;
 	}
 
-	if (m_edges.empty())
-	{
-		m_lastOperationStatus = ERROR_EDGES_ARE_NOT_SPECIFIED;
+	if (!ValidateAllowedAreaVehiclePosition())
 		return false;
-	}
 
-	auto CountEdgeSequences = [&]() {
-		Edge edge = m_edges.front();
-		std::vector<size_t> result;
-		for (size_t i = 1; i < m_edges.size(); ++i)
-		{
-			if (m_edges[i - 1][1] == m_edges[i][0])
-			{
-				// If the end of the previous edge is the beggining of the current edge
-				// It meanse there is no gap
-				if (edge[0] == m_edges[i][1])
-				{
-					result.push_back(i + 1);
-					if (i + 1 >= m_edges.size())
-						break;
-					edge = m_edges[i + 1];
-					++i;
-				}
-			}
-		}
-
-		return result;
-	};
-
-	auto pivots = CountEdgeSequences();
-	if (pivots.size() != 2)
-	{
-		m_lastOperationStatus = ERROR_INCORRECT_EDGE_SEQUENCE_COUNT;
+	if (!ValidateRoadAreaVehiclePosition())
 		return false;
-	}
 
-	auto IsEdgeSequenceIntersection = [&]()
-	{
-		auto pivot = pivots.front();
-		for (size_t i = 0; i < pivot; ++i)
-		{
-			for (size_t j = pivot; j < m_edges.size(); ++j)
-			{
-				if (DrawableMath::Intersect(m_edges[i], m_edges[j]))
-					return true;
-			}
-		}
-
+	if (!ValidateVehicleAngle())
 		return false;
-	};
 
-	if (IsEdgeSequenceIntersection())
-	{
-		m_lastOperationStatus = ERROR_EDGE_SEQUENCE_INTERSECTION;
+	if (!ValidateTotalNumberOfEdges(m_edges.size()))
 		return false;
-	}
 
-	// Set number of inner edges, pivot from where outer edges start
-	m_edgesPivot = pivots.front();
-
-	if (m_edgesPivot < GetMinNumberOfInnerEdges())
-	{
-		m_lastOperationStatus = ERROR_TOO_LITTLE_INNER_EDGES;
+	if (!ValidateNumberOfEdgeSequences())
 		return false;
-	}
 
-	if (m_edges.size() - m_edgesPivot < GetMaxNumberOfInnerEdges())
-	{
-		m_lastOperationStatus = ERROR_TOO_LITTLE_OUTER_EDGES;
+	if (!ValidateEdgesPivot(m_edgesPivot, m_edges.size()))
 		return false;
-	}
 
-	auto checkpoints = DrawableMap::GenerateTriangleCheckpoints(m_edges, m_edgesPivot);
-	if (checkpoints.empty())
-	{
-		m_lastOperationStatus = ERROR_CANNOT_GENERATE_ALL_CHECKPOINTS;
+	if (!ValidateEdgeSequenceIntersection())
 		return false;
-	}
+
+	if (!ValidateTriangleCheckpoints())
+		return false;
 
 	return true;
 }
@@ -101,140 +188,56 @@ void DrawableMapBuilder::ClearInternal()
 
 bool DrawableMapBuilder::LoadInternal(std::ifstream& input)
 {
-	auto ExtractDoubleFromString = [&](std::string input, double& output)
-	{
-		if (input.empty())
-		{
-			m_lastOperationStatus = ERROR_CANNOT_EXTRACT_DOUBLE_WHILE_READING;
-			return false;
-		}
-
-		const char* character = &input[0];
-		if (*character == '-' || *character == '+')
-			++character;
-
-		size_t periodCount = 0;
-		while (character && *character)
-		{
-			if (*character == '.')
-			{
-				++periodCount;
-				if (periodCount > 1)
-				{
-					m_lastOperationStatus = ERROR_CANNOT_EXTRACT_DOUBLE_WHILE_READING;
-					return false;
-				}
-			}
-			else if (*character < '0' || *character > '9')
-			{
-				m_lastOperationStatus = ERROR_CANNOT_EXTRACT_DOUBLE_WHILE_READING;
-				return false;
-			}
-
-			++character;
-		}
-
-		output = std::atof(input.c_str());
-		return true;
-	};
-
-	auto ExtractPointFromString = [&](std::string line, sf::Vector2f& result)
-	{
-		size_t position = line.find(' ');
-		if (position == std::string::npos)
-		{
-			m_lastOperationStatus = ERROR_CANNOT_EXTRACT_POINT_WHILE_READING;
-			return false;
-		}
-
-		double x;
-		std::string xString = line.substr(0, position);
-		if (!ExtractDoubleFromString(xString, x))
-			return false;
-
-		double y;
-		std::string yString = line.erase(0, position + 1);
-		if (!ExtractDoubleFromString(yString, y))
-			return false;
-
-		result = sf::Vector2f(float(x), float(y));
-		return true;
-	};
-
-	auto ExtractEdgeFromString = [&](std::string line, Edge& result)
-	{
-		std::vector<float> data;
-		while (data.size() != 3)
-		{
-			size_t position = line.find(' ');
-			if (position == std::string::npos)
-				break;
-
-			double coordinate;
-			std::string substr = line.substr(0, position);
-			if (!ExtractDoubleFromString(substr, coordinate))
-				return false;
-
-			data.push_back(float(coordinate));
-			line.erase(0, position + 1);
-		}
-
-		if (data.size() != 3)
-		{
-			m_lastOperationStatus = ERROR_CANNOT_EXTRACT_EDGE_WHILE_READING;
-			return false;
-		}
-
-		float coordinate = static_cast<float>(std::atof(line.c_str()));
-		data.push_back(coordinate);
-		result[0].x = data[0];
-		result[0].y = data[1];
-		result[1].x = data[2];
-		result[1].y = data[3];
-		return true;
-	};
-
-	// Get vehicle angle
-	std::string line;
-	std::getline(input, line);
-	if (line.find(m_vehicleAngleString) != 0)
-	{
-		m_lastOperationStatus = ERROR_CANNOT_FIND_VEHICLE_ANGLE_STRING_WHILE_READING;
-		return false;
-	}
-	line.erase(0, m_vehicleAngleString.size());
-	if (!ExtractDoubleFromString(line, m_vehicleAngle))
-		return false;
-
-	// Get vehicle center
-	std::getline(input, line);
-	if (line.find(m_vehicleCenterString) != 0)
-	{
-		m_lastOperationStatus = ERROR_CANNOT_FIND_VEHICLE_CENTER_STRING_WHILE_READING;
-		return false;
-	}
-	line.erase(0, m_vehicleCenterString.size());
-	if (!ExtractPointFromString(line, m_vehicleCenter))
-		return false;
+	// Read vehicle center position
+	input.read((char*)&m_vehicleCenter.x, sizeof(m_vehicleCenter.x));
+	input.read((char*)&m_vehicleCenter.y, sizeof(m_vehicleCenter.y));
 	m_vehiclePositioned = true;
 
-	// Get edges
-	Edge edge;
-	while (std::getline(input, line))
-	{
-		if (line.find(m_edgeString) != 0)
-		{
-			m_lastOperationStatus = ERROR_CANNOT_FIND_EDGE_STRING_WHILE_READING;
-			return false;
-		}
+	if (!ValidateAllowedAreaVehiclePosition())
+		return false;
 
-		line.erase(0, m_edgeString.size());
-		if (!ExtractEdgeFromString(line, edge))
-			return false;
-		m_edges.push_back(edge);
+	// Read vehicle angle
+	input.read((char*)&m_vehicleAngle, sizeof(m_vehicleAngle));
+
+	if (!ValidateVehicleAngle())
+		return false;
+
+	// Read number of edges
+	size_t numberOfEdges = 0;
+	input.read((char*)&numberOfEdges, sizeof(numberOfEdges));
+
+	if (!ValidateTotalNumberOfEdges(numberOfEdges))
+		return false;
+
+	// Read edges pivot
+	input.read((char*)&m_edgesPivot, sizeof(m_edgesPivot));
+
+	if (!ValidateEdgesPivot(m_edgesPivot, numberOfEdges))
+		return false;
+
+	// Read edges points
+	m_edges.resize(numberOfEdges);
+	for (auto& i : m_edges)
+	{
+		input.read((char*)&i[0].x, sizeof(i[0].x));
+		input.read((char*)&i[0].y, sizeof(i[0].y));
 	}
 
-	if (!Validate())
+	// Pin edges
+	for (size_t i = 0; i < m_edgesPivot - 1; i++)
+		m_edges[i][1] = m_edges[i + 1][0];
+	m_edges[m_edgesPivot - 1][1] = m_edges[0][0];
+
+	for (size_t i = m_edgesPivot; i < numberOfEdges - 1; i++)
+		m_edges[i][1] = m_edges[i + 1][0];
+	m_edges[numberOfEdges - 1][1] = m_edges[m_edgesPivot][0];
+
+	// Validate edge sequence intersection
+	if (!ValidateEdgeSequenceIntersection())
+		return false;
+
+	// Validate triangle checkpoints
+	if (!ValidateTriangleCheckpoints())
 		return false;
 
 	return true;
@@ -242,13 +245,26 @@ bool DrawableMapBuilder::LoadInternal(std::ifstream& input)
 
 bool DrawableMapBuilder::SaveInternal(std::ofstream& output)
 {
-	// Save vehicle
-	output << m_vehicleAngleString << m_vehicleAngle << std::endl;
-	output << m_vehicleCenterString << m_vehicleCenter.x << " " << m_vehicleCenter.y << std::endl;
+	// Save vehicle center position
+	output.write((const char*)&m_vehicleCenter.x, sizeof(m_vehicleCenter.x));
+	output.write((const char*)&m_vehicleCenter.y, sizeof(m_vehicleCenter.y));
 
-	// Save edges
+	// Save vehicle angle
+	output.write((const char*)&m_vehicleAngle, sizeof(m_vehicleAngle));
+	
+	// Save number of edges
+	size_t numberOfEdges = m_edges.size();
+	output.write((const char*)&numberOfEdges, sizeof(numberOfEdges));
+
+	// Save edges pivot
+	output.write((const char*)&m_edgesPivot, sizeof(m_edgesPivot));
+
+	// Save edges beggining position
 	for (auto& i : m_edges)
-		output << m_edgeString << i[0].x << " " << i[0].y << " " << i[1].x << " " << i[1].y << std::endl;
+	{
+		output.write((const char*)&i[0].x, sizeof(i[0].x));
+		output.write((const char*)&i[0].y, sizeof(i[0].y));
+	}
 
 	return true;
 }
@@ -286,23 +302,23 @@ void DrawableMapBuilder::CreateDummyInternal()
 }
 
 DrawableMapBuilder::DrawableMapBuilder() :
-	AbstractBuilder(std::ios::in, std::ios::out),
+	AbstractBuilder(),
 	m_edgesPivot(0),
 	m_vehiclePositioned(false),
 	m_vehicleAngle(0.0)
 {
 	m_operationsMap[ERROR_VEHICLE_IS_NOT_POSITIONED] = "Error: Vehicle is not positioned!";
+	m_operationsMap[ERROR_VEHICLE_OUTSIDE_ALLOWED_MAP_AREA] = "Error: Vehicle is outside allowed map area!";
+	m_operationsMap[ERROR_VEHICLE_OUTSIDE_ALLOWED_ROAD_AREA] = "Error: Vehicle is outside allowed road area!";
+	m_operationsMap[ERROR_VEHICLE_ANGLE_IS_TOO_LITTLE] = "Error: Vehicle's angle is too little!";
+	m_operationsMap[ERROR_VEHICLE_ANGLE_IS_TOO_LARGE] = "Error: Vehicle's angle is too large!";
 	m_operationsMap[ERROR_EDGES_ARE_NOT_SPECIFIED] = "Error: Edges are not specified!";
 	m_operationsMap[ERROR_INCORRECT_EDGE_SEQUENCE_COUNT] = "Error: There should be only two edge sequences!";
 	m_operationsMap[ERROR_EDGE_SEQUENCE_INTERSECTION] = "Error: Found intersection between edge sequences!";
 	m_operationsMap[ERROR_TOO_LITTLE_INNER_EDGES] = "Error: Too little inner edges specified!";
+	m_operationsMap[ERROR_TOO_MANY_INNER_EDGES] = "Error: Too many inner edges specified!";
 	m_operationsMap[ERROR_TOO_LITTLE_OUTER_EDGES] = "Error: Too little outer edges specified!";
-	m_operationsMap[ERROR_CANNOT_EXTRACT_DOUBLE_WHILE_READING] = "Error: Cannot extract floating point value from string while reading!";
-	m_operationsMap[ERROR_CANNOT_EXTRACT_POINT_WHILE_READING] = "Error: Cannot extract point from string while reading!";
-	m_operationsMap[ERROR_CANNOT_EXTRACT_EDGE_WHILE_READING] = "Error: Cannot extract edge from string while reading!";
-	m_operationsMap[ERROR_CANNOT_FIND_VEHICLE_ANGLE_STRING_WHILE_READING] = "Error: Cannot extract vehicle angle string line while reading!";
-	m_operationsMap[ERROR_CANNOT_FIND_VEHICLE_CENTER_STRING_WHILE_READING] = "Error: Cannot extract vehicle center string line while reading!";
-	m_operationsMap[ERROR_CANNOT_FIND_EDGE_STRING_WHILE_READING] = "Error: Cannot extract edge string line while reading!";
+	m_operationsMap[ERROR_TOO_MANY_OUTER_EDGES] = "Error: Too many outer edges specified!";
 	m_operationsMap[ERROR_CANNOT_GENERATE_ALL_CHECKPOINTS] = "Error: Cannot generate all checkpoints! Check if edges are reasonable positioned.";
 	Clear();
 }
@@ -351,28 +367,52 @@ DrawableMap* DrawableMapBuilder::Copy(const DrawableMap* drawableMap)
 	if (!drawableMap)
 		return nullptr;
 
-	return new DrawableMap(drawableMap->m_edges, drawableMap->m_pivot);
+	return new DrawableMap(*drawableMap);
 }
 
-size_t DrawableMapBuilder::GetMinNumberOfInnerEdges() const
+size_t DrawableMapBuilder::GetMinNumberOfInnerEdges()
 {
 	return 4;
 }
 
-size_t DrawableMapBuilder::GetMaxNumberOfInnerEdges() const
+size_t DrawableMapBuilder::GetMaxNumberOfInnerEdges()
+{
+	return 512;
+}
+
+size_t DrawableMapBuilder::GetMinNumberOfOuterEdges()
 {
 	return GetMinNumberOfInnerEdges();
 }
 
-sf::Vector2f DrawableMapBuilder::GetMaxAllowedMapArea() const
+size_t DrawableMapBuilder::GetMaxNumberOfOuterEdges()
 {
-	auto windowSize = CoreWindow::GetSize();
-	return windowSize * 3.0f;
+	return GetMaxNumberOfInnerEdges();
 }
 
-sf::Vector2f DrawableMapBuilder::GetMaxAllowedViewArea() const
+std::pair<sf::Vector2f, sf::Vector2f> DrawableMapBuilder::GetMaxAllowedMapArea() const
 {
-	return GetMaxAllowedMapArea() * 1.05f;
+	auto size = CoreWindow::GetSize() * 3.0f;
+	auto position = sf::Vector2f(size.x / 20.0f, size.y / 20.0f);
+	return std::make_pair(position, size);
+}
+
+std::pair<sf::Vector2f, sf::Vector2f> DrawableMapBuilder::GetMaxAllowedViewArea() const
+{
+	auto area = GetMaxAllowedMapArea();
+	auto size = area.second * 1.05f;
+	auto position = sf::Vector2f(area.first.x - (size.x - area.second.x) / 2, area.first.y - (size.y - area.second.y) / 2);
+	return std::make_pair(position, size);
+}
+
+double DrawableMapBuilder::GetMinVehicleAngle()
+{
+	return 0.0;
+}
+
+double DrawableMapBuilder::GetMaxVehicleAngle()
+{
+	return 360.0;
 }
 
 bool DrawableMapBuilder::Initialize()

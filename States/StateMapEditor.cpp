@@ -50,17 +50,15 @@ StateMapEditor::StateMapEditor() :
 	m_upToDate = false;
 	m_vehiclePositioned = false;
 
-	auto windowSize = CoreWindow::GetSize();
-	auto maxSize = m_drawableMapBuilder.GetMaxAllowedMapArea();
-	auto allowedShapePosition = sf::Vector2f(windowSize.x / 20.0f, windowSize.y / 20.0f);
-	auto maxViewSize = m_drawableMapBuilder.GetMaxAllowedViewArea();
-	m_allowedAreaShape.setFillColor(sf::Color(255, 255, 255, 0));
-	m_allowedAreaShape.setOutlineColor(sf::Color(255, 255, 255, 64));
-	m_allowedAreaShape.setOutlineThickness(2);
-	m_allowedAreaShape.setSize(maxSize);
-	m_allowedAreaShape.setPosition(allowedShapePosition);
-	m_allowedViewAreaShape.setSize(maxViewSize);
-	m_allowedViewAreaShape.setPosition(allowedShapePosition.x - (maxViewSize.x - maxSize.x) / 2, allowedShapePosition.y - (maxViewSize.y - maxSize.y) / 2);
+	auto allowedMapArea = m_drawableMapBuilder.GetMaxAllowedMapArea();
+	auto allowedViewArea = m_drawableMapBuilder.GetMaxAllowedViewArea();
+	m_allowedMapAreaShape.setFillColor(sf::Color(255, 255, 255, 0));
+	m_allowedMapAreaShape.setOutlineColor(sf::Color(255, 255, 255, 64));
+	m_allowedMapAreaShape.setOutlineThickness(2);
+	m_allowedMapAreaShape.setPosition(allowedMapArea.first);
+	m_allowedMapAreaShape.setSize(allowedMapArea.second);
+	m_allowedViewAreaShape.setPosition(allowedViewArea.first);
+	m_allowedViewAreaShape.setSize(allowedViewArea.second);
 	
 	m_drawableVehicleBuilder.CreateDummy();
 	m_drawableVehicle = m_drawableVehicleBuilder.Get();
@@ -122,79 +120,79 @@ void StateMapEditor::Capture()
 	if (CoreWindow::GetEvent().type == sf::Event::MouseButtonPressed)
 	{
 		sf::Vector2f correctPosition = CoreWindow::GetMousePosition() + CoreWindow::GetViewOffset();
-		if (DrawableMath::IsPointInsideRectangle(m_allowedAreaShape.getSize(), m_allowedAreaShape.getPosition(), correctPosition))
+		if (DrawableMath::IsPointInsideRectangle(m_allowedMapAreaShape.getSize(), m_allowedMapAreaShape.getPosition(), correctPosition))
 		{
 			switch (m_activeMode)
 			{
-			case ActiveMode::EDGE:
-			{
-				switch (m_edgeSubmode)
+				case ActiveMode::EDGE:
 				{
-					case EdgeSubmode::GLUED_INSERT:
+					switch (m_edgeSubmode)
 					{
-						if (m_insertEdge)
+						case EdgeSubmode::GLUED_INSERT:
 						{
-							if (!m_edges.empty())
+							if (m_insertEdge)
 							{
-								size_t size = m_edges.size() - 1;
-								Edge temporaryEdge = { m_edgeBeggining, correctPosition };
-								sf::Vector2f intersectionPoint;
+								if (!m_edges.empty())
+								{
+									size_t size = m_edges.size() - 1;
+									Edge temporaryEdge = { m_edgeBeggining, correctPosition };
+									sf::Vector2f intersectionPoint;
+									for (size_t i = 0; i < size; ++i)
+									{
+										if (DrawableMath::GetIntersectionPoint(m_edges[i], temporaryEdge, intersectionPoint))
+										{
+											auto segment = DrawableMath::Distance(m_edges[i][0], intersectionPoint);
+											auto length = DrawableMath::Distance(m_edges[i]);
+											double percentage = segment / length;
+											if (percentage > 0.01 && percentage < 0.5)
+												correctPosition = m_edges[i][0];
+											else if (percentage > 0.5 && percentage < 0.99)
+												correctPosition = m_edges[i][1];
+											else
+												continue;
+											m_insertEdge = false;
+											break;
+										}
+									}
+								}
+
+								Edge newEdge;
+								newEdge[0] = m_edgeBeggining;
+								newEdge[1] = correctPosition;
+								m_edges.push_back(newEdge);
+								m_upToDate = false;
+							}
+							else
+								m_insertEdge = true;
+
+							m_edgeBeggining = correctPosition;
+							break;
+						}
+						case EdgeSubmode::REMOVE:
+						{
+							if (m_removeEdge)
+							{
+								size_t size = m_edges.size();
 								for (size_t i = 0; i < size; ++i)
 								{
-									if (DrawableMath::GetIntersectionPoint(m_edges[i], temporaryEdge, intersectionPoint))
+									if (DrawableMath::Intersect(m_edges[i], m_edgeBeggining, correctPosition))
 									{
-										auto segment = DrawableMath::Distance(m_edges[i][0], intersectionPoint);
-										auto length = DrawableMath::Distance(m_edges[i]);
-										double percentage = segment / length;
-										if (percentage > 0.01 && percentage < 0.5)
-											correctPosition = m_edges[i][0];
-										else if (percentage > 0.5 && percentage < 0.99)
-											correctPosition = m_edges[i][1];
-										else
-											continue;
-										m_insertEdge = false;
-										break;
+										m_upToDate = false;
+										m_edges.erase(m_edges.begin() + i);
+										--size;
+										--i;
 									}
 								}
 							}
+							else
+								m_edgeBeggining = correctPosition;
 
-							Edge newEdge;
-							newEdge[0] = m_edgeBeggining;
-							newEdge[1] = correctPosition;
-							m_edges.push_back(newEdge);
-							m_upToDate = false;
+							m_removeEdge = !m_removeEdge;
+							break;
 						}
-						else
-							m_insertEdge = true;
-
-						m_edgeBeggining = correctPosition;
+						}
 						break;
 					}
-					case EdgeSubmode::REMOVE:
-					{
-						if (m_removeEdge)
-						{
-							size_t size = m_edges.size();
-							for (size_t i = 0; i < size; ++i)
-							{
-								if (DrawableMath::Intersect(m_edges[i], m_edgeBeggining, correctPosition))
-								{
-									m_upToDate = false;
-									m_edges.erase(m_edges.begin() + i);
-									--size;
-									--i;
-								}
-							}
-						}
-						else
-							m_edgeBeggining = correctPosition;
-
-						m_removeEdge = !m_removeEdge;
-						break;
-					}
-					}
-					break;
-				}
 				case ActiveMode::VEHICLE:
 				{
 					switch (m_vehicleSubmode)
@@ -361,11 +359,19 @@ void StateMapEditor::Update()
 						if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z))
 						{
 							m_drawableVehicle->Rotate(0.0);
+							auto angle = m_drawableVehicle->GetAngle();
+							if (angle < DrawableMapBuilder::GetMinVehicleAngle())
+								angle = DrawableMapBuilder::GetMinVehicleAngle();
+							m_drawableVehicle->SetAngle(angle);
 							m_drawableVehicle->Update();
 						}
 						else if (sf::Keyboard::isKeyPressed(sf::Keyboard::X))
 						{
 							m_drawableVehicle->Rotate(1.0);
+							auto angle = m_drawableVehicle->GetAngle();
+							if (angle > DrawableMapBuilder::GetMaxVehicleAngle())
+								angle = DrawableMapBuilder::GetMaxVehicleAngle();
+							m_drawableVehicle->SetAngle(angle);
 							m_drawableVehicle->Update();
 						}
 					}
@@ -457,7 +463,7 @@ bool StateMapEditor::Load()
 	m_texts[MOVEMENT_TEXT] = new DrawableTripleText({ "Movement:", "", "| [+] [-]" });
 	m_texts[VIEW_OFFSET_X_TEXT] = new DrawableTripleText({ "View offset x:", "", "| [A] [D]" });
 	m_texts[VIEW_OFFSET_Y_TEXT] = new DrawableTripleText({ "View offset y:", "", "| [W] [S]" });
-	m_texts[FILENAME_TEXT] = new DrawableFilenameText<true, true>;
+	m_texts[FILENAME_TEXT] = new DrawableFilenameText<true, true>("map.bin");
 	m_texts[EDGE_SUBMODE_TEXT] = new DrawableTripleText({ "Current mode:", "", "| [1] [2] [RMB] [Alt] [Esc]" });
 	m_texts[EDGE_COUNT_TEXT] = new DrawableDoubleText({ "Edge count:" });
 	m_texts[VEHICLE_SUBMODE_TEXT] = new DrawableTripleText({ "Current mode:", "", "| [1] [2] [RMB]" });
@@ -472,10 +478,7 @@ bool StateMapEditor::Load()
 	m_textObservers[EDGE_SUBMODE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_edgeSubmodeMap[m_edgeSubmode]; });
 	m_textObservers[EDGE_COUNT_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(m_edges.size()); }, 0.5);
 	m_textObservers[VEHICLE_SUBMODE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_vehicleSubmodeMap[m_vehicleSubmode]; });
-	m_textObservers[VEHICLE_ANGLE_TEXT] = new FunctionTimerObserver<std::string>([&] {
-											double angle = double((long long)(m_drawableVehicle->GetAngle()) % 360);
-											return std::to_string(DrawableMath::CastAtan2ToFullAngle(angle)); },
-											0.2);
+	m_textObservers[VEHICLE_ANGLE_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(m_drawableVehicle->GetAngle()); }, 0.2);
 
 	// Set text observers
 	for (size_t i = 0; i < TEXT_COUNT; ++i)
@@ -513,7 +516,7 @@ void StateMapEditor::Draw()
 		CoreWindow::GetRenderWindow().draw(m_line.data(), m_line.size(), sf::Lines);
 	}
 
-	CoreWindow::GetRenderWindow().draw(m_allowedAreaShape);
+	CoreWindow::GetRenderWindow().draw(m_allowedMapAreaShape);
 
 	switch (m_activeMode)
 	{

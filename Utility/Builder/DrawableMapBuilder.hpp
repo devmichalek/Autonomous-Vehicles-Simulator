@@ -12,17 +12,17 @@ class DrawableMapBuilder final :
 	enum
 	{
 		ERROR_VEHICLE_IS_NOT_POSITIONED = LAST_ENUM_OPERATION_INDEX,
+		ERROR_VEHICLE_OUTSIDE_ALLOWED_MAP_AREA,
+		ERROR_VEHICLE_OUTSIDE_ALLOWED_ROAD_AREA,
+		ERROR_VEHICLE_ANGLE_IS_TOO_LITTLE,
+		ERROR_VEHICLE_ANGLE_IS_TOO_LARGE,
 		ERROR_EDGES_ARE_NOT_SPECIFIED,
 		ERROR_INCORRECT_EDGE_SEQUENCE_COUNT,
 		ERROR_EDGE_SEQUENCE_INTERSECTION,
 		ERROR_TOO_LITTLE_INNER_EDGES,
+		ERROR_TOO_MANY_INNER_EDGES,
 		ERROR_TOO_LITTLE_OUTER_EDGES,
-		ERROR_CANNOT_EXTRACT_DOUBLE_WHILE_READING,
-		ERROR_CANNOT_EXTRACT_POINT_WHILE_READING,
-		ERROR_CANNOT_EXTRACT_EDGE_WHILE_READING,
-		ERROR_CANNOT_FIND_VEHICLE_ANGLE_STRING_WHILE_READING,
-		ERROR_CANNOT_FIND_VEHICLE_CENTER_STRING_WHILE_READING,
-		ERROR_CANNOT_FIND_EDGE_STRING_WHILE_READING,
+		ERROR_TOO_MANY_OUTER_EDGES,
 		ERROR_CANNOT_GENERATE_ALL_CHECKPOINTS
 	};
 
@@ -32,10 +32,29 @@ class DrawableMapBuilder final :
 	sf::Vector2f m_vehicleCenter;
 	double m_vehicleAngle;
 
-	// String constants used for file input/output operations
-	static inline const std::string m_vehicleAngleString = "Vehicle angle: ";
-	static inline const std::string m_vehicleCenterString = "Vehicle center: ";
-	static inline const std::string m_edgeString = "Edge: ";
+	// Validates if car position is inside allowed area
+	bool ValidateAllowedAreaVehiclePosition();
+
+	// Validates if vehicle position is inside road are
+	bool ValidateRoadAreaVehiclePosition();
+
+	// Validates if vehicle's angle is correct
+	bool ValidateVehicleAngle();
+
+	// Validates total number of edges
+	bool ValidateTotalNumberOfEdges(size_t count);
+
+	// Validates edges pivot
+	bool ValidateEdgesPivot(size_t pivot, size_t count);
+
+	// Validates number of edge sequences
+	bool ValidateNumberOfEdgeSequences();
+
+	// Checks if there is edge sequence intersection
+	bool ValidateEdgeSequenceIntersection();
+
+	// Validate triangle checkpoints by creating dummies
+	bool ValidateTriangleCheckpoints();
 
 	// Validate internal fields
 	bool ValidateInternal();
@@ -77,16 +96,28 @@ public:
 	static DrawableMap* Copy(const DrawableMap* drawableMap);
 
 	// Returns minimum required number of inner edges
-	size_t GetMinNumberOfInnerEdges() const;
+	static size_t GetMinNumberOfInnerEdges();
 
 	// Returns maximum required number of inner edges
-	size_t GetMaxNumberOfInnerEdges() const;
+	static size_t GetMaxNumberOfInnerEdges();
 
-	// Returns maximum allowed map area
-	sf::Vector2f GetMaxAllowedMapArea() const;
+	// Returns minimum required number of outer edges
+	static size_t GetMinNumberOfOuterEdges();
 
-	// Returns maximum allowed view area
-	sf::Vector2f GetMaxAllowedViewArea() const;
+	// Returns maximum required number of outer edges
+	static size_t GetMaxNumberOfOuterEdges();
+
+	// Returns maximum allowed map area (position + size)
+	std::pair<sf::Vector2f, sf::Vector2f> GetMaxAllowedMapArea() const;
+
+	// Returns maximum allowed view area (position + size)
+	std::pair<sf::Vector2f, sf::Vector2f> GetMaxAllowedViewArea() const;
+
+	// Returns minimum vehicle's angle
+	static double GetMinVehicleAngle();
+
+	// Returns maximum vehicle's angle
+	static double GetMaxVehicleAngle();
 
 	// Checks if dummy can be created
 	static bool Initialize();

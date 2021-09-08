@@ -302,7 +302,7 @@ void ArtificialNeuralNetworkBuilder::CreateDummyInternal()
 }
 
 ArtificialNeuralNetworkBuilder::ArtificialNeuralNetworkBuilder() :
-	AbstractBuilder(std::ios::in | std::ios::binary, std::ios::out | std::ios::binary),
+	AbstractBuilder(),
 	m_numberOfNeurons(0),
 	m_numberOfWeights(0)
 {

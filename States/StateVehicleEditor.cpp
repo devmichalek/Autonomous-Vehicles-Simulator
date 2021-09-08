@@ -298,7 +298,7 @@ bool StateVehicleEditor::Load()
 	m_texts[ACTIVE_SUBMODE_TEXT] = new DrawableTripleText({ "Active submode:", "", "| [1] [2]" });
 	m_texts[TOTAL_NUMBER_OF_EDGES_TEXT] = new DrawableTripleText({ "Total number of edges:", "", "| [RMB]" });
 	m_texts[TOTAL_NUMBER_OF_SENSORS_TEXT] = new DrawableTripleText({ "Total number of sensors:", "", "| [RMB]" });
-	m_texts[FILENAME_TEXT] = new DrawableFilenameText<true, true>;
+	m_texts[FILENAME_TEXT] = new DrawableFilenameText<true, true>("vehicle.bin");
 	m_texts[CURRENT_SENSOR_TEXT] = new DrawableTripleText({ "Current sensor:", "", "| [Alt]" });
 	m_texts[CURRENT_SENSOR_ANGLE_TEXT] = new DrawableTripleText({ "Current sensor angle:", "", "| [Z] [X]" });
 

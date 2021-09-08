@@ -315,7 +315,7 @@ VehicleBody DrawableVehicleBuilder::CreateVehicleBodyDummy(sf::Vector2f dummySiz
 }
 
 DrawableVehicleBuilder::DrawableVehicleBuilder() :
-	AbstractBuilder(std::ios::in | std::ios::binary, std::ios::out | std::ios::binary)
+	AbstractBuilder()
 {
 	m_operationsMap[ERROR_TOO_LITTLE_VEHICLE_BODY_POINTS] = "Error: Too little vehicle body points!";
 	m_operationsMap[ERROR_TOO_MANY_VEHICLE_BODY_POINTS] = "Error: Too many vehicle body points!";
