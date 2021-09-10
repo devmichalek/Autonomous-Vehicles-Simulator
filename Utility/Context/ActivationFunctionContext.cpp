@@ -18,15 +18,15 @@ void ActivationFunctionContext::Initialize()
 		CoreLogger::PrintError("Activation function context initialization was performed more than once!");
 }
 
-ActivationFunction& ActivationFunctionContext::Get(size_t index)
+Neuron ActivationFunctionContext::Compute(size_t index, Neuron neuron)
 {
 	if (index >= ACTIVATION_FUNCTIONS_COUNT)
 	{
 		CoreLogger::PrintError("Activation function index is out of range!");
-		return m_activationFunctionTable[STUB_ACTIVATION_FUNCTION];
+		return m_activationFunctionTable[STUB_ACTIVATION_FUNCTION](neuron);
 	}
 
-	return m_activationFunctionTable[index];
+	return m_activationFunctionTable[index](neuron);
 }
 
 std::string ActivationFunctionContext::GetString(size_t index)

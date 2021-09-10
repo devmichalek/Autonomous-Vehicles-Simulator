@@ -27,7 +27,7 @@ public:
 	
 	static void Initialize();
 
-	static ActivationFunction& Get(size_t index);
+	static Neuron Compute(size_t index, Neuron neuron);
 
 	static std::string GetString(size_t index);
 

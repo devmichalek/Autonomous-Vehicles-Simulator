@@ -259,7 +259,6 @@ void StateMapEditor::Update()
 			for (auto& i : m_edges)
 				m_drawableMapBuilder.AddEdge(i);
 			bool success = m_drawableMapBuilder.Save(filenameText->GetFilename());
-			std::string message;
 			auto status = m_drawableMapBuilder.GetLastOperationStatus();
 			filenameText->ShowStatusText();
 			if (success)

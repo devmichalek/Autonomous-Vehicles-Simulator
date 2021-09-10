@@ -102,6 +102,8 @@ public:
 	// Returns raw neuron data
 	const Neuron* GetRawNeuronData();
 
+	void Set(ArtificialNeuralNetwork* artificialNeuralNetwork);
+
 	// Returns artificial neural network
 	ArtificialNeuralNetwork* Get();
 

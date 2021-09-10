@@ -364,47 +364,72 @@ const Neuron* ArtificialNeuralNetworkBuilder::GetRawNeuronData()
 	return &m_rawData[0];
 }
 
+void ArtificialNeuralNetworkBuilder::Set(ArtificialNeuralNetwork* artificialNeuralNetwork)
+{
+	// Get number of neuron layers
+	const size_t layersCount = artificialNeuralNetwork->m_neuronLayers.size();
+
+	// Set neuron layers sizes
+	m_neuronLayerSizes.resize(layersCount);
+	for (size_t i = 0; i < layersCount; ++i)
+		m_neuronLayerSizes[i] = artificialNeuralNetwork->m_neuronLayers[i].size();
+
+	// Set number of neurons
+	m_numberOfNeurons = artificialNeuralNetwork->m_numberOfNeurons;
+
+	// Set number of weights
+	m_numberOfWeights = artificialNeuralNetwork->m_numberOfWeights;
+
+	// Set bias vector
+	m_biasVector = artificialNeuralNetwork->m_biasVector;
+
+	// Set activation function indexes
+	m_activationFunctionIndexes = artificialNeuralNetwork->m_activationFunctionIndexes;
+
+	// Set raw data
+	m_rawData.resize(m_numberOfWeights);
+	artificialNeuralNetwork->GetRawData(&m_rawData[0]);
+}
+
 ArtificialNeuralNetwork* ArtificialNeuralNetworkBuilder::Get()
 {
 	if (!Validate())
 		return nullptr;
 
 	// Create artificial neural network
-	auto* ann = new ArtificialNeuralNetwork;
+	auto* artificialNeuralNetwork = new ArtificialNeuralNetwork;
 
-	// Get number of layers
+	// Get number of neuron layers
 	const size_t layersCount = m_neuronLayerSizes.size();
 
 	// Set neuron layers
-	ann->m_neuronLayers.resize(layersCount);
+	artificialNeuralNetwork->m_neuronLayers.resize(layersCount);
 	for (size_t i = 0; i < layersCount; ++i)
-		ann->m_neuronLayers[i].resize(m_neuronLayerSizes[i], 0.0);
+		artificialNeuralNetwork->m_neuronLayers[i].resize(m_neuronLayerSizes[i], 0.0);
 
 	// Set number of neurons
-	ann->m_numberOfNeurons = m_numberOfNeurons;
+	artificialNeuralNetwork->m_numberOfNeurons = m_numberOfNeurons;
 
 	// Set weights
-	ann->m_weightLayers.resize(layersCount - 1);
+	artificialNeuralNetwork->m_weightLayers.resize(layersCount - 1);
 	for (size_t i = 1; i < layersCount; ++i)
 	{
-		ann->m_weightLayers[i - 1].resize(m_neuronLayerSizes[i]);
-		size_t connectionsCount = ann->m_neuronLayers[i - 1].size();
-		for (auto& weights : ann->m_weightLayers[i - 1])
+		artificialNeuralNetwork->m_weightLayers[i - 1].resize(m_neuronLayerSizes[i]);
+		size_t connectionsCount = artificialNeuralNetwork->m_neuronLayers[i - 1].size();
+		for (auto& weights : artificialNeuralNetwork->m_weightLayers[i - 1])
 			weights.resize(connectionsCount, 0.0);
 	}
 
 	// Set number of weights
-	ann->m_numberOfWeights = m_numberOfWeights;
+	artificialNeuralNetwork->m_numberOfWeights = m_numberOfWeights;
 
 	// Set bias vector
-	ann->m_biasVector = m_biasVector;
+	artificialNeuralNetwork->m_biasVector = m_biasVector;
 
-	// Set activation functions
-	ann->m_activationFunctions.resize(layersCount - 1);
-	for (size_t i = 0; i < layersCount - 1; ++i)
-		ann->m_activationFunctions[i] = ActivationFunctionContext::Get(m_activationFunctionIndexes[i]);
+	// Set activation function indexes
+	artificialNeuralNetwork->m_activationFunctionIndexes = m_activationFunctionIndexes;
 
-	return ann;
+	return artificialNeuralNetwork;
 }
 
 ArtificialNeuralNetwork* ArtificialNeuralNetworkBuilder::Copy(const ArtificialNeuralNetwork* artificialNeuralNetwork)
@@ -416,7 +441,7 @@ ArtificialNeuralNetwork* ArtificialNeuralNetworkBuilder::Copy(const ArtificialNe
 	result->m_neuronLayers = artificialNeuralNetwork->m_neuronLayers;
 	result->m_weightLayers = artificialNeuralNetwork->m_weightLayers;
 	result->m_biasVector = artificialNeuralNetwork->m_biasVector;
-	result->m_activationFunctions = artificialNeuralNetwork->m_activationFunctions;
+	result->m_activationFunctionIndexes = artificialNeuralNetwork->m_activationFunctionIndexes;
 	result->m_numberOfNeurons = artificialNeuralNetwork->m_numberOfNeurons;
 	result->m_numberOfWeights = artificialNeuralNetwork->m_numberOfWeights;
 	return result;

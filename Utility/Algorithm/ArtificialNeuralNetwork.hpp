@@ -11,7 +11,7 @@ class ArtificialNeuralNetwork
 	NeuronLayers m_neuronLayers;
 	WeightLayers m_weightLayers;
 	BiasVector m_biasVector; // Bias per neuron layer
-	ActivationFunctions m_activationFunctions;
+	ActivationFunctionIndexes m_activationFunctionIndexes;
 	size_t m_numberOfNeurons;
 	size_t m_numberOfWeights;
 	friend ArtificialNeuralNetworkBuilder;
@@ -46,7 +46,7 @@ class ArtificialNeuralNetwork
 				neuron += m_biasVector[layerNr - 1];
 
 				// Call activation function
-				neuron = m_activationFunctions[layerNr - 1](neuron);
+				neuron = ActivationFunctionContext::Compute(m_activationFunctionIndexes[layerNr - 1], neuron);
 			}
 		}
 	}
@@ -73,9 +73,23 @@ public:
 				for (auto& weights : weightLayer)
 				{
 					for (auto& weight : weights)
-					{
 						weight = data[index++];
-					}
+				}
+			}
+		}
+	}
+
+	void GetRawData(Neuron* data)
+	{
+		if (data)
+		{
+			size_t index = 0;
+			for (auto& weightLayer : m_weightLayers)
+			{
+				for (auto& weights : weightLayer)
+				{
+					for (auto& weight : weights)
+						data[index++] = weight;
 				}
 			}
 		}

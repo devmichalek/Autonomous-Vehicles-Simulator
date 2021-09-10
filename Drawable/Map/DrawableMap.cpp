@@ -8,12 +8,10 @@ DrawableMap::DrawableMap(const EdgeVector& edges, const size_t pivot) :
 	m_edgeLine[1].color = m_edgeLine[0].color;
 	m_edges = edges;
 
-	m_fitnessVector.clear();
-	m_previousFitnessVector.clear();
 	m_highestFitness = 0;
 	m_highestFitnessOverall = 0;
-	m_timers.clear();
 	m_minFitnessImprovement = 0.0;
+	m_bestVehicleIndex = 0;
 
 	// Generate triangle checkpoints
 	m_triangleCheckpoints = GenerateTriangleCheckpoints(m_edges, m_edgesPivot);
@@ -38,18 +36,11 @@ DrawableMap::DrawableMap(const DrawableMap& drawableMap) :
 	m_edgeLine[0].color = sf::Color::White;
 	m_edgeLine[1].color = m_edgeLine[0].color;
 	m_edges = drawableMap.m_edges;
-
-	m_fitnessVector.clear();
-	m_previousFitnessVector.clear();
 	m_highestFitness = 0;
 	m_highestFitnessOverall = 0;
-	m_timers.clear();
 	m_minFitnessImprovement = 0.0;
-
-	// Generate triangle checkpoints
+	m_bestVehicleIndex = 0;
 	m_triangleCheckpoints = drawableMap.m_triangleCheckpoints;
-
-	// Set shape point count
 	m_triangleCheckpointShape.setPointCount(m_triangleCheckpoints.back().size());
 }
 
@@ -57,7 +48,7 @@ DrawableMap::~DrawableMap()
 {
 }
 
-void DrawableMap::Reset()
+void DrawableMap::Init(size_t size, double minFitnessImprovement)
 {
 	m_highestFitness = 0;
 	m_highestFitnessOverall = 0;
@@ -68,32 +59,29 @@ void DrawableMap::Reset()
 		m_previousFitnessVector[i] = 0.0;
 		m_timers[i].Reset();
 	}
-}
 
-void DrawableMap::Init(size_t size, double minFitnessImprovement)
-{
-	Reset();
 	m_fitnessVector.resize(size, 0);
 	m_previousFitnessVector.resize(size, 0.0);
 	m_timers.resize(size, StoppableTimer(0.0, std::numeric_limits<double>::max()));
 	m_minFitnessImprovement = minFitnessImprovement;
+	m_bestVehicleIndex = 0;
 }
 
 void DrawableMap::Intersect(DrawableVehicleFactory& drawableVehicleFactory)
 {
-	for (auto& vehicle : drawableVehicleFactory)
+	size_t count = drawableVehicleFactory.size();
+	for (size_t i = 0; i < count; ++i)
 	{
-		if (!vehicle->IsActive())
+		if (!drawableVehicleFactory[i]->IsActive())
 			continue;
 
+		m_timers[i].Update();
 		for (auto& edge : m_edges)
 		{
-			if (DrawableMath::Intersect(edge, vehicle->GetVertices()))
-			{
-				vehicle->SetInactive();
-			}
+			if (DrawableMath::Intersect(edge, drawableVehicleFactory[i]->GetVertices()))
+				drawableVehicleFactory[i]->SetInactive();
 			else
-				vehicle->Detect(edge);
+				drawableVehicleFactory[i]->Detect(edge);
 		}
 	}
 }
@@ -121,28 +109,38 @@ void DrawableMap::DrawDebug()
 		m_triangleCheckpointShape.setFillColor(sf::Color(red, green, blue, 48));
 		CoreWindow::GetRenderWindow().draw(m_triangleCheckpointShape);
 	}
-
-	/*for (auto& position : m_lineCheckpoints)
-	{
-		m_lineCheckpointShape[0].position = position[0];
-		m_lineCheckpointShape[1].position = position[1];
-		CoreWindow::GetRenderWindow().draw(m_lineCheckpointShape.data(), m_lineCheckpointShape.size(), sf::Lines);
-	}*/
 }
 
-void DrawableMap::Iterate(DrawableVehicleFactory& drawableVehicleFactory)
+size_t DrawableMap::Iterate(DrawableVehicleFactory& drawableVehicleFactory)
 {
-	auto maxFitness = GetMaxFitness();
 	for (size_t i = 0; i < drawableVehicleFactory.size(); ++i)
-	{
 		m_fitnessVector[i] = CalculateFitness(drawableVehicleFactory[i]);
-		m_fitnessVector[i] += static_cast<Fitness>(double(maxFitness) / m_timers[i].Value());
+
+	auto index = std::max_element(m_fitnessVector.begin(), m_fitnessVector.end()); // Max: 100%
+	if (m_highestFitnessOverall < *index)
+		m_highestFitnessOverall = *index;
+	m_highestFitness = 0;
+
+	for (size_t i = 0; i < drawableVehicleFactory.size(); ++i)
+		m_fitnessVector[i] += static_cast<Fitness>(double(m_fitnessVector[i]) / m_timers[i].Value());
+
+	index = std::max_element(m_fitnessVector.begin(), m_fitnessVector.end());
+	m_bestVehicleIndex = std::distance(m_fitnessVector.begin(), index); // Max: 100% + (100 / n)%
+
+	for (size_t i = 0; i < m_fitnessVector.size(); ++i)
+	{
+		m_fitnessVector[i] = 0;
+		m_previousFitnessVector[i] = 0.0;
+		m_timers[i].Reset();
 	}
 
-	auto iterator = std::max_element(m_fitnessVector.begin(), m_fitnessVector.end());
-	m_highestFitness = *iterator;
-	if (m_highestFitnessOverall < m_highestFitness)
-		m_highestFitnessOverall = m_highestFitness;
+	return m_bestVehicleIndex;
+
+}
+
+size_t DrawableMap::GetBestVehicleFromLastIteration()
+{
+	return m_bestVehicleIndex;
 }
 
 size_t DrawableMap::MarkLeader(DrawableVehicleFactory& drawableVehicleFactory)
@@ -198,12 +196,6 @@ std::pair<size_t, double> DrawableMap::Punish(DrawableVehicleFactory& drawableVe
 	return std::pair(population, meanRequiredFitness / maxFitness / double(population));
 }
 
-void DrawableMap::UpdateTimers()
-{
-	for (auto& timer : m_timers)
-		timer.Update();
-}
-
 const FitnessVector& DrawableMap::GetFitnessVector() const
 {
 	return m_fitnessVector;
@@ -221,7 +213,7 @@ double DrawableMap::GetHighestFitnessOverall()
 
 Fitness DrawableMap::CalculateFitness(DrawableVehicle* drawableVehicle)
 {
-	Fitness fitness = 0;
+	Fitness fitness = GetMaxFitness();
 	for (size_t i = 0; i < m_triangleCheckpoints.size(); ++i)
 	{
 		if (DrawableMath::Intersect(m_triangleCheckpoints[i], drawableVehicle->GetVertices()))
@@ -251,7 +243,7 @@ TriangleVector DrawableMap::GenerateTriangleCheckpoints(const EdgeVector& edges,
 
 Fitness DrawableMap::GetMaxFitness()
 {
-	return Fitness(m_triangleCheckpoints.size());
+	return Fitness(m_triangleCheckpoints.size()) + 1;
 }
 
 std::vector<std::pair<size_t, size_t>> DrawableMap::GetEndPoints(const EdgeVector& edges, const size_t pivot, const size_t index)
@@ -384,7 +376,6 @@ TriangleVector DrawableMap::GetTriangleCheckpoints(const EdgeVector& edges, cons
 		result.push_back(triangle);
 	}
 
-	result.push_back({ edges.back()[0], edges.back()[1], edges.front()[0] });
 	result.shrink_to_fit();
 
 	return result;

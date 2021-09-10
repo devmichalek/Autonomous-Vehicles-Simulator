@@ -74,6 +74,7 @@ class StateTraining final :
 		NO_DRAWABLE_VEHICLE_SPECIFIED,
 		ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH,
 		ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH,
+		SAVE_IS_ALLOWED_ONLY_IN_PAUSED_MODE,
 		SAVE_IS_ALLOWED_ONLY_FOR_ANN,
 		INTERNAL_ERRORS_COUNT
 	};
@@ -181,4 +182,8 @@ public:
 	bool Load() override;
 
 	void Draw() override;
+
+private:
+
+	void ChangeFilenameType();
 };
