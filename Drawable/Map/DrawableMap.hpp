@@ -18,6 +18,9 @@ public:
 
 	~DrawableMap();
 
+	// Reset fitness vector and timers
+	void Reset();
+
 	// Initiates internal fields, resizes vectors
 	void Init(size_t size, double minFitnessImprovement);
 
@@ -27,14 +30,11 @@ public:
 	// Draws map (edges)
 	void Draw();
 
-	// Draws checkpoint map
-	void DrawDebug();
+	// Draws checkpoints
+	void DrawCheckpoints();
 
 	// Calculates highest fitness for this iteration and highest fitness overall
-	size_t Iterate(DrawableVehicleFactory& drawableVehicleFactory);
-
-	// Returns vehicle with highest fitness from last iteration
-	size_t GetBestVehicleFromLastIteration();
+	void Iterate(DrawableVehicleFactory& drawableVehicleFactory);
 
 	// Marks leader of current iteration (drawable vehicle with highest fitness)
 	size_t MarkLeader(DrawableVehicleFactory& drawableVehicleFactory);
@@ -87,7 +87,6 @@ private:
 	Fitness m_highestFitnessOverall;
 	std::vector<StoppableTimer> m_timers;
 	double m_minFitnessImprovement;
-	size_t m_bestVehicleIndex;
 
 	// Checkpoints data
 	sf::ConvexShape m_triangleCheckpointShape;

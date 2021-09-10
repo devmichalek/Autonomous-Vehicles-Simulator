@@ -64,6 +64,7 @@ public:
 	inline void SetCenter(sf::Vector2f center)
 	{
 		m_center = center;
+		m_speed = 0;
 	}
 
 	// Returns vehicle center

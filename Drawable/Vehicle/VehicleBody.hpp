@@ -1,5 +1,6 @@
 #pragma once
 #include "DrawableMath.hpp"
+#include <random>
 
 class DrawableVehicle;
 class DrawableVehicleBuilder;

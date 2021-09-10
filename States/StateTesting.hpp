@@ -4,8 +4,9 @@
 #include "DrawableVehicleBuilder.hpp"
 #include "ArtificialNeuralNetworkBuilder.hpp"
 #include "DrawableMap.hpp"
+#include "CycleTimer.hpp"
 
-class DrawableTripleText;
+class DrawableDoubleText;
 class ObserverIf;
 
 class StateTesting final :
@@ -15,6 +16,7 @@ class StateTesting final :
 	{
 		STOPPED_MODE,
 		RUNNING_MODE,
+		PAUSED_MODE,
 		MODES_COUNT
 	};
 	std::array<std::string, MODES_COUNT> m_modeStrings;
@@ -30,14 +32,27 @@ class StateTesting final :
 	std::array<std::string, FILENAME_TYPES_COUNT> m_filenameTypeStrings;
 	size_t m_filenameType;
 
+	// Parameter types
+	enum
+	{
+		SWITCH_VEHICLE,
+		NUMBER_OF_VEHICLES,
+		ACTIVATE_USER_VEHICLE,
+		SHOW_CHECKPOINTS,
+		PARAMETERS_COUNT
+	};
+	std::array<std::string, PARAMETERS_COUNT> m_parameterTypesStrings;
+	size_t m_parameterType;
+
 	// Control keys
 	enum
 	{
 		CHANGE_MODE,
 		CHANGE_FILENAME_TYPE,
-		SWITCH_VEHICLE,
-		ADD_VEHICLE,
-		REMOVE_VEHICLE,
+		CHANGE_PARAMETER,
+		PAUSED_CHANGE_MODE = CHANGE_PARAMETER,
+		INCREASE_PARAMETER,
+		DECREASE_PARAMETER,
 		CONTROLS_COUNT
 	};
 	std::map<sf::Keyboard::Key, size_t> m_controlKeys;
@@ -46,11 +61,12 @@ class StateTesting final :
 	// Internal erros
 	enum
 	{
-		NO_ARTIFICIAL_NEURAL_NETWORK_SPECIFIED,
-		NO_DRAWABLE_MAP_SPECIFIED,
-		NO_DRAWABLE_VEHICLE_SPECIFIED,
-		ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH,
-		ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH,
+		ERROR_NO_ARTIFICIAL_NEURAL_NETWORK_SPECIFIED,
+		ERROR_NO_DRAWABLE_MAP_SPECIFIED,
+		ERROR_NO_DRAWABLE_VEHICLE_SPECIFIED,
+		ERROR_ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH,
+		ERROR_ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH,
+		ERROR_NO_DRAWABLE_VEHICLES,
 		INTERNAL_ERRORS_COUNT
 	};
 	std::array<std::string, INTERNAL_ERRORS_COUNT> m_internalErrorsStrings;
@@ -58,8 +74,11 @@ class StateTesting final :
 	// Testing parameters
 	size_t m_numberOfVehicles;
 	size_t m_currentVehicle;
-	Fitness m_lastUserCalculatedFitness;
 	const size_t m_maxNumberOfVehicles;
+	bool m_activateUserVehicle;
+	bool m_showCheckpoints;
+	CycleTimer m_viewTimer;
+	const double m_viewMovementOffset;
 
 	// Objects of environment
 	DrawableMap* m_drawableMap;
@@ -77,15 +96,18 @@ class StateTesting final :
 	// Texts and text observers
 	enum
 	{
-		ACTIVE_MODE_TEXT,
+		MODE_TEXT,
 		FILENAME_TYPE_TEXT,
 		FILENAME_TEXT,
-		NUMBER_OF_VEHICLES_TEXT,
+		PARAMETER_TYPE_TEXT,
 		CURRENT_VEHICLE_TEXT,
-		USER_FITNESS,
+		NUMBER_OF_VEHICLES_TEXT,
+		SHOW_CHECKPOINTS_TEXT,
+		IS_USER_VEHICLE_ACTIVE_TEXT,
+		USER_FITNESS_TEXT,
 		TEXT_COUNT
 	};
-	std::vector<DrawableTripleText*> m_texts;
+	std::vector<DrawableDoubleText*> m_texts;
 	std::vector<ObserverIf*> m_textObservers;
 
 	// Called when new vehicle is being added
@@ -93,6 +115,9 @@ class StateTesting final :
 
 	// Called when vehicle is beign deleted
 	void OnRemoveVehicle();
+
+	// Returns current vehicle name
+	std::string GetCurrentVehicleName();
 
 public:
 

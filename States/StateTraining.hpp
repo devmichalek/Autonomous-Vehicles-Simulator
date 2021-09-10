@@ -66,16 +66,16 @@ class StateTraining final :
 	std::map<sf::Keyboard::Key, size_t> m_controlKeys;
 	std::array<bool, CONTROLS_COUNT> m_pressedKeys;
 
-	// Internal erros
+	// Internal errors
 	enum
 	{
-		NO_ARTIFICIAL_NEURAL_NETWORK_SPECIFIED,
-		NO_DRAWABLE_MAP_SPECIFIED,
-		NO_DRAWABLE_VEHICLE_SPECIFIED,
-		ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH,
-		ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH,
-		SAVE_IS_ALLOWED_ONLY_IN_PAUSED_MODE,
-		SAVE_IS_ALLOWED_ONLY_FOR_ANN,
+		ERROR_NO_ARTIFICIAL_NEURAL_NETWORK_SPECIFIED,
+		ERROR_NO_DRAWABLE_MAP_SPECIFIED,
+		ERROR_NO_DRAWABLE_VEHICLE_SPECIFIED,
+		ERROR_ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH,
+		ERROR_ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH,
+		ERROR_SAVE_IS_ALLOWED_ONLY_IN_PAUSED_MODE,
+		ERROR_SAVE_IS_ALLOWED_ONLY_FOR_ANN,
 		INTERNAL_ERRORS_COUNT
 	};
 	std::array<std::string, INTERNAL_ERRORS_COUNT> m_internalErrorsStrings;
@@ -112,7 +112,6 @@ class StateTraining final :
 	CycleTimer m_pressedKeyTimer;
 	CycleTimer m_viewTimer;
 	CycleTimer m_requiredFitnessImprovementRiseTimer;
-	sf::Vector2f m_viewCenter;
 	const double m_viewMovementOffset;
 	const size_t m_minPopulationSize;
 	const size_t m_maxPopulationSize;
@@ -182,8 +181,4 @@ public:
 	bool Load() override;
 
 	void Draw() override;
-
-private:
-
-	void ChangeFilenameType();
 };

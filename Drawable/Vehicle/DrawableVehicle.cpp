@@ -35,12 +35,12 @@ void DrawableVehicle::Rotate(Neuron value)
 
 void DrawableVehicle::Accelerate(Neuron value)
 {
-	m_speed += (value / m_speedFactor);
+	m_speed += (value * m_speedFactor * CoreWindow::GetElapsedTime());
 }
 
 void DrawableVehicle::Brake(Neuron value)
 {
-	m_speed -= (value / m_speedFactor);
+	m_speed -= (value * m_speedFactor * CoreWindow::GetElapsedTime());
 }
 
 void DrawableVehicle::Update()

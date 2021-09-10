@@ -14,7 +14,7 @@ StateManager::StateManager()
 	m_states[VEHICLE_EDITOR_STATE] = new StateVehicleEditor();
 	m_states[TRAINING_STATE] = new StateTraining();
 	m_states[TESTING_STATE] = new StateTesting();
-	m_currentState = TESTING_STATE;
+	m_currentState = MAP_EDITOR_STATE;
 	m_stateText = nullptr;
 	m_stateTextObserver = nullptr;
 	m_statesStrings[MAP_EDITOR_STATE] = "Map Editor";

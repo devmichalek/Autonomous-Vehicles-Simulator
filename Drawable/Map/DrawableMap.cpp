@@ -11,7 +11,6 @@ DrawableMap::DrawableMap(const EdgeVector& edges, const size_t pivot) :
 	m_highestFitness = 0;
 	m_highestFitnessOverall = 0;
 	m_minFitnessImprovement = 0.0;
-	m_bestVehicleIndex = 0;
 
 	// Generate triangle checkpoints
 	m_triangleCheckpoints = GenerateTriangleCheckpoints(m_edges, m_edgesPivot);
@@ -39,13 +38,22 @@ DrawableMap::DrawableMap(const DrawableMap& drawableMap) :
 	m_highestFitness = 0;
 	m_highestFitnessOverall = 0;
 	m_minFitnessImprovement = 0.0;
-	m_bestVehicleIndex = 0;
 	m_triangleCheckpoints = drawableMap.m_triangleCheckpoints;
 	m_triangleCheckpointShape.setPointCount(m_triangleCheckpoints.back().size());
 }
 
 DrawableMap::~DrawableMap()
 {
+}
+
+void DrawableMap::Reset()
+{
+	for (size_t i = 0; i < m_fitnessVector.size(); ++i)
+	{
+		m_fitnessVector[i] = 0;
+		m_previousFitnessVector[i] = 0.0;
+		m_timers[i].Reset();
+	}
 }
 
 void DrawableMap::Init(size_t size, double minFitnessImprovement)
@@ -64,7 +72,6 @@ void DrawableMap::Init(size_t size, double minFitnessImprovement)
 	m_previousFitnessVector.resize(size, 0.0);
 	m_timers.resize(size, StoppableTimer(0.0, std::numeric_limits<double>::max()));
 	m_minFitnessImprovement = minFitnessImprovement;
-	m_bestVehicleIndex = 0;
 }
 
 void DrawableMap::Intersect(DrawableVehicleFactory& drawableVehicleFactory)
@@ -96,7 +103,7 @@ void DrawableMap::Draw()
 	}
 }
 
-void DrawableMap::DrawDebug()
+void DrawableMap::DrawCheckpoints()
 {
 	for (size_t i = 0; i < m_triangleCheckpoints.size(); ++i)
 	{
@@ -111,36 +118,22 @@ void DrawableMap::DrawDebug()
 	}
 }
 
-size_t DrawableMap::Iterate(DrawableVehicleFactory& drawableVehicleFactory)
+void DrawableMap::Iterate(DrawableVehicleFactory& drawableVehicleFactory)
 {
 	for (size_t i = 0; i < drawableVehicleFactory.size(); ++i)
 		m_fitnessVector[i] = CalculateFitness(drawableVehicleFactory[i]);
 
-	auto index = std::max_element(m_fitnessVector.begin(), m_fitnessVector.end()); // Max: 100%
-	if (m_highestFitnessOverall < *index)
-		m_highestFitnessOverall = *index;
+	auto iterator = std::max_element(m_fitnessVector.begin(), m_fitnessVector.end()); // Max: 100%
+	auto value = *iterator;
+
+	if (m_highestFitnessOverall < value)
+		m_highestFitnessOverall = value;
 	m_highestFitness = 0;
 
 	for (size_t i = 0; i < drawableVehicleFactory.size(); ++i)
-		m_fitnessVector[i] += static_cast<Fitness>(double(m_fitnessVector[i]) / m_timers[i].Value());
-
-	index = std::max_element(m_fitnessVector.begin(), m_fitnessVector.end());
-	m_bestVehicleIndex = std::distance(m_fitnessVector.begin(), index); // Max: 100% + (100 / n)%
-
-	for (size_t i = 0; i < m_fitnessVector.size(); ++i)
 	{
-		m_fitnessVector[i] = 0;
-		m_previousFitnessVector[i] = 0.0;
-		m_timers[i].Reset();
+		m_fitnessVector[i] += static_cast<Fitness>(double(1) / m_timers[i].Value());
 	}
-
-	return m_bestVehicleIndex;
-
-}
-
-size_t DrawableMap::GetBestVehicleFromLastIteration()
-{
-	return m_bestVehicleIndex;
 }
 
 size_t DrawableMap::MarkLeader(DrawableVehicleFactory& drawableVehicleFactory)

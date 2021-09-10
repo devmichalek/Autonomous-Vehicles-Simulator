@@ -260,7 +260,9 @@ void StateANNEditor::Capture()
 					case INCREASE_BIAS:
 						if (!m_biasVector.empty() && m_currentLayer != 0)
 						{
-							m_biasVector[m_currentLayer - 1] += m_biasOffset;
+							int x = int(m_biasVector[m_currentLayer - 1] * 100);
+							x += int(m_biasOffset * 100);
+							m_biasVector[m_currentLayer - 1] = double(x) / 100;
 							if (m_biasVector[m_currentLayer - 1] > ArtificialNeuralNetworkBuilder::GetMaxBiasValue())
 								m_biasVector[m_currentLayer - 1] = ArtificialNeuralNetworkBuilder::GetMaxBiasValue();
 							m_upToDate = false;
@@ -269,7 +271,9 @@ void StateANNEditor::Capture()
 					case DECREASE_BIAS:
 						if (!m_biasVector.empty() && m_currentLayer != 0)
 						{
-							m_biasVector[m_currentLayer - 1] -= m_biasOffset;
+							int x = int(m_biasVector[m_currentLayer - 1] * 100);
+							x -= int(m_biasOffset * 100);
+							m_biasVector[m_currentLayer - 1] = double(x) / 100;
 							if (m_biasVector[m_currentLayer - 1] < ArtificialNeuralNetworkBuilder::GetMinBiasValue())
 								m_biasVector[m_currentLayer - 1] = ArtificialNeuralNetworkBuilder::GetMinBiasValue();
 							m_upToDate = false;

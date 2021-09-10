@@ -32,7 +32,7 @@ class DrawableMapBuilder final :
 	sf::Vector2f m_vehicleCenter;
 	double m_vehicleAngle;
 
-	// Validates if car position is inside allowed area
+	// Validates if vehicle position is inside allowed area
 	bool ValidateAllowedAreaVehiclePosition();
 
 	// Validates if vehicle position is inside road are

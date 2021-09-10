@@ -12,7 +12,7 @@ StateTraining::StateTraining() :
 	m_pressedKeyTimer(0.0, 1.0, 5000),
 	m_viewTimer(1.0, 0.1),
 	m_requiredFitnessImprovementRiseTimer(0.0, 0.0),
-	m_viewMovementOffset(500.0),
+	m_viewMovementOffset(2.0),
 	m_minPopulationSize(4),
 	m_maxPopulationSize(60),
 	m_populationSizeResetValue(30),
@@ -33,7 +33,7 @@ StateTraining::StateTraining() :
 	m_requiredFitnessImprovementOffset(0.01),
 	m_minRequiredFitnessImprovementRise(1.0),
 	m_maxRequiredFitnessImprovementRise(10.0),
-	m_requiredFitnessImprovementRiseResetValue(4.0),
+	m_requiredFitnessImprovementRiseResetValue(3.0),
 	m_requiredFitnessImprovementRiseOffset(0.5)
 {
 	// Initialize modes
@@ -70,13 +70,13 @@ StateTraining::StateTraining() :
 		pressedKey = false;
 
 	// Initialize internal errors
-	m_internalErrorsStrings[NO_ARTIFICIAL_NEURAL_NETWORK_SPECIFIED] = "Error: No artificial neural network is specified!";
-	m_internalErrorsStrings[NO_DRAWABLE_MAP_SPECIFIED] = "Error: No drawable map is specified!";
-	m_internalErrorsStrings[NO_DRAWABLE_VEHICLE_SPECIFIED] = "Error: No drawable vehicle is specified!";
-	m_internalErrorsStrings[ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH] = "Error: Artificial neural network number of input neurons mismatches number of vehicle sensors!";
-	m_internalErrorsStrings[ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH] = "Error: Artificial neural network number of output neurons mismatches number of vehicle (3) inputs!";
-	m_internalErrorsStrings[SAVE_IS_ALLOWED_ONLY_IN_PAUSED_MODE] = "Error: Save mode is allowed only in paused mode!";
-	m_internalErrorsStrings[SAVE_IS_ALLOWED_ONLY_FOR_ANN] = "Error: Save mode is allowed only for artificial neural network!";
+	m_internalErrorsStrings[ERROR_NO_ARTIFICIAL_NEURAL_NETWORK_SPECIFIED] = "Error: No artificial neural network is specified!";
+	m_internalErrorsStrings[ERROR_NO_DRAWABLE_MAP_SPECIFIED] = "Error: No drawable map is specified!";
+	m_internalErrorsStrings[ERROR_NO_DRAWABLE_VEHICLE_SPECIFIED] = "Error: No drawable vehicle is specified!";
+	m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH] = "Error: Artificial neural network number of input neurons mismatches number of vehicle sensors!";
+	m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH] = "Error: Artificial neural network number of output neurons mismatches number of vehicle (3) inputs!";
+	m_internalErrorsStrings[ERROR_SAVE_IS_ALLOWED_ONLY_IN_PAUSED_MODE] = "Error: Save mode is allowed only in paused mode!";
+	m_internalErrorsStrings[ERROR_SAVE_IS_ALLOWED_ONLY_FOR_ANN] = "Error: Save mode is allowed only for artificial neural network!";
 
 	// Initialize simulation parameters
 	m_populationSize = m_populationSizeResetValue;
@@ -226,43 +226,43 @@ void StateTraining::Capture()
 							if (m_pressedKeys[iterator->second])
 								break;
 							m_mode = RUNNING_MODE;
-							DrawableStatusText* activeModeText = static_cast<DrawableStatusText*>(m_texts[MODE_TEXT]);
+							DrawableStatusText* modeText = static_cast<DrawableStatusText*>(m_texts[MODE_TEXT]);
 							if (!m_artificialNeuralNetworkBackup)
 							{
-								activeModeText->ShowStatusText();
-								activeModeText->SetErrorStatusText(m_internalErrorsStrings[NO_ARTIFICIAL_NEURAL_NETWORK_SPECIFIED]);
+								modeText->ShowStatusText();
+								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_ARTIFICIAL_NEURAL_NETWORK_SPECIFIED]);
 								m_mode = STOPPED_MODE;
 								break;
 							}
 
 							if (!m_drawableVehicleBackup)
 							{
-								activeModeText->ShowStatusText();
-								activeModeText->SetErrorStatusText(m_internalErrorsStrings[NO_DRAWABLE_VEHICLE_SPECIFIED]);
+								modeText->ShowStatusText();
+								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_DRAWABLE_VEHICLE_SPECIFIED]);
 								m_mode = STOPPED_MODE;
 								break;
 							}
 
 							if (!m_drawableMapBackup)
 							{
-								activeModeText->ShowStatusText();
-								activeModeText->SetErrorStatusText(m_internalErrorsStrings[NO_DRAWABLE_MAP_SPECIFIED]);
+								modeText->ShowStatusText();
+								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_DRAWABLE_MAP_SPECIFIED]);
 								m_mode = STOPPED_MODE;
 								break;
 							}
 
 							if (m_artificialNeuralNetworkBackup->GetNumberOfInputNeurons() != m_drawableVehicleBackup->GetNumberOfOutputs())
 							{
-								activeModeText->ShowStatusText();
-								activeModeText->SetErrorStatusText(m_internalErrorsStrings[ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH]);
+								modeText->ShowStatusText();
+								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH]);
 								m_mode = STOPPED_MODE;
 								break;
 							}
 
 							if (m_artificialNeuralNetworkBackup->GetNumberOfOutputNeurons() != m_drawableVehicleBackup->GetNumberOfInputs())
 							{
-								activeModeText->ShowStatusText();
-								activeModeText->SetErrorStatusText(m_internalErrorsStrings[ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH]);
+								modeText->ShowStatusText();
+								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH]);
 								m_mode = STOPPED_MODE;
 								break;
 							}
@@ -330,7 +330,10 @@ void StateTraining::Capture()
 						case CHANGE_FILENAME_TYPE:
 							if (m_pressedKeys[iterator->second])
 								break;
-							ChangeFilenameType();
+							++m_filenameType;
+							if (m_filenameType >= FILENAME_TYPES_COUNT)
+								m_filenameType = MAP_FILENAME_TYPE;
+							m_textObservers[FILENAME_TYPE_TEXT]->Notify();
 							break;
 						case CHANGE_SIMULATION_PARAMETER:
 							if (m_pressedKeys[iterator->second])
@@ -498,7 +501,11 @@ void StateTraining::Capture()
 							{
 								if (m_pressedKeys[iterator->second])
 									break;
-								ChangeFilenameType();
+
+								++m_filenameType;
+								if (m_filenameType >= FILENAME_TYPES_COUNT)
+									m_filenameType = MAP_FILENAME_TYPE;
+								m_textObservers[FILENAME_TYPE_TEXT]->Notify();
 							}
 
 							break;
@@ -517,7 +524,6 @@ void StateTraining::Capture()
 							{
 								m_mode = RUNNING_MODE;
 								m_textObservers[MODE_TEXT]->Notify();
-								break;
 							}
 
 							break;
@@ -584,6 +590,8 @@ void StateTraining::Update()
 						if (!success)
 						{
 							filenameText->SetErrorStatusText(status.second);
+							delete m_drawableMapBackup;
+							m_drawableMapBackup = nullptr;
 							break;
 						}
 						filenameText->SetSuccessStatusText(status.second);
@@ -632,6 +640,8 @@ void StateTraining::Update()
 						if (!success)
 						{
 							filenameText->SetErrorStatusText(status.second);
+							delete m_drawableVehicleBackup;
+							m_drawableVehicleBackup = nullptr;
 							break;
 						}
 						filenameText->SetSuccessStatusText(status.second);
@@ -661,7 +671,7 @@ void StateTraining::Update()
 					case VEHICLE_FILENAME_TYPE:
 					case MAP_FILENAME_TYPE:
 						filenameText->ShowStatusText();
-						filenameText->SetErrorStatusText(m_internalErrorsStrings[SAVE_IS_ALLOWED_ONLY_IN_PAUSED_MODE]);
+						filenameText->SetErrorStatusText(m_internalErrorsStrings[ERROR_SAVE_IS_ALLOWED_ONLY_IN_PAUSED_MODE]);
 						break;
 					default:
 						break;
@@ -686,6 +696,7 @@ void StateTraining::Update()
 
 			m_drawableMap->Intersect(m_drawableVehicleFactory);
 
+			sf::Vector2f m_viewCenter;
 			if (!activity)
 			{
 				// Set highest fitness overall
@@ -698,6 +709,7 @@ void StateTraining::Update()
 					// Increase generation number
 					++m_generation;
 					m_textObservers[CURRENT_GENERATION_TEXT]->Notify();
+					m_drawableMap->Reset();
 
 					// Set artificial neural networks new raw data
 					for (size_t i = 0; i < m_artificialNeuralNetworks.size(); ++i)
@@ -752,7 +764,7 @@ void StateTraining::Update()
 			auto currentViewCenter = view.getCenter();
 			auto distance = DrawableMath::Distance(currentViewCenter, m_viewCenter);
 			auto angle = DrawableMath::DifferenceVectorAngle(currentViewCenter, m_viewCenter);
-			auto newCenter = DrawableMath::GetEndPoint(currentViewCenter, angle, float(-distance / m_viewMovementOffset));
+			auto newCenter = DrawableMath::GetEndPoint(currentViewCenter, angle, float(-distance * m_viewMovementOffset * CoreWindow::GetElapsedTime()));
 			view.setCenter(newCenter);
 			CoreWindow::GetRenderWindow().setView(view);
 			break;
@@ -768,9 +780,8 @@ void StateTraining::Update()
 					{
 						m_artificialNeuralNetworkBuilder.Clear();
 					
-						// Choose the best artificial neural network
-						auto index = m_drawableMap->GetBestVehicleFromLastIteration();
-						m_artificialNeuralNetworkBuilder.Set(m_artificialNeuralNetworks[index]);
+						// Take the best artificial neural network
+						m_artificialNeuralNetworkBuilder.Set(m_artificialNeuralNetworks[0]);
 
 						bool success = m_artificialNeuralNetworkBuilder.Save(filenameText->GetFilename());
 						auto status = m_artificialNeuralNetworkBuilder.GetLastOperationStatus();
@@ -786,7 +797,7 @@ void StateTraining::Update()
 					case VEHICLE_FILENAME_TYPE:
 					case MAP_FILENAME_TYPE:
 						filenameText->ShowStatusText();
-						filenameText->SetErrorStatusText(m_internalErrorsStrings[SAVE_IS_ALLOWED_ONLY_FOR_ANN]);
+						filenameText->SetErrorStatusText(m_internalErrorsStrings[ERROR_SAVE_IS_ALLOWED_ONLY_FOR_ANN]);
 						break;
 					default:
 						break;
@@ -931,12 +942,4 @@ void StateTraining::Draw()
 	m_texts[SINGLE_POINT_CROSSOVER_TEXT]->Draw();
 	m_texts[REQUIRED_FITNESS_IMPROVEMENT_RISE_TEXT]->Draw();
 	m_texts[REQUIRED_FITNESS_IMPROVEMENT_TEXT]->Draw();
-}
-
-void StateTraining::ChangeFilenameType()
-{
-	++m_filenameType;
-	if (m_filenameType >= FILENAME_TYPES_COUNT)
-		m_filenameType = MAP_FILENAME_TYPE;
-	m_textObservers[FILENAME_TYPE_TEXT]->Notify();
 }
