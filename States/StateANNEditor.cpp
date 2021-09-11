@@ -140,7 +140,7 @@ void StateANNEditor::RemoveNeuron()
 }
 
 StateANNEditor::StateANNEditor() :
-	m_biasOffset(0.2)
+	m_biasOffset(0.1)
 {
 	m_controlKeys[sf::Keyboard::Tab] = SWITCH_LAYER;
 	m_controlKeys[sf::Keyboard::Enter] = ADD_LAYER;
@@ -260,9 +260,7 @@ void StateANNEditor::Capture()
 					case INCREASE_BIAS:
 						if (!m_biasVector.empty() && m_currentLayer != 0)
 						{
-							int x = int(m_biasVector[m_currentLayer - 1] * 100);
-							x += int(m_biasOffset * 100);
-							m_biasVector[m_currentLayer - 1] = double(x) / 100;
+							m_biasVector[m_currentLayer - 1] += m_biasOffset;
 							if (m_biasVector[m_currentLayer - 1] > ArtificialNeuralNetworkBuilder::GetMaxBiasValue())
 								m_biasVector[m_currentLayer - 1] = ArtificialNeuralNetworkBuilder::GetMaxBiasValue();
 							m_upToDate = false;
@@ -271,9 +269,7 @@ void StateANNEditor::Capture()
 					case DECREASE_BIAS:
 						if (!m_biasVector.empty() && m_currentLayer != 0)
 						{
-							int x = int(m_biasVector[m_currentLayer - 1] * 100);
-							x -= int(m_biasOffset * 100);
-							m_biasVector[m_currentLayer - 1] = double(x) / 100;
+							m_biasVector[m_currentLayer - 1] -= m_biasOffset;
 							if (m_biasVector[m_currentLayer - 1] < ArtificialNeuralNetworkBuilder::GetMinBiasValue())
 								m_biasVector[m_currentLayer - 1] = ArtificialNeuralNetworkBuilder::GetMinBiasValue();
 							m_upToDate = false;

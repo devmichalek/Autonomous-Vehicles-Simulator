@@ -126,10 +126,10 @@ public:
 	inline static size_t GetMaxNumberOfNeuronsPerLayer() { return 12; }
 
 	// Get minimum bias value
-	inline static double GetMinBiasValue() { return -10.0; }
+	inline static double GetMinBiasValue() { return -4.0; }
 
 	// Get maximum bias value
-	inline static double GetMaxBiasValue() { return 10.0; }
+	inline static double GetMaxBiasValue() { return 4.0; }
 
 	// Get default bias value
 	inline static double GetDefaultBiasValue() { return 0.0; }

@@ -83,7 +83,6 @@ protected:
 	double m_crossoverProbability;
 	double m_mutationProbability;
 	const size_t m_parentsCount;
-	std::random_device m_randomDevice;
 	std::mt19937 m_mersenneTwister;
 	std::uniform_int_distribution<std::mt19937::result_type> m_coinDistribution;
 	std::uniform_int_distribution<std::mt19937::result_type> m_hundredDistribution;

@@ -18,10 +18,8 @@ DrawableMap::DrawableMap(const EdgeVector& edges, const size_t pivot) :
 	// Set shape point count
 	m_triangleCheckpointShape.setPointCount(m_triangleCheckpoints.back().size());
 
-	// Add finish line position
+	// Add finish line and blocking edge
 	m_edges.push_back({ m_edges.front()[0], m_edges[pivot][0] });
-
-	// Set blocking edge position
 	m_edges.push_back({ m_edges.front()[1], m_edges[pivot][1] });
 
 	// Erase continuity
@@ -70,7 +68,7 @@ void DrawableMap::Init(size_t size, double minFitnessImprovement)
 
 	m_fitnessVector.resize(size, 0);
 	m_previousFitnessVector.resize(size, 0.0);
-	m_timers.resize(size, StoppableTimer(0.0, std::numeric_limits<double>::max()));
+	m_timers.resize(size, StoppableTimer(1.0, std::numeric_limits<double>::max()));
 	m_minFitnessImprovement = minFitnessImprovement;
 }
 
@@ -132,7 +130,8 @@ void DrawableMap::Iterate(DrawableVehicleFactory& drawableVehicleFactory)
 
 	for (size_t i = 0; i < drawableVehicleFactory.size(); ++i)
 	{
-		m_fitnessVector[i] += static_cast<Fitness>(double(1) / m_timers[i].Value());
+		m_fitnessVector[i] *= 100000;
+		m_fitnessVector[i] += static_cast<Fitness>(double(1) / m_timers[i].Value() * 10000);
 	}
 }
 
