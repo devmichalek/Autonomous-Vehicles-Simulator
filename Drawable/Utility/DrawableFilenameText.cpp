@@ -179,6 +179,7 @@ void DrawableFilenameText<ReadOperations, WriteOperations>::Reset()
 		pressedFilenameKey.second = false;
 	m_filename = m_filenameDummy;
 	m_texts[VARIABLE_TEXT].setString(m_filename);
+	SetVariableTextColor();
 
 	// Reset status text
 	DrawableStatusText::Reset();

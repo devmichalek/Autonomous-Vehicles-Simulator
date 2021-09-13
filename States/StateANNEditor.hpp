@@ -40,6 +40,7 @@ class StateANNEditor final :
 	// Drawable shapes and their position
 	std::vector<std::vector<sf::Vector2f>> m_layersPositions;
 	std::vector<Edge> m_weightPositions;
+	std::vector<sf::Color> m_weightStrengths;
 	sf::CircleShape m_neuronShape;
 	Line m_weightShape;
 
@@ -76,6 +77,9 @@ class StateANNEditor final :
 
 	// Removes neuron from the current active neruon layer
 	void RemoveNeuron();
+
+	// Returns weight strength representation in color
+	sf::Color GetWeightStrength(double max, double value);
 
 public:
 

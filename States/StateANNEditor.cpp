@@ -9,6 +9,7 @@ void StateANNEditor::CalculatePositions()
 {
 	m_layersPositions.clear();
 	m_weightPositions.clear();
+	m_weightStrengths.clear();
 
 	auto windowSize = CoreWindow::GetSize();
 	const float screenWidth = windowSize.x;
@@ -54,6 +55,7 @@ void StateANNEditor::CalculatePositions()
 				edge[0] = m_layersPositions[layerNr - 1][j];
 				edge[1] = m_layersPositions[layerNr][i];
 				m_weightPositions.push_back(edge);
+				m_weightStrengths.push_back(GetWeightStrength(1.0, 1.0));
 			}
 		}
 	}
@@ -139,8 +141,13 @@ void StateANNEditor::RemoveNeuron()
 	}
 }
 
+sf::Color StateANNEditor::GetWeightStrength(double max, double value)
+{
+	return sf::Color(255, 255, 255, 32 + sf::Uint8(128.0 * (value / max)));
+}
+
 StateANNEditor::StateANNEditor() :
-	m_biasOffset(0.1)
+	m_biasOffset(0.2)
 {
 	m_controlKeys[sf::Keyboard::Tab] = SWITCH_LAYER;
 	m_controlKeys[sf::Keyboard::Enter] = ADD_LAYER;
@@ -323,6 +330,19 @@ void StateANNEditor::Update()
 			m_currentLayer = 0;
 			m_upToDate = true;
 			CalculatePositions();
+			auto weights = m_artificialNeuralNetworkBuilder.GetRawNeuronData();
+
+			// Find max
+			double max = 0.001;
+			for (size_t i = 0; i < m_weightStrengths.size(); ++i)
+			{
+				if (weights[i] > max)
+					max = weights[i];
+			}
+
+			// Calculate strengths
+			for (size_t i = 0; i < m_weightStrengths.size(); ++i)
+				m_weightStrengths[i] = GetWeightStrength(max, weights[i]);
 		}
 		else
 			filenameText->SetErrorStatusText(status.second);
@@ -399,10 +419,12 @@ bool StateANNEditor::Load()
 
 void StateANNEditor::Draw()
 {
-	for (const auto& position : m_weightPositions)
+	for (size_t i = 0; i < m_weightPositions.size(); ++i)
 	{
-		m_weightShape[0].position = position[0];
-		m_weightShape[1].position = position[1];
+		m_weightShape[0].position = m_weightPositions[i][0];
+		m_weightShape[1].position = m_weightPositions[i][1];
+		m_weightShape[0].color = m_weightStrengths[i];
+		m_weightShape[1].color = m_weightShape[0].color;
 		CoreWindow::GetRenderWindow().draw(m_weightShape.data(), m_weightShape.size(), sf::Lines);
 	}
 
