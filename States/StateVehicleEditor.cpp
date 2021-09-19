@@ -24,6 +24,8 @@ StateVehicleEditor::StateVehicleEditor()
 	m_controlKeys[sf::Keyboard::LAlt] = CHANGE_SENSOR;
 	m_controlKeys[sf::Keyboard::Z] = DEACREASE_SENSOR_ANGLE;
 	m_controlKeys[sf::Keyboard::X] = INCREASE_SENSOR_ANGLE;
+	m_controlKeys[sf::Keyboard::C] = DECREASE_SENSOR_MOTION_RANGE;
+	m_controlKeys[sf::Keyboard::V] = INCREASE_SENSOR_MOTION_RANGE;
 
 	for (size_t i = 0; i < CONTROL_KEYS_COUNT; ++i)
 		m_pressedKeys[i] = false;
@@ -41,6 +43,7 @@ StateVehicleEditor::StateVehicleEditor()
 	m_vehicleSensors = m_drawableVehicleBuilder.GetVehicleSensors();
 
 	m_currentSensorIndex = m_vehicleSensors.GetNumberOfSensors() - 1;
+	m_currentSensorMotionRange = m_vehicleSensors.GetSensorMotionRange(m_currentSensorIndex);
 	m_currentSensorAngle = m_vehicleSensors.GetSensorAngle(m_currentSensorIndex);
 	m_upToDate = false;
 
@@ -80,6 +83,7 @@ void StateVehicleEditor::Reload()
 
 	m_currentSensorIndex = m_vehicleSensors.GetNumberOfSensors() - 1;
 	m_currentSensorAngle = m_vehicleSensors.GetSensorAngle(m_currentSensorIndex);
+	m_currentSensorMotionRange = m_vehicleSensors.GetSensorMotionRange(m_currentSensorIndex);
 	m_upToDate = false;
 
 	// Reset texts and text observers
@@ -117,32 +121,34 @@ void StateVehicleEditor::Capture()
 						m_submode = INSERT;
 						m_currentSensorIndex = 0;
 						m_currentSensorAngle = m_vehicleSensors.GetSensorAngle(m_currentSensorIndex);
+						m_currentSensorMotionRange = m_vehicleSensors.GetSensorMotionRange(m_currentSensorIndex);
 						break;
-
 					case CHANGE_TO_VEHICLE_SENSORS_MODE:
 						m_mode = MODE_VEHICLE_SENSORS;
 						m_submode = INSERT;
 						m_currentSensorIndex = 0;
 						m_currentSensorAngle = m_vehicleSensors.GetSensorAngle(m_currentSensorIndex);
+						m_currentSensorMotionRange = m_vehicleSensors.GetSensorMotionRange(m_currentSensorIndex);
 						break;
-
 					case CHANGE_TO_INSERT_STATE:
 						m_submode = INSERT;
 						break;
-
 					case CHANGE_TO_REMOVE_STATE:
 						m_submode = REMOVE;
 						break;
-
 					case CHANGE_SENSOR:
+						if (m_mode != MODE_VEHICLE_SENSORS)
+							break;
 						++m_currentSensorIndex;
 						if (m_currentSensorIndex >= m_vehicleSensors.GetNumberOfSensors())
 							m_currentSensorIndex = 0;
 						m_currentSensorAngle = m_vehicleSensors.GetSensorAngle(m_currentSensorIndex);
+						m_currentSensorMotionRange = m_vehicleSensors.GetSensorMotionRange(m_currentSensorIndex);
 						m_upToDate = false;
 						break;
-
 					case DEACREASE_SENSOR_ANGLE:
+						if (m_mode != MODE_VEHICLE_SENSORS)
+							break;
 						if (m_vehicleSensors.GetNumberOfSensors() > 0)
 						{
 							m_currentSensorAngle -= DrawableVehicleBuilder::GetDefaultSensorAngleOffset();
@@ -152,8 +158,9 @@ void StateVehicleEditor::Capture()
 							m_upToDate = false;
 						}
 						break;
-
 					case INCREASE_SENSOR_ANGLE:
+						if (m_mode != MODE_VEHICLE_SENSORS)
+							break;
 						if (m_vehicleSensors.GetNumberOfSensors() > 0)
 						{
 							m_currentSensorAngle += DrawableVehicleBuilder::GetDefaultSensorAngleOffset();
@@ -162,6 +169,30 @@ void StateVehicleEditor::Capture()
 							else if (m_currentSensorAngle == DrawableVehicleBuilder::GetMaxSensorAngle())
 								m_currentSensorAngle = DrawableVehicleBuilder::GetMinSensorAngle();
 							m_vehicleSensors.SetSensorAngle(m_currentSensorIndex, m_currentSensorAngle);
+							m_upToDate = false;
+						}
+						break;
+					case DECREASE_SENSOR_MOTION_RANGE:
+						if (m_mode != MODE_VEHICLE_SENSORS)
+							break;
+						if (m_vehicleSensors.GetNumberOfSensors() > 0)
+						{
+							m_currentSensorMotionRange -= DrawableVehicleBuilder::GetDefaultSensorMotionRange();
+							if (m_currentSensorMotionRange < DrawableVehicleBuilder::GetMinSensorMotionRange())
+								m_currentSensorMotionRange = DrawableVehicleBuilder::GetMinSensorMotionRange();
+							m_vehicleSensors.SetSensorMotionRange(m_currentSensorIndex, m_currentSensorMotionRange);
+							m_upToDate = false;
+						}
+						break;
+					case INCREASE_SENSOR_MOTION_RANGE:
+						if (m_mode != MODE_VEHICLE_SENSORS)
+							break;
+						if (m_vehicleSensors.GetNumberOfSensors() > 0)
+						{
+							m_currentSensorMotionRange += DrawableVehicleBuilder::GetDefaultSensorMotionRange();
+							if (m_currentSensorMotionRange > DrawableVehicleBuilder::GetMaxSensorMotionRange())
+								m_currentSensorMotionRange = DrawableVehicleBuilder::GetMaxSensorMotionRange();
+							m_vehicleSensors.SetSensorMotionRange(m_currentSensorIndex, m_currentSensorMotionRange);
 							m_upToDate = false;
 						}
 						break;
@@ -205,12 +236,14 @@ void StateVehicleEditor::Capture()
 						switch (m_submode)
 						{
 							case INSERT:
-								m_vehicleSensors.AddSensor(relativePosition, DrawableVehicleBuilder::GetMinSensorAngle());
+								m_vehicleSensors.AddSensor(relativePosition,
+														   DrawableVehicleBuilder::GetMinSensorAngle(),
+														   DrawableVehicleBuilder::GetDefaultSensorMotionRange());
 								m_currentSensorIndex = m_vehicleSensors.GetNumberOfSensors() - 1;
 								m_currentSensorAngle = m_vehicleSensors.GetSensorAngle(m_currentSensorIndex);
+								m_currentSensorMotionRange = m_vehicleSensors.GetSensorMotionRange(m_currentSensorIndex);
 								m_upToDate = false;
 								break;
-
 							case REMOVE:
 							{
 								size_t index = (size_t)-1;
@@ -221,9 +254,15 @@ void StateVehicleEditor::Capture()
 									{
 										--m_currentSensorIndex;
 										if (currentLastIndex == 1)
+										{
 											m_currentSensorAngle = DrawableVehicleBuilder::GetMinSensorAngle();
+											m_currentSensorMotionRange = DrawableVehicleBuilder::GetDefaultSensorMotionRange();
+										}
 										else
+										{
 											m_currentSensorAngle = m_vehicleSensors.GetSensorAngle(m_currentSensorIndex);
+											m_currentSensorMotionRange = m_vehicleSensors.GetSensorMotionRange(m_currentSensorIndex);
+										}
 									}
 									m_vehicleSensors.RemoveSensor(index);
 									m_upToDate = false;
@@ -252,7 +291,9 @@ void StateVehicleEditor::Update()
 				m_drawableVehicleBuilder.AddVehicleBodyPoint(point);
 			size_t numberOfSensors = m_vehicleSensors.GetNumberOfSensors();
 			for (size_t i = 0; i < numberOfSensors; ++i)
-				m_drawableVehicleBuilder.AddVehicleSensor(m_vehicleSensors.m_points[i], m_vehicleSensors.m_angleVector[i]);
+				m_drawableVehicleBuilder.AddVehicleSensor(m_vehicleSensors.m_points[i],
+														  m_vehicleSensors.GetSensorAngle(i),
+														  m_vehicleSensors.GetSensorMotionRange(i));
 
 			bool success = m_drawableVehicleBuilder.Save(filenameText->GetFilename());
 			auto status = m_drawableVehicleBuilder.GetLastOperationStatus();
@@ -276,6 +317,7 @@ void StateVehicleEditor::Update()
 			m_vehicleSensors = m_drawableVehicleBuilder.GetVehicleSensors();
 			m_currentSensorIndex = 0;
 			m_currentSensorAngle = m_vehicleSensors.GetSensorAngle(m_currentSensorIndex);
+			m_currentSensorMotionRange = m_vehicleSensors.GetSensorMotionRange(m_currentSensorIndex);
 			m_upToDate = true;
 		}
 		else
@@ -301,6 +343,7 @@ bool StateVehicleEditor::Load()
 	m_texts[FILENAME_TEXT] = new DrawableFilenameText<true, true>("vehicle.bin");
 	m_texts[CURRENT_SENSOR_TEXT] = new DrawableTripleText({ "Current sensor:", "", "| [Alt]" });
 	m_texts[CURRENT_SENSOR_ANGLE_TEXT] = new DrawableTripleText({ "Current sensor angle:", "", "| [Z] [X]" });
+	m_texts[CURRENT_SENSOR_MOTION_RANGE_TEXT] = new DrawableTripleText({ "Current sensor motion range:", "", "| [C] [V]" });
 
 	// Create observers
 	m_textObservers[ACTIVE_MODE_TEXT] = new FunctionTimerObserver<std::string>([&] { return m_modeStrings[m_mode]; }, 0.2);
@@ -309,6 +352,7 @@ bool StateVehicleEditor::Load()
 	m_textObservers[TOTAL_NUMBER_OF_SENSORS_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(m_vehicleSensors.GetNumberOfSensors()); }, 0.1);
 	m_textObservers[CURRENT_SENSOR_TEXT] = new FunctionTimerObserver<std::string>([&] { return m_vehicleSensors.GetNumberOfSensors() > 0 ? "S" + std::to_string(m_currentSensorIndex) : "None"; }, 0.1);
 	m_textObservers[CURRENT_SENSOR_ANGLE_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(size_t(m_currentSensorAngle)); }, 0.1);
+	m_textObservers[CURRENT_SENSOR_MOTION_RANGE_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(m_currentSensorMotionRange); }, 0.1);
 
 	// Set text observers
 	for (size_t i = ACTIVE_MODE_TEXT; i < TEXT_COUNT; ++i)
@@ -330,8 +374,9 @@ bool StateVehicleEditor::Load()
 	m_texts[TOTAL_NUMBER_OF_EDGES_TEXT]->SetPosition({ FontContext::Component(2), {0}, {5}, {9} });
 	m_texts[TOTAL_NUMBER_OF_SENSORS_TEXT]->SetPosition({ FontContext::Component(3), {0}, {5}, {9} });
 	m_texts[FILENAME_TEXT]->SetPosition({ FontContext::Component(4), {0}, {5}, {9}, {18} });
-	m_texts[CURRENT_SENSOR_TEXT]->SetPosition({ FontContext::Component(1, true), {0}, {5}, {7} });
-	m_texts[CURRENT_SENSOR_ANGLE_TEXT]->SetPosition({ FontContext::Component(2, true), {0}, {5}, {7} });
+	m_texts[CURRENT_SENSOR_TEXT]->SetPosition({ FontContext::Component(3, true), {0}, {6}, {8} });
+	m_texts[CURRENT_SENSOR_ANGLE_TEXT]->SetPosition({ FontContext::Component(2, true), {0}, {6}, {8} });
+	m_texts[CURRENT_SENSOR_MOTION_RANGE_TEXT]->SetPosition({ FontContext::Component(1, true), {0}, {6}, {8} });
 
 	CoreLogger::PrintSuccess("State \"Vehicle Editor\" dependencies loaded correctly");
 	return true;
@@ -359,5 +404,6 @@ void StateVehicleEditor::Draw()
 	{
 		m_texts[CURRENT_SENSOR_TEXT]->Draw();
 		m_texts[CURRENT_SENSOR_ANGLE_TEXT]->Draw();
+		m_texts[CURRENT_SENSOR_MOTION_RANGE_TEXT]->Draw();
 	}
 }

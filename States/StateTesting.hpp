@@ -4,7 +4,7 @@
 #include "DrawableVehicleBuilder.hpp"
 #include "ArtificialNeuralNetworkBuilder.hpp"
 #include "DrawableMap.hpp"
-#include "CycleTimer.hpp"
+#include "CyclicTimer.hpp"
 
 class DrawableDoubleText;
 class ObserverIf;
@@ -77,7 +77,7 @@ class StateTesting final :
 	const size_t m_maxNumberOfVehicles;
 	bool m_activateUserVehicle;
 	bool m_showCheckpoints;
-	CycleTimer m_viewTimer;
+	CyclicTimer m_viewTimer;
 	const double m_viewMovementOffset;
 
 	// Objects of environment

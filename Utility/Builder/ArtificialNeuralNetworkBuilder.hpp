@@ -134,8 +134,11 @@ public:
 	// Get default bias value
 	inline static double GetDefaultBiasValue() { return 0.0; }
 
-	// Get default neuron value
-	inline static double GetDefaultNeuronValue() { return 0.0; }
+	// Get min neuron value
+	inline static double GetMinNeuronValue() { return 0.0; }
+
+	// Get max neuron value
+	inline static double GetMaxNeuronValue() { return 1.0; }
 
 	// Checks if dummy can be created
 	static bool Initialize();

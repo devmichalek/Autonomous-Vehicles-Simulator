@@ -488,10 +488,9 @@ void StateTraining::Capture()
 							m_mode = STOPPED_MODE;
 							m_textObservers[MODE_TEXT]->Notify();
 
-							// Reset view
+							// Reset view so that the center is car starting position
 							auto& view = CoreWindow::GetView();
-							auto viewOffset = CoreWindow::GetViewOffset();
-							view.move(-viewOffset);
+							view.setCenter(m_drawableVehicleBackup->GetCenter());
 							CoreWindow::GetRenderWindow().setView(view);
 							break;
 						}
@@ -608,7 +607,13 @@ void StateTraining::Update()
 							m_drawableVehicleBackup = m_drawableVehicleBuilder.Get();
 						}
 
+						// Update vehicle starting position
 						m_drawableMapBuilder.UpdateVehicle(m_drawableVehicleBackup);
+
+						// Reset view so that the center is car starting position
+						auto& view = CoreWindow::GetView();
+						view.setCenter(m_drawableVehicleBackup->GetCenter());
+						CoreWindow::GetRenderWindow().setView(view);
 						break;
 					}
 					case ANN_FILENAME_TYPE:
@@ -654,9 +659,17 @@ void StateTraining::Update()
 							m_drawableMapBackup->Init(0, 0.0);
 						}
 
+						// Remove old vehicle backup and prepare new one
 						delete m_drawableVehicleBackup;
 						m_drawableVehicleBackup = m_drawableVehicleBuilder.Get();
+
+						// Update vehicle starting position
 						m_drawableMapBuilder.UpdateVehicle(m_drawableVehicleBackup);
+
+						// Reset view so that the center is car starting position
+						auto& view = CoreWindow::GetView();
+						view.setCenter(m_drawableVehicleBackup->GetCenter());
+						CoreWindow::GetRenderWindow().setView(view);
 						break;
 					}
 					default:
@@ -778,6 +791,7 @@ void StateTraining::Update()
 				{
 					case ANN_FILENAME_TYPE:
 					{
+						// Clear builder
 						m_artificialNeuralNetworkBuilder.Clear();
 					
 						// Take the best artificial neural network
@@ -849,10 +863,10 @@ bool StateTraining::Load()
 	m_textObservers[REQUIRED_FITNESS_IMPROVEMENT_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(size_t(m_requiredFitnessImprovement * 100.0)) + "%"; });
 	m_textObservers[CURRENT_POPULATION_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(m_population) + "/" + std::to_string(m_populationSize); });
 	m_textObservers[CURRENT_GENERATION_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(m_generation) + "/" + std::to_string(m_numberOfGenerations); });
-	m_textObservers[HIGHEST_FITNESS_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(!m_drawableMap ? 0 : m_drawableMap->GetHighestFitness()) + " %"; });
-	m_textObservers[HIGHEST_FITNESS_OVERALL_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(!m_drawableMap ? 0 : m_drawableMap->GetHighestFitnessOverall()) + " %"; });
+	m_textObservers[HIGHEST_FITNESS_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(!m_drawableMap ? 0 : size_t(m_drawableMap->GetHighestFitness() * 100.0)) + "%"; });
+	m_textObservers[HIGHEST_FITNESS_OVERALL_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(!m_drawableMap ? 0 : size_t(m_drawableMap->GetHighestFitnessOverall()* 100.0)) + "%"; });
 	m_textObservers[RAISING_REQUIRED_FITNESS_IMPROVEMENT_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(m_requiredFitnessImprovementRiseTimer.GetTimeout() - m_requiredFitnessImprovementRiseTimer.Value()) + " seconds"; }, 0.3);
-	m_textObservers[MEAN_REQUIRED_FITNESS_IMPROVEMENT] = new FunctionEventObserver<std::string>([&] { return std::to_string(m_meanRequiredFitnessImprovement) + " %"; });
+	m_textObservers[MEAN_REQUIRED_FITNESS_IMPROVEMENT] = new FunctionEventObserver<std::string>([&] { return std::to_string(size_t(m_meanRequiredFitnessImprovement * 100.0)) + "%"; });
 
 	// Set text observers
 	for (size_t i = 0; i < TEXT_COUNT; ++i)

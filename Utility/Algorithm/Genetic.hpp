@@ -1,4 +1,4 @@
 #pragma once
 
-using Fitness = unsigned;
+using Fitness = double;
 using FitnessVector = std::vector<Fitness>;

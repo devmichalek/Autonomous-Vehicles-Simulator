@@ -16,6 +16,8 @@ class DrawableVehicleBuilder final :
 		ERROR_SENSOR_ANGLE_IS_NOT_DIVISIBLE,
 		ERROR_SENSOR_ANGLE_IS_TOO_LITTLE,
 		ERROR_SENSOR_ANGLE_IS_TOO_LARGE,
+		ERROR_SENSOR_MOTION_RANGE_IS_TOO_LITTLE,
+		ERROR_SENSOR_MOTION_RANGE_IS_TOO_LARGE,
 		ERROR_SENSOR_IS_OUTSIDE_OF_VEHICLE_BODY
 	};
 
@@ -39,6 +41,9 @@ class DrawableVehicleBuilder final :
 
 	// Validates sensor's angle
 	bool ValidateSensorAngle(double angle);
+
+	// Validates sensor's motion range
+	bool ValidateSensorMotionRange(double motionRange);
 
 	// Validates sensor's position over vehicle body
 	bool ValidateSensorPositionsOverVehicleBody();
@@ -71,7 +76,7 @@ public:
 	void AddVehicleBodyPoint(sf::Vector2f point);
 
 	// Add vehicle sensor
-	void AddVehicleSensor(sf::Vector2f point, double angle);
+	void AddVehicleSensor(sf::Vector2f point, double angle, double motionRange);
 
 	// Returns intermediate representation of vehicle body
 	VehicleBody GetVehicleBody();
@@ -93,6 +98,18 @@ public:
 
 	// Returns maximum sensor's angle
 	static double GetMaxSensorAngle();
+
+	// Returns minimum sensor's motion range
+	static double GetMinSensorMotionRange();
+
+	// Returns maximum sensor's motion range
+	static double GetMaxSensorMotionRange();
+
+	// Returns default sensor's motion range
+	static double GetDefaultSensorMotionRange();
+
+	// Returns sensor's motion range multiplier
+	static double GetSensorMotionRangeMultiplier();
 
 	// Returns minimum required number of sensors
 	static size_t GetMinNumberOfSensors();

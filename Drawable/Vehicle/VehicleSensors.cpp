@@ -1,6 +1,7 @@
 #include "VehicleSensors.hpp"
 #include "CoreLogger.hpp"
 #include "ArtificialNeuralNetworkBuilder.hpp"
+#include "DrawableVehicleBuilder.hpp"
 
 double VehicleSensors::m_beamLength;
 sf::Vector2f VehicleSensors::m_sensorSize;
@@ -10,6 +11,7 @@ double VehicleSensors::m_baseSinus;
 double VehicleSensors::m_baseCosinus;
 Line VehicleSensors::m_beamShape;
 sf::CircleShape VehicleSensors::m_sensorShape;
+std::mt19937 VehicleSensors::m_mersenneTwister((std::random_device())());
 bool VehicleSensors::m_initialized = false;
 
 VehicleSensors::VehicleSensors() :
@@ -54,6 +56,7 @@ void VehicleSensors::Clear()
 	m_points.clear();
 	m_angleVector.clear();
 	m_sensors.clear();
+	m_motionRanges.clear();
 }
 
 void VehicleSensors::SetBase(const sf::Vector2f* center,
@@ -77,6 +80,9 @@ void VehicleSensors::Update()
 		// Set base
 		m_beamVector[i][0] = m_points[i];
 
+		// Update motion range
+		m_motionRanges[i].Update();
+
 		// Set beam start point
 		float x = m_beamVector[i][0].x;
 		float y = m_beamVector[i][0].y;
@@ -85,8 +91,8 @@ void VehicleSensors::Update()
 		m_beamVector[i][0] += *m_center;
 
 		// Set beam end point
-		auto cosBeam = cos((*m_angle + m_angleVector[i]) * M_PI / 180);
-		auto sinBeam = sin((*m_angle + m_angleVector[i]) * M_PI / 180);
+		auto cosBeam = cos((*m_angle + m_angleVector[i] + m_motionRanges[i].Value()) * M_PI / 180);
+		auto sinBeam = sin((*m_angle + m_angleVector[i] + m_motionRanges[i].Value()) * M_PI / 180);
 		m_beamVector[i][1].x = static_cast<float>(m_beamVector[i][0].x + m_beamLength * cosBeam);
 		m_beamVector[i][1].y = static_cast<float>(m_beamVector[i][0].y + m_beamLength * sinBeam);
 	}
@@ -128,19 +134,45 @@ double VehicleSensors::GetSensorAngle(size_t index)
 	return 0.0;
 }
 
-void VehicleSensors::AddSensor(sf::Vector2f point, double angle)
+void VehicleSensors::SetSensorMotionRange(size_t index, double motionRange)
+{
+	auto& element = m_motionRanges[index];
+	element.SetMinValue(motionRange * -0.5);
+	element.SetMaxValue(motionRange * 0.5);
+	element.SetMultiplier(DrawableVehicleBuilder::GetSensorMotionRangeMultiplier());
+	element.SetValue(GenerateMotionRangeValue(motionRange));
+}
+
+double VehicleSensors::GetSensorMotionRange(size_t index)
+{
+	auto& element = m_motionRanges[index];
+	return -element.Min() + element.Max();
+}
+
+double VehicleSensors::GenerateMotionRangeValue(double motionRange)
+{
+	const double distributionMultiplier = 1000.0;
+	std::uniform_int_distribution<std::mt19937::result_type> waveTimerDistribution(0, size_t(motionRange * distributionMultiplier));
+	int result = waveTimerDistribution(m_mersenneTwister) - static_cast<int>(motionRange * 0.5 * distributionMultiplier);
+	return double(result) / distributionMultiplier;
+}
+
+void VehicleSensors::AddSensor(sf::Vector2f point, double angle, double motionRange)
 {
 	// Push back
 	m_beamVector.push_back(Edge());
 	m_points.push_back(point);
 	m_angleVector.push_back(angle);
-	m_sensors.push_back(ArtificialNeuralNetworkBuilder::GetDefaultNeuronValue());
+	m_sensors.push_back(ArtificialNeuralNetworkBuilder::GetMinNeuronValue());
+	m_motionRanges.emplace_back(motionRange * -0.5, motionRange * 0.5, DrawableVehicleBuilder::GetSensorMotionRangeMultiplier());
+	m_motionRanges.back().SetValue(GenerateMotionRangeValue(motionRange));
 
 	// Shrink to fit
 	m_beamVector.shrink_to_fit();
 	m_points.shrink_to_fit();
 	m_angleVector.shrink_to_fit();
 	m_sensors.shrink_to_fit();
+	m_motionRanges.shrink_to_fit();
 }
 
 void VehicleSensors::RemoveSensor(size_t index)
@@ -151,6 +183,7 @@ void VehicleSensors::RemoveSensor(size_t index)
 		m_points.erase(m_points.begin() + index);
 		m_angleVector.erase(m_angleVector.begin() + index);
 		m_sensors.erase(m_sensors.begin() + index);
+		m_motionRanges.erase(m_motionRanges.begin() + index);
 	}
 	else
 		CoreLogger::PrintError("Requested sensor index is outside of array bound!");

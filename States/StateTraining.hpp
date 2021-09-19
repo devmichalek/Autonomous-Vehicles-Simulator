@@ -3,7 +3,7 @@
 #include "ArtificialNeuralNetworkBuilder.hpp"
 #include "DrawableMapBuilder.hpp"
 #include "DrawableVehicleBuilder.hpp"
-#include "CycleTimer.hpp"
+#include "CyclicTimer.hpp"
 
 class GeneticAlgorithmNeuron;
 class DrawableMap;
@@ -109,9 +109,9 @@ class StateTraining final :
 	DrawableVehicleBuilder m_drawableVehicleBuilder;
 
 	// Timers, offsets and value boundaries
-	CycleTimer m_pressedKeyTimer;
-	CycleTimer m_viewTimer;
-	CycleTimer m_requiredFitnessImprovementRiseTimer;
+	CyclicTimer m_pressedKeyTimer;
+	CyclicTimer m_viewTimer;
+	CyclicTimer m_requiredFitnessImprovementRiseTimer;
 	const double m_viewMovementOffset;
 	const size_t m_minPopulationSize;
 	const size_t m_maxPopulationSize;

@@ -10,8 +10,11 @@ class DrawableVehicle final
 	inline static const double m_maxSpeed = 1.5;
 	inline static const double m_minSpeed = 0.0;
 	inline static const double m_speedFactor = 300.0;
+	inline static const double m_frictionConst = 10.0;
 
 	bool m_active;
+	double m_friction;
+	double m_steer;
 	double m_angle;
 	double m_sinus;
 	double m_cosinus;
@@ -76,7 +79,7 @@ public:
 	// Sets vehicle angle
 	inline void SetAngle(double angle)
 	{
-		m_angle = angle;
+		m_steer = m_angle = angle;
 	}
 
 	// Returns vehicle angle

@@ -45,11 +45,11 @@ public:
 	// Returns fitness vector
 	const FitnessVector& GetFitnessVector() const;
 
-	// Return highest fitness in the current iteration
-	double GetHighestFitness();
+	// Return highest fitness in the current iteration in ratio
+	Fitness GetHighestFitness();
 
-	// Returns highest fitness that has been recorded so far
-	double GetHighestFitnessOverall();
+	// Returns highest fitness that has been recorded so far in ratio
+	Fitness GetHighestFitnessOverall();
 
 	// Calculates fitness of drawable vehicle
 	Fitness CalculateFitness(DrawableVehicle* drawableVehicle);
@@ -75,6 +75,8 @@ private:
 
 	static TriangleVector GetTriangleCheckpoints(const EdgeVector& edges, const EdgePrecedencesVector& edgePrecedencesVector);
 
+	void EmboldenEdges();
+
 	// Map data
 	const size_t m_edgesPivot;
 	Line m_edgeLine;
@@ -82,7 +84,7 @@ private:
 
 	// Fitness data
 	FitnessVector m_fitnessVector;
-	std::vector<double> m_previousFitnessVector;
+	FitnessVector m_previousFitnessVector;
 	Fitness m_highestFitness;
 	Fitness m_highestFitnessOverall;
 	std::vector<StoppableTimer> m_timers;

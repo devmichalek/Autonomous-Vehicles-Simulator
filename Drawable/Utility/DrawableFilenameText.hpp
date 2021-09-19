@@ -1,6 +1,6 @@
 #pragma once
 #include "DrawableStatusText.hpp"
-#include "CycleTimer.hpp"
+#include "CyclicTimer.hpp"
 #include <array>
 
 template<bool ReadOperations, bool WriteOperations>
@@ -18,7 +18,7 @@ class DrawableFilenameText :
 	std::array<bool, ACTION_COUNT> m_activeActions;
 
 	std::map<sf::Keyboard::Key, bool> m_pressedControlKeys;
-	CycleTimer m_pressedBackspaceKeyTimer;
+	CyclicTimer m_pressedBackspaceKeyTimer;
 	
 	std::map<sf::Keyboard::Key, bool> m_pressedFilenameKeys;
 	std::string m_filename;

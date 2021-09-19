@@ -332,7 +332,7 @@ void StateANNEditor::Update()
 			CalculatePositions();
 			auto weights = m_artificialNeuralNetworkBuilder.GetRawNeuronData();
 
-			// Find max
+			// Find max value
 			double max = 0.001;
 			for (size_t i = 0; i < m_weightStrengths.size(); ++i)
 			{

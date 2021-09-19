@@ -393,10 +393,9 @@ void StateTesting::Capture()
 								m_drawableVehicleFactory[i]->Update();
 							}
 
-							// Reset view
+							// Reset view so that the center is car starting position
 							auto& view = CoreWindow::GetView();
-							auto viewOffset = CoreWindow::GetViewOffset();
-							view.move(-viewOffset);
+							view.setCenter(m_dummyVehicle->GetCenter());
 							CoreWindow::GetRenderWindow().setView(view);
 							break;
 						}
@@ -471,6 +470,11 @@ void StateTesting::Update()
 
 						// Prepare dummy vehicle
 						m_drawableMapBuilder.UpdateVehicle(m_dummyVehicle);
+
+						// Reset view so that the center is car starting position
+						auto& view = CoreWindow::GetView();
+						view.setCenter(m_dummyVehicle->GetCenter());
+						CoreWindow::GetRenderWindow().setView(view);
 						break;
 					}
 					case ANN_FILENAME_TYPE:

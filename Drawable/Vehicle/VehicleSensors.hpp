@@ -2,6 +2,8 @@
 #include "DrawableMath.hpp"
 #include "Neural.hpp"
 #include "CoreWindow.hpp"
+#include "WaveTimer.hpp"
+#include <random>
 #include <SFML/Graphics/CircleShape.hpp>
 
 class DrawableVehicle;
@@ -20,6 +22,7 @@ class VehicleSensors final
 	std::vector<sf::Vector2f> m_points;
 	AngleVector m_angleVector;
 	NeuronLayer m_sensors;
+	std::vector<WaveTimer> m_motionRanges;
 
 	const sf::Vector2f* m_center;
 	const double* m_angle;
@@ -36,6 +39,7 @@ class VehicleSensors final
 	static sf::CircleShape m_sensorShape;
 	inline static const Neuron m_sensorMaxValue = 1.0;
 	inline static const Neuron m_sensorMinValue = 0.0;
+	static std::mt19937 m_mersenneTwister;
 	static bool m_initialized;
 
 	VehicleSensors();
@@ -83,8 +87,17 @@ class VehicleSensors final
 	// Returns sensor's beam angle
 	double GetSensorAngle(size_t index);
 
+	// Change sensor's motion range
+	void SetSensorMotionRange(size_t index, double motionRange);
+
+	// Returns sensor's motion range
+	double GetSensorMotionRange(size_t index);
+
+	// Generates sensor's motion range start value
+	double GenerateMotionRangeValue(double motionRange);
+
 	// Adds new sensor
-	void AddSensor(sf::Vector2f point, double angle);
+	void AddSensor(sf::Vector2f point, double angle, double motionRange);
 
 	// Removes particular sensor
 	void RemoveSensor(size_t index);

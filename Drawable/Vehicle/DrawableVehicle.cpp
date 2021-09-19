@@ -3,6 +3,7 @@
 
 DrawableVehicle::DrawableVehicle(VehicleBody vehicleBody, VehicleSensors vehicleSensors) :
 	m_active(true),
+	m_steer(0.0),
 	m_angle(0.0),
 	m_sinus(0.0),
 	m_cosinus(0.0),
@@ -50,11 +51,16 @@ void DrawableVehicle::Update()
 	else if (m_speed < m_minSpeed)
 		m_speed = m_minSpeed;
 
+	double elapsedTime = CoreWindow::GetElapsedTime();
+	auto difference = m_steer - m_angle;
+	m_steer -= difference * elapsedTime * m_frictionConst;
+	double steerCosinus = cos(m_steer * M_PI / 180);
+	double steerSinus = sin(m_steer * M_PI / 180);
+
 	m_cosinus = cos(m_angle * M_PI / 180);
 	m_sinus = sin(m_angle * M_PI / 180);
-	double elapsedTime = CoreWindow::GetElapsedTime();
-	m_center.x += static_cast<float>(m_speed * elapsedTime * m_speedFactor * m_cosinus);
-	m_center.y += static_cast<float>(m_speed * elapsedTime * m_speedFactor * m_sinus);
+	m_center.x += static_cast<float>(m_speed * elapsedTime * m_speedFactor * steerCosinus);
+	m_center.y += static_cast<float>(m_speed * elapsedTime * m_speedFactor * steerSinus);
 	m_speed -= elapsedTime;
 
 	m_vehicleBody.Update();

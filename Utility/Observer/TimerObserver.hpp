@@ -1,6 +1,6 @@
 #pragma once
 #include "ObserverIf.hpp"
-#include "CycleTimer.hpp"
+#include "CyclicTimer.hpp"
 
 class TimerObserver :
 	public ObserverIf
@@ -35,5 +35,5 @@ protected:
 
 private:
 
-	CycleTimer m_timer;
+	CyclicTimer m_timer;
 };

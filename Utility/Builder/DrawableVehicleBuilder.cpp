@@ -119,6 +119,23 @@ bool DrawableVehicleBuilder::ValidateSensorAngle(double angle)
 	return true;
 }
 
+bool DrawableVehicleBuilder::ValidateSensorMotionRange(double motionRange)
+{
+	if (motionRange < GetMinSensorMotionRange())
+	{
+		m_lastOperationStatus = ERROR_SENSOR_MOTION_RANGE_IS_TOO_LITTLE;
+		return false;
+	}
+
+	if (motionRange > GetMaxSensorMotionRange())
+	{
+		m_lastOperationStatus = ERROR_SENSOR_MOTION_RANGE_IS_TOO_LARGE;
+		return false;
+	}
+
+	return true;
+}
+
 bool DrawableVehicleBuilder::ValidateSensorPositionsOverVehicleBody()
 {
 	for (const auto& position : m_vehicleSensors.m_points)
@@ -164,9 +181,12 @@ bool DrawableVehicleBuilder::ValidateInternal()
 	if (!ValidateSensorPositionsOverVehicleBody())
 		return false;
 	
-	for (const auto& angle : m_vehicleSensors.m_angleVector)
+	for (size_t i = 0; i < m_vehicleSensors.m_angleVector.size(); ++i)
 	{
-		if (!ValidateSensorAngle(angle))
+		if (!ValidateSensorAngle(m_vehicleSensors.m_angleVector[i]))
+			return false;
+
+		if (!ValidateSensorMotionRange(m_vehicleSensors.GetSensorMotionRange(i)))
 			return false;
 	}
 
@@ -225,7 +245,7 @@ bool DrawableVehicleBuilder::LoadInternal(std::ifstream& input)
 		input.read((char*)&y, sizeof(y));
 		x *= double(windowSize.x);
 		y *= double(windowSize.y);
-		m_vehicleSensors.AddSensor(sf::Vector2f(float(x), float(y)), 0.0);
+		m_vehicleSensors.AddSensor(sf::Vector2f(float(x), float(y)), 0.0, GetDefaultSensorMotionRange());
 	}
 
 	if (!ValidateRelativePositions(m_vehicleSensors.m_points))
@@ -244,6 +264,18 @@ bool DrawableVehicleBuilder::LoadInternal(std::ifstream& input)
 			return false;
 
 		m_vehicleSensors.SetSensorAngle(i, angle);
+	}
+
+	// Read vehicle sensor's motion range
+	for (size_t i = 0; i < numberOfSensors; ++i)
+	{
+		double motionRange = 0.0;
+		input.read((char*)&motionRange, sizeof(motionRange));
+
+		if (!ValidateSensorMotionRange(motionRange))
+			return false;
+
+		m_vehicleSensors.SetSensorMotionRange(i, motionRange);
 	}
 
 	return true;
@@ -287,6 +319,13 @@ bool DrawableVehicleBuilder::SaveInternal(std::ofstream& output)
 		output.write((const char*)&angle, sizeof(angle));
 	}
 
+	// Save vehicle sensor's motion range
+	for (size_t i = 0; i < numberOfSensors; ++i)
+	{
+		double motionRange = m_vehicleSensors.GetSensorMotionRange(i);
+		output.write((const char*)&motionRange, sizeof(motionRange));
+	}
+
 	return true;
 }
 
@@ -297,11 +336,11 @@ void DrawableVehicleBuilder::CreateDummyInternal()
 
 	m_vehicleBody = CreateVehicleBodyDummy(dummySize);
 
-	m_vehicleSensors.AddSensor(sf::Vector2f(0, -dummySize.y / 2), 270.0);
-	m_vehicleSensors.AddSensor(sf::Vector2f(dummySize.x / 2, -dummySize.y / 2), 315.0);
-	m_vehicleSensors.AddSensor(sf::Vector2f(dummySize.x / 2, 0), 0);
-	m_vehicleSensors.AddSensor(sf::Vector2f(dummySize.x / 2, dummySize.y / 2), 45.0);
-	m_vehicleSensors.AddSensor(sf::Vector2f(0, dummySize.y / 2), 90.0);
+	m_vehicleSensors.AddSensor(sf::Vector2f(0, -dummySize.y / 2), 270.0, GetDefaultSensorMotionRange());
+	m_vehicleSensors.AddSensor(sf::Vector2f(dummySize.x / 2, -dummySize.y / 2), 315.0, GetDefaultSensorMotionRange());
+	m_vehicleSensors.AddSensor(sf::Vector2f(dummySize.x / 2, 0), 0, GetDefaultSensorMotionRange());
+	m_vehicleSensors.AddSensor(sf::Vector2f(dummySize.x / 2, dummySize.y / 2), 45.0, GetDefaultSensorMotionRange());
+	m_vehicleSensors.AddSensor(sf::Vector2f(0, dummySize.y / 2), 90.0, GetDefaultSensorMotionRange());
 }
 
 VehicleBody DrawableVehicleBuilder::CreateVehicleBodyDummy(sf::Vector2f dummySize)
@@ -326,6 +365,8 @@ DrawableVehicleBuilder::DrawableVehicleBuilder() :
 	m_operationsMap[ERROR_SENSOR_ANGLE_IS_NOT_DIVISIBLE] = "Error: Sensor's angle must be divisible by 15.0!";
 	m_operationsMap[ERROR_SENSOR_ANGLE_IS_TOO_LITTLE] = "Error: Sensor's angle is too little!";
 	m_operationsMap[ERROR_SENSOR_ANGLE_IS_TOO_LARGE] = "Error: Sensor's angle is too large!";
+	m_operationsMap[ERROR_SENSOR_MOTION_RANGE_IS_TOO_LITTLE] = "Error: Sensor's motion range is too little!";
+	m_operationsMap[ERROR_SENSOR_MOTION_RANGE_IS_TOO_LARGE] = "Error: Sensor's motion range is too large!";
 	m_operationsMap[ERROR_SENSOR_IS_OUTSIDE_OF_VEHICLE_BODY] = "Error: One of sensors is outside of vehicle body!";
 	Clear();
 }
@@ -339,9 +380,9 @@ void DrawableVehicleBuilder::AddVehicleBodyPoint(sf::Vector2f point)
 	m_vehicleBody.AddPoint(point);
 }
 
-void DrawableVehicleBuilder::AddVehicleSensor(sf::Vector2f point, double angle)
+void DrawableVehicleBuilder::AddVehicleSensor(sf::Vector2f point, double angle, double motionRange)
 {
-	m_vehicleSensors.AddSensor(point, angle);
+	m_vehicleSensors.AddSensor(point, angle, motionRange);
 }
 
 VehicleBody DrawableVehicleBuilder::GetVehicleBody()
@@ -380,6 +421,26 @@ double DrawableVehicleBuilder::GetMinSensorAngle()
 double DrawableVehicleBuilder::GetMaxSensorAngle()
 {
 	return 360.0;
+}
+
+double DrawableVehicleBuilder::GetMinSensorMotionRange()
+{
+	return 0.0;
+}
+
+double DrawableVehicleBuilder::GetMaxSensorMotionRange()
+{
+	return 10.0;
+}
+
+double DrawableVehicleBuilder::GetDefaultSensorMotionRange()
+{
+	return 1.0;
+}
+
+double DrawableVehicleBuilder::GetSensorMotionRangeMultiplier()
+{
+	return 32.0;
 }
 
 size_t DrawableVehicleBuilder::GetMinNumberOfSensors()

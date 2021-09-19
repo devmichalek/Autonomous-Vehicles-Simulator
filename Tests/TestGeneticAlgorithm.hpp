@@ -156,7 +156,7 @@ namespace TestGeneticAlgorithm
 					size_t difference = std::abs(geneticAlgorithm.GetChromosome(j)[k] - expectedChromosome[k]);
 					difference = size_t(std::pow(difference, 2));
 					long long value = long long(numOfCombinations) - difference;
-					fitnessVector[j] += Fitness(value < 0 ? 0 : value);
+					fitnessVector[j] += Fitness(value < 0 ? 0.0 : value);
 				}
 			}
 		}
@@ -217,7 +217,7 @@ namespace TestGeneticAlgorithm
 					long long longDifference = long long(difference * precision);
 					longDifference = long long(std::pow(longDifference, 1.15));
 					long long value = long long(delta * precision) - longDifference;
-					fitnessVector[j] += Fitness(value < 0 ? 0 : value);
+					fitnessVector[j] += Fitness(value < 0 ? 0.0 : value);
 				}
 			}
 		}
@@ -280,7 +280,7 @@ namespace TestGeneticAlgorithm
 					Neuron difference = std::fabs(data - expectedChromosome[k]);
 					long long longDifference = long long(difference * precision);
 					long long value = long long(delta * precision) - longDifference;
-					fitnessVector[j] += Fitness(value < 0 ? 0 : value);
+					fitnessVector[j] += Fitness(value < 0 ? 0.0 : value);
 				}
 			}
 		}

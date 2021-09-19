@@ -134,7 +134,7 @@ bool ArtificialNeuralNetworkBuilder::ValidateInternal()
 	CalculateNumberOfWeights();
 
 	if (m_rawData.empty())
-		m_rawData.resize(m_numberOfWeights, GetDefaultNeuronValue());
+		m_rawData.resize(m_numberOfWeights, GetMaxNeuronValue());
 
 	if (!ValidateRawData())
 		return false;

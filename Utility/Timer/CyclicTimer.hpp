@@ -2,17 +2,17 @@
 #include "TimerAbstract.hpp"
 #include "CoreWindow.hpp"
 
-class CycleTimer final :
+class CyclicTimer final :
 	public TimerAbstract
 {
 public:
 
-	explicit CycleTimer(double resetValue, double timeout, double multiplier = 1) :
+	explicit CyclicTimer(double resetValue, double timeout, double multiplier = 1) :
 		TimerAbstract(resetValue, timeout, multiplier)
 	{
 	}
 
-	~CycleTimer()
+	~CyclicTimer()
 	{
 	}
 

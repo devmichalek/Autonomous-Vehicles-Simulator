@@ -3,7 +3,7 @@
 #include "DrawableVehicle.hpp"
 #include "DrawableMapBuilder.hpp"
 #include "DrawableVehicleBuilder.hpp"
-#include "CycleTimer.hpp"
+#include "CyclicTimer.hpp"
 
 class DrawableDoubleText;
 class ObserverIf;
@@ -44,7 +44,7 @@ class StateMapEditor final :
 	sf::RectangleShape m_allowedViewAreaShape;
 
 	// View movement
-	CycleTimer m_viewMovementTimer;
+	CyclicTimer m_viewMovementTimer;
 	const double m_viewMovementOffset;
 	double m_viewMovement;
 	const double m_viewMinMovement;
