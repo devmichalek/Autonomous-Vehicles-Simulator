@@ -18,6 +18,8 @@ public:
 	{
 	}
 
+	// Returns observed value
+	// Result is converted to string type if observed value is of different type
 	std::string Read() override
 	{
 		if constexpr (std::is_same<Type, std::string>::value)

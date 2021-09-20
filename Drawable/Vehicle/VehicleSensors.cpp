@@ -91,8 +91,8 @@ void VehicleSensors::Update()
 		m_beamVector[i][0] += *m_center;
 
 		// Set beam end point
-		auto cosBeam = cos((*m_angle + m_angleVector[i] + m_motionRanges[i].Value()) * M_PI / 180);
-		auto sinBeam = sin((*m_angle + m_angleVector[i] + m_motionRanges[i].Value()) * M_PI / 180);
+		auto cosBeam = cos((*m_angle + m_angleVector[i] + m_motionRanges[i].GetValue()) * M_PI / 180);
+		auto sinBeam = sin((*m_angle + m_angleVector[i] + m_motionRanges[i].GetValue()) * M_PI / 180);
 		m_beamVector[i][1].x = static_cast<float>(m_beamVector[i][0].x + m_beamLength * cosBeam);
 		m_beamVector[i][1].y = static_cast<float>(m_beamVector[i][0].y + m_beamLength * sinBeam);
 	}
@@ -145,16 +145,15 @@ void VehicleSensors::SetSensorMotionRange(size_t index, double motionRange)
 
 double VehicleSensors::GetSensorMotionRange(size_t index)
 {
-	auto& element = m_motionRanges[index];
-	return -element.Min() + element.Max();
+	return m_motionRanges[index].GetValueRange();
 }
 
 double VehicleSensors::GenerateMotionRangeValue(double motionRange)
 {
-	const double distributionMultiplier = 1000.0;
-	std::uniform_int_distribution<std::mt19937::result_type> waveTimerDistribution(0, size_t(motionRange * distributionMultiplier));
-	int result = waveTimerDistribution(m_mersenneTwister) - static_cast<int>(motionRange * 0.5 * distributionMultiplier);
-	return double(result) / distributionMultiplier;
+	const double multiplier = 1000.0;
+	std::uniform_int_distribution<std::mt19937::result_type> distribution(0, unsigned(motionRange * multiplier));
+	int result = distribution(m_mersenneTwister) - static_cast<int>(motionRange * 0.5 * multiplier);
+	return double(result) / multiplier;
 }
 
 void VehicleSensors::AddSensor(sf::Vector2f point, double angle, double motionRange)

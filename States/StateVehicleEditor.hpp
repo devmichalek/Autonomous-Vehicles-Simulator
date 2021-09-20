@@ -4,7 +4,7 @@
 #include "DrawableVehicleBuilder.hpp"
 
 class DrawableTextAbstract;
-class ObserverIf;
+class ObserverInterface;
 
 class StateVehicleEditor final :
 	public StateInterface
@@ -69,7 +69,7 @@ class StateVehicleEditor final :
 		TEXT_COUNT
 	};
 	std::vector<DrawableTextAbstract*> m_texts;
-	std::vector<ObserverIf*> m_textObservers;
+	std::vector<ObserverInterface*> m_textObservers;
 
 public:
 

@@ -19,6 +19,8 @@ public:
 	{
 	}
 
+	// Calls observed function and returns its result
+	// If observed function return type is different than string return type is converted
 	std::string Read() override
 	{
 		if constexpr (std::is_same<Type, std::string>::value)

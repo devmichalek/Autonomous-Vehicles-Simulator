@@ -1,7 +1,7 @@
 #pragma once
 #include "CoreWindow.hpp"
 
-class WaveTimer
+class PeriodicTimer
 {
 	double m_value;
 	double m_minValue;
@@ -11,20 +11,22 @@ class WaveTimer
 
 public:
 
-	WaveTimer(double minValue, double maxValue, double multiplier = 1) :
+	// Periodic timer constructor that takes min, max and multiplier
+	PeriodicTimer(double minValue, double maxValue, double multiplier = 1) :
 		m_value(minValue),
 		m_minValue(minValue),
 		m_maxValue(maxValue),
 		m_multiplier(multiplier)
 	{
-		m_sign = minValue < maxValue ? 1 : -1;
+		m_sign = 1;
 	}
 
-	~WaveTimer()
+	~PeriodicTimer()
 	{
 	}
 
-	bool Update()
+	// Update value with periodic function
+	void Update()
 	{
 		m_value += CoreWindow::GetElapsedTime() * m_multiplier * m_sign;
 
@@ -32,49 +34,46 @@ public:
 		{
 			m_value = m_maxValue;
 			m_sign *= -1;
-			return true;
 		}
-		
-		if (m_value < m_minValue)
+		else if (m_value < m_minValue)
 		{
 			m_value = m_minValue;
 			m_sign *= -1;
-			return true;
 		}
-
-		return false;
 	}
 
+	// Sets value
 	void SetValue(double value)
 	{
 		m_value = value;
 	}
 
-	double Value()
+	// Returns current value
+	// Value is in a range of previously set boundaries (min; max)
+	double GetValue()
 	{
 		return m_value;
 	}
 
+	// Sets minimum value
 	void SetMinValue(double minValue)
 	{
 		m_minValue = minValue;
 	}
 
-	double Min()
-	{
-		return m_minValue;
-	}
-
+	// Sets maximum value
 	void SetMaxValue(double maxValue)
 	{
 		m_maxValue = maxValue;
 	}
 
-	double Max()
+	// Returns value range | max - min |
+	double GetValueRange()
 	{
-		return m_maxValue;
+		return std::fabs(m_maxValue - m_minValue);
 	}
 
+	// Sets multiplier
 	void SetMultiplier(double multiplier)
 	{
 		m_multiplier = multiplier;

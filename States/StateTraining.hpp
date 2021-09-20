@@ -3,13 +3,13 @@
 #include "ArtificialNeuralNetworkBuilder.hpp"
 #include "DrawableMapBuilder.hpp"
 #include "DrawableVehicleBuilder.hpp"
-#include "CyclicTimer.hpp"
+#include "ContinuousTimer.hpp"
 
 class GeneticAlgorithmNeuron;
 class DrawableMap;
 class DrawableCheckpointMap;
 class DrawableDoubleText;
-class ObserverIf;
+class ObserverInterface;
 
 class StateTraining final :
 	public StateInterface
@@ -109,9 +109,9 @@ class StateTraining final :
 	DrawableVehicleBuilder m_drawableVehicleBuilder;
 
 	// Timers, offsets and value boundaries
-	CyclicTimer m_pressedKeyTimer;
-	CyclicTimer m_viewTimer;
-	CyclicTimer m_requiredFitnessImprovementRiseTimer;
+	ContinuousTimer m_pressedKeyTimer;
+	ContinuousTimer m_viewTimer;
+	ContinuousTimer m_requiredFitnessImprovementRiseTimer;
 	const double m_viewMovementOffset;
 	const size_t m_minPopulationSize;
 	const size_t m_maxPopulationSize;
@@ -160,7 +160,7 @@ class StateTraining final :
 		TEXT_COUNT
 	};
 	std::vector<DrawableDoubleText*> m_texts;
-	std::vector<ObserverIf*> m_textObservers;
+	std::vector<ObserverInterface*> m_textObservers;
 
 public:
 

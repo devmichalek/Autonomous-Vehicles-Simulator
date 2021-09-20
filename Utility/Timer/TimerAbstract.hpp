@@ -30,14 +30,9 @@ public:
 		m_value = m_resetValue;
 	}
 
-	inline void ResetTimeout(double timeout)
+	inline void SetTimeout(double timeout)
 	{
 		m_timeout = timeout;
-	}
-
-	inline void SetTimeout()
-	{
-		m_value = m_timeout;
 	}
 
 	inline double GetTimeout()
@@ -45,7 +40,12 @@ public:
 		return m_timeout;
 	}
 
-	inline double Value()
+	inline void MakeTimeout()
+	{
+		m_value = m_timeout;
+	}
+
+	inline double GetValue()
 	{
 		return m_value;
 	}

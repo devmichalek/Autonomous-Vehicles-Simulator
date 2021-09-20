@@ -1,8 +1,8 @@
 #pragma once
-#include "ObserverIf.hpp"
+#include "ObserverInterface.hpp"
 
 class EventObserver :
-	public ObserverIf
+	public ObserverInterface
 {
 public:
 
@@ -10,6 +10,8 @@ public:
 	{
 	}
 
+	// Returns true if observed entity is ready
+	// Observed entity is ready when someone notifies observer
 	inline bool Ready() override
 	{
 		bool ready = m_ready;
@@ -17,11 +19,13 @@ public:
 		return ready;
 	}
 
+	// Resets observer ready field
 	inline void Reset() override
 	{
 		m_ready = false;
 	}
 
+	// Sets observer ready field
 	inline void Notify() override
 	{
 		m_ready = true;

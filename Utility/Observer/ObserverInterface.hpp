@@ -1,11 +1,11 @@
 #pragma once
 #include <string>
 
-class ObserverIf
+class ObserverInterface
 {
 public:
 
-	virtual ~ObserverIf()
+	virtual ~ObserverInterface()
 	{
 	}
 

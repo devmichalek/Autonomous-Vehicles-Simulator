@@ -1,5 +1,4 @@
 #include "DrawableStatusText.hpp"
-#include "ObserverIf.hpp"
 #include "CoreLogger.hpp"
 
 DrawableStatusText::DrawableStatusText(std::vector<std::string> strings) :
@@ -14,7 +13,7 @@ DrawableStatusText::~DrawableStatusText()
 
 void DrawableStatusText::Reset()
 {
-	m_alphaTimer.SetTimeout();
+	m_alphaTimer.MakeTimeout();
 	DrawableTripleText::Reset();
 }
 
@@ -54,7 +53,7 @@ void DrawableStatusText::UpdateInternal()
 {
 	m_alphaTimer.Update();
 	sf::Color color = m_texts[STATUS_TEXT].getFillColor();
-	color.a = static_cast<sf::Uint8>(255.0 - m_alphaTimer.Value());
+	color.a = static_cast<sf::Uint8>(255.0 - m_alphaTimer.GetValue());
 	m_texts[STATUS_TEXT].setFillColor(color);
 
 	DrawableTripleText::UpdateInternal();

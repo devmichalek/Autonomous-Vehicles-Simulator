@@ -3,10 +3,10 @@
 #include "DrawableVehicle.hpp"
 #include "DrawableMapBuilder.hpp"
 #include "DrawableVehicleBuilder.hpp"
-#include "CyclicTimer.hpp"
+#include "ContinuousTimer.hpp"
 
 class DrawableDoubleText;
-class ObserverIf;
+class ObserverInterface;
 
 class StateMapEditor final :
 	public StateInterface
@@ -44,7 +44,7 @@ class StateMapEditor final :
 	sf::RectangleShape m_allowedViewAreaShape;
 
 	// View movement
-	CyclicTimer m_viewMovementTimer;
+	ContinuousTimer m_viewMovementTimer;
 	const double m_viewMovementOffset;
 	double m_viewMovement;
 	const double m_viewMinMovement;
@@ -69,7 +69,7 @@ class StateMapEditor final :
 		TEXT_COUNT
 	};
 	std::vector<DrawableDoubleText*> m_texts;
-	std::vector<ObserverIf*> m_textObservers;
+	std::vector<ObserverInterface*> m_textObservers;
 
 	void SetActiveMode(ActiveMode);
 

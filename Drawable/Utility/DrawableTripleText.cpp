@@ -1,5 +1,4 @@
 #include "DrawableTripleText.hpp"
-#include "ObserverIf.hpp"
 #include "CoreLogger.hpp"
 
 DrawableTripleText::DrawableTripleText(std::vector<std::string> strings, size_t size) :

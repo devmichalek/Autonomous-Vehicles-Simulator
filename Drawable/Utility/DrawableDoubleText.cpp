@@ -1,5 +1,5 @@
 #include "DrawableDoubleText.hpp"
-#include "ObserverIf.hpp"
+#include "ObserverInterface.hpp"
 #include "CoreLogger.hpp"
 
 DrawableDoubleText::DrawableDoubleText(std::vector<std::string> strings, size_t size) :
@@ -33,7 +33,7 @@ void DrawableDoubleText::SetPosition(std::vector<FontContext::Component> compone
 	Update();
 }
 
-void DrawableDoubleText::SetObserver(ObserverIf* observer)
+void DrawableDoubleText::SetObserver(ObserverInterface* observer)
 {
 	m_observer = observer;
 	Update();

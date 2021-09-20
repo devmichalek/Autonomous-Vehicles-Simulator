@@ -5,7 +5,7 @@
 #include "DrawableTextAbstract.hpp"
 #include <SFML/Graphics/CircleShape.hpp>
 
-class ObserverIf;
+class ObserverInterface;
 
 class StateANNEditor final :
 	public StateInterface
@@ -61,7 +61,7 @@ class StateANNEditor final :
 		TEXT_COUNT
 	};
 	std::vector<DrawableTextAbstract*> m_texts;
-	std::vector<ObserverIf*> m_textObservers;
+	std::vector<ObserverInterface*> m_textObservers;
 
 	// Calculates positions of neuron shapes and weight shapes
 	void CalculatePositions();

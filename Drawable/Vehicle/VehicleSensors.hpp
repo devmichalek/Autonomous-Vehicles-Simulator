@@ -2,7 +2,7 @@
 #include "DrawableMath.hpp"
 #include "Neural.hpp"
 #include "CoreWindow.hpp"
-#include "WaveTimer.hpp"
+#include "PeriodicTimer.hpp"
 #include <random>
 #include <SFML/Graphics/CircleShape.hpp>
 
@@ -22,7 +22,7 @@ class VehicleSensors final
 	std::vector<sf::Vector2f> m_points;
 	AngleVector m_angleVector;
 	NeuronLayer m_sensors;
-	std::vector<WaveTimer> m_motionRanges;
+	std::vector<PeriodicTimer> m_motionRanges;
 
 	const sf::Vector2f* m_center;
 	const double* m_angle;
@@ -49,7 +49,7 @@ class VehicleSensors final
 	// Initializes static fields
 	static void Initialize();
 
-	// Clears dynamicly allocated memory
+	// Clears dynamically allocated memory
 	void Clear();
 
 	// Set up base components

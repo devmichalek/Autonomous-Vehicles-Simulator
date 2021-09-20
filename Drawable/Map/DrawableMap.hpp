@@ -9,7 +9,6 @@ class DrawableMapBuilder;
 
 class DrawableMap final
 {
-
 	DrawableMap(const EdgeVector& edges, const size_t pivot);
 
 	DrawableMap(const DrawableMap& drawableMap);
@@ -18,14 +17,15 @@ public:
 
 	~DrawableMap();
 
-	// Reset fitness vector and timers
+	// Resets fitness vector (its elements are set to 0) and timers
 	void Reset();
 
 	// Initiates internal fields, resizes vectors
 	void Init(size_t size, double minFitnessImprovement);
 
-	// Checks if there is an intersection of vehicles against map (edges)
-	void Intersect(DrawableVehicleFactory& drawableVehicleFactory);
+	// Checks if there is an intersection vehicles vs edges
+	// Update timers
+	void Update(DrawableVehicleFactory& drawableVehicleFactory);
 
 	// Draws map (edges)
 	void Draw();
@@ -54,6 +54,7 @@ public:
 	// Calculates fitness of drawable vehicle
 	Fitness CalculateFitness(DrawableVehicle* drawableVehicle);
 
+	// Generates triangle checkpoints for given vector of edges (inner edges + outer edges)
 	static TriangleVector GenerateTriangleCheckpoints(const EdgeVector& edges, const size_t pivot);
 
 private:
@@ -61,21 +62,26 @@ private:
 	// Returns maximum fitness
 	Fitness GetMaxFitness();
 
+	// Internal types 
 	using EndPoint = std::pair<size_t, size_t>;
 	using EndPoints = std::vector<EndPoint>;
 	using EndPointsVector = std::vector<EndPoints>;
 	using EdgePrecedence = std::pair<Edge, size_t>;
 	using EdgePrecedences = std::vector<EdgePrecedence>;
 	using EdgePrecedencesVector = std::vector<EdgePrecedences>;
+
 	friend DrawableMapBuilder;
 
+	// Returns available end points from specific point
+	// Point is taken from inner edges (first half of edges vector) and it's pointer via index
+	// Pivot determines how many inner edges are inside edges vector
 	static EndPoints GetEndPoints(const EdgeVector& edges, const size_t pivot, const size_t index);
 
+	// Returns edge precedences vector for each point create from inner edges
 	static EdgePrecedencesVector GetEdgePrecedencesVector(const EdgeVector& edges, const size_t pivot, EndPointsVector& endPointsVector);
 
+	// Transforms edges and edge precedences vector into triangle checkpoints
 	static TriangleVector GetTriangleCheckpoints(const EdgeVector& edges, const EdgePrecedencesVector& edgePrecedencesVector);
-
-	void EmboldenEdges();
 
 	// Map data
 	const size_t m_edgesPivot;
@@ -87,7 +93,7 @@ private:
 	FitnessVector m_previousFitnessVector;
 	Fitness m_highestFitness;
 	Fitness m_highestFitnessOverall;
-	std::vector<StoppableTimer> m_timers;
+	std::vector<StoppableTimer> m_timers; // To measure time that has passed since the beggining of iteration for specific instance
 	double m_minFitnessImprovement;
 
 	// Checkpoints data

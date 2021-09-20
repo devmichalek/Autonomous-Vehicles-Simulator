@@ -14,12 +14,12 @@ CoreEngine::CoreEngine()
 {
 	if (!Load())
 	{
-		CoreLogger::PrintError("Loading engine dependencies failed");
+		CoreLogger::PrintError("Loading engine dependencies failed!");
 		CoreWindow::GetInstance().Close();
 	}
 	else
 	{
-		CoreLogger::PrintSuccess("Correctly loaded all engine dependencies");
+		CoreLogger::PrintSuccess("Correctly loaded all engine dependencies.");
 		Loop();
 	}
 		

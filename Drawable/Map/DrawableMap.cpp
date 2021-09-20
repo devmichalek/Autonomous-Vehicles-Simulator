@@ -72,7 +72,7 @@ void DrawableMap::Init(size_t size, double minFitnessImprovement)
 	m_minFitnessImprovement = minFitnessImprovement;
 }
 
-void DrawableMap::Intersect(DrawableVehicleFactory& drawableVehicleFactory)
+void DrawableMap::Update(DrawableVehicleFactory& drawableVehicleFactory)
 {
 	size_t count = drawableVehicleFactory.size();
 	for (size_t i = 0; i < count; ++i)
@@ -131,7 +131,7 @@ void DrawableMap::Iterate(DrawableVehicleFactory& drawableVehicleFactory)
 	for (size_t i = 0; i < drawableVehicleFactory.size(); ++i)
 	{
 		m_fitnessVector[i] *= 100000;
-		m_fitnessVector[i] += (1.0 / m_timers[i].Value()) * 10000;
+		m_fitnessVector[i] += (1.0 / m_timers[i].GetValue()) * 10000;
 	}
 }
 
@@ -225,7 +225,7 @@ TriangleVector DrawableMap::GenerateTriangleCheckpoints(const EdgeVector& edges,
 			return {};
 	}
 
-	// Start adding edge precendences
+	// Generate edge precendences vector
 	auto edgePrecedencesVector = GetEdgePrecedencesVector(edges, pivot, endPointsVector);
 
 	// Generate triangle checkpoints

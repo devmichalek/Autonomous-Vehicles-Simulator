@@ -558,8 +558,7 @@ void StateTesting::Update()
 
 				if (m_drawableMap)
 				{
-					// Check intersection
-					m_drawableMap->Intersect(m_drawableVehicleFactory);
+					m_drawableMap->Update(m_drawableVehicleFactory);
 				}
 			}
 

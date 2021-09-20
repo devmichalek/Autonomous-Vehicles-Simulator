@@ -13,7 +13,6 @@ class DrawableVehicle final
 	inline static const double m_frictionConst = 10.0;
 
 	bool m_active;
-	double m_friction;
 	double m_steer;
 	double m_angle;
 	double m_sinus;

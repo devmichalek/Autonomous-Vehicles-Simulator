@@ -31,7 +31,7 @@ class VehicleBody final
 	// Initializes static fields
 	static void Initialize();
 
-	// Clears dynamicly allocated memory
+	// Clears dynamically allocated memory
 	void Clear();
 
 	// Set up base components

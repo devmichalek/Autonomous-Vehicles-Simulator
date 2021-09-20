@@ -28,6 +28,7 @@ public:
 
 private:
 
+	// Internal print function implementation for all print function types
 	static void PrintInternal(const char* prefix, std::string& message);
 
 	static std::ofstream m_output;

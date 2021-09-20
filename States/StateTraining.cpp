@@ -102,8 +102,8 @@ StateTraining::StateTraining() :
 	m_drawableMapBackup = nullptr;
 
 	// Initialize timers
-	m_pressedKeyTimer.SetTimeout();
-	m_requiredFitnessImprovementRiseTimer.ResetTimeout(m_requiredFitnessImprovementRiseResetValue);
+	m_pressedKeyTimer.MakeTimeout();
+	m_requiredFitnessImprovementRiseTimer.SetTimeout(m_requiredFitnessImprovementRiseResetValue);
 
 	// Initialize text and their observers
 	m_texts.resize(TEXT_COUNT, nullptr);
@@ -182,9 +182,9 @@ void StateTraining::Reload()
 	m_drawableVehicleBuilder.Clear();
 
 	// Reset timers
-	m_pressedKeyTimer.SetTimeout();
+	m_pressedKeyTimer.MakeTimeout();
 	m_viewTimer.Reset();
-	m_requiredFitnessImprovementRiseTimer.ResetTimeout(m_requiredFitnessImprovementRiseResetValue);
+	m_requiredFitnessImprovementRiseTimer.SetTimeout(m_requiredFitnessImprovementRiseResetValue);
 	m_requiredFitnessImprovementRiseTimer.Reset();
 
 	// Reset view
@@ -393,7 +393,7 @@ void StateTraining::Capture()
 										currentTimeout += m_requiredFitnessImprovementRiseOffset;
 										if (currentTimeout > m_maxRequiredFitnessImprovementRise)
 											currentTimeout = m_maxRequiredFitnessImprovementRise;
-										m_requiredFitnessImprovementRiseTimer.ResetTimeout(currentTimeout);
+										m_requiredFitnessImprovementRiseTimer.SetTimeout(currentTimeout);
 										m_textObservers[REQUIRED_FITNESS_IMPROVEMENT_RISE_TEXT]->Notify();
 										break;
 									}
@@ -452,7 +452,7 @@ void StateTraining::Capture()
 										currentTimeout -= m_requiredFitnessImprovementRiseOffset;
 										if (currentTimeout < m_minRequiredFitnessImprovementRise)
 											currentTimeout = m_minRequiredFitnessImprovementRise;
-										m_requiredFitnessImprovementRiseTimer.ResetTimeout(currentTimeout);
+										m_requiredFitnessImprovementRiseTimer.SetTimeout(currentTimeout);
 										m_textObservers[REQUIRED_FITNESS_IMPROVEMENT_RISE_TEXT]->Notify();
 										break;
 									}
@@ -559,7 +559,7 @@ void StateTraining::Capture()
 					break;
 				case INCREASE_PARAMETER:
 				case DECREASE_PARAMETER:
-					m_pressedKeyTimer.SetTimeout();
+					m_pressedKeyTimer.MakeTimeout();
 					break;
 				default:
 					break;
@@ -707,7 +707,7 @@ void StateTraining::Update()
 				m_drawableVehicleFactory[i]->Update();
 			}
 
-			m_drawableMap->Intersect(m_drawableVehicleFactory);
+			m_drawableMap->Update(m_drawableVehicleFactory);
 
 			sf::Vector2f m_viewCenter;
 			if (!activity)
@@ -865,7 +865,7 @@ bool StateTraining::Load()
 	m_textObservers[CURRENT_GENERATION_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(m_generation) + "/" + std::to_string(m_numberOfGenerations); });
 	m_textObservers[HIGHEST_FITNESS_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(!m_drawableMap ? 0 : size_t(m_drawableMap->GetHighestFitness() * 100.0)) + "%"; });
 	m_textObservers[HIGHEST_FITNESS_OVERALL_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(!m_drawableMap ? 0 : size_t(m_drawableMap->GetHighestFitnessOverall()* 100.0)) + "%"; });
-	m_textObservers[RAISING_REQUIRED_FITNESS_IMPROVEMENT_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(m_requiredFitnessImprovementRiseTimer.GetTimeout() - m_requiredFitnessImprovementRiseTimer.Value()) + " seconds"; }, 0.3);
+	m_textObservers[RAISING_REQUIRED_FITNESS_IMPROVEMENT_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(m_requiredFitnessImprovementRiseTimer.GetTimeout() - m_requiredFitnessImprovementRiseTimer.GetValue()) + " seconds"; }, 0.3);
 	m_textObservers[MEAN_REQUIRED_FITNESS_IMPROVEMENT] = new FunctionEventObserver<std::string>([&] { return std::to_string(size_t(m_meanRequiredFitnessImprovement * 100.0)) + "%"; });
 
 	// Set text observers

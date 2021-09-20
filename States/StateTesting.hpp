@@ -4,10 +4,10 @@
 #include "DrawableVehicleBuilder.hpp"
 #include "ArtificialNeuralNetworkBuilder.hpp"
 #include "DrawableMap.hpp"
-#include "CyclicTimer.hpp"
+#include "ContinuousTimer.hpp"
 
 class DrawableDoubleText;
-class ObserverIf;
+class ObserverInterface;
 
 class StateTesting final :
 	public StateInterface
@@ -77,7 +77,7 @@ class StateTesting final :
 	const size_t m_maxNumberOfVehicles;
 	bool m_activateUserVehicle;
 	bool m_showCheckpoints;
-	CyclicTimer m_viewTimer;
+	ContinuousTimer m_viewTimer;
 	const double m_viewMovementOffset;
 
 	// Objects of environment
@@ -108,7 +108,7 @@ class StateTesting final :
 		TEXT_COUNT
 	};
 	std::vector<DrawableDoubleText*> m_texts;
-	std::vector<ObserverIf*> m_textObservers;
+	std::vector<ObserverInterface*> m_textObservers;
 
 	// Called when new vehicle is being added
 	void OnAddVehicle();
