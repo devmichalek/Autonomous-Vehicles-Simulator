@@ -343,7 +343,7 @@ void DrawableVehicleBuilder::CreateDummyInternal()
 	m_vehicleSensors.AddSensor(sf::Vector2f(0, dummySize.y / 2), 90.0, GetDefaultSensorMotionRange());
 }
 
-VehicleBody DrawableVehicleBuilder::CreateVehicleBodyDummy(sf::Vector2f dummySize)
+VehicleBody DrawableVehicleBuilder::CreateVehicleBodyDummy(sf::Vector2f dummySize) const
 {
 	VehicleBody dummy;
 	dummy.AddPoint(sf::Vector2f(-dummySize.x / 2, -dummySize.y / 2));
@@ -385,12 +385,12 @@ void DrawableVehicleBuilder::AddVehicleSensor(sf::Vector2f point, double angle, 
 	m_vehicleSensors.AddSensor(point, angle, motionRange);
 }
 
-VehicleBody DrawableVehicleBuilder::GetVehicleBody()
+VehicleBody DrawableVehicleBuilder::GetVehicleBody() const
 {
 	return m_vehicleBody;
 }
 
-VehicleSensors DrawableVehicleBuilder::GetVehicleSensors()
+VehicleSensors DrawableVehicleBuilder::GetVehicleSensors() const
 {
 	return m_vehicleSensors;
 }

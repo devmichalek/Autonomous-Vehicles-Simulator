@@ -10,7 +10,7 @@ public:
 	}
 
 	// Reads observed value
-	virtual std::string Read() = 0;
+	virtual std::string Read() const = 0;
 
 	// Returns true if value was marked as updated
 	virtual bool Ready() = 0;

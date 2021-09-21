@@ -91,16 +91,16 @@ public:
 	void SetRawNeuronData(NeuronLayer rawNeuronData);
 
 	// Returns intermediate representation of neuron layers
-	NeuronLayerSizes GetNeuronLayerSizes();
+	NeuronLayerSizes GetNeuronLayerSizes() const;
 
 	// Returns intermediate representation of activation functions
-	ActivationFunctionIndexes GetActivationFunctionIndexes();
+	ActivationFunctionIndexes GetActivationFunctionIndexes() const;
 
 	// Returns bias vector
-	BiasVector GetBiasVector();
+	BiasVector GetBiasVector() const;
 
 	// Returns raw neuron data
-	const Neuron* GetRawNeuronData();
+	const Neuron* GetRawNeuronData() const;
 
 	void Set(ArtificialNeuralNetwork* artificialNeuralNetwork);
 

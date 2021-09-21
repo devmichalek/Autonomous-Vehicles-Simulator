@@ -1,5 +1,6 @@
 #include "CoreEngine.hpp"
 #include "TestEngine.hpp"
+#include "CoreLogger.hpp"
 
 int main()
 {
@@ -10,6 +11,7 @@ int main()
     }
     catch (...)
     {
+        CoreLogger::PrintError("Caught exception!");
     }
 
     return 0;

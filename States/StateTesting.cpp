@@ -72,7 +72,7 @@ void StateTesting::OnRemoveVehicle()
 	}
 }
 
-std::string StateTesting::GetCurrentVehicleName()
+std::string StateTesting::GetCurrentVehicleName() const
 {
 	if (m_numberOfVehicles == 0)
 		return "None";

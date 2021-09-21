@@ -344,22 +344,22 @@ void ArtificialNeuralNetworkBuilder::SetRawNeuronData(NeuronLayer rawNeuronData)
 	m_rawData = rawNeuronData;
 }
 
-NeuronLayerSizes ArtificialNeuralNetworkBuilder::GetNeuronLayerSizes()
+NeuronLayerSizes ArtificialNeuralNetworkBuilder::GetNeuronLayerSizes() const
 {
 	return m_neuronLayerSizes;
 }
 
-ActivationFunctionIndexes ArtificialNeuralNetworkBuilder::GetActivationFunctionIndexes()
+ActivationFunctionIndexes ArtificialNeuralNetworkBuilder::GetActivationFunctionIndexes() const
 {
 	return m_activationFunctionIndexes;
 }
 
-BiasVector ArtificialNeuralNetworkBuilder::GetBiasVector()
+BiasVector ArtificialNeuralNetworkBuilder::GetBiasVector() const
 {
 	return m_biasVector;
 }
 
-const Neuron* ArtificialNeuralNetworkBuilder::GetRawNeuronData()
+const Neuron* ArtificialNeuralNetworkBuilder::GetRawNeuronData() const
 {
 	return &m_rawData[0];
 }

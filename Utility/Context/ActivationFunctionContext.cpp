@@ -2,7 +2,7 @@
 #include "CoreLogger.hpp"
 
 ActivationFunction ActivationFunctionContext::m_activationFunctionTable[ACTIVATION_FUNCTIONS_COUNT];
-bool ActivationFunctionContext::m_initialized = false;
+const bool ActivationFunctionContext::m_initialized = false;
 
 void ActivationFunctionContext::Initialize()
 {

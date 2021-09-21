@@ -84,7 +84,7 @@ public:
 	void AddEdge(Edge edge);
 
 	// Returns intermediate representation of edges
-	EdgeVector GetEdges();
+	EdgeVector GetEdges() const;
 
 	// Updates vehicle position and its angle
 	void UpdateVehicle(DrawableVehicle* drawableVehicle);

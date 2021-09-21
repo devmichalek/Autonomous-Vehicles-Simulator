@@ -8,11 +8,15 @@ class FunctionTimerObserver final :
 {
 public:
 
-	FunctionTimerObserver(std::function<Type()> function, double timeout = 0.2, std::string prefix = "", std::string postfix = "") :
-		TimerObserver(timeout), m_function(function)
+	FunctionTimerObserver(const std::function<Type()> function,
+						  const double timeout = 0.2,
+						  const std::string prefix = "",
+						  const std::string postfix = "") :
+		TimerObserver(timeout),
+		m_function(function),
+		m_prefix(prefix),
+		m_postfix(postfix)
 	{
-		m_prefix = prefix;
-		m_postfix = postfix;
 	}
 
 	~FunctionTimerObserver()
@@ -21,7 +25,7 @@ public:
 
 	// Calls observed function and returns its result
 	// If observed function return type is different than string return type is converted
-	std::string Read() override
+	std::string Read() const override
 	{
 		if constexpr (std::is_same<Type, std::string>::value)
 			return m_prefix + m_function() + m_postfix;
@@ -31,7 +35,7 @@ public:
 
 private:
 
-	std::function<Type()> m_function;
-	std::string m_prefix;
-	std::string m_postfix;
+	const std::function<Type()> m_function;
+	const std::string m_prefix;
+	const std::string m_postfix;
 };

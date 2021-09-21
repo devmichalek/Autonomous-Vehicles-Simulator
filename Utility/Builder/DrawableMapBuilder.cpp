@@ -339,7 +339,7 @@ void DrawableMapBuilder::AddEdge(Edge edge)
 	m_edges.push_back(edge);
 }
 
-EdgeVector DrawableMapBuilder::GetEdges()
+EdgeVector DrawableMapBuilder::GetEdges() const
 {
 	return m_edges;
 }

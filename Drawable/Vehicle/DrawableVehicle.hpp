@@ -30,7 +30,7 @@ public:
 	~DrawableVehicle();
 
 	// Returns true if vehicle is active
-	inline bool IsActive()
+	inline bool IsActive() const
 	{
 		return m_active;
 	}
@@ -70,7 +70,7 @@ public:
 	}
 
 	// Returns vehicle center
-	inline const sf::Vector2f& GetCenter()
+	inline const sf::Vector2f& GetCenter() const
 	{
 		return m_center;
 	}
@@ -88,7 +88,7 @@ public:
 	}
 
 	// Returns true if given point is inside vehicle area
-	inline bool Inside(sf::Vector2f point)
+	inline bool Inside(sf::Vector2f point) const
 	{
 		return m_vehicleBody.Inside(point);
 	}
@@ -112,7 +112,7 @@ public:
 	void DrawBeams();
 
 	// Output sensors data
-	inline const NeuronLayer& ProcessOutput()
+	inline const NeuronLayer& ProcessOutput() const
 	{
 		return m_vehicleSensors.GetSensorsReading();
 	}
@@ -126,19 +126,19 @@ public:
 	}
 
 	// Returns number of inputs
-	inline size_t GetNumberOfInputs()
+	inline size_t GetNumberOfInputs() const
 	{
 		// Accelerate(), Rotate(), Brake()
 		return 3;
 	}
 
-	inline size_t GetNumberOfOutputs()
+	inline size_t GetNumberOfOutputs() const
 	{
 		return m_vehicleSensors.GetNumberOfSensors();
 	}
 
 	// Return vehicle described in vertices
-	inline const sf::VertexArray& GetVertices()
+	inline const sf::VertexArray& GetVertices() const
 	{
 		return m_vehicleBody.GetVertices();
 	}

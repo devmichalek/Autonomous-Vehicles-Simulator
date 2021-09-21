@@ -85,16 +85,16 @@ class VehicleSensors final
 	void SetSensorAngle(size_t index, double angle);
 
 	// Returns sensor's beam angle
-	double GetSensorAngle(size_t index);
+	double GetSensorAngle(size_t index) const;
 
 	// Change sensor's motion range
 	void SetSensorMotionRange(size_t index, double motionRange);
 
 	// Returns sensor's motion range
-	double GetSensorMotionRange(size_t index);
+	double GetSensorMotionRange(size_t index) const;
 
 	// Generates sensor's motion range start value
-	double GenerateMotionRangeValue(double motionRange);
+	double GenerateMotionRangeValue(double motionRange) const;
 
 	// Adds new sensor
 	void AddSensor(sf::Vector2f point, double angle, double motionRange);
@@ -103,13 +103,16 @@ class VehicleSensors final
 	void RemoveSensor(size_t index);
 
 	// Checks if there is intersection if yes then returns proper sensor index
-	bool GetSensorIndex(size_t& index, sf::Vector2f point);
+	bool GetSensorIndex(size_t& index, sf::Vector2f point) const;
 
 	// Returns number of sensors
-	size_t GetNumberOfSensors();
+	inline size_t GetNumberOfSensors() const
+	{
+		return m_sensors.size();
+	}
 
 	// Returns sensors readings
-	inline const NeuronLayer& GetSensorsReading()
+	inline const NeuronLayer& GetSensorsReading() const
 	{
 		return m_sensors;
 	}

@@ -3,7 +3,7 @@
 #include "CoreWindow.hpp"
 
 template<bool ReadOperations, bool WriteOperations>
-DrawableFilenameText<ReadOperations, WriteOperations>::DrawableFilenameText(std::string filenameDummy) :
+DrawableFilenameText<ReadOperations, WriteOperations>::DrawableFilenameText(const std::string filenameDummy) :
 	DrawableStatusText({ "Filename:", filenameDummy, GetInformationString() }),
 	m_pressedBackspaceKeyTimer(0.0, 1.0, 7500.0),
 	m_filenameDummy(filenameDummy),
@@ -84,13 +84,13 @@ bool DrawableFilenameText<ReadOperations, WriteOperations>::IsWriting()
 }
 
 template<bool ReadOperations, bool WriteOperations>
-bool DrawableFilenameText<ReadOperations, WriteOperations>::IsRenaming()
+bool DrawableFilenameText<ReadOperations, WriteOperations>::IsRenaming() const
 {
 	return m_activeActions[RENAMING_ACTION];
 }
 
 template<bool ReadOperations, bool WriteOperations>
-std::string DrawableFilenameText<ReadOperations, WriteOperations>::GetFilename()
+std::string DrawableFilenameText<ReadOperations, WriteOperations>::GetFilename() const
 {
 	return m_filename;
 }
@@ -224,7 +224,7 @@ void DrawableFilenameText<ReadOperations, WriteOperations>::OnControlKeyReleased
 }
 
 template<bool ReadOperations, bool WriteOperations>
-std::string DrawableFilenameText<ReadOperations, WriteOperations>::GetInformationString()
+std::string DrawableFilenameText<ReadOperations, WriteOperations>::GetInformationString() const
 {
 	std::string informationString = "| ";
 	if (WriteOperations)

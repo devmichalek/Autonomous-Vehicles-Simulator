@@ -7,11 +7,14 @@ class TypeEventObserver final :
 {
 public:
 
-	TypeEventObserver(const Type& data, std::string prefix = "", std::string postfix = "") :
-		m_data(data)
+	TypeEventObserver(const Type& data,
+					  const std::string prefix = "",
+					  const std::string postfix = "") :
+		EventObserver(),
+		m_data(data),
+		m_prefix(prefix),
+		m_postfix(postfix)
 	{
-		m_prefix = prefix;
-		m_postfix = postfix;
 	}
 
 	~TypeEventObserver()
@@ -20,7 +23,7 @@ public:
 
 	// Returns observed value
 	// Result is converted to string type if observed value is of different type
-	std::string Read() override
+	std::string Read() const override
 	{
 		if constexpr (std::is_same<Type, std::string>::value)
 			return m_prefix + m_data + m_postfix;
@@ -31,6 +34,6 @@ public:
 private:
 
 	const Type& m_data;
-	std::string m_prefix;
-	std::string m_postfix;
+	const std::string m_prefix;
+	const std::string m_postfix;
 };

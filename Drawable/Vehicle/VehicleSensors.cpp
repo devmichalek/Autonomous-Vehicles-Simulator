@@ -125,7 +125,7 @@ void VehicleSensors::SetSensorAngle(size_t index, double angle)
 		CoreLogger::PrintError("Requested sensor index is outside of array bound!");
 }
 
-double VehicleSensors::GetSensorAngle(size_t index)
+double VehicleSensors::GetSensorAngle(size_t index) const
 {
 	if (index < m_angleVector.size())
 		return m_angleVector[index];
@@ -137,18 +137,17 @@ double VehicleSensors::GetSensorAngle(size_t index)
 void VehicleSensors::SetSensorMotionRange(size_t index, double motionRange)
 {
 	auto& element = m_motionRanges[index];
-	element.SetMinValue(motionRange * -0.5);
-	element.SetMaxValue(motionRange * 0.5);
+	element.SetBoundaryValue(motionRange * 0.5);
 	element.SetMultiplier(DrawableVehicleBuilder::GetSensorMotionRangeMultiplier());
 	element.SetValue(GenerateMotionRangeValue(motionRange));
 }
 
-double VehicleSensors::GetSensorMotionRange(size_t index)
+double VehicleSensors::GetSensorMotionRange(size_t index) const
 {
 	return m_motionRanges[index].GetValueRange();
 }
 
-double VehicleSensors::GenerateMotionRangeValue(double motionRange)
+double VehicleSensors::GenerateMotionRangeValue(double motionRange) const
 {
 	const double multiplier = 1000.0;
 	std::uniform_int_distribution<std::mt19937::result_type> distribution(0, unsigned(motionRange * multiplier));
@@ -163,7 +162,7 @@ void VehicleSensors::AddSensor(sf::Vector2f point, double angle, double motionRa
 	m_points.push_back(point);
 	m_angleVector.push_back(angle);
 	m_sensors.push_back(ArtificialNeuralNetworkBuilder::GetMinNeuronValue());
-	m_motionRanges.emplace_back(motionRange * -0.5, motionRange * 0.5, DrawableVehicleBuilder::GetSensorMotionRangeMultiplier());
+	m_motionRanges.emplace_back(motionRange * 0.5, DrawableVehicleBuilder::GetSensorMotionRangeMultiplier());
 	m_motionRanges.back().SetValue(GenerateMotionRangeValue(motionRange));
 
 	// Shrink to fit
@@ -188,7 +187,7 @@ void VehicleSensors::RemoveSensor(size_t index)
 		CoreLogger::PrintError("Requested sensor index is outside of array bound!");
 }
 
-bool VehicleSensors::GetSensorIndex(size_t& index, sf::Vector2f point)
+bool VehicleSensors::GetSensorIndex(size_t& index, sf::Vector2f point) const
 {
 	for (size_t i = 0; i < m_points.size(); ++i)
 	{
@@ -201,9 +200,4 @@ bool VehicleSensors::GetSensorIndex(size_t& index, sf::Vector2f point)
 
 	index = -1;
 	return false;
-}
-
-size_t VehicleSensors::GetNumberOfSensors()
-{
-	return m_sensors.size();
 }

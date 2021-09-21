@@ -141,7 +141,7 @@ void StateANNEditor::RemoveNeuron()
 	}
 }
 
-sf::Color StateANNEditor::GetWeightStrength(double max, double value)
+sf::Color StateANNEditor::GetWeightStrength(double max, double value) const
 {
 	return sf::Color(255, 255, 255, 32 + sf::Uint8(128.0 * (value / max)));
 }

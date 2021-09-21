@@ -7,11 +7,15 @@ class TypeTimerObserver final :
 {
 public:
 
-	TypeTimerObserver(const Type& data, double timeout = 0.2, std::string prefix = "", std::string postfix = "") :
-		TimerObserver(timeout), m_data(data)
+	TypeTimerObserver(const Type& data,
+					  const double timeout = 0.2,
+					  const std::string prefix = "",
+					  const std::string postfix = "") :
+		TimerObserver(timeout),
+		m_data(data),
+		m_prefix(prefix),
+		m_postfix(postfix)
 	{
-		m_prefix = prefix;
-		m_postfix = postfix;
 	}
 
 	~TypeTimerObserver()
@@ -20,7 +24,7 @@ public:
 
 	// Returns observed value
 	// Result is converted to string type if observed value is of different type
-	std::string Read() override
+	std::string Read() const override
 	{
 		if constexpr (std::is_same<Type, std::string>::value)
 			return m_prefix + m_data + m_postfix;
@@ -31,6 +35,6 @@ public:
 private:
 
 	const Type& m_data;
-	std::string m_prefix;
-	std::string m_postfix;
+	const std::string m_prefix;
+	const std::string m_postfix;
 };

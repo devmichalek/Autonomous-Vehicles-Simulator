@@ -192,12 +192,12 @@ const FitnessVector& DrawableMap::GetFitnessVector() const
 	return m_fitnessVector;
 }
 
-Fitness DrawableMap::GetHighestFitness()
+Fitness DrawableMap::GetHighestFitness() const
 {
 	return m_highestFitness / GetMaxFitness();
 }
 
-Fitness DrawableMap::GetHighestFitnessOverall()
+Fitness DrawableMap::GetHighestFitnessOverall() const
 {
 	return m_highestFitnessOverall / GetMaxFitness();
 }
@@ -232,7 +232,7 @@ TriangleVector DrawableMap::GenerateTriangleCheckpoints(const EdgeVector& edges,
 	return GetTriangleCheckpoints(edges, edgePrecedencesVector);
 }
 
-Fitness DrawableMap::GetMaxFitness()
+Fitness DrawableMap::GetMaxFitness() const
 {
 	return Fitness(m_triangleCheckpoints.size()) + 1.0;
 }

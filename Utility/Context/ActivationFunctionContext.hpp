@@ -21,7 +21,7 @@ class ActivationFunctionContext
 
 	static ActivationFunction m_activationFunctionTable[ACTIVATION_FUNCTIONS_COUNT];
 
-	static bool m_initialized;
+	static const bool m_initialized;
 
 public:
 	

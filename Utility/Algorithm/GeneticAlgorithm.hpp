@@ -159,7 +159,7 @@ public:
 		m_population.shrink_to_fit();
 	}
 
-	inline Chromosome<Type> GetChromosome(const size_t index)
+	inline Chromosome<Type> GetChromosome(const size_t index) const
 	{
 		if (index < m_populationSize)
 			return m_population[index];

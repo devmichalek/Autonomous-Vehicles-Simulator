@@ -79,7 +79,7 @@ class StateANNEditor final :
 	void RemoveNeuron();
 
 	// Returns weight strength representation in color
-	sf::Color GetWeightStrength(double max, double value);
+	sf::Color GetWeightStrength(double max, double value) const;
 
 public:
 

@@ -1,6 +1,6 @@
 #pragma once
 #include "DrawableMath.hpp"
-#include <random>
+#include "CoreWindow.hpp"
 
 class DrawableVehicle;
 class DrawableVehicleBuilder;
@@ -43,7 +43,10 @@ class VehicleBody final
 	void Update();
 
 	// Draws vehicle body
-	void Draw();
+	void Draw()
+	{
+		CoreWindow::GetRenderWindow().draw(m_vertices);
+	}
 
 	// Set this vehicle body with "leader" color
 	void SetLeaderColor();
@@ -52,7 +55,7 @@ class VehicleBody final
 	void SetFollowerColor();
 
 	// Returns true if given point is inside vehicle body area
-	bool Inside(const sf::Vector2f& point);
+	bool Inside(const sf::Vector2f& point) const;
 
 	// Adds new descriptive point relative to the center
 	void AddPoint(sf::Vector2f point);
@@ -61,10 +64,13 @@ class VehicleBody final
 	void RemovePoint(sf::Vector2f point);
 
 	// Returns number of vertices
-	size_t GetNumberOfPoints();
+	inline size_t GetNumberOfPoints() const
+	{
+		return m_points.size();
+	}
 
 	// Return vehicle body described in vertices
-	inline const sf::VertexArray& GetVertices()
+	inline const sf::VertexArray& GetVertices() const
 	{
 		return m_vertices;
 	}

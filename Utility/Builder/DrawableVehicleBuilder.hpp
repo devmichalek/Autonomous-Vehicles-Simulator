@@ -64,7 +64,7 @@ class DrawableVehicleBuilder final :
 	void CreateDummyInternal();
 	
 	// Creates vehicle body dummy
-	VehicleBody CreateVehicleBodyDummy(sf::Vector2f dummySize);
+	VehicleBody CreateVehicleBodyDummy(sf::Vector2f dummySize) const;
 
 public:
 
@@ -79,10 +79,10 @@ public:
 	void AddVehicleSensor(sf::Vector2f point, double angle, double motionRange);
 
 	// Returns intermediate representation of vehicle body
-	VehicleBody GetVehicleBody();
+	VehicleBody GetVehicleBody() const;
 
 	// Returns intermediate representation of vehicle sensors
-	VehicleSensors GetVehicleSensors();
+	VehicleSensors GetVehicleSensors() const;
 
 	// Returns maximum vehicle body bound
 	static sf::Vector2f GetMaxVehicleBodySize();

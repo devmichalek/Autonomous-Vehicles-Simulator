@@ -46,10 +46,10 @@ public:
 	const FitnessVector& GetFitnessVector() const;
 
 	// Return highest fitness in the current iteration in ratio
-	Fitness GetHighestFitness();
+	Fitness GetHighestFitness() const;
 
 	// Returns highest fitness that has been recorded so far in ratio
-	Fitness GetHighestFitnessOverall();
+	Fitness GetHighestFitnessOverall() const;
 
 	// Calculates fitness of drawable vehicle
 	Fitness CalculateFitness(DrawableVehicle* drawableVehicle);
@@ -60,7 +60,7 @@ public:
 private:
 
 	// Returns maximum fitness
-	Fitness GetMaxFitness();
+	Fitness GetMaxFitness() const;
 
 	// Internal types 
 	using EndPoint = std::pair<size_t, size_t>;

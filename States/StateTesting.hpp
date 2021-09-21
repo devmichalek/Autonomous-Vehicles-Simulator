@@ -117,7 +117,7 @@ class StateTesting final :
 	void OnRemoveVehicle();
 
 	// Returns current vehicle name
-	std::string GetCurrentVehicleName();
+	std::string GetCurrentVehicleName() const;
 
 public:
 

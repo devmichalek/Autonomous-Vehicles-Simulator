@@ -1,5 +1,4 @@
 #include "VehicleBody.hpp"
-#include "CoreWindow.hpp"
 #include "CoreLogger.hpp"
 
 sf::Vector2f VehicleBody::m_baseCenter;
@@ -63,11 +62,6 @@ void VehicleBody::Update()
 	}
 }
 
-void VehicleBody::Draw()
-{
-	CoreWindow::GetRenderWindow().draw(m_vertices);
-}
-
 void VehicleBody::SetLeaderColor()
 {
 	size_t size = m_vertices.getVertexCount();
@@ -82,7 +76,7 @@ void VehicleBody::SetFollowerColor()
 		m_vertices[i].color = sf::Color::Yellow;
 }
 
-bool VehicleBody::Inside(const sf::Vector2f& point)
+bool VehicleBody::Inside(const sf::Vector2f& point) const
 {
 	for (size_t i = 2; i < m_vertices.getVertexCount(); ++i)
 	{
@@ -117,9 +111,4 @@ void VehicleBody::RemovePoint(sf::Vector2f point)
 			break;
 		}
 	}
-}
-
-size_t VehicleBody::GetNumberOfPoints()
-{
-	return m_points.size();
 }

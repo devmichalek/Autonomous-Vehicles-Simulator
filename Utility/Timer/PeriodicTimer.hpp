@@ -1,21 +1,19 @@
 #pragma once
 #include "CoreWindow.hpp"
 
-class PeriodicTimer
+class PeriodicTimer final
 {
 	double m_value;
-	double m_minValue;
-	double m_maxValue;
+	double m_boundaryValue;
 	double m_multiplier;
 	double m_sign;
 
 public:
 
-	// Periodic timer constructor that takes min, max and multiplier
-	PeriodicTimer(double minValue, double maxValue, double multiplier = 1) :
-		m_value(minValue),
-		m_minValue(minValue),
-		m_maxValue(maxValue),
+	// Periodic timer constructor that takes boundary and multiplier
+	PeriodicTimer(double boundaryValue, double multiplier = 1) :
+		m_value(-boundaryValue),
+		m_boundaryValue(boundaryValue),
 		m_multiplier(multiplier)
 	{
 		m_sign = 1;
@@ -29,16 +27,10 @@ public:
 	void Update()
 	{
 		m_value += CoreWindow::GetElapsedTime() * m_multiplier * m_sign;
-
-		if (m_value > m_maxValue)
+		if (m_value * m_sign > m_boundaryValue)
 		{
-			m_value = m_maxValue;
-			m_sign *= -1;
-		}
-		else if (m_value < m_minValue)
-		{
-			m_value = m_minValue;
-			m_sign *= -1;
+			m_value = m_boundaryValue * m_sign;
+			m_sign = -m_sign;
 		}
 	}
 
@@ -49,28 +41,22 @@ public:
 	}
 
 	// Returns current value
-	// Value is in a range of previously set boundaries (min; max)
-	double GetValue()
+	// Value is in a range of previously set boundary
+	double GetValue() const
 	{
 		return m_value;
 	}
 
 	// Sets minimum value
-	void SetMinValue(double minValue)
+	void SetBoundaryValue(double boundaryValue)
 	{
-		m_minValue = minValue;
+		m_boundaryValue = boundaryValue;
 	}
 
-	// Sets maximum value
-	void SetMaxValue(double maxValue)
+	// Returns value range - m_boundaryValue * 2
+	double GetValueRange() const
 	{
-		m_maxValue = maxValue;
-	}
-
-	// Returns value range | max - min |
-	double GetValueRange()
-	{
-		return std::fabs(m_maxValue - m_minValue);
+		return m_boundaryValue * 2;
 	}
 
 	// Sets multiplier

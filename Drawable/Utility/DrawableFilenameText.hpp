@@ -27,10 +27,10 @@ public:
 	bool IsWriting();
 
 	// Returns true if renaming action is taking place until it is interrupter
-	bool IsRenaming();
+	bool IsRenaming() const;
 
 	// Returns current variable text string - filename
-	std::string GetFilename();
+	std::string GetFilename() const;
 
 	// Captures key events
 	void Capture();
@@ -48,7 +48,7 @@ private:
 	void OnControlKeyReleasedEvent(sf::Keyboard::Key eventKey);
 
 	// Returns internal information text string
-	std::string GetInformationString();
+	std::string GetInformationString() const;
 
 	// Actions
 	enum
@@ -65,6 +65,6 @@ private:
 
 	std::map<sf::Keyboard::Key, bool> m_pressedFilenameKeys;
 	std::string m_filename;
-	std::string m_filenameDummy;
+	const std::string m_filenameDummy;
 	const size_t m_maxFilenameLength;
 };
