@@ -6,42 +6,8 @@
 #include <random>
 #include <SFML/Graphics/CircleShape.hpp>
 
-class DrawableVehicle;
-class DrawableVehicleBuilder;
-class StateVehicleEditor;
-
 class VehicleSensors final
 {
-	using BeamVector = EdgeVector;
-	using AngleVector = std::vector<double>;
-	friend DrawableVehicle;
-	friend DrawableVehicleBuilder;
-	friend StateVehicleEditor;
-
-	BeamVector m_beamVector;
-	std::vector<sf::Vector2f> m_points;
-	AngleVector m_angleVector;
-	NeuronLayer m_sensors;
-	std::vector<PeriodicTimer> m_motionRanges;
-
-	const sf::Vector2f* m_center;
-	const double* m_angle;
-	const double* m_sinus;
-	const double* m_cosinus;
-
-	static double m_beamLength;
-	static sf::Vector2f m_sensorSize;
-	static sf::Vector2f m_baseCenter;
-	static double m_baseAngle;
-	static double m_baseSinus;
-	static double m_baseCosinus;
-	static Line m_beamShape;
-	static sf::CircleShape m_sensorShape;
-	inline static const Neuron m_sensorMaxValue = 1.0;
-	inline static const Neuron m_sensorMinValue = 0.0;
-	static std::mt19937 m_mersenneTwister;
-	static bool m_initialized;
-
 	VehicleSensors();
 
 	~VehicleSensors();
@@ -116,4 +82,36 @@ class VehicleSensors final
 	{
 		return m_sensors;
 	}
+
+	using BeamVector = EdgeVector;
+	using AngleVector = std::vector<double>;
+
+	// Friend classes
+	friend class DrawableVehicle;
+	friend class DrawableVehicleBuilder;
+	friend class StateVehicleEditor;
+
+	BeamVector m_beamVector;
+	std::vector<sf::Vector2f> m_points;
+	AngleVector m_angleVector;
+	NeuronLayer m_sensors;
+	std::vector<PeriodicTimer> m_motionRanges;
+
+	const sf::Vector2f* m_center;
+	const double* m_angle;
+	const double* m_sinus;
+	const double* m_cosinus;
+
+	static double m_beamLength;
+	static sf::Vector2f m_sensorSize;
+	static sf::Vector2f m_baseCenter;
+	static double m_baseAngle;
+	static double m_baseSinus;
+	static double m_baseCosinus;
+	static Line m_beamShape;
+	static sf::CircleShape m_sensorShape;
+	inline static const Neuron m_sensorMaxValue = 1.0;
+	inline static const Neuron m_sensorMinValue = 0.0;
+	static std::mt19937 m_mersenneTwister;
+	static bool m_initialized;
 };

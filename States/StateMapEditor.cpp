@@ -7,30 +7,6 @@
 #include "CoreLogger.hpp"
 #include <functional>
 
-void StateMapEditor::SetActiveMode(ActiveMode activeMode)
-{
-	if (m_activeMode != activeMode)
-	{
-		switch (m_activeMode)
-		{
-			case ActiveMode::EDGE:
-				m_edgeSubmode = EdgeSubmode::GLUED_INSERT;
-				m_insertEdge = false;
-				m_removeEdge = false;
-				m_textObservers[EDGE_SUBMODE_TEXT]->Notify();
-				break;
-
-			case ActiveMode::VEHICLE:
-				m_vehicleSubmode = VehicleSubmode::INSERT;
-				m_textObservers[VEHICLE_SUBMODE_TEXT]->Notify();
-				break;
-		}
-
-		m_activeMode = activeMode;
-		m_textObservers[ACTIVE_MODE_TEXT]->Notify();
-	}
-}
-
 StateMapEditor::StateMapEditor() :
 	m_drawableVehicle(nullptr),
 	m_viewMovementTimer(0.0, 0.1),
@@ -557,4 +533,28 @@ void StateMapEditor::Draw()
 	m_texts[VIEW_OFFSET_X_TEXT]->Draw();
 	m_texts[VIEW_OFFSET_Y_TEXT]->Draw();
 	m_texts[FILENAME_TEXT]->Draw();
+}
+
+void StateMapEditor::SetActiveMode(ActiveMode activeMode)
+{
+	if (m_activeMode != activeMode)
+	{
+		switch (m_activeMode)
+		{
+			case ActiveMode::EDGE:
+				m_edgeSubmode = EdgeSubmode::GLUED_INSERT;
+				m_insertEdge = false;
+				m_removeEdge = false;
+				m_textObservers[EDGE_SUBMODE_TEXT]->Notify();
+				break;
+
+			case ActiveMode::VEHICLE:
+				m_vehicleSubmode = VehicleSubmode::INSERT;
+				m_textObservers[VEHICLE_SUBMODE_TEXT]->Notify();
+				break;
+		}
+
+		m_activeMode = activeMode;
+		m_textObservers[ACTIVE_MODE_TEXT]->Notify();
+	}
 }

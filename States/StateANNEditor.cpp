@@ -5,147 +5,6 @@
 #include "DrawableVariableText.hpp"
 #include "DrawableFilenameText.hpp"
 
-void StateANNEditor::CalculatePositions()
-{
-	m_layersPositions.clear();
-	m_weightPositions.clear();
-	m_weightStrengths.clear();
-
-	auto windowSize = CoreWindow::GetSize();
-	const float screenWidth = windowSize.x;
-	const float screenHeight = windowSize.y;
-	const float availableWidth = screenWidth * 0.8f;
-	const float availableHeight = screenHeight * 0.8f;
-
-	// Find offset x
-	const size_t numberOfLayers = m_neuronLayerSizes.size();
-	const float offsetX = availableWidth / (numberOfLayers + 1);
-	const float startX = (screenWidth / 2) - (offsetX * (numberOfLayers - 1)) / 2;
-
-	// Add neuron shape positions
-	m_totalNumberOfNeurons = 0;
-	for (size_t layerNr = 0; layerNr < numberOfLayers; ++layerNr)
-	{
-		float x = startX + (offsetX * layerNr);
-		const size_t numberOfNeurons = m_neuronLayerSizes[layerNr];
-		const float offsetY = availableHeight / (numberOfNeurons + 1);
-		const float startY = (screenHeight / 2) - (offsetY * (numberOfNeurons - 1)) / 2;
-
-		std::vector<sf::Vector2f> neuronPositions;
-		for (size_t neuronNr = 0; neuronNr < numberOfNeurons; ++neuronNr)
-		{
-			float y = startY + (offsetY * neuronNr);
-			neuronPositions.push_back(sf::Vector2f(x, y));
-			++m_totalNumberOfNeurons;
-		}
-
-		m_layersPositions.push_back(neuronPositions);
-	}
-
-	// Add weight shape positions
-	for (size_t layerNr = 1; layerNr < numberOfLayers; ++layerNr)
-	{
-		const size_t numberOfNeurons = m_neuronLayerSizes[layerNr];
-		for (size_t i = 0; i < numberOfNeurons; ++i)
-		{
-			const size_t previousLayerNumberOfNeurons = m_neuronLayerSizes[layerNr - 1];
-			for (size_t j = 0; j < previousLayerNumberOfNeurons; ++j)
-			{
-				Edge edge;
-				edge[0] = m_layersPositions[layerNr - 1][j];
-				edge[1] = m_layersPositions[layerNr][i];
-				m_weightPositions.push_back(edge);
-				m_weightStrengths.push_back(GetWeightStrength(1.0, 1.0));
-			}
-		}
-	}
-
-	m_totalNumberOfWeights = m_weightPositions.size();
-
-	// Normalize neuron shape positions
-	for (auto& neurons : m_layersPositions)
-	{
-		for (auto& position : neurons)
-		{
-			position.x -= m_neuronShape.getRadius();
-			position.y -= m_neuronShape.getRadius();
-		}
-	}
-}
-
-void StateANNEditor::AddLayer()
-{
-	if (m_neuronLayerSizes.size() < ArtificialNeuralNetworkBuilder::GetMaxNumberOfLayers())
-	{
-		m_currentLayer = m_neuronLayerSizes.empty() ? 0 : m_currentLayer + 1;
-		m_neuronLayerSizes.insert(m_neuronLayerSizes.begin() + m_currentLayer, 0);
-		if (m_currentLayer != 0)
-		{
-			m_activationFunctionIndexes.insert(m_activationFunctionIndexes.begin() + (m_currentLayer - 1), ActivationFunctionContext::GetMinActivationFunctionIndex());
-			m_biasVector.insert(m_biasVector.begin() + (m_currentLayer - 1), ArtificialNeuralNetworkBuilder::GetDefaultBiasValue());
-		}
-
-		AddNeuron();
-		m_upToDate = false;
-	}
-}
-
-void StateANNEditor::RemoveLayer()
-{
-	if (!m_neuronLayerSizes.empty())
-	{
-		const size_t previousNumberOfNeuronLayers = m_neuronLayerSizes.size();
-		m_neuronLayerSizes.erase(m_neuronLayerSizes.begin() + m_currentLayer);
-		if (!m_neuronLayerSizes.empty())
-		{
-			auto correctedIndex = m_currentLayer == 0 ? m_currentLayer : (m_currentLayer - 1);
-			m_activationFunctionIndexes.erase(m_activationFunctionIndexes.begin() + correctedIndex);
-			m_biasVector.erase(m_biasVector.begin() + correctedIndex);
-		}
-
-		if (m_currentLayer == previousNumberOfNeuronLayers - 1)
-		{
-			if (m_currentLayer > 0)
-				--m_currentLayer;
-		}
-
-		m_upToDate = false;
-	}
-}
-
-void StateANNEditor::AddNeuron()
-{
-	if (!m_neuronLayerSizes.empty())
-	{
-		if (m_neuronLayerSizes[m_currentLayer] + 1 <= ArtificialNeuralNetworkBuilder::GetMaxNumberOfNeuronsPerLayer())
-		{
-			++m_neuronLayerSizes[m_currentLayer];
-		}
-
-		m_upToDate = false;
-	}
-}
-
-void StateANNEditor::RemoveNeuron()
-{
-	if (!m_neuronLayerSizes.empty())
-	{
-		if (m_neuronLayerSizes[m_currentLayer] > 0)
-		{
-			--m_neuronLayerSizes[m_currentLayer];
-			if (m_neuronLayerSizes[m_currentLayer] == 0)
-				RemoveLayer();
-		}
-
-		m_upToDate = false;
-	}
-}
-
-sf::Color StateANNEditor::GetWeightStrength(double max, double value) const
-{
-	return sf::Color(255, 255, 255, 32 + sf::Uint8(128.0 * (value / max)));
-}
-
 StateANNEditor::StateANNEditor() :
 	m_biasOffset(0.2)
 {
@@ -440,4 +299,145 @@ void StateANNEditor::Draw()
 
 	for (const auto& text : m_texts)
 		text->Draw();
+}
+
+void StateANNEditor::CalculatePositions()
+{
+	m_layersPositions.clear();
+	m_weightPositions.clear();
+	m_weightStrengths.clear();
+
+	auto windowSize = CoreWindow::GetSize();
+	const float screenWidth = windowSize.x;
+	const float screenHeight = windowSize.y;
+	const float availableWidth = screenWidth * 0.8f;
+	const float availableHeight = screenHeight * 0.8f;
+
+	// Find offset x
+	const size_t numberOfLayers = m_neuronLayerSizes.size();
+	const float offsetX = availableWidth / (numberOfLayers + 1);
+	const float startX = (screenWidth / 2) - (offsetX * (numberOfLayers - 1)) / 2;
+
+	// Add neuron shape positions
+	m_totalNumberOfNeurons = 0;
+	for (size_t layerNr = 0; layerNr < numberOfLayers; ++layerNr)
+	{
+		float x = startX + (offsetX * layerNr);
+		const size_t numberOfNeurons = m_neuronLayerSizes[layerNr];
+		const float offsetY = availableHeight / (numberOfNeurons + 1);
+		const float startY = (screenHeight / 2) - (offsetY * (numberOfNeurons - 1)) / 2;
+
+		std::vector<sf::Vector2f> neuronPositions;
+		for (size_t neuronNr = 0; neuronNr < numberOfNeurons; ++neuronNr)
+		{
+			float y = startY + (offsetY * neuronNr);
+			neuronPositions.push_back(sf::Vector2f(x, y));
+			++m_totalNumberOfNeurons;
+		}
+
+		m_layersPositions.push_back(neuronPositions);
+	}
+
+	// Add weight shape positions
+	for (size_t layerNr = 1; layerNr < numberOfLayers; ++layerNr)
+	{
+		const size_t numberOfNeurons = m_neuronLayerSizes[layerNr];
+		for (size_t i = 0; i < numberOfNeurons; ++i)
+		{
+			const size_t previousLayerNumberOfNeurons = m_neuronLayerSizes[layerNr - 1];
+			for (size_t j = 0; j < previousLayerNumberOfNeurons; ++j)
+			{
+				Edge edge;
+				edge[0] = m_layersPositions[layerNr - 1][j];
+				edge[1] = m_layersPositions[layerNr][i];
+				m_weightPositions.push_back(edge);
+				m_weightStrengths.push_back(GetWeightStrength(1.0, 1.0));
+			}
+		}
+	}
+
+	m_totalNumberOfWeights = m_weightPositions.size();
+
+	// Normalize neuron shape positions
+	for (auto& neurons : m_layersPositions)
+	{
+		for (auto& position : neurons)
+		{
+			position.x -= m_neuronShape.getRadius();
+			position.y -= m_neuronShape.getRadius();
+		}
+	}
+}
+
+void StateANNEditor::AddLayer()
+{
+	if (m_neuronLayerSizes.size() < ArtificialNeuralNetworkBuilder::GetMaxNumberOfLayers())
+	{
+		m_currentLayer = m_neuronLayerSizes.empty() ? 0 : m_currentLayer + 1;
+		m_neuronLayerSizes.insert(m_neuronLayerSizes.begin() + m_currentLayer, 0);
+		if (m_currentLayer != 0)
+		{
+			m_activationFunctionIndexes.insert(m_activationFunctionIndexes.begin() + (m_currentLayer - 1), ActivationFunctionContext::GetMinActivationFunctionIndex());
+			m_biasVector.insert(m_biasVector.begin() + (m_currentLayer - 1), ArtificialNeuralNetworkBuilder::GetDefaultBiasValue());
+		}
+
+		AddNeuron();
+		m_upToDate = false;
+	}
+}
+
+void StateANNEditor::RemoveLayer()
+{
+	if (!m_neuronLayerSizes.empty())
+	{
+		const size_t previousNumberOfNeuronLayers = m_neuronLayerSizes.size();
+		m_neuronLayerSizes.erase(m_neuronLayerSizes.begin() + m_currentLayer);
+		if (!m_neuronLayerSizes.empty())
+		{
+			auto correctedIndex = m_currentLayer == 0 ? m_currentLayer : (m_currentLayer - 1);
+			m_activationFunctionIndexes.erase(m_activationFunctionIndexes.begin() + correctedIndex);
+			m_biasVector.erase(m_biasVector.begin() + correctedIndex);
+		}
+
+		if (m_currentLayer == previousNumberOfNeuronLayers - 1)
+		{
+			if (m_currentLayer > 0)
+				--m_currentLayer;
+		}
+
+		m_upToDate = false;
+	}
+}
+
+void StateANNEditor::AddNeuron()
+{
+	if (!m_neuronLayerSizes.empty())
+	{
+		if (m_neuronLayerSizes[m_currentLayer] + 1 <= ArtificialNeuralNetworkBuilder::GetMaxNumberOfNeuronsPerLayer())
+		{
+			++m_neuronLayerSizes[m_currentLayer];
+		}
+
+		m_upToDate = false;
+	}
+}
+
+void StateANNEditor::RemoveNeuron()
+{
+	if (!m_neuronLayerSizes.empty())
+	{
+		if (m_neuronLayerSizes[m_currentLayer] > 0)
+		{
+			--m_neuronLayerSizes[m_currentLayer];
+			if (m_neuronLayerSizes[m_currentLayer] == 0)
+				RemoveLayer();
+		}
+
+		m_upToDate = false;
+	}
+}
+
+sf::Color StateANNEditor::GetWeightStrength(double max, double value) const
+{
+	return sf::Color(255, 255, 255, 32 + sf::Uint8(128.0 * (value / max)));
 }

@@ -4,8 +4,6 @@
 #include "Neural.hpp"
 #include "ActivationFunctionContext.hpp"
 
-class ArtificialNeuralNetworkBuilder;
-
 class ArtificialNeuralNetwork
 {
 	NeuronLayers m_neuronLayers;
@@ -14,7 +12,9 @@ class ArtificialNeuralNetwork
 	ActivationFunctionIndexes m_activationFunctionIndexes;
 	size_t m_numberOfNeurons;
 	size_t m_numberOfWeights;
-	friend ArtificialNeuralNetworkBuilder;
+
+	// Friend classes
+	friend class ArtificialNeuralNetworkBuilder;
 
 	inline void UpdateInternal()
 	{

@@ -2,8 +2,6 @@
 #include "VehicleBody.hpp"
 #include "VehicleSensors.hpp"
 
-class DrawableVehicleBuilder;
-
 class DrawableVehicle final
 {
 	inline static const double m_rotationConst = 150.0;
@@ -21,7 +19,9 @@ class DrawableVehicle final
 	sf::Vector2f m_center;
 	VehicleBody m_vehicleBody;
 	VehicleSensors m_vehicleSensors;
-	friend DrawableVehicleBuilder;
+
+	// Friend classes
+	friend class DrawableVehicleBuilder;
 	
 	DrawableVehicle(VehicleBody vehicleBody, VehicleSensors vehicleSensors);
 

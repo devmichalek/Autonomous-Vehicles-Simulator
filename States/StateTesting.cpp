@@ -7,82 +7,6 @@
 #include "TypeEventObserver.hpp"
 #include "FunctionEventObserver.hpp"
 
-void StateTesting::OnAddVehicle()
-{
-	if (m_numberOfVehicles < m_maxNumberOfVehicles)
-	{
-		if (m_numberOfVehicles)
-		{
-			DrawableVehicleFactory drawableVehicleFactoryTemp(m_numberOfVehicles + 1, nullptr);
-			ArtificialNeuralNetworks artificialNeuralNetworksTemp(m_numberOfVehicles + 1, nullptr);
-
-			for (size_t i = 0; i <= m_currentVehicle; ++i)
-			{
-				drawableVehicleFactoryTemp[i] = m_drawableVehicleFactory[i];
-				artificialNeuralNetworksTemp[i] = m_artificialNeuralNetworks[i];
-			}
-
-			drawableVehicleFactoryTemp[m_currentVehicle + 1] = nullptr;
-			artificialNeuralNetworksTemp[m_currentVehicle + 1] = nullptr;
-
-			for (size_t i = m_currentVehicle + 1; i < m_numberOfVehicles; ++i)
-			{
-				drawableVehicleFactoryTemp[i + 1] = m_drawableVehicleFactory[i];
-				artificialNeuralNetworksTemp[i + 1] = m_artificialNeuralNetworks[i];
-			}
-
-			m_drawableVehicleFactory = drawableVehicleFactoryTemp;
-			m_artificialNeuralNetworks = artificialNeuralNetworksTemp;
-			++m_numberOfVehicles;
-		}
-		else
-		{
-			++m_numberOfVehicles;
-			m_drawableVehicleFactory.resize(m_numberOfVehicles, nullptr);
-			m_artificialNeuralNetworks.resize(m_numberOfVehicles, nullptr);
-		}
-
-		m_textObservers[CURRENT_VEHICLE_TEXT]->Notify();
-		m_textObservers[NUMBER_OF_VEHICLES_TEXT]->Notify();
-	}
-}
-
-void StateTesting::OnRemoveVehicle()
-{
-	if (m_numberOfVehicles)
-	{
-		delete m_drawableVehicleFactory[m_currentVehicle];
-		delete m_artificialNeuralNetworks[m_currentVehicle];
-
-		for (size_t i = m_currentVehicle + 1; i < m_numberOfVehicles; ++i)
-		{
-			m_drawableVehicleFactory[i - 1] = m_drawableVehicleFactory[i];
-			m_artificialNeuralNetworks[i - 1] = m_artificialNeuralNetworks[i];
-		}
-
-		m_drawableVehicleFactory[m_numberOfVehicles - 1] = nullptr;
-		m_artificialNeuralNetworks[m_numberOfVehicles - 1] = nullptr;
-
-		if (m_currentVehicle)
-			--m_currentVehicle;
-
-		--m_numberOfVehicles;
-		m_textObservers[CURRENT_VEHICLE_TEXT]->Notify();
-		m_textObservers[NUMBER_OF_VEHICLES_TEXT]->Notify();
-	}
-}
-
-std::string StateTesting::GetCurrentVehicleName() const
-{
-	if (m_numberOfVehicles == 0)
-		return "None";
-
-	std::string data = " [ ][ ]";
-	data[2] = m_drawableVehicleFactory[m_currentVehicle] ? 'X' : ' ';
-	data[5] = m_artificialNeuralNetworks[m_currentVehicle] ? 'X' : ' ';
-	return std::string("Vehicle ") + std::to_string(m_currentVehicle) + data;
-}
-
 StateTesting::StateTesting() :
 	m_numberOfVehicles(0),
 	m_currentVehicle(0),
@@ -726,4 +650,80 @@ void StateTesting::Draw()
 	m_texts[MODE_TEXT]->Draw();
 	m_texts[SHOW_CHECKPOINTS_TEXT]->Draw();
 	m_texts[IS_USER_VEHICLE_ACTIVE_TEXT]->Draw();
+}
+
+void StateTesting::OnAddVehicle()
+{
+	if (m_numberOfVehicles < m_maxNumberOfVehicles)
+	{
+		if (m_numberOfVehicles)
+		{
+			DrawableVehicleFactory drawableVehicleFactoryTemp(m_numberOfVehicles + 1, nullptr);
+			ArtificialNeuralNetworks artificialNeuralNetworksTemp(m_numberOfVehicles + 1, nullptr);
+
+			for (size_t i = 0; i <= m_currentVehicle; ++i)
+			{
+				drawableVehicleFactoryTemp[i] = m_drawableVehicleFactory[i];
+				artificialNeuralNetworksTemp[i] = m_artificialNeuralNetworks[i];
+			}
+
+			drawableVehicleFactoryTemp[m_currentVehicle + 1] = nullptr;
+			artificialNeuralNetworksTemp[m_currentVehicle + 1] = nullptr;
+
+			for (size_t i = m_currentVehicle + 1; i < m_numberOfVehicles; ++i)
+			{
+				drawableVehicleFactoryTemp[i + 1] = m_drawableVehicleFactory[i];
+				artificialNeuralNetworksTemp[i + 1] = m_artificialNeuralNetworks[i];
+			}
+
+			m_drawableVehicleFactory = drawableVehicleFactoryTemp;
+			m_artificialNeuralNetworks = artificialNeuralNetworksTemp;
+			++m_numberOfVehicles;
+		}
+		else
+		{
+			++m_numberOfVehicles;
+			m_drawableVehicleFactory.resize(m_numberOfVehicles, nullptr);
+			m_artificialNeuralNetworks.resize(m_numberOfVehicles, nullptr);
+		}
+
+		m_textObservers[CURRENT_VEHICLE_TEXT]->Notify();
+		m_textObservers[NUMBER_OF_VEHICLES_TEXT]->Notify();
+	}
+}
+
+void StateTesting::OnRemoveVehicle()
+{
+	if (m_numberOfVehicles)
+	{
+		delete m_drawableVehicleFactory[m_currentVehicle];
+		delete m_artificialNeuralNetworks[m_currentVehicle];
+
+		for (size_t i = m_currentVehicle + 1; i < m_numberOfVehicles; ++i)
+		{
+			m_drawableVehicleFactory[i - 1] = m_drawableVehicleFactory[i];
+			m_artificialNeuralNetworks[i - 1] = m_artificialNeuralNetworks[i];
+		}
+
+		m_drawableVehicleFactory[m_numberOfVehicles - 1] = nullptr;
+		m_artificialNeuralNetworks[m_numberOfVehicles - 1] = nullptr;
+
+		if (m_currentVehicle)
+			--m_currentVehicle;
+
+		--m_numberOfVehicles;
+		m_textObservers[CURRENT_VEHICLE_TEXT]->Notify();
+		m_textObservers[NUMBER_OF_VEHICLES_TEXT]->Notify();
+	}
+}
+
+std::string StateTesting::GetCurrentVehicleName() const
+{
+	if (m_numberOfVehicles == 0)
+		return "None";
+
+	std::string data = " [ ][ ]";
+	data[2] = m_drawableVehicleFactory[m_currentVehicle] ? 'X' : ' ';
+	data[5] = m_artificialNeuralNetworks[m_currentVehicle] ? 'X' : ' ';
+	return std::string("Vehicle ") + std::to_string(m_currentVehicle) + data;
 }

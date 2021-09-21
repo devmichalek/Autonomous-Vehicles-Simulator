@@ -2,28 +2,8 @@
 #include "DrawableMath.hpp"
 #include "CoreWindow.hpp"
 
-class DrawableVehicle;
-class DrawableVehicleBuilder;
-class StateVehicleEditor;
-
 class VehicleBody final
 {
-	friend DrawableVehicle;
-	friend DrawableVehicleBuilder;
-	friend StateVehicleEditor;
-
-	sf::VertexArray m_vertices;
-	std::vector<sf::Vector2f> m_points;
-
-	static sf::Vector2f m_baseCenter;
-	static double m_baseSinus;
-	static double m_baseCosinus;
-	static bool m_initialized;
-
-	const sf::Vector2f* m_center;
-	const double* m_sinus;
-	const double* m_cosinus;
-
 	VehicleBody();
 
 	~VehicleBody();
@@ -36,8 +16,8 @@ class VehicleBody final
 
 	// Set up base components
 	void SetBase(const sf::Vector2f* center,
-				 const double* sinus,
-				 const double* cosinus);
+		const double* sinus,
+		const double* cosinus);
 
 	// Updates each vertex
 	void Update();
@@ -74,4 +54,21 @@ class VehicleBody final
 	{
 		return m_vertices;
 	}
+
+	sf::VertexArray m_vertices;
+	std::vector<sf::Vector2f> m_points;
+
+	static sf::Vector2f m_baseCenter;
+	static double m_baseSinus;
+	static double m_baseCosinus;
+	static bool m_initialized;
+
+	const sf::Vector2f* m_center;
+	const double* m_sinus;
+	const double* m_cosinus;
+
+	// Friend classes
+	friend class DrawableVehicle;
+	friend class DrawableVehicleBuilder;
+	friend class StateVehicleEditor;
 };

@@ -11,6 +11,27 @@ class ObserverInterface;
 class StateMapEditor final :
 	public StateInterface
 {
+	StateMapEditor(const StateMapEditor&) = delete;
+
+	const StateMapEditor& operator=(const StateMapEditor&) = delete;
+
+	StateMapEditor();
+
+	~StateMapEditor();
+
+	void Reload() override;
+
+	void Capture() override;
+
+	void Update() override;
+
+	bool Load() override;
+
+	void Draw() override;
+
+	enum class ActiveMode;
+	void SetActiveMode(ActiveMode);
+
 	enum class ActiveMode
 	{
 		EDGE,
@@ -71,25 +92,6 @@ class StateMapEditor final :
 	std::vector<DrawableDoubleText*> m_texts;
 	std::vector<ObserverInterface*> m_textObservers;
 
-	void SetActiveMode(ActiveMode);
-
-public:
-
-	StateMapEditor(const StateMapEditor&) = delete;
-
-	const StateMapEditor& operator=(const StateMapEditor&) = delete;
-
-	StateMapEditor();
-
-	~StateMapEditor();
-
-	void Reload() override;
-
-	void Capture() override;
-
-	void Update() override;
-
-	bool Load() override;
-
-	void Draw() override;
+	// Friend classes
+	friend class StateManager;
 };

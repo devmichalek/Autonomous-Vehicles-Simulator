@@ -4,9 +4,6 @@
 #include "StoppableTimer.hpp"
 #include <SFML/Graphics/ConvexShape.hpp>
 
-class DrawableVehicle;
-class DrawableMapBuilder;
-
 class DrawableMap final
 {
 	DrawableMap(const EdgeVector& edges, const size_t pivot);
@@ -70,7 +67,8 @@ private:
 	using EdgePrecedences = std::vector<EdgePrecedence>;
 	using EdgePrecedencesVector = std::vector<EdgePrecedences>;
 
-	friend DrawableMapBuilder;
+	// Friend classes
+	friend class DrawableMapBuilder;
 
 	// Returns available end points from specific point
 	// Point is taken from inner edges (first half of edges vector) and it's pointer via index

@@ -9,6 +9,24 @@ class ObserverInterface;
 class StateVehicleEditor final :
 	public StateInterface
 {
+	StateVehicleEditor(const StateVehicleEditor&) = delete;
+
+	const StateVehicleEditor& operator=(const StateVehicleEditor&) = delete;
+
+	StateVehicleEditor();
+
+	~StateVehicleEditor();
+
+	void Reload() override;
+
+	void Capture() override;
+
+	void Update() override;
+
+	bool Load() override;
+
+	void Draw() override;
+
 	enum
 	{
 		MODE_VEHICLE_BODY,
@@ -71,23 +89,6 @@ class StateVehicleEditor final :
 	std::vector<DrawableTextAbstract*> m_texts;
 	std::vector<ObserverInterface*> m_textObservers;
 
-public:
-
-	StateVehicleEditor(const StateVehicleEditor&) = delete;
-
-	const StateVehicleEditor& operator=(const StateVehicleEditor&) = delete;
-
-	StateVehicleEditor();
-
-	~StateVehicleEditor();
-
-	void Reload() override;
-
-	void Capture() override;
-
-	void Update() override;
-
-	bool Load() override;
-
-	void Draw() override;
+	// Friend classes
+	friend class StateManager;
 };

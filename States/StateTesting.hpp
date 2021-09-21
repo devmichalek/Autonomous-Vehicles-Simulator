@@ -12,6 +12,33 @@ class ObserverInterface;
 class StateTesting final :
 	public StateInterface
 {
+	StateTesting(const StateTesting&) = delete;
+
+	const StateTesting& operator=(const StateTesting&) = delete;
+
+	StateTesting();
+
+	~StateTesting();
+
+	void Reload() override;
+
+	void Capture() override;
+
+	void Update() override;
+
+	bool Load() override;
+
+	void Draw() override;
+
+	// Called when new vehicle is being added
+	void OnAddVehicle();
+
+	// Called when vehicle is beign deleted
+	void OnRemoveVehicle();
+
+	// Returns current vehicle name
+	std::string GetCurrentVehicleName() const;
+
 	enum
 	{
 		STOPPED_MODE,
@@ -110,32 +137,6 @@ class StateTesting final :
 	std::vector<DrawableDoubleText*> m_texts;
 	std::vector<ObserverInterface*> m_textObservers;
 
-	// Called when new vehicle is being added
-	void OnAddVehicle();
-
-	// Called when vehicle is beign deleted
-	void OnRemoveVehicle();
-
-	// Returns current vehicle name
-	std::string GetCurrentVehicleName() const;
-
-public:
-
-	StateTesting(const StateTesting&) = delete;
-
-	const StateTesting& operator=(const StateTesting&) = delete;
-
-	StateTesting();
-
-	~StateTesting();
-
-	void Reload() override;
-
-	void Capture() override;
-
-	void Update() override;
-
-	bool Load() override;
-
-	void Draw() override;
+	// Friend classes
+	friend class StateManager;
 };

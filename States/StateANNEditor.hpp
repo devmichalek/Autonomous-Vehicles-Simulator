@@ -10,6 +10,42 @@ class ObserverInterface;
 class StateANNEditor final :
 	public StateInterface
 {
+	StateANNEditor(const StateANNEditor&) = delete;
+
+	const StateANNEditor& operator=(const StateANNEditor&) = delete;
+
+	StateANNEditor();
+
+	~StateANNEditor();
+
+	void Reload() override;
+
+	void Capture() override;
+
+	void Update() override;
+
+	bool Load() override;
+
+	void Draw() override;
+
+	// Calculates positions of neuron shapes and weight shapes
+	void CalculatePositions();
+
+	// Adds neuron layer to the container
+	void AddLayer();
+
+	// Removes neuron layer from the container
+	void RemoveLayer();
+
+	// Adds neuron to the current active neuron layer
+	void AddNeuron();
+
+	// Removes neuron from the current active neruon layer
+	void RemoveNeuron();
+
+	// Returns weight strength representation in color
+	sf::Color GetWeightStrength(double max, double value) const;
+
 	// Control states
 	enum
 	{
@@ -63,41 +99,6 @@ class StateANNEditor final :
 	std::vector<DrawableTextAbstract*> m_texts;
 	std::vector<ObserverInterface*> m_textObservers;
 
-	// Calculates positions of neuron shapes and weight shapes
-	void CalculatePositions();
-
-	// Adds neuron layer to the container
-	void AddLayer();
-
-	// Removes neuron layer from the container
-	void RemoveLayer();
-
-	// Adds neuron to the current active neuron layer
-	void AddNeuron();
-
-	// Removes neuron from the current active neruon layer
-	void RemoveNeuron();
-
-	// Returns weight strength representation in color
-	sf::Color GetWeightStrength(double max, double value) const;
-
-public:
-
-	StateANNEditor(const StateANNEditor&) = delete;
-
-	const StateANNEditor& operator=(const StateANNEditor&) = delete;
-
-	StateANNEditor();
-
-	~StateANNEditor();
-
-	void Reload() override;
-
-	void Capture() override;
-
-	void Update() override;
-
-	bool Load() override;
-
-	void Draw() override;
+	// Friend classes
+	friend class StateManager;
 };

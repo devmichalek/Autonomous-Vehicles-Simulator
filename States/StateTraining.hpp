@@ -14,6 +14,24 @@ class ObserverInterface;
 class StateTraining final :
 	public StateInterface
 {
+	StateTraining(const StateTraining&) = delete;
+
+	const StateTraining& operator=(const StateTraining&) = delete;
+
+	StateTraining();
+
+	~StateTraining();
+
+	void Reload() override;
+
+	void Capture() override;
+
+	void Update() override;
+
+	bool Load() override;
+
+	void Draw() override;
+
 	// Modes
 	enum
 	{
@@ -162,23 +180,6 @@ class StateTraining final :
 	std::vector<DrawableDoubleText*> m_texts;
 	std::vector<ObserverInterface*> m_textObservers;
 
-public:
-
-	StateTraining(const StateTraining&) = delete;
-
-	const StateTraining& operator=(const StateTraining&) = delete;
-
-	StateTraining();
-
-	~StateTraining();
-
-	void Reload() override;
-
-	void Capture() override;
-
-	void Update() override;
-
-	bool Load() override;
-
-	void Draw() override;
+	// Friend classes
+	friend class StateManager;
 };
