@@ -10,16 +10,13 @@
 StateMapEditor::StateMapEditor() :
 	m_drawableVehicle(nullptr),
 	m_viewMovementTimer(0.0, 0.1),
-	m_viewMovementOffset(20.0),
-	m_viewMovement(800.0),
-	m_viewMinMovement(200.0),
-	m_viewMaxMovement(1800.0)
+	m_viewMovement(200.0, 1800.0, 20.0, 800.0)
 {
-	m_activeMode = ActiveMode::EDGE;
+	m_activeMode = ActiveMode::EDGE_MODE;
 	m_edgeSubmode = EdgeSubmode::GLUED_INSERT;
 	m_vehicleSubmode = VehicleSubmode::INSERT;
-	m_line[0].color = sf::Color::White;
-	m_line[1].color = sf::Color::White;
+	m_edgeLine[0].color = sf::Color::White;
+	m_edgeLine[1].color = sf::Color::White;
 	m_edges.reserve(1024);
 	m_insertEdge = false;
 	m_removeEdge = false;
@@ -60,7 +57,7 @@ StateMapEditor::~StateMapEditor()
 void StateMapEditor::Reload()
 {
 	// Reset internal states
-	m_activeMode = ActiveMode::EDGE;
+	m_activeMode = ActiveMode::EDGE_MODE;
 	m_edgeSubmode = EdgeSubmode::GLUED_INSERT;
 	m_vehicleSubmode = VehicleSubmode::INSERT;
 	m_insertEdge = false;
@@ -69,7 +66,10 @@ void StateMapEditor::Reload()
 	m_upToDate = false;
 	delete m_drawableVehicle;
 	m_drawableVehicle = m_drawableVehicleBuilder.Get();
+
+	// Reset view movement
 	m_viewMovementTimer.Reset();
+	m_viewMovement.ResetValue();
 
 	m_drawableMapBuilder.CreateDummy();
 	m_edges = m_drawableMapBuilder.GetEdges();
@@ -100,7 +100,7 @@ void StateMapEditor::Capture()
 		{
 			switch (m_activeMode)
 			{
-				case ActiveMode::EDGE:
+				case ActiveMode::EDGE_MODE:
 				{
 					switch (m_edgeSubmode)
 					{
@@ -169,7 +169,7 @@ void StateMapEditor::Capture()
 						}
 						break;
 					}
-				case ActiveMode::VEHICLE:
+				case ActiveMode::VEHICLE_MODE:
 				{
 					switch (m_vehicleSubmode)
 					{
@@ -248,12 +248,17 @@ void StateMapEditor::Update()
 	{
 		switch (m_activeMode)
 		{
-			case ActiveMode::EDGE:
+			case ActiveMode::EDGE_MODE:
 			{
 				if (sf::Keyboard::isKeyPressed(sf::Keyboard::F2))
-					SetActiveMode(ActiveMode::VEHICLE);
+				{
+					m_vehicleSubmode = VehicleSubmode::INSERT;
+					m_textObservers[VEHICLE_SUBMODE_TEXT]->Notify();
+					m_activeMode = ActiveMode::VEHICLE_MODE;
+					m_textObservers[ACTIVE_MODE_TEXT]->Notify();
+				}
 				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::LAlt) ||
-					sf::Keyboard::isKeyPressed(sf::Keyboard::RAlt))
+						 sf::Keyboard::isKeyPressed(sf::Keyboard::RAlt))
 				{
 					if (!m_edges.empty() && m_edgeSubmode == EdgeSubmode::GLUED_INSERT)
 					{
@@ -312,10 +317,17 @@ void StateMapEditor::Update()
 
 				break;
 			}
-			case ActiveMode::VEHICLE:
+			case ActiveMode::VEHICLE_MODE:
 			{
 				if (sf::Keyboard::isKeyPressed(sf::Keyboard::F1))
-					SetActiveMode(ActiveMode::EDGE);
+				{
+					m_edgeSubmode = EdgeSubmode::GLUED_INSERT;
+					m_insertEdge = false;
+					m_removeEdge = false;
+					m_textObservers[EDGE_SUBMODE_TEXT]->Notify();
+					m_activeMode = ActiveMode::EDGE_MODE;
+					m_textObservers[ACTIVE_MODE_TEXT]->Notify();
+				}
 				else
 				{
 					VehicleSubmode mode = m_vehicleSubmode;
@@ -368,20 +380,12 @@ void StateMapEditor::Update()
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Add))
 		{
 			if (m_viewMovementTimer.Update())
-			{
-				m_viewMovement += m_viewMovementOffset;
-				if (m_viewMovement > m_viewMaxMovement)
-					m_viewMovement = m_viewMaxMovement;
-			}
+				m_viewMovement.Increase();
 		}
 		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Subtract))
 		{
 			if (m_viewMovementTimer.Update())
-			{
-				m_viewMovement -= m_viewMovementOffset;
-				if (m_viewMovement < m_viewMinMovement)
-					m_viewMovement = m_viewMinMovement;
-			}
+				m_viewMovement.Decrease();
 		}
 
 		auto& view = CoreWindow::GetView();
@@ -426,8 +430,8 @@ void StateMapEditor::Update()
 bool StateMapEditor::Load()
 {
 	// Set strigs map
-	m_activeModeMap[ActiveMode::EDGE] = "Edge mode";
-	m_activeModeMap[ActiveMode::VEHICLE] = "Vehicle mode";
+	m_activeModeMap[ActiveMode::EDGE_MODE] = "Edge mode";
+	m_activeModeMap[ActiveMode::VEHICLE_MODE] = "Vehicle mode";
 	m_edgeSubmodeMap[EdgeSubmode::GLUED_INSERT] = "Glued insert mode";
 	m_edgeSubmodeMap[EdgeSubmode::REMOVE] = "Remove mode";
 	m_vehicleSubmodeMap[VehicleSubmode::INSERT] = "Insert mode";
@@ -482,43 +486,43 @@ void StateMapEditor::Draw()
 		m_drawableVehicle->DrawBeams();
 	}
 
-	m_line[0].color = sf::Color::White;
-	m_line[1].color = m_line[0].color;
+	m_edgeLine[0].color = sf::Color::White;
+	m_edgeLine[1].color = m_edgeLine[0].color;
 	for (const auto& i : m_edges)
 	{
-		m_line[0].position = i[0];
-		m_line[1].position = i[1];
-		CoreWindow::GetRenderWindow().draw(m_line.data(), m_line.size(), sf::Lines);
+		m_edgeLine[0].position = i[0];
+		m_edgeLine[1].position = i[1];
+		CoreWindow::GetRenderWindow().draw(m_edgeLine.data(), m_edgeLine.size(), sf::Lines);
 	}
 
 	CoreWindow::GetRenderWindow().draw(m_allowedMapAreaShape);
 
 	switch (m_activeMode)
 	{
-		case ActiveMode::EDGE:
+		case ActiveMode::EDGE_MODE:
 		{
 			if (m_insertEdge)
 			{
-				m_line[0].position = m_edgeBeggining;
-				m_line[1].position = CoreWindow::GetMousePosition() + CoreWindow::GetViewOffset();
-				m_line[0].color = sf::Color::White;
-				m_line[1].color = m_line[0].color;
-				CoreWindow::GetRenderWindow().draw(m_line.data(), m_line.size(), sf::Lines);
+				m_edgeLine[0].position = m_edgeBeggining;
+				m_edgeLine[1].position = CoreWindow::GetMousePosition() + CoreWindow::GetViewOffset();
+				m_edgeLine[0].color = sf::Color::White;
+				m_edgeLine[1].color = m_edgeLine[0].color;
+				CoreWindow::GetRenderWindow().draw(m_edgeLine.data(), m_edgeLine.size(), sf::Lines);
 			}
 			else if (m_removeEdge)
 			{
-				m_line[0].position = m_edgeBeggining;
-				m_line[1].position = CoreWindow::GetMousePosition() + CoreWindow::GetViewOffset();
-				m_line[0].color = sf::Color::Red;
-				m_line[1].color = m_line[0].color;
-				CoreWindow::GetRenderWindow().draw(m_line.data(), m_line.size(), sf::Lines);
+				m_edgeLine[0].position = m_edgeBeggining;
+				m_edgeLine[1].position = CoreWindow::GetMousePosition() + CoreWindow::GetViewOffset();
+				m_edgeLine[0].color = sf::Color::Red;
+				m_edgeLine[1].color = m_edgeLine[0].color;
+				CoreWindow::GetRenderWindow().draw(m_edgeLine.data(), m_edgeLine.size(), sf::Lines);
 			}
 
 			m_texts[EDGE_SUBMODE_TEXT]->Draw();
 			m_texts[EDGE_COUNT_TEXT]->Draw();
 			break;
 		}
-		case ActiveMode::VEHICLE:
+		case ActiveMode::VEHICLE_MODE:
 		{
 			m_texts[VEHICLE_SUBMODE_TEXT]->Draw();
 			m_texts[VEHICLE_ANGLE_TEXT]->Draw();
@@ -533,28 +537,4 @@ void StateMapEditor::Draw()
 	m_texts[VIEW_OFFSET_X_TEXT]->Draw();
 	m_texts[VIEW_OFFSET_Y_TEXT]->Draw();
 	m_texts[FILENAME_TEXT]->Draw();
-}
-
-void StateMapEditor::SetActiveMode(ActiveMode activeMode)
-{
-	if (m_activeMode != activeMode)
-	{
-		switch (m_activeMode)
-		{
-			case ActiveMode::EDGE:
-				m_edgeSubmode = EdgeSubmode::GLUED_INSERT;
-				m_insertEdge = false;
-				m_removeEdge = false;
-				m_textObservers[EDGE_SUBMODE_TEXT]->Notify();
-				break;
-
-			case ActiveMode::VEHICLE:
-				m_vehicleSubmode = VehicleSubmode::INSERT;
-				m_textObservers[VEHICLE_SUBMODE_TEXT]->Notify();
-				break;
-		}
-
-		m_activeMode = activeMode;
-		m_textObservers[ACTIVE_MODE_TEXT]->Notify();
-	}
 }

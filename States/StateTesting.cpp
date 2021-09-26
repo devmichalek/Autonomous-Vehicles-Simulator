@@ -565,8 +565,8 @@ bool StateTesting::Load()
 	m_textObservers[PARAMETER_TYPE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_parameterTypesStrings[m_parameterType]; });
 	m_textObservers[CURRENT_VEHICLE_TEXT] = new FunctionEventObserver<std::string>([&] { return GetCurrentVehicleName(); });
 	m_textObservers[NUMBER_OF_VEHICLES_TEXT] = new TypeEventObserver<size_t>(m_numberOfVehicles);
-	m_textObservers[SHOW_CHECKPOINTS_TEXT] = new FunctionEventObserver<std::string>([&] { return m_showCheckpoints ? "True" : "False"; });
-	m_textObservers[IS_USER_VEHICLE_ACTIVE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_activateUserVehicle ? "True" : "False"; });
+	m_textObservers[SHOW_CHECKPOINTS_TEXT] = new FunctionEventObserver<bool>([&] { return m_showCheckpoints; });
+	m_textObservers[IS_USER_VEHICLE_ACTIVE_TEXT] = new FunctionEventObserver<bool>([&] { return m_activateUserVehicle; });
 	m_textObservers[USER_FITNESS_TEXT] = new FunctionTimerObserver<std::string>([&]{ return !m_drawableMap ? "Unknown" : std::to_string(m_drawableMap->CalculateFitness(m_userVehicle)); }, 0.5);
 
 	// Set text observers

@@ -4,6 +4,7 @@
 #include "DrawableMapBuilder.hpp"
 #include "DrawableVehicleBuilder.hpp"
 #include "ContinuousTimer.hpp"
+#include "Property.hpp"
 
 class DrawableDoubleText;
 class ObserverInterface;
@@ -29,13 +30,10 @@ class StateMapEditor final :
 
 	void Draw() override;
 
-	enum class ActiveMode;
-	void SetActiveMode(ActiveMode);
-
 	enum class ActiveMode
 	{
-		EDGE,
-		VEHICLE
+		EDGE_MODE,
+		VEHICLE_MODE
 	} m_activeMode;
 	std::map<ActiveMode, std::string> m_activeModeMap;
 
@@ -53,7 +51,7 @@ class StateMapEditor final :
 	} m_vehicleSubmode;
 	std::map<VehicleSubmode, std::string> m_vehicleSubmodeMap;
 
-	Line m_line;
+	Line m_edgeLine;
 	EdgeVector m_edges;
 	bool m_insertEdge;
 	bool m_removeEdge;
@@ -66,10 +64,7 @@ class StateMapEditor final :
 
 	// View movement
 	ContinuousTimer m_viewMovementTimer;
-	const double m_viewMovementOffset;
-	double m_viewMovement;
-	const double m_viewMinMovement;
-	const double m_viewMaxMovement;
+	Property<double> m_viewMovement;
 
 	// Builders
 	DrawableMapBuilder m_drawableMapBuilder;

@@ -159,6 +159,11 @@ public:
 		m_population.shrink_to_fit();
 	}
 
+	inline size_t GetCurrentIteration() const
+	{
+		return m_currentIteration;
+	}
+
 	inline Chromosome<Type> GetChromosome(const size_t index) const
 	{
 		if (index < m_populationSize)

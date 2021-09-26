@@ -4,6 +4,7 @@
 #include "DrawableMapBuilder.hpp"
 #include "DrawableVehicleBuilder.hpp"
 #include "ContinuousTimer.hpp"
+#include "Property.hpp"
 
 class GeneticAlgorithmNeuron;
 class DrawableMap;
@@ -98,17 +99,21 @@ class StateTraining final :
 	};
 	std::array<std::string, INTERNAL_ERRORS_COUNT> m_internalErrorsStrings;
 
-	// Simulation parameters
-	size_t m_populationSize;
-	size_t m_numberOfGenerations;
-	size_t m_population;
-	size_t m_generation;
-	double m_crossoverProbability;
-	double m_mutationProbability;
-	bool m_decreaseMutationOverGenerations;
-	bool m_singlePointCrossover;
-	double m_requiredFitnessImprovement;
-	double m_meanRequiredFitnessImprovement;
+	// Simulation properties
+	Property<size_t> m_population;
+	Property<size_t> m_generation;
+	Property<double> m_crossoverProbability;
+	Property<bool> m_singlePointCrossover;
+	Property<double> m_mutationProbability;
+	Property<bool> m_decreaseMutationOverGenerations;
+	Property<double> m_requiredFitnessImprovement;
+	Property<double> m_requiredFitnessImprovementRise;
+
+	// Offsets, timers
+	const double m_viewMovementOffset;
+	ContinuousTimer m_viewTimer;
+	ContinuousTimer m_pressedKeyTimer;
+	ContinuousTimer m_requiredFitnessImprovementRiseTimer;
 
 	// Objects of environment
 	GeneticAlgorithmNeuron* m_geneticAlgorithm;
@@ -125,34 +130,6 @@ class StateTraining final :
 	ArtificialNeuralNetworkBuilder m_artificialNeuralNetworkBuilder;
 	DrawableMapBuilder m_drawableMapBuilder;
 	DrawableVehicleBuilder m_drawableVehicleBuilder;
-
-	// Timers, offsets and value boundaries
-	ContinuousTimer m_pressedKeyTimer;
-	ContinuousTimer m_viewTimer;
-	ContinuousTimer m_requiredFitnessImprovementRiseTimer;
-	const double m_viewMovementOffset;
-	const size_t m_minPopulationSize;
-	const size_t m_maxPopulationSize;
-	const size_t m_populationSizeResetValue;
-	const size_t m_minNumberOfGenerations;
-	const size_t m_maxNumberOfGenerations;
-	const size_t m_numberOfGenerationsResetValue;
-	const double m_minCrossoverProbability;
-	const double m_maxCrossoverProbability;
-	const double m_crossoverProbabilityResetValue;
-	const double m_crossoverProbabilityOffset;
-	const double m_minMutationProbability;
-	const double m_maxMutationProbability;
-	const double m_mutationProbabilityResetValue;
-	const double m_mutationProbabilityOffset;
-	const double m_minRequiredFitnessImprovement;
-	const double m_maxRequiredFitnessImprovement;
-	const double m_requiredFitnessImprovementResetValue;
-	const double m_requiredFitnessImprovementOffset;
-	const double m_minRequiredFitnessImprovementRise;
-	const double m_maxRequiredFitnessImprovementRise;
-	const double m_requiredFitnessImprovementRiseResetValue;
-	const double m_requiredFitnessImprovementRiseOffset;
 
 	// Texts and text observers
 	enum

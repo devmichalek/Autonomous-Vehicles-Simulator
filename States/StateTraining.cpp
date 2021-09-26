@@ -9,32 +9,18 @@
 #include "CoreLogger.hpp"
 
 StateTraining::StateTraining() :
-	m_pressedKeyTimer(0.0, 1.0, 5000),
-	m_viewTimer(1.0, 0.1),
-	m_requiredFitnessImprovementRiseTimer(0.0, 0.0),
+	m_population(4, 75, 1, 30),
+	m_generation(5, 300, 1, 60),
+	m_crossoverProbability(0.01, 1.00, 0.01, 0.5),
+	m_singlePointCrossover(false, true, true, false),
+	m_mutationProbability(0.01, 0.99, 0.01, 0.05),
+	m_decreaseMutationOverGenerations(false, true, true, false),
+	m_requiredFitnessImprovement(0.01, 0.2, 0.01, 0.05),
+	m_requiredFitnessImprovementRise(1.0, 15.0, 0.5, 3.0),
 	m_viewMovementOffset(2.0),
-	m_minPopulationSize(4),
-	m_maxPopulationSize(60),
-	m_populationSizeResetValue(30),
-	m_minNumberOfGenerations(5),
-	m_maxNumberOfGenerations(300),
-	m_numberOfGenerationsResetValue(60),
-	m_minCrossoverProbability(0.01),
-	m_maxCrossoverProbability(1.00),
-	m_crossoverProbabilityResetValue(0.5),
-	m_crossoverProbabilityOffset(0.01),
-	m_minMutationProbability(0.01),
-	m_maxMutationProbability(0.99),
-	m_mutationProbabilityResetValue(0.05),
-	m_mutationProbabilityOffset(0.01),
-	m_minRequiredFitnessImprovement(0.01),
-	m_maxRequiredFitnessImprovement(0.2),
-	m_requiredFitnessImprovementResetValue(0.05),
-	m_requiredFitnessImprovementOffset(0.01),
-	m_minRequiredFitnessImprovementRise(1.0),
-	m_maxRequiredFitnessImprovementRise(10.0),
-	m_requiredFitnessImprovementRiseResetValue(3.0),
-	m_requiredFitnessImprovementRiseOffset(0.5)
+	m_viewTimer(1.0, 0.1),
+	m_pressedKeyTimer(0.0, 1.0, 5000),
+	m_requiredFitnessImprovementRiseTimer(0.0, 0.0)
 {
 	// Initialize modes
 	m_modeStrings[STOPPED_MODE] = "Stopped";
@@ -78,32 +64,20 @@ StateTraining::StateTraining() :
 	m_internalErrorsStrings[ERROR_SAVE_IS_ALLOWED_ONLY_IN_PAUSED_MODE] = "Error: Save mode is allowed only in paused mode!";
 	m_internalErrorsStrings[ERROR_SAVE_IS_ALLOWED_ONLY_FOR_ANN] = "Error: Save mode is allowed only for artificial neural network!";
 
-	// Initialize simulation parameters
-	m_populationSize = m_populationSizeResetValue;
-	m_numberOfGenerations = m_numberOfGenerationsResetValue;
-	m_population = m_populationSize;
-	m_generation = 0;
-	m_crossoverProbability = m_crossoverProbabilityResetValue;
-	m_mutationProbability = m_mutationProbabilityResetValue;
-	m_decreaseMutationOverGenerations = false;
-	m_singlePointCrossover = false;
-	m_requiredFitnessImprovement = m_requiredFitnessImprovementResetValue;
-	m_meanRequiredFitnessImprovement = 0.0;
+	// Initialize timers
+	m_pressedKeyTimer.MakeTimeout();
+	m_requiredFitnessImprovementRiseTimer.SetTimeout(m_requiredFitnessImprovementRise);
 
 	// Initialize objects of environment
 	m_geneticAlgorithm = nullptr;
-	m_artificialNeuralNetworks.resize(m_populationSizeResetValue, nullptr);
+	m_artificialNeuralNetworks.resize(m_population, nullptr);
 	m_drawableMap = nullptr;
-	m_drawableVehicleFactory.resize(m_populationSizeResetValue, nullptr);
+	m_drawableVehicleFactory.resize(m_population, nullptr);
 
 	// Initialize backups
 	m_artificialNeuralNetworkBackup = nullptr;
 	m_drawableVehicleBackup = nullptr;
 	m_drawableMapBackup = nullptr;
-
-	// Initialize timers
-	m_pressedKeyTimer.MakeTimeout();
-	m_requiredFitnessImprovementRiseTimer.SetTimeout(m_requiredFitnessImprovementRiseResetValue);
 
 	// Initialize text and their observers
 	m_texts.resize(TEXT_COUNT, nullptr);
@@ -138,17 +112,21 @@ void StateTraining::Reload()
 	for (size_t i = 0; i < m_pressedKeys.size(); ++i)
 		m_pressedKeys[i] = false;
 
-	// Reset simulation parameters
-	m_populationSize = m_populationSizeResetValue;
-	m_numberOfGenerations = m_numberOfGenerationsResetValue;
-	m_population = m_populationSize;
-	m_generation = 0;
-	m_crossoverProbability = m_crossoverProbabilityResetValue;
-	m_mutationProbability = m_mutationProbabilityResetValue;
-	m_decreaseMutationOverGenerations = false;
-	m_singlePointCrossover = false;
-	m_requiredFitnessImprovement = m_requiredFitnessImprovementResetValue;
-	m_meanRequiredFitnessImprovement = 0.0;
+	// Reset simulation properties
+	m_population.ResetValue();
+	m_generation.ResetValue();
+	m_crossoverProbability.ResetValue();
+	m_singlePointCrossover.ResetValue();
+	m_mutationProbability.ResetValue();
+	m_decreaseMutationOverGenerations.ResetValue();
+	m_requiredFitnessImprovement.ResetValue();
+	m_requiredFitnessImprovementRise.ResetValue();
+
+	// Reset timers
+	m_viewTimer.Reset();
+	m_pressedKeyTimer.MakeTimeout();
+	m_requiredFitnessImprovementRiseTimer.SetTimeout(m_requiredFitnessImprovementRise);
+	m_requiredFitnessImprovementRiseTimer.Reset();
 
 	// Reset objects of environment
 	delete m_geneticAlgorithm;
@@ -158,7 +136,7 @@ void StateTraining::Reload()
 		delete ann;
 		ann = nullptr;
 	}
-	m_artificialNeuralNetworks.resize(m_populationSizeResetValue, nullptr);
+	m_artificialNeuralNetworks.resize(m_population, nullptr);
 	delete m_drawableMap;
 	m_drawableMap = nullptr;
 	for (auto& vehicle : m_drawableVehicleFactory)
@@ -166,7 +144,7 @@ void StateTraining::Reload()
 		delete vehicle;
 		vehicle = nullptr;
 	}
-	m_drawableVehicleFactory.resize(m_populationSizeResetValue, nullptr);
+	m_drawableVehicleFactory.resize(m_population, nullptr);
 
 	// Reset backups
 	delete m_artificialNeuralNetworkBackup;
@@ -180,12 +158,6 @@ void StateTraining::Reload()
 	m_artificialNeuralNetworkBuilder.Clear();
 	m_drawableMapBuilder.Clear();
 	m_drawableVehicleBuilder.Clear();
-
-	// Reset timers
-	m_pressedKeyTimer.MakeTimeout();
-	m_viewTimer.Reset();
-	m_requiredFitnessImprovementRiseTimer.SetTimeout(m_requiredFitnessImprovementRiseResetValue);
-	m_requiredFitnessImprovementRiseTimer.Reset();
 
 	// Reset view
 	auto& view = CoreWindow::GetView();
@@ -270,29 +242,24 @@ void StateTraining::Capture()
 							// Create artificial neural networks
 							for (auto& ann : m_artificialNeuralNetworks)
 								delete ann;
-							m_artificialNeuralNetworks.resize(m_populationSize);
+							m_artificialNeuralNetworks.resize(m_population);
 							for (auto& ann : m_artificialNeuralNetworks)
 								ann = ArtificialNeuralNetworkBuilder::Copy(m_artificialNeuralNetworkBackup);
 
 							// Create drawable map
 							delete m_drawableMap;
 							m_drawableMap = DrawableMapBuilder::Copy(m_drawableMapBackup);
-							m_drawableMap->Init(m_populationSize, m_requiredFitnessImprovement);
+							m_drawableMap->Init(m_population, m_requiredFitnessImprovement);
+							m_textObservers[CURRENT_POPULATION_TEXT]->Notify();
 
 							// Create drawable vehicles
 							for (auto& vehicle : m_drawableVehicleFactory)
 								delete vehicle;
-							m_drawableVehicleFactory.resize(m_populationSize);
+							m_drawableVehicleFactory.resize(m_population);
 							for (auto& vehicle : m_drawableVehicleFactory)
 							{
 								vehicle = DrawableVehicleBuilder::Copy(m_drawableVehicleBackup);
 							}
-
-							// Reset population size and generation number
-							m_population = m_populationSize;
-							m_generation = 0;
-							m_textObservers[CURRENT_POPULATION_TEXT]->Notify();
-							m_textObservers[CURRENT_GENERATION_TEXT]->Notify();
 
 							// Reset filename type
 							m_filenameType = MAP_FILENAME_TYPE;
@@ -304,15 +271,16 @@ void StateTraining::Capture()
 
 							// Create genetic algorithm
 							delete m_geneticAlgorithm;
-							m_geneticAlgorithm = new GeneticAlgorithmNeuron(m_numberOfGenerations,
-								m_artificialNeuralNetworkBackup->GetNumberOfWeights(),
-								m_populationSize,
-								m_crossoverProbability,
-								m_mutationProbability,
-								m_decreaseMutationOverGenerations,
-								m_singlePointCrossover,
-								1000,
-								std::pair(-1.0, 1.0));
+							m_geneticAlgorithm = new GeneticAlgorithmNeuron(m_generation,
+																			m_artificialNeuralNetworkBackup->GetNumberOfWeights(),
+																			m_population,
+																			m_crossoverProbability,
+																			m_mutationProbability,
+																			m_decreaseMutationOverGenerations,
+																			m_singlePointCrossover,
+																			1000,
+																			std::pair(-1.0, 1.0));
+							m_textObservers[CURRENT_GENERATION_TEXT]->Notify();
 
 							// Set first individual in genetic algorithm (this one may be already trained)
 							m_artificialNeuralNetworks[0]->GetRawData(m_geneticAlgorithm->GetIndividual(0));
@@ -350,53 +318,38 @@ void StateTraining::Capture()
 								switch (m_parameterType)
 								{
 									case POPULATION_SIZE:
-										++m_populationSize;
-										if (m_populationSize > m_maxPopulationSize)
-											m_populationSize = m_maxPopulationSize;
+										m_population.Increase();
 										m_textObservers[POPULATION_SIZE_TEXT]->Notify();
 										break;
 									case NUMBER_OF_GENERATIONS:
-										++m_numberOfGenerations;
-										if (m_numberOfGenerations > m_maxNumberOfGenerations)
-											m_numberOfGenerations = m_maxNumberOfGenerations;
+										m_generation.Increase();
 										m_textObservers[NUMBER_OF_GENERATIONS_TEXT]->Notify();
 										break;
 									case CROSSOVER_PROBABILITY:
-										m_crossoverProbability += m_crossoverProbabilityOffset;
-										if (m_crossoverProbability > m_maxCrossoverProbability)
-											m_crossoverProbability = m_maxCrossoverProbability;
+										m_crossoverProbability.Increase();
 										m_textObservers[CROSSOVER_PROBABILITY_TEXT]->Notify();
 										break;
 									case MUTATION_PROBABILITY:
-										m_mutationProbability += m_mutationProbabilityOffset;
-										if (m_mutationProbability > m_maxMutationProbability)
-											m_mutationProbability = m_maxMutationProbability;
+										m_mutationProbability.Increase();
 										m_textObservers[MUTATION_PROBABILITY_TEXT]->Notify();
 										break;
 									case DECREASE_MUTATION_OVER_GENERATIONS:
-										m_decreaseMutationOverGenerations = true;
+										m_decreaseMutationOverGenerations.SetValue(true);
 										m_textObservers[DECREASE_MUTATION_OVER_GENERATION_TEXT]->Notify();
 										break;
 									case SINGLE_POINT_CROSSOVER:
-										m_singlePointCrossover = true;
+										m_singlePointCrossover.SetValue(true);
 										m_textObservers[SINGLE_POINT_CROSSOVER_TEXT]->Notify();
 										break;
 									case REQUIRED_FITNESS_IMPROVEMENT:
-										m_requiredFitnessImprovement += m_requiredFitnessImprovementOffset;
-										if (m_requiredFitnessImprovement > m_maxRequiredFitnessImprovement)
-											m_requiredFitnessImprovement = m_maxRequiredFitnessImprovement;
+										m_requiredFitnessImprovement.Increase();
 										m_textObservers[REQUIRED_FITNESS_IMPROVEMENT_TEXT]->Notify();
 										break;
 									case REQUIRED_FITNESS_IMPROVEMENT_RISE:
-									{
-										auto currentTimeout = m_requiredFitnessImprovementRiseTimer.GetTimeout();
-										currentTimeout += m_requiredFitnessImprovementRiseOffset;
-										if (currentTimeout > m_maxRequiredFitnessImprovementRise)
-											currentTimeout = m_maxRequiredFitnessImprovementRise;
-										m_requiredFitnessImprovementRiseTimer.SetTimeout(currentTimeout);
+										m_requiredFitnessImprovementRise.Increase();
+										m_requiredFitnessImprovementRiseTimer.SetTimeout(m_requiredFitnessImprovementRise);
 										m_textObservers[REQUIRED_FITNESS_IMPROVEMENT_RISE_TEXT]->Notify();
 										break;
-									}
 								}
 							}
 								
@@ -409,53 +362,38 @@ void StateTraining::Capture()
 								switch (m_parameterType)
 								{
 									case POPULATION_SIZE:
-										--m_populationSize;
-										if (m_populationSize < m_minPopulationSize)
-											m_populationSize = m_minPopulationSize;
+										m_population.Decrease();
 										m_textObservers[POPULATION_SIZE_TEXT]->Notify();
 										break;
 									case NUMBER_OF_GENERATIONS:
-										--m_numberOfGenerations;
-										if (m_numberOfGenerations < m_minNumberOfGenerations)
-											m_numberOfGenerations = m_minNumberOfGenerations;
+										m_generation.Decrease();
 										m_textObservers[NUMBER_OF_GENERATIONS_TEXT]->Notify();
 										break;
 									case CROSSOVER_PROBABILITY:
-										m_crossoverProbability -= m_crossoverProbabilityOffset;
-										if (m_crossoverProbability < m_minCrossoverProbability)
-											m_crossoverProbability = m_minCrossoverProbability;
+										m_crossoverProbability.Decrease();
 										m_textObservers[CROSSOVER_PROBABILITY_TEXT]->Notify();
 										break;
 									case MUTATION_PROBABILITY:
-										m_mutationProbability -= m_mutationProbabilityOffset;
-										if (m_mutationProbability < m_minMutationProbability)
-											m_mutationProbability = m_minMutationProbability;
+										m_mutationProbability.Decrease();
 										m_textObservers[MUTATION_PROBABILITY_TEXT]->Notify();
 										break;
 									case DECREASE_MUTATION_OVER_GENERATIONS:
-										m_decreaseMutationOverGenerations = false;
+										m_decreaseMutationOverGenerations.SetValue(false);
 										m_textObservers[DECREASE_MUTATION_OVER_GENERATION_TEXT]->Notify();
 										break;
 									case SINGLE_POINT_CROSSOVER:
-										m_singlePointCrossover = false;
+										m_singlePointCrossover.SetValue(false);
 										m_textObservers[SINGLE_POINT_CROSSOVER_TEXT]->Notify();
 										break;
 									case REQUIRED_FITNESS_IMPROVEMENT:
-										m_requiredFitnessImprovement -= m_requiredFitnessImprovementOffset;
-										if (m_requiredFitnessImprovement < m_minRequiredFitnessImprovement)
-											m_requiredFitnessImprovement = m_minRequiredFitnessImprovement;
+										m_requiredFitnessImprovement.Decrease();
 										m_textObservers[REQUIRED_FITNESS_IMPROVEMENT_TEXT]->Notify();
 										break;
 									case REQUIRED_FITNESS_IMPROVEMENT_RISE:
-									{
-										auto currentTimeout = m_requiredFitnessImprovementRiseTimer.GetTimeout();
-										currentTimeout -= m_requiredFitnessImprovementRiseOffset;
-										if (currentTimeout < m_minRequiredFitnessImprovementRise)
-											currentTimeout = m_minRequiredFitnessImprovementRise;
-										m_requiredFitnessImprovementRiseTimer.SetTimeout(currentTimeout);
+										m_requiredFitnessImprovementRise.Decrease();
+										m_requiredFitnessImprovementRiseTimer.SetTimeout(m_requiredFitnessImprovementRise);
 										m_textObservers[REQUIRED_FITNESS_IMPROVEMENT_RISE_TEXT]->Notify();
 										break;
-									}
 								}
 							}
 
@@ -519,7 +457,7 @@ void StateTraining::Capture()
 								m_mode = PAUSED_MODE;
 								m_textObservers[MODE_TEXT]->Notify();
 							}
-							else if (m_generation <= m_numberOfGenerations)
+							else if (m_geneticAlgorithm)
 							{
 								m_mode = RUNNING_MODE;
 								m_textObservers[MODE_TEXT]->Notify();
@@ -719,10 +657,10 @@ void StateTraining::Update()
 				// Generate new generation
 				if (m_geneticAlgorithm->Iterate(m_drawableMap->GetFitnessVector()))
 				{
-					// Increase generation number
-					++m_generation;
-					m_textObservers[CURRENT_GENERATION_TEXT]->Notify();
 					m_drawableMap->Reset();
+					m_textObservers[CURRENT_GENERATION_TEXT]->Notify();
+					m_textObservers[CURRENT_POPULATION_TEXT]->Notify();
+					m_textObservers[MEAN_REQUIRED_FITNESS_IMPROVEMENT]->Notify();
 
 					// Set artificial neural networks new raw data
 					for (size_t i = 0; i < m_artificialNeuralNetworks.size(); ++i)
@@ -735,23 +673,16 @@ void StateTraining::Update()
 						vehicle = DrawableVehicleBuilder::Copy(m_drawableVehicleBackup);
 					}
 
-					// Reset require fitness improvement rise timer
+					// Reset required fitness improvement rise timer
 					m_requiredFitnessImprovementRiseTimer.Reset();
 					m_textObservers[RAISING_REQUIRED_FITNESS_IMPROVEMENT_TEXT]->Notify();
-
-					// Reset simulation parameters
-					m_population = m_populationSize;
-					m_meanRequiredFitnessImprovement = 0.0;
-					m_textObservers[CURRENT_POPULATION_TEXT]->Notify();
-					m_textObservers[MEAN_REQUIRED_FITNESS_IMPROVEMENT]->Notify();
 				}
 				else
 				{
 					m_mode = PAUSED_MODE;
 					m_textObservers[MODE_TEXT]->Notify();
-
-					// Increase generation number but do not notify observer!
-					++m_generation;
+					delete m_geneticAlgorithm;
+					m_geneticAlgorithm = nullptr;
 				}
 			}
 			else
@@ -766,7 +697,7 @@ void StateTraining::Update()
 
 				if (m_requiredFitnessImprovementRiseTimer.Update())
 				{
-					std::tie(m_population, m_meanRequiredFitnessImprovement) = m_drawableMap->Punish(m_drawableVehicleFactory);
+					m_drawableMap->Punish(m_drawableVehicleFactory);
 					m_textObservers[CURRENT_POPULATION_TEXT]->Notify();
 					m_textObservers[MEAN_REQUIRED_FITNESS_IMPROVEMENT]->Notify();
 				}
@@ -853,20 +784,20 @@ bool StateTraining::Load()
 	m_textObservers[MODE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_modeStrings[m_mode]; });
 	m_textObservers[FILENAME_TYPE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_filenameTypeStrings[m_filenameType]; });
 	m_textObservers[PARAMETER_TYPE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_parameterTypesStrings[m_parameterType]; });
-	m_textObservers[POPULATION_SIZE_TEXT] = new TypeEventObserver<size_t>(m_populationSize);
-	m_textObservers[NUMBER_OF_GENERATIONS_TEXT] = new TypeEventObserver<size_t>(m_numberOfGenerations);
-	m_textObservers[CROSSOVER_PROBABILITY_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(size_t(m_crossoverProbability * 100.0)) + "%"; });
-	m_textObservers[MUTATION_PROBABILITY_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(size_t(m_mutationProbability * 100.0)) + "%"; });
-	m_textObservers[DECREASE_MUTATION_OVER_GENERATION_TEXT] = new FunctionEventObserver<std::string>([&] { return m_decreaseMutationOverGenerations ? "True" : "False"; });
-	m_textObservers[SINGLE_POINT_CROSSOVER_TEXT] = new FunctionEventObserver<std::string>([&] { return m_singlePointCrossover ? "True" : "False"; });
+	m_textObservers[POPULATION_SIZE_TEXT] = new FunctionEventObserver<size_t>([&] { return m_population; });
+	m_textObservers[NUMBER_OF_GENERATIONS_TEXT] = new FunctionEventObserver<size_t>([&] { return m_generation; });
+	m_textObservers[CROSSOVER_PROBABILITY_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(size_t(m_crossoverProbability * 100.0)); }, "", "%");
+	m_textObservers[MUTATION_PROBABILITY_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(size_t(m_mutationProbability * 100.0)); }, "", "%");
+	m_textObservers[DECREASE_MUTATION_OVER_GENERATION_TEXT] = new FunctionEventObserver<bool>([&] { return m_decreaseMutationOverGenerations; });
+	m_textObservers[SINGLE_POINT_CROSSOVER_TEXT] = new FunctionEventObserver<bool>([&] { return m_singlePointCrossover; });
 	m_textObservers[REQUIRED_FITNESS_IMPROVEMENT_RISE_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(m_requiredFitnessImprovementRiseTimer.GetTimeout()) + " seconds"; });
-	m_textObservers[REQUIRED_FITNESS_IMPROVEMENT_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(size_t(m_requiredFitnessImprovement * 100.0)) + "%"; });
-	m_textObservers[CURRENT_POPULATION_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(m_population) + "/" + std::to_string(m_populationSize); });
-	m_textObservers[CURRENT_GENERATION_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(m_generation) + "/" + std::to_string(m_numberOfGenerations); });
-	m_textObservers[HIGHEST_FITNESS_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(!m_drawableMap ? 0 : size_t(m_drawableMap->GetHighestFitness() * 100.0)) + "%"; });
-	m_textObservers[HIGHEST_FITNESS_OVERALL_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(!m_drawableMap ? 0 : size_t(m_drawableMap->GetHighestFitnessOverall()* 100.0)) + "%"; });
-	m_textObservers[RAISING_REQUIRED_FITNESS_IMPROVEMENT_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(m_requiredFitnessImprovementRiseTimer.GetTimeout() - m_requiredFitnessImprovementRiseTimer.GetValue()) + " seconds"; }, 0.3);
-	m_textObservers[MEAN_REQUIRED_FITNESS_IMPROVEMENT] = new FunctionEventObserver<std::string>([&] { return std::to_string(size_t(m_meanRequiredFitnessImprovement * 100.0)) + "%"; });
+	m_textObservers[REQUIRED_FITNESS_IMPROVEMENT_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(size_t(m_requiredFitnessImprovement * 100.0)); }, "", "%");
+	m_textObservers[CURRENT_POPULATION_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(m_drawableMap ? (m_population - m_drawableMap->GetNumberOfPunishedVehicles()) : m_population) + "/" + std::to_string(m_population); });
+	m_textObservers[CURRENT_GENERATION_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(m_geneticAlgorithm ? m_geneticAlgorithm->GetCurrentIteration() : m_generation) + "/" + std::to_string(m_generation); });
+	m_textObservers[HIGHEST_FITNESS_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(!m_drawableMap ? 0 : size_t(m_drawableMap->GetHighestFitness() * 100.0)); }, "", "%");
+	m_textObservers[HIGHEST_FITNESS_OVERALL_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(!m_drawableMap ? 0 : size_t(m_drawableMap->GetHighestFitnessOverall()* 100.0)); }, "", "%");
+	m_textObservers[RAISING_REQUIRED_FITNESS_IMPROVEMENT_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(m_requiredFitnessImprovementRiseTimer.GetTimeout() - m_requiredFitnessImprovementRiseTimer.GetValue()); }, 0.3, "", " seconds");
+	m_textObservers[MEAN_REQUIRED_FITNESS_IMPROVEMENT] = new FunctionEventObserver<std::string>([&] { return std::to_string(size_t((m_drawableMap ? m_drawableMap->GetMeanRequiredFitnessImprovement() : 0) * 100.0)); }, "", "%");
 
 	// Set text observers
 	for (size_t i = 0; i < TEXT_COUNT; ++i)
