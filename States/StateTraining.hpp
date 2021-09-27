@@ -7,8 +7,6 @@
 #include "Property.hpp"
 
 class GeneticAlgorithmNeuron;
-class DrawableMap;
-class DrawableCheckpointMap;
 class DrawableDoubleText;
 class ObserverInterface;
 
@@ -60,10 +58,11 @@ class StateTraining final :
 	{
 		POPULATION_SIZE,
 		NUMBER_OF_GENERATIONS,
-		CROSSOVER_PROBABILITY,
+		CROSSOVER_TYPE,
+		REPEAT_CROSSOVER_PER_INDIVIDUAL,
 		MUTATION_PROBABILITY,
-		DECREASE_MUTATION_OVER_GENERATIONS,
-		SINGLE_POINT_CROSSOVER,
+		DECREASE_MUTATION_PROBABILITY_OVER_GENERATIONS,
+		NUMBER_OF_PARENTS,
 		REQUIRED_FITNESS_IMPROVEMENT_RISE,
 		REQUIRED_FITNESS_IMPROVEMENT,
 		PARAMETERS_COUNT
@@ -102,10 +101,11 @@ class StateTraining final :
 	// Simulation properties
 	Property<size_t> m_population;
 	Property<size_t> m_generation;
-	Property<double> m_crossoverProbability;
-	Property<bool> m_singlePointCrossover;
+	Property<int> m_crossoverType;
+	Property<bool> m_repeatCrossoverPerIndividual;
 	Property<double> m_mutationProbability;
-	Property<bool> m_decreaseMutationOverGenerations;
+	Property<bool> m_decreaseMutationProbabilityOverGenerations;
+	Property<size_t> m_numberOfParents;
 	Property<double> m_requiredFitnessImprovement;
 	Property<double> m_requiredFitnessImprovementRise;
 
@@ -140,10 +140,11 @@ class StateTraining final :
 		PARAMETER_TYPE_TEXT,
 		POPULATION_SIZE_TEXT,
 		NUMBER_OF_GENERATIONS_TEXT,
-		CROSSOVER_PROBABILITY_TEXT,
+		CROSSOVER_TYPE_TEXT,
+		REPEAT_CROSSOVER_PER_INDIVIDUAL_TEXT,
 		MUTATION_PROBABILITY_TEXT,
-		DECREASE_MUTATION_OVER_GENERATION_TEXT,
-		SINGLE_POINT_CROSSOVER_TEXT,
+		DECREASE_MUTATION_PROBABILITY_OVER_GENERATIONS_TEXT,
+		NUMBER_OF_PARENTS_TEXT,
 		REQUIRED_FITNESS_IMPROVEMENT_RISE_TEXT,
 		REQUIRED_FITNESS_IMPROVEMENT_TEXT,
 		CURRENT_POPULATION_TEXT,

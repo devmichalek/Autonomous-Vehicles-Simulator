@@ -9,12 +9,13 @@
 #include "CoreLogger.hpp"
 
 StateTraining::StateTraining() :
-	m_population(4, 75, 1, 30),
+	m_population(12, 75, 1, 30),
 	m_generation(5, 300, 1, 60),
-	m_crossoverProbability(0.01, 1.00, 0.01, 0.5),
-	m_singlePointCrossover(false, true, true, false),
+	m_crossoverType(UNIFORM_CROSSOVER, TWO_POINT_CROSSOVER, 1, UNIFORM_CROSSOVER),
+	m_repeatCrossoverPerIndividual(false, true, true, true),
 	m_mutationProbability(0.01, 0.99, 0.01, 0.05),
-	m_decreaseMutationOverGenerations(false, true, true, false),
+	m_decreaseMutationProbabilityOverGenerations(false, true, true, false),
+	m_numberOfParents(1, 10, 1, 2),
 	m_requiredFitnessImprovement(0.01, 0.2, 0.01, 0.05),
 	m_requiredFitnessImprovementRise(1.0, 15.0, 0.5, 3.0),
 	m_viewMovementOffset(2.0),
@@ -37,10 +38,11 @@ StateTraining::StateTraining() :
 	// Initialize parameter types
 	m_parameterTypesStrings[POPULATION_SIZE] = "Population size";
 	m_parameterTypesStrings[NUMBER_OF_GENERATIONS] = "Number of generations";
-	m_parameterTypesStrings[CROSSOVER_PROBABILITY] = "Crossover probability";
+	m_parameterTypesStrings[CROSSOVER_TYPE] = "Crossover type";
+	m_parameterTypesStrings[REPEAT_CROSSOVER_PER_INDIVIDUAL] = "Repeat crossover per individual";
 	m_parameterTypesStrings[MUTATION_PROBABILITY] = "Mutation probability";
-	m_parameterTypesStrings[DECREASE_MUTATION_OVER_GENERATIONS] = "Decrease mutation over generations";
-	m_parameterTypesStrings[SINGLE_POINT_CROSSOVER] = "Single-point crossover";
+	m_parameterTypesStrings[DECREASE_MUTATION_PROBABILITY_OVER_GENERATIONS] = "Decrease mutation probability over generations";
+	m_parameterTypesStrings[NUMBER_OF_PARENTS] = "Number of parents";
 	m_parameterTypesStrings[REQUIRED_FITNESS_IMPROVEMENT_RISE] = "Required fitness improvement rise";
 	m_parameterTypesStrings[REQUIRED_FITNESS_IMPROVEMENT] = "Required fitness improvement";
 	m_parameterType = POPULATION_SIZE;
@@ -115,10 +117,11 @@ void StateTraining::Reload()
 	// Reset simulation properties
 	m_population.ResetValue();
 	m_generation.ResetValue();
-	m_crossoverProbability.ResetValue();
-	m_singlePointCrossover.ResetValue();
+	m_crossoverType.ResetValue();
+	m_repeatCrossoverPerIndividual.ResetValue();
 	m_mutationProbability.ResetValue();
-	m_decreaseMutationOverGenerations.ResetValue();
+	m_decreaseMutationProbabilityOverGenerations.ResetValue();
+	m_numberOfParents.ResetValue();
 	m_requiredFitnessImprovement.ResetValue();
 	m_requiredFitnessImprovementRise.ResetValue();
 
@@ -274,20 +277,21 @@ void StateTraining::Capture()
 							m_geneticAlgorithm = new GeneticAlgorithmNeuron(m_generation,
 																			m_artificialNeuralNetworkBackup->GetNumberOfWeights(),
 																			m_population,
-																			m_crossoverProbability,
+																			m_crossoverType,
+																			m_repeatCrossoverPerIndividual,
 																			m_mutationProbability,
-																			m_decreaseMutationOverGenerations,
-																			m_singlePointCrossover,
+																			m_decreaseMutationProbabilityOverGenerations,
+																			m_numberOfParents,
 																			1000,
-																			std::pair(-1.0, 1.0));
+																			std::pair(-ArtificialNeuralNetworkBuilder::GetMaxNeuronValue(), ArtificialNeuralNetworkBuilder::GetMaxNeuronValue()));
 							m_textObservers[CURRENT_GENERATION_TEXT]->Notify();
 
 							// Set first individual in genetic algorithm (this one may be already trained)
-							m_artificialNeuralNetworks[0]->GetRawData(m_geneticAlgorithm->GetIndividual(0));
+							m_artificialNeuralNetworks[0]->GetRawData(m_geneticAlgorithm->GetIndividualGenes(0));
 
 							// Reset artificial neural networks except first one
 							for (size_t i = 1; i < m_artificialNeuralNetworks.size(); ++i)
-								m_artificialNeuralNetworks[i]->SetFromRawData(m_geneticAlgorithm->GetIndividual(i));
+								m_artificialNeuralNetworks[i]->SetFromRawData(m_geneticAlgorithm->GetIndividualGenes(i));
 
 							// Reset require fitness improvement rise timer
 							m_requiredFitnessImprovementRiseTimer.Reset();
@@ -325,21 +329,25 @@ void StateTraining::Capture()
 										m_generation.Increase();
 										m_textObservers[NUMBER_OF_GENERATIONS_TEXT]->Notify();
 										break;
-									case CROSSOVER_PROBABILITY:
-										m_crossoverProbability.Increase();
-										m_textObservers[CROSSOVER_PROBABILITY_TEXT]->Notify();
+									case CROSSOVER_TYPE:
+										m_crossoverType.Increase();
+										m_textObservers[CROSSOVER_TYPE_TEXT]->Notify();
+										break;
+									case REPEAT_CROSSOVER_PER_INDIVIDUAL:
+										m_repeatCrossoverPerIndividual.SetValue(true);
+										m_textObservers[REPEAT_CROSSOVER_PER_INDIVIDUAL_TEXT]->Notify();
 										break;
 									case MUTATION_PROBABILITY:
 										m_mutationProbability.Increase();
 										m_textObservers[MUTATION_PROBABILITY_TEXT]->Notify();
 										break;
-									case DECREASE_MUTATION_OVER_GENERATIONS:
-										m_decreaseMutationOverGenerations.SetValue(true);
-										m_textObservers[DECREASE_MUTATION_OVER_GENERATION_TEXT]->Notify();
+									case DECREASE_MUTATION_PROBABILITY_OVER_GENERATIONS:
+										m_decreaseMutationProbabilityOverGenerations.SetValue(true);
+										m_textObservers[DECREASE_MUTATION_PROBABILITY_OVER_GENERATIONS_TEXT]->Notify();
 										break;
-									case SINGLE_POINT_CROSSOVER:
-										m_singlePointCrossover.SetValue(true);
-										m_textObservers[SINGLE_POINT_CROSSOVER_TEXT]->Notify();
+									case NUMBER_OF_PARENTS:
+										m_numberOfParents.Increase();
+										m_textObservers[NUMBER_OF_PARENTS_TEXT]->Notify();
 										break;
 									case REQUIRED_FITNESS_IMPROVEMENT:
 										m_requiredFitnessImprovement.Increase();
@@ -369,21 +377,25 @@ void StateTraining::Capture()
 										m_generation.Decrease();
 										m_textObservers[NUMBER_OF_GENERATIONS_TEXT]->Notify();
 										break;
-									case CROSSOVER_PROBABILITY:
-										m_crossoverProbability.Decrease();
-										m_textObservers[CROSSOVER_PROBABILITY_TEXT]->Notify();
+									case CROSSOVER_TYPE:
+										m_crossoverType.Decrease();
+										m_textObservers[CROSSOVER_TYPE_TEXT]->Notify();
+										break;
+									case REPEAT_CROSSOVER_PER_INDIVIDUAL:
+										m_repeatCrossoverPerIndividual.SetValue(false);
+										m_textObservers[REPEAT_CROSSOVER_PER_INDIVIDUAL_TEXT]->Notify();
 										break;
 									case MUTATION_PROBABILITY:
 										m_mutationProbability.Decrease();
 										m_textObservers[MUTATION_PROBABILITY_TEXT]->Notify();
 										break;
-									case DECREASE_MUTATION_OVER_GENERATIONS:
-										m_decreaseMutationOverGenerations.SetValue(false);
-										m_textObservers[DECREASE_MUTATION_OVER_GENERATION_TEXT]->Notify();
+									case DECREASE_MUTATION_PROBABILITY_OVER_GENERATIONS:
+										m_decreaseMutationProbabilityOverGenerations.SetValue(false);
+										m_textObservers[DECREASE_MUTATION_PROBABILITY_OVER_GENERATIONS_TEXT]->Notify();
 										break;
-									case SINGLE_POINT_CROSSOVER:
-										m_singlePointCrossover.SetValue(false);
-										m_textObservers[SINGLE_POINT_CROSSOVER_TEXT]->Notify();
+									case NUMBER_OF_PARENTS:
+										m_numberOfParents.Decrease();
+										m_textObservers[NUMBER_OF_PARENTS_TEXT]->Notify();
 										break;
 									case REQUIRED_FITNESS_IMPROVEMENT:
 										m_requiredFitnessImprovement.Decrease();
@@ -664,7 +676,7 @@ void StateTraining::Update()
 
 					// Set artificial neural networks new raw data
 					for (size_t i = 0; i < m_artificialNeuralNetworks.size(); ++i)
-						m_artificialNeuralNetworks[i]->SetFromRawData(m_geneticAlgorithm->GetIndividual(i));
+						m_artificialNeuralNetworks[i]->SetFromRawData(m_geneticAlgorithm->GetIndividualGenes(i));
 
 					// Reset vehicles
 					for (auto & vehicle : m_drawableVehicleFactory)
@@ -765,14 +777,15 @@ bool StateTraining::Load()
 	m_texts[FILENAME_TEXT] = new DrawableFilenameText<true, true>("map.bin");
 	m_texts[FILENAME_TYPE_TEXT] = new DrawableTripleText({ "Filename type:", "", "| [F]"});
 	m_texts[PARAMETER_TYPE_TEXT] = new DrawableTripleText({ "Parameter type:", "", "| [P] [+] [-]" });
-	m_texts[POPULATION_SIZE_TEXT] = new DrawableDoubleText({ "Population size:" });
-	m_texts[NUMBER_OF_GENERATIONS_TEXT] = new DrawableDoubleText({ "Number of generations:" });
-	m_texts[CROSSOVER_PROBABILITY_TEXT] = new DrawableDoubleText({ "Crossover probability:" });
-	m_texts[MUTATION_PROBABILITY_TEXT] = new DrawableDoubleText({ "Mutation probability:" });
-	m_texts[DECREASE_MUTATION_OVER_GENERATION_TEXT] = new DrawableDoubleText({ "Decrease mutation over generations:" });
-	m_texts[SINGLE_POINT_CROSSOVER_TEXT] = new DrawableDoubleText({ "Single-point crossover:" });
-	m_texts[REQUIRED_FITNESS_IMPROVEMENT_RISE_TEXT] = new DrawableDoubleText({ "Required fitness improvement rise:" });
-	m_texts[REQUIRED_FITNESS_IMPROVEMENT_TEXT] = new DrawableDoubleText({ "Required fitness improvement:" });
+	m_texts[POPULATION_SIZE_TEXT] = new DrawableDoubleText({ m_parameterTypesStrings[POPULATION_SIZE] + ":" });
+	m_texts[NUMBER_OF_GENERATIONS_TEXT] = new DrawableDoubleText({ m_parameterTypesStrings[NUMBER_OF_GENERATIONS] + ":" });
+	m_texts[CROSSOVER_TYPE_TEXT] = new DrawableDoubleText({ m_parameterTypesStrings[CROSSOVER_TYPE] + ":" });
+	m_texts[REPEAT_CROSSOVER_PER_INDIVIDUAL_TEXT] = new DrawableDoubleText({ m_parameterTypesStrings[REPEAT_CROSSOVER_PER_INDIVIDUAL] + ":" });
+	m_texts[MUTATION_PROBABILITY_TEXT] = new DrawableDoubleText({ m_parameterTypesStrings[MUTATION_PROBABILITY] + ":" });
+	m_texts[DECREASE_MUTATION_PROBABILITY_OVER_GENERATIONS_TEXT] = new DrawableDoubleText({ m_parameterTypesStrings[DECREASE_MUTATION_PROBABILITY_OVER_GENERATIONS] + ":" });
+	m_texts[NUMBER_OF_PARENTS_TEXT] = new DrawableDoubleText({ m_parameterTypesStrings[NUMBER_OF_PARENTS] + ":" });
+	m_texts[REQUIRED_FITNESS_IMPROVEMENT_RISE_TEXT] = new DrawableDoubleText({ m_parameterTypesStrings[REQUIRED_FITNESS_IMPROVEMENT_RISE] + ":" });
+	m_texts[REQUIRED_FITNESS_IMPROVEMENT_TEXT] = new DrawableDoubleText({ m_parameterTypesStrings[REQUIRED_FITNESS_IMPROVEMENT] + ":" });
 	m_texts[CURRENT_POPULATION_TEXT] = new DrawableDoubleText({ "Current population size:" });
 	m_texts[CURRENT_GENERATION_TEXT] = new DrawableDoubleText({ "Current generation:" });
 	m_texts[HIGHEST_FITNESS_TEXT] = new DrawableDoubleText({ "Highest fitness:" });
@@ -786,14 +799,15 @@ bool StateTraining::Load()
 	m_textObservers[PARAMETER_TYPE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_parameterTypesStrings[m_parameterType]; });
 	m_textObservers[POPULATION_SIZE_TEXT] = new FunctionEventObserver<size_t>([&] { return m_population; });
 	m_textObservers[NUMBER_OF_GENERATIONS_TEXT] = new FunctionEventObserver<size_t>([&] { return m_generation; });
-	m_textObservers[CROSSOVER_PROBABILITY_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(size_t(m_crossoverProbability * 100.0)); }, "", "%");
+	m_textObservers[CROSSOVER_TYPE_TEXT] = new FunctionEventObserver<std::string>([&] { return crossoverTypeStrings[m_crossoverType]; });
+	m_textObservers[REPEAT_CROSSOVER_PER_INDIVIDUAL_TEXT] = new FunctionEventObserver<bool>([&] { return m_repeatCrossoverPerIndividual; });
 	m_textObservers[MUTATION_PROBABILITY_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(size_t(m_mutationProbability * 100.0)); }, "", "%");
-	m_textObservers[DECREASE_MUTATION_OVER_GENERATION_TEXT] = new FunctionEventObserver<bool>([&] { return m_decreaseMutationOverGenerations; });
-	m_textObservers[SINGLE_POINT_CROSSOVER_TEXT] = new FunctionEventObserver<bool>([&] { return m_singlePointCrossover; });
+	m_textObservers[DECREASE_MUTATION_PROBABILITY_OVER_GENERATIONS_TEXT] = new FunctionEventObserver<bool>([&] { return m_decreaseMutationProbabilityOverGenerations; });
+	m_textObservers[NUMBER_OF_PARENTS_TEXT] = new FunctionEventObserver<size_t>([&] { return m_numberOfParents; });
 	m_textObservers[REQUIRED_FITNESS_IMPROVEMENT_RISE_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(m_requiredFitnessImprovementRiseTimer.GetTimeout()) + " seconds"; });
 	m_textObservers[REQUIRED_FITNESS_IMPROVEMENT_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(size_t(m_requiredFitnessImprovement * 100.0)); }, "", "%");
 	m_textObservers[CURRENT_POPULATION_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(m_drawableMap ? (m_population - m_drawableMap->GetNumberOfPunishedVehicles()) : m_population) + "/" + std::to_string(m_population); });
-	m_textObservers[CURRENT_GENERATION_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(m_geneticAlgorithm ? m_geneticAlgorithm->GetCurrentIteration() : m_generation) + "/" + std::to_string(m_generation); });
+	m_textObservers[CURRENT_GENERATION_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(m_geneticAlgorithm ? m_geneticAlgorithm->GetCurrentGeneration() : m_generation) + "/" + std::to_string(m_generation); });
 	m_textObservers[HIGHEST_FITNESS_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(!m_drawableMap ? 0 : size_t(m_drawableMap->GetHighestFitness() * 100.0)); }, "", "%");
 	m_textObservers[HIGHEST_FITNESS_OVERALL_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(!m_drawableMap ? 0 : size_t(m_drawableMap->GetHighestFitnessOverall()* 100.0)); }, "", "%");
 	m_textObservers[RAISING_REQUIRED_FITNESS_IMPROVEMENT_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(m_requiredFitnessImprovementRiseTimer.GetTimeout() - m_requiredFitnessImprovementRiseTimer.GetValue()); }, 0.3, "", " seconds");
@@ -807,21 +821,22 @@ bool StateTraining::Load()
 	m_texts[MODE_TEXT]->SetPosition({ FontContext::Component(0), {0}, {3}, {7}, {16} });
 	m_texts[FILENAME_TYPE_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {7} });
 	m_texts[FILENAME_TEXT]->SetPosition({ FontContext::Component(2), {0}, {3}, {7}, {16} });
-	m_texts[PARAMETER_TYPE_TEXT]->SetPosition({ FontContext::Component(9, true), {0}, {8}, {15} });
-	m_texts[POPULATION_SIZE_TEXT]->SetPosition({ FontContext::Component(8, true), {0}, {8} });
-	m_texts[NUMBER_OF_GENERATIONS_TEXT]->SetPosition({ FontContext::Component(7, true), {0}, {8} });
-	m_texts[CROSSOVER_PROBABILITY_TEXT]->SetPosition({ FontContext::Component(6, true), {0}, {8} });
-	m_texts[MUTATION_PROBABILITY_TEXT]->SetPosition({ FontContext::Component(5, true), {0}, {8} });
-	m_texts[DECREASE_MUTATION_OVER_GENERATION_TEXT]->SetPosition({ FontContext::Component(4, true), {0}, {8} });
-	m_texts[SINGLE_POINT_CROSSOVER_TEXT]->SetPosition({ FontContext::Component(3, true), {0}, {8} });
-	m_texts[REQUIRED_FITNESS_IMPROVEMENT_RISE_TEXT]->SetPosition({ FontContext::Component(2, true), {0}, {8} });
-	m_texts[REQUIRED_FITNESS_IMPROVEMENT_TEXT]->SetPosition({ FontContext::Component(1, true), {0}, {8} });
-	m_texts[CURRENT_POPULATION_TEXT]->SetPosition({ FontContext::Component(6, true), {12}, {21} });
-	m_texts[CURRENT_GENERATION_TEXT]->SetPosition({ FontContext::Component(5, true), {12}, {21} });
-	m_texts[HIGHEST_FITNESS_TEXT]->SetPosition({ FontContext::Component(4, true), {12}, {21} });
-	m_texts[HIGHEST_FITNESS_OVERALL_TEXT]->SetPosition({ FontContext::Component(3, true), {12}, {21} });
-	m_texts[RAISING_REQUIRED_FITNESS_IMPROVEMENT_TEXT]->SetPosition({ FontContext::Component(2, true), {12}, {21} });
-	m_texts[MEAN_REQUIRED_FITNESS_IMPROVEMENT]->SetPosition({ FontContext::Component(1, true), {12}, {21} });
+	m_texts[PARAMETER_TYPE_TEXT]->SetPosition({ FontContext::Component(10, true), {0}, {10}, {20} });
+	m_texts[POPULATION_SIZE_TEXT]->SetPosition({ FontContext::Component(9, true), {0}, {10} });
+	m_texts[NUMBER_OF_GENERATIONS_TEXT]->SetPosition({ FontContext::Component(8, true), {0}, {10} });
+	m_texts[CROSSOVER_TYPE_TEXT]->SetPosition({ FontContext::Component(7, true), {0}, {10} });
+	m_texts[REPEAT_CROSSOVER_PER_INDIVIDUAL_TEXT]->SetPosition({ FontContext::Component(6, true), {0}, {10} });
+	m_texts[MUTATION_PROBABILITY_TEXT]->SetPosition({ FontContext::Component(5, true), {0}, {10} });
+	m_texts[DECREASE_MUTATION_PROBABILITY_OVER_GENERATIONS_TEXT]->SetPosition({ FontContext::Component(4, true), {0}, {10} });
+	m_texts[NUMBER_OF_PARENTS_TEXT]->SetPosition({ FontContext::Component(3, true), {0}, {10} });
+	m_texts[REQUIRED_FITNESS_IMPROVEMENT_RISE_TEXT]->SetPosition({ FontContext::Component(2, true), {0}, {10} });
+	m_texts[REQUIRED_FITNESS_IMPROVEMENT_TEXT]->SetPosition({ FontContext::Component(1, true), {0}, {10} });
+	m_texts[CURRENT_POPULATION_TEXT]->SetPosition({ FontContext::Component(6, true), {14}, {23} });
+	m_texts[CURRENT_GENERATION_TEXT]->SetPosition({ FontContext::Component(5, true), {14}, {23} });
+	m_texts[HIGHEST_FITNESS_TEXT]->SetPosition({ FontContext::Component(4, true), {14}, {23} });
+	m_texts[HIGHEST_FITNESS_OVERALL_TEXT]->SetPosition({ FontContext::Component(3, true), {14}, {23} });
+	m_texts[RAISING_REQUIRED_FITNESS_IMPROVEMENT_TEXT]->SetPosition({ FontContext::Component(2, true), {14}, {23} });
+	m_texts[MEAN_REQUIRED_FITNESS_IMPROVEMENT]->SetPosition({ FontContext::Component(1, true), {14}, {23} });
 
 	CoreLogger::PrintSuccess("State \"Training\" dependencies loaded correctly");
 	return true;
@@ -881,10 +896,11 @@ void StateTraining::Draw()
 	}
 
 	m_texts[MODE_TEXT]->Draw();
-	m_texts[CROSSOVER_PROBABILITY_TEXT]->Draw();
+	m_texts[CROSSOVER_TYPE_TEXT]->Draw();
+	m_texts[REPEAT_CROSSOVER_PER_INDIVIDUAL_TEXT]->Draw();
 	m_texts[MUTATION_PROBABILITY_TEXT]->Draw();
-	m_texts[DECREASE_MUTATION_OVER_GENERATION_TEXT]->Draw();
-	m_texts[SINGLE_POINT_CROSSOVER_TEXT]->Draw();
+	m_texts[DECREASE_MUTATION_PROBABILITY_OVER_GENERATIONS_TEXT]->Draw();
+	m_texts[NUMBER_OF_PARENTS_TEXT]->Draw();
 	m_texts[REQUIRED_FITNESS_IMPROVEMENT_RISE_TEXT]->Draw();
 	m_texts[REQUIRED_FITNESS_IMPROVEMENT_TEXT]->Draw();
 }

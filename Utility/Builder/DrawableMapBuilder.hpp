@@ -4,7 +4,6 @@
 
 class DrawableMap;
 class DrawableVehicle;
-class DrawableCheckpointMap;
 
 class DrawableMapBuilder final :
 	public AbstractBuilder

@@ -8,111 +8,86 @@
 #include "Genetic.hpp"
 
 template <class Type>
-struct Gene
-{
-	Type m_data;
-	inline Gene<Type>& operator=(Gene<Type>& rhs) = default;
-	inline Type operator=(Type rhs)
-	{
-		m_data = rhs;
-		return m_data;
-	}
-};
-
-template <class Type>
-struct Chromosome
-{
-	std::vector<Gene<Type>> m_genes;
-
-	Chromosome() = default;
-
-	Chromosome(const size_t length)
-	{
-		m_genes.resize(length);
-	}
-
-	Chromosome(const Chromosome<Type>& rhs)
-	{
-		m_genes = rhs.m_genes;
-	}
-
-	~Chromosome()
-	{
-	}
-
-	inline void Resize(size_t length)
-	{
-		m_genes.resize(length);
-	}
-
-	inline Type& operator[](size_t i)
-	{
-		return m_genes[i].m_data;
-	}
-
-	inline size_t Length()
-	{
-		return m_genes.size();
-	}
-
-	inline Chromosome<Type>& operator=(Chromosome<Type>& rhs)
-	{
-		std::memcpy(&m_genes[0], &rhs.m_genes[0], sizeof(Type) * Length());
-		return *this;
-	}
-
-	inline Chromosome<Type>& operator=(Chromosome<Type>&& rhs) noexcept
-	{
-		m_genes = rhs.m_genes;
-		return *this;
-	}
-
-	template <class Type>
-	friend std::ostream& operator<<(std::ostream& os, const Chromosome<Type>& rhs);
-};
-
-template <class Type>
 class GeneticAlgorithm
 {
 protected:
+
+	using Gene = Type;
+	using Chromosome = std::vector<Gene>;
 	const size_t m_maxNumberOfGenerations;
-	size_t m_currentIteration;
+	size_t m_currentGeneration;
 	const size_t m_chromosomeLength;
 	const size_t m_populationSize;
-	std::vector<Chromosome<Type>> m_population;
-	double m_crossoverProbability;
-	double m_mutationProbability;
+	std::vector<Chromosome> m_population;
+	const size_t m_crossoverType;
+	const bool m_repeatCrossoverPerIndividual;
+	const double m_mutationProbability;
+	const bool m_decreaseMutationProbabilityOverGenerations;
 	const size_t m_parentsCount;
-	std::mt19937 m_mersenneTwister;
-	std::uniform_int_distribution<std::mt19937::result_type> m_coinDistribution;
-	std::uniform_int_distribution<std::mt19937::result_type> m_hundredDistribution;
+	static inline std::mt19937 m_mersenneTwister = std::mt19937((std::random_device())());
+	static inline std::uniform_int_distribution<std::mt19937::result_type> m_hundredDistribution =
+		std::uniform_int_distribution<std::mt19937::result_type>(0, 100);
 
-	// Mutates gene data
-	virtual void Mutate(Type&) = 0;
-
-	// Creates new chromosomes based on parents chromosomes
-	virtual void Crossover() // Recreate population based on parents
+	// Creates new chromosome (individual) based on parents
+	Chromosome Crossover()
 	{
-		Chromosome<Type> newChromosome(m_chromosomeLength);
-		for (size_t i = 0; i < m_chromosomeLength; ++i)
+		Chromosome newChromosome(m_chromosomeLength);
+		switch (m_crossoverType)
 		{
-			if (m_hundredDistribution(m_mersenneTwister) < (m_crossoverProbability * 100))
+			case UNIFORM_CROSSOVER:
 			{
-				// Take gene from the first parent
-				newChromosome[i] = m_population[0][i];
+				const size_t probabilityPerParent = 100 / m_parentsCount;
+				for (size_t i = 0; i < m_chromosomeLength; ++i)
+				{
+					size_t parentIndex = m_hundredDistribution(m_mersenneTwister) % probabilityPerParent;
+					if (parentIndex >= m_parentsCount)
+						parentIndex = m_parentsCount - 1;
+					newChromosome[i] = m_population[parentIndex][i];
+				}
+				break;
 			}
-			else
+			case MEAN_CROSSOVER:
 			{
-				// Take gene from the second parent
-				newChromosome[i] = m_population[1][i];
+				for (size_t i = 0; i < m_chromosomeLength; ++i)
+				{
+					Gene gene = m_population[0][i];
+					for (size_t j = 1; j < m_parentsCount; ++j)
+						gene += m_population[j][i];
+					newChromosome[i] = gene /m_parentsCount;
+				}
+				break;
 			}
-
-			if (m_hundredDistribution(m_mersenneTwister) < (m_mutationProbability * 100))
-				Mutate(newChromosome[i]);
+			case ONE_POINT_CROSSOVER:
+			{
+				const double percentage = double(m_hundredDistribution(m_mersenneTwister)) / 100.0;
+				const size_t pivot = size_t(percentage * m_chromosomeLength);
+				for (size_t i = 0; i < pivot; ++i)
+					newChromosome[i] = m_population[0][i];
+				for (size_t i = pivot; i < m_chromosomeLength; ++i)
+					newChromosome[i] = m_population[1][i];
+				break;
+			}
+			case TWO_POINT_CROSSOVER:
+			default:
+			{
+				const double percentage1 = double(m_hundredDistribution(m_mersenneTwister)) / 100.0;
+				const size_t pivot1 = size_t(percentage1 * m_chromosomeLength);
+				const double percentage2 = double(m_hundredDistribution(m_mersenneTwister)) / 100.0;
+				const size_t pivot2 = pivot1 + size_t(percentage2 * (m_chromosomeLength - pivot1));
+				for (size_t i = 0; i < pivot1; ++i)
+					newChromosome[i] = m_population[0][i];
+				for (size_t i = pivot1; i < pivot2; ++i)
+					newChromosome[i] = m_population[1][i];
+				for (size_t i = pivot2; i < m_chromosomeLength; ++i)
+					newChromosome[i] = m_population[0][i];
+				break;
+			}
 		}
 
-		m_population.push_back(newChromosome);
+		return newChromosome;
 	}
+
+private:
 
 	// Selects best chromosomes as parents
 	virtual void Select(const FitnessVector& points)
@@ -121,7 +96,7 @@ protected:
 		FitnessVector dummy = points;
 
 		// Find best ones
-		std::vector<Chromosome<Type>> newPopulation;
+		std::vector<Chromosome> newPopulation;
 		for (size_t i = 0; i < m_parentsCount; ++i)
 		{
 			// Select parent
@@ -134,59 +109,94 @@ protected:
 		m_population = newPopulation;
 	}
 
+	// Mutates gene
+	virtual void Mutate(Gene& gene) = 0;
+
 public:
 
 	GeneticAlgorithm(const size_t maxNumberOfGenerations,
 					 const size_t chromosomeLength,
-					 size_t populationSize,
-					 const double crossoverProbability,
+					 const size_t populationSize,
+					 const size_t crossoverType,
+					 const bool repeatCrossoverPerIndividual,
 					 const double mutationProbability,
+					 const bool decreaseMutationProbabilityOverGenerations = false,
 					 const unsigned parentsCount = 2) :
 		m_maxNumberOfGenerations(maxNumberOfGenerations),
-		m_currentIteration(0),
+		m_currentGeneration(0),
 		m_chromosomeLength(chromosomeLength),
 		m_populationSize(populationSize),
-		m_crossoverProbability(crossoverProbability),
+		m_crossoverType(crossoverType),
+		m_repeatCrossoverPerIndividual(repeatCrossoverPerIndividual),
 		m_mutationProbability(mutationProbability),
-		m_parentsCount(parentsCount),
-		m_mersenneTwister((std::random_device())()),
-		m_coinDistribution(0, 1),
-		m_hundredDistribution(0, 100)
+		m_decreaseMutationProbabilityOverGenerations(decreaseMutationProbabilityOverGenerations),
+		m_parentsCount(parentsCount)
 	{
 		assert(m_populationSize > m_parentsCount);
-		assert(m_parentsCount <= 100);
 		m_population.resize(m_populationSize);
 		m_population.shrink_to_fit();
 	}
 
-	inline size_t GetCurrentIteration() const
+	inline size_t GetCurrentGeneration() const
 	{
-		return m_currentIteration;
+		return m_currentGeneration;
 	}
 
-	inline Chromosome<Type> GetChromosome(const size_t index) const
+	inline Chromosome GetIndividualChromosome(const size_t identity) const
 	{
-		if (index < m_populationSize)
-			return m_population[index];
-		return Chromosome<Type>(m_chromosomeLength); // Error
+		if (identity < m_populationSize)
+			return m_population[identity];
+		return Chromosome(m_chromosomeLength);
+	}
+
+	inline Gene* GetIndividualGenes(const size_t identity)
+	{
+		if (identity >= m_populationSize)
+			return nullptr;
+		return &m_population[identity][0];
 	}
 
 	bool Iterate(const FitnessVector& points)
 	{
-		++m_currentIteration;
-		if (m_currentIteration > m_maxNumberOfGenerations)
+		++m_currentGeneration;
+		if (m_currentGeneration > m_maxNumberOfGenerations)
 		{
-			m_currentIteration = 0;
+			m_currentGeneration = 0;
 			return false;
 		}
 
 		Select(points);
 
-		size_t repeatCount = m_populationSize - m_parentsCount;
-		for (size_t i = 0; i < repeatCount; ++i)
-			Crossover();
+		const size_t repeatCount = m_populationSize - m_parentsCount;
+		if (m_repeatCrossoverPerIndividual)
+		{
+			for (size_t i = 0; i < repeatCount; ++i)
+			{
+				auto individual = Crossover();
+				for (auto& gene : individual)
+				{
+					if (m_hundredDistribution(m_mersenneTwister) < (m_mutationProbability * 100))
+						Mutate(gene);
+				}
+				m_population.push_back(individual);
+			}
+		}
+		else
+		{
+			auto dummy = Crossover();
+			for (size_t i = 0; i < repeatCount; ++i)
+			{
+				auto individual = dummy;
+				for (auto& gene : individual)
+				{
+					if (m_hundredDistribution(m_mersenneTwister) < (m_mutationProbability * 100))
+						Mutate(gene);
+				}
+				m_population.push_back(individual);
+			}
+		}
+		
 		m_population.shrink_to_fit();
-
 		return true;
 	}
 
@@ -201,53 +211,28 @@ public:
 	}
 };
 
-class GeneticAlgorithmBoolean : public GeneticAlgorithm<bool>
-{
-	void Mutate(bool& geneData)
-	{
-		geneData = !geneData;
-	}
-
-public:
-	GeneticAlgorithmBoolean(const size_t maxNumberOfGenerations,
-							const size_t chromosomeLength,
-							const size_t populationSize,
-							double crossoverProbability,
-							double mutationProbability) :
-		GeneticAlgorithm(maxNumberOfGenerations, chromosomeLength, populationSize, crossoverProbability, mutationProbability)
-	{
-		for (auto& j : m_population)
-		{
-			j.Resize(m_chromosomeLength);
-			for (size_t i = 0; i < m_chromosomeLength; ++i)
-				j[i] = static_cast<bool>(m_coinDistribution(m_mersenneTwister));
-		}
-	}
-};
-
 class GeneticAlgorithmCharacter : public GeneticAlgorithm<char>
 {
-	bool m_decreaseMutationOverGenerations;
-	std::string m_alphabet;
+	const std::string m_alphabet;
 	std::uniform_int_distribution<std::mt19937::result_type> m_alphabetDistribution;
 
-	void Mutate(char& geneData)
+	void Mutate(char& gene)
 	{
 		size_t offset = m_alphabetDistribution(m_mersenneTwister);
 
-		if (m_decreaseMutationOverGenerations)
+		if (m_decreaseMutationProbabilityOverGenerations)
 		{
-			double generationCompleteness = double(m_maxNumberOfGenerations - m_currentIteration) / m_maxNumberOfGenerations;
+			double generationCompleteness = double(m_maxNumberOfGenerations - m_currentGeneration) / m_maxNumberOfGenerations;
 			offset = size_t(generationCompleteness * offset);
 		}
 
-		size_t characterPosition = m_alphabet.find(geneData);
+		size_t characterPosition = m_alphabet.find(gene);
 		characterPosition += offset;
 		const size_t alphabetSize = m_alphabet.size();
 		if (characterPosition >= alphabetSize)
 			characterPosition -= alphabetSize;
 
-		geneData = m_alphabet[characterPosition];
+		gene = m_alphabet[characterPosition];
 	}
 
 public:
@@ -255,45 +240,50 @@ public:
 	GeneticAlgorithmCharacter(const size_t maxNumberOfGenerations,
 							  const size_t chromosomeLength,
 							  const size_t populationSize,
-							  double crossoverProbability,
-							  double mutationProbability,
-							  std::string alphabet,
-							  bool decreaseMutationOverGenerations) :
-		GeneticAlgorithm(maxNumberOfGenerations, chromosomeLength, populationSize, crossoverProbability, mutationProbability),
-		m_alphabet(alphabet),
-		m_decreaseMutationOverGenerations(decreaseMutationOverGenerations)
+							  const size_t crossoverType,
+							  const bool repeatCrossoverPerIndividual,
+							  const double mutationProbability,
+							  const bool decreaseMutationProbabilityOverGenerations,
+							  const std::string alphabet) :
+		GeneticAlgorithm(maxNumberOfGenerations,
+						 chromosomeLength,
+						 populationSize,
+						 crossoverType,
+						 repeatCrossoverPerIndividual,
+						 mutationProbability,
+						 decreaseMutationProbabilityOverGenerations),
+		m_alphabet(alphabet)
 	{
 		m_alphabetDistribution = std::uniform_int_distribution<std::mt19937::result_type>(0, static_cast<int>((m_alphabet.size() - 1)));
-		for (auto& j : m_population)
+		for (auto& individual : m_population)
 		{
-			j.Resize(m_chromosomeLength);
-			for (size_t i = 0; i < m_chromosomeLength; ++i)
-				j[i] = m_alphabet[m_alphabetDistribution(m_mersenneTwister)];
+			individual.resize(m_chromosomeLength);
+			for (auto& gene : individual)
+				gene = m_alphabet[m_alphabetDistribution(m_mersenneTwister)];
 		}
 	}
 };
 
 class GeneticAlgorithmFloat : public GeneticAlgorithm<float>
 {
-	bool m_decreaseMutationOverGenerations;
 	unsigned m_precision;
 	std::pair<float, float> m_range;
 	std::uniform_int_distribution<std::mt19937::result_type> m_rangeDistribution;
 
-	void Mutate(float& geneData)
+	void Mutate(float& gene)
 	{
 		size_t offset = m_rangeDistribution(m_mersenneTwister);
 
-		if (m_decreaseMutationOverGenerations)
+		if (m_decreaseMutationProbabilityOverGenerations)
 		{
-			double generationCompleteness = double(m_maxNumberOfGenerations - m_currentIteration) / m_maxNumberOfGenerations;
+			double generationCompleteness = double(m_maxNumberOfGenerations - m_currentGeneration) / m_maxNumberOfGenerations;
 			offset = size_t(generationCompleteness * offset);
 		}
 
 		float finalOffset = float(offset) / m_precision;
-		geneData += finalOffset;
-		if (geneData > m_range.second)
-			geneData = m_range.first + (geneData - m_range.second);
+		gene += finalOffset;
+		if (gene > m_range.second)
+			gene = m_range.first + (gene - m_range.second);
 	}
 
 public:
@@ -301,28 +291,34 @@ public:
 	GeneticAlgorithmFloat(const size_t maxNumberOfGenerations,
 						  const size_t chromosomeLength,
 						  const size_t populationSize,
-						  double crossoverProbability,
-						  double mutationProbability,
-						  bool decreaseMutationOverGenerations,
-						  unsigned precision,
-						  std::pair<float, float> range) :
-		GeneticAlgorithm(maxNumberOfGenerations, chromosomeLength, populationSize, crossoverProbability, mutationProbability),
-		m_decreaseMutationOverGenerations(decreaseMutationOverGenerations),
+						  const size_t crossoverType,
+						  const bool repeatCrossoverPerIndividual,
+						  const double mutationProbability,
+						  const bool decreaseMutationProbabilityOverGenerations,
+						  const unsigned precision,
+						  const std::pair<float, float> range) :
+		GeneticAlgorithm(maxNumberOfGenerations,
+						 chromosomeLength,
+						 populationSize,
+						 crossoverType,
+						 repeatCrossoverPerIndividual,
+						 mutationProbability,
+						 decreaseMutationProbabilityOverGenerations),
 		m_precision(precision),
 		m_range(range)
 	{
 		assert(m_range.first < m_range.second);
 		float right = std::fabs(m_range.first - m_range.second);
 		m_rangeDistribution = std::uniform_int_distribution<std::mt19937::result_type>(0, static_cast<int>(right * m_precision));
-		for (auto& j : m_population)
+		for (auto& individual : m_population)
 		{
-			j.Resize(m_chromosomeLength);
-			for (size_t i = 0; i < m_chromosomeLength; ++i)
+			individual.resize(m_chromosomeLength);
+			for (auto& gene : individual)
 			{
-				float geneData = float(m_rangeDistribution(m_mersenneTwister)) / m_precision;
-				if (geneData > m_range.second)
-					geneData = m_range.first + (geneData - m_range.second);
-				j[i] = geneData;
+				float newGene = float(m_rangeDistribution(m_mersenneTwister)) / m_precision;
+				if (newGene > m_range.second)
+					newGene = m_range.first + (newGene - m_range.second);
+				gene = newGene;
 			}
 		}
 	}
@@ -330,26 +326,24 @@ public:
 
 class GeneticAlgorithmNeuron : public GeneticAlgorithm<Neuron>
 {
-	bool m_decreaseMutationOverGenerations;
-	bool m_singlePointCrossover;
 	size_t m_precision;
 	std::pair<Neuron, Neuron> m_range;
 	std::uniform_int_distribution<std::mt19937::result_type> m_rangeDistribution;
 
-	void Mutate(Neuron& geneData)
+	void Mutate(Neuron& gene)
 	{
 		size_t offset = m_rangeDistribution(m_mersenneTwister);
 
-		if (m_decreaseMutationOverGenerations)
+		if (m_decreaseMutationProbabilityOverGenerations)
 		{
-			double generationCompleteness = double(m_maxNumberOfGenerations - m_currentIteration) / m_maxNumberOfGenerations;
+			double generationCompleteness = double(m_maxNumberOfGenerations - m_currentGeneration) / m_maxNumberOfGenerations;
 			offset = size_t(generationCompleteness * offset);
 		}
 
 		Neuron finalOffset = Neuron(offset) / m_precision;
-		geneData += finalOffset;
-		if (geneData > m_range.second)
-			geneData = m_range.first + (geneData - m_range.second);
+		gene += finalOffset;
+		if (gene > m_range.second)
+			gene = m_range.first + (gene - m_range.second);
 	}
 
 public:
@@ -357,85 +351,37 @@ public:
 	GeneticAlgorithmNeuron(const size_t maxNumberOfGenerations,
 						   const size_t chromosomeLength,
 						   const size_t populationSize,
-						   double crossoverProbability,
+						   const size_t crossoverType,
+						   const bool repeatCrossoverPerIndividual,
 						   double mutationProbability,
-						   bool decreaseMutationOverGenerations,
-						   bool singlePointCrossover,
+						   bool decreaseMutationProbabilityOverGenerations,
+						   const unsigned parentsCount,
 						   unsigned precision,
 						   std::pair<Neuron, Neuron> range) :
-		GeneticAlgorithm(maxNumberOfGenerations, chromosomeLength, populationSize, crossoverProbability, mutationProbability),
-		m_decreaseMutationOverGenerations(decreaseMutationOverGenerations),
-		m_singlePointCrossover(singlePointCrossover),
+		GeneticAlgorithm(maxNumberOfGenerations,
+						 chromosomeLength,
+						 populationSize,
+						 crossoverType,
+						 repeatCrossoverPerIndividual,
+						 mutationProbability,
+						 decreaseMutationProbabilityOverGenerations,
+						 parentsCount),
 		m_precision(precision),
 		m_range(range)
 	{
 		assert(m_range.first < m_range.second);
 		Neuron right = std::fabs(m_range.first - m_range.second);
 		m_rangeDistribution = std::uniform_int_distribution<std::mt19937::result_type>(0, static_cast<int>(right * m_precision));
-		for (auto& j : m_population)
+		for (auto& individual : m_population)
 		{
-			j.Resize(m_chromosomeLength);
-			for (size_t i = 0; i < m_chromosomeLength; ++i)
+			individual.resize(m_chromosomeLength);
+			for (auto& gene : individual)
 			{
-				Neuron geneData = Neuron(m_rangeDistribution(m_mersenneTwister)) / m_precision;
-				if (geneData > m_range.second)
-					geneData = m_range.first + (geneData - m_range.second);
-				j[i] = geneData;
+				Neuron newGene = Neuron(m_rangeDistribution(m_mersenneTwister)) / m_precision;
+				if (newGene > m_range.second)
+					newGene = m_range.first + (newGene - m_range.second);
+				gene = newGene;
 			}
 		}
 	}
-
-	Neuron* GetIndividual(size_t identity)
-	{
-		if (identity >= m_populationSize)
-			return nullptr;
-
-		return reinterpret_cast<Neuron*>(&m_population[identity][0]);
-	}
 };
-
-template <class Type>
-std::ostream& operator<<(std::ostream& os, const Chromosome<Type>& rhs)
-{
-	if constexpr (std::is_same<Type, bool>::value)
-	{
-		auto rhsSize = rhs.m_genes.size();
-		std::string rhsResult;
-		rhsResult.resize(rhsSize);
-		for (auto i = 0; i < rhsSize; ++i)
-		{
-			bool value = rhs.m_genes[i].m_data;
-			rhsResult[i] = static_cast<char>(static_cast<unsigned>(value) + 48);
-		}
-		os << rhsResult;
-	}
-	else if constexpr (std::is_same<Type, char>::value)
-	{
-		auto rhsSize = rhs.m_genes.size();
-		std::string rhsResult;
-		rhsResult.resize(rhsSize);
-		for (auto i = 0; i < rhsSize; ++i)
-			rhsResult[i] = rhs.m_genes[i].m_data;
-		os << rhsResult;
-	}
-	else if constexpr (std::is_same<Type, float>::value)
-	{
-		auto rhsSize = rhs.m_genes.size();
-		os << std::fixed << std::setprecision(2) << rhs.m_genes[0].m_data;
-		for (auto i = 1; i < rhsSize; ++i)
-			os << ", " << std::fixed << std::setprecision(2) << rhs.m_genes[i].m_data;
-	}
-	else if constexpr (std::is_same<Type, double>::value)
-	{
-		auto rhsSize = rhs.m_genes.size();
-		os << std::fixed << std::setprecision(4) << rhs.m_genes[0].m_data;
-		for (auto i = 1; i < rhsSize; ++i)
-			os << ", " << std::fixed << std::setprecision(4) << rhs.m_genes[i].m_data;
-	}
-	else
-	{
-		os << "There is no available chromosome representation.";
-	}
-
-	return os;
-}

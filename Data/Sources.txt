@@ -41,3 +41,8 @@ How to check if point is inside polygon
 https://stackoverflow.com/questions/217578/how-can-i-determine-whether-a-2d-point-is-within-a-polygon
 https://wrf.ecse.rpi.edu/Research/Short_Notes/pnpoly.html
 
+Crossover
+https://en.wikipedia.org/wiki/Crossover_(genetic_algorithm)
+
+Experimental Comparison of Binary and Floating Point Representations in Genetic Algorithms
+http://www.cs.umsl.edu/~janikow/publications/1991/GAbin/text.pdf

@@ -369,6 +369,7 @@ std::vector<EdgeVector> DrawableMap::GetLineCheckpoints(const EdgeVector& edges,
 	for (auto& edgePrecedences : edgePrecedencesVector)
 		std::sort(edgePrecedences.begin(), edgePrecedences.end(), Compare);
 
+	// Add more edge precedences to have optimal number of checkpoints per edge
 	double maxDistanceBetweenEndPoints = CoreWindow::GetSize().x / 16;
 	auto checkpointCount = edgePrecedencesVector.size();
 	for (size_t i = 1; i < checkpointCount; ++i)
