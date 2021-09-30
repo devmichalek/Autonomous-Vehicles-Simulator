@@ -105,11 +105,11 @@ namespace TestGeneticAlgorithm
 	void TestCharacters(const size_t chromosomeLength,
 						const size_t populationSize,
 						const size_t numOfGenerations,
-						size_t crossoverType,
-						bool repeatCrossover,
-						double mutationProbability,
-						std::string alphabet,
-						bool decreaseMutationOverGenerations,
+						const int crossoverType,
+						const bool repeatCrossover,
+						const double mutationProbability,
+						const std::string alphabet,
+						const bool decreaseMutationOverGenerations,
 						const double expectedResults)
 	{
 		std::cout << "\tTest parameters:\n";
@@ -161,12 +161,12 @@ namespace TestGeneticAlgorithm
 	void TestFloatingPoints(const size_t chromosomeLength,
 							const size_t populationSize,
 							const size_t numOfGenerations,
-							size_t crossoverType,
-							bool repeatCrossover,
-							double mutationProbability,
-							unsigned precision,
-							std::pair<float, float> range,
-							bool decreaseMutationOverGenerations,
+							const int crossoverType,
+							const bool repeatCrossover,
+							const double mutationProbability,
+							const unsigned precision,
+							const std::pair<float, float> range,
+							const bool decreaseMutationOverGenerations,
 							const double expectedResults)
 	{
 		std::cout << "\tTest parameters:\n";
@@ -182,7 +182,15 @@ namespace TestGeneticAlgorithm
 		FitnessVector fitnessVector(populationSize);
 
 		// Initialize
-		GeneticAlgorithmFloat geneticAlgorithm(numOfGenerations, chromosomeLength, populationSize, crossoverType, repeatCrossover, mutationProbability, decreaseMutationOverGenerations, precision, range);
+		GeneticAlgorithmFloat geneticAlgorithm(numOfGenerations,
+											   chromosomeLength,
+											   populationSize,
+											   crossoverType,
+											   repeatCrossover,
+											   mutationProbability,
+											   decreaseMutationOverGenerations,
+											   precision,
+											   range);
 
 		// Set up goal, all genes set to 1.0
 		float delta = std::fabs(range.second - range.first);
@@ -224,13 +232,13 @@ namespace TestGeneticAlgorithm
 	void TestNeurons(const size_t chromosomeLength,
 					 const size_t populationSize,
 					 const size_t numOfGenerations,
-					 size_t crossoverType,
-					 bool repeatCrossover,
-					 double mutationProbability,
-					 unsigned precision,
-					 std::pair<Neuron, Neuron> range,
-					 bool decreaseMutationOverGenerations,
-					 bool singlePointCrossover,
+					 const int crossoverType,
+					 const bool repeatCrossover,
+					 const double mutationProbability,
+					 const unsigned precision,
+					 const std::pair<Neuron, Neuron> range,
+					 const bool decreaseMutationOverGenerations,
+					 const bool singlePointCrossover,
 					 const double expectedResults)
 	{
 		std::cout << "\tTest parameters:\n";

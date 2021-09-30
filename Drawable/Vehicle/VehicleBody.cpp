@@ -54,10 +54,10 @@ void VehicleBody::Update()
 	size_t count = m_vertices.getVertexCount();
 	for (size_t i = 0; i < count; ++i)
 	{
-		float x = m_points[i].x;
-		float y = m_points[i].y;
-		m_vertices[i].position.x = static_cast<float>(double(x) * *m_cosinus - double(y) * *m_sinus);
-		m_vertices[i].position.y = static_cast<float>(double(x) * *m_sinus + double(y) * *m_cosinus);
+		double x = double(m_points[i].x);
+		double y = double(m_points[i].y);
+		m_vertices[i].position.x = static_cast<float>(x * *m_cosinus - y * *m_sinus);
+		m_vertices[i].position.y = static_cast<float>(x * *m_sinus + y * *m_cosinus);
 		m_vertices[i].position += *m_center;
 	}
 }

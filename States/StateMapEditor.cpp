@@ -10,7 +10,7 @@
 StateMapEditor::StateMapEditor() :
 	m_drawableVehicle(nullptr),
 	m_viewMovementTimer(0.0, 0.1),
-	m_viewMovement(200.0, 1800.0, 20.0, 800.0)
+	m_viewMovement(500.0, 1500.0, 50.0, 900.0)
 {
 	m_activeMode = ActiveMode::EDGE_MODE;
 	m_edgeSubmode = EdgeSubmode::GLUED_INSERT;
@@ -166,37 +166,36 @@ void StateMapEditor::Capture()
 							m_removeEdge = !m_removeEdge;
 							break;
 						}
-						}
-						break;
 					}
+					break;
+				}
 				case ActiveMode::VEHICLE_MODE:
 				{
 					switch (m_vehicleSubmode)
 					{
-					case VehicleSubmode::INSERT:
-					{
-						m_vehiclePositioned = true;
-						m_drawableVehicle->SetCenter(correctPosition);
-						m_drawableVehicle->Update();
-						m_upToDate = false;
-						break;
-					}
-					case VehicleSubmode::REMOVE:
-					{
-						if (m_drawableVehicle->Inside(correctPosition))
+						case VehicleSubmode::INSERT:
 						{
-							m_vehiclePositioned = false;
+							m_vehiclePositioned = true;
+							m_drawableVehicle->SetCenter(correctPosition);
+							m_drawableVehicle->Update();
 							m_upToDate = false;
+							break;
 						}
-						break;
-					}
-					default:
-						break;
+						case VehicleSubmode::REMOVE:
+						{
+							if (m_drawableVehicle->Inside(correctPosition))
+							{
+								m_vehiclePositioned = false;
+								m_upToDate = false;
+							}
+							break;
+						}
+						default:
+							break;
 					}
 
 					break;
 				}
-
 				default:
 					break;
 			}
@@ -257,8 +256,7 @@ void StateMapEditor::Update()
 					m_activeMode = ActiveMode::VEHICLE_MODE;
 					m_textObservers[ACTIVE_MODE_TEXT]->Notify();
 				}
-				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::LAlt) ||
-						 sf::Keyboard::isKeyPressed(sf::Keyboard::RAlt))
+				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::LAlt) || sf::Keyboard::isKeyPressed(sf::Keyboard::RAlt))
 				{
 					if (!m_edges.empty() && m_edgeSubmode == EdgeSubmode::GLUED_INSERT)
 					{
@@ -450,7 +448,7 @@ bool StateMapEditor::Load()
 
 	// Create observers
 	m_textObservers[ACTIVE_MODE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_activeModeMap[m_activeMode]; });
-	m_textObservers[MOVEMENT_TEXT] = new TypeTimerObserver<double, int>(m_viewMovement, 0.05);
+	m_textObservers[MOVEMENT_TEXT] = new FunctionTimerObserver<size_t>([&] { return size_t(m_viewMovement); }, 0.05);
 	m_textObservers[VIEW_OFFSET_X_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(int(CoreWindow::GetViewOffset().x)); }, 0.05);
 	m_textObservers[VIEW_OFFSET_Y_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(int(CoreWindow::GetViewOffset().y)); }, 0.05);
 	m_textObservers[FILENAME_TEXT] = nullptr;

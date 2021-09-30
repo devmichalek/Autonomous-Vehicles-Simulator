@@ -19,7 +19,7 @@ protected:
 	const size_t m_chromosomeLength;
 	const size_t m_populationSize;
 	std::vector<Chromosome> m_population;
-	const size_t m_crossoverType;
+	const int m_crossoverType;
 	const bool m_repeatCrossoverPerIndividual;
 	const double m_mutationProbability;
 	const bool m_decreaseMutationProbabilityOverGenerations;
@@ -53,7 +53,7 @@ protected:
 					Gene gene = m_population[0][i];
 					for (size_t j = 1; j < m_parentsCount; ++j)
 						gene += m_population[j][i];
-					newChromosome[i] = gene /m_parentsCount;
+					newChromosome[i] = gene / Gene(m_parentsCount);
 				}
 				break;
 			}
@@ -117,7 +117,7 @@ public:
 	GeneticAlgorithm(const size_t maxNumberOfGenerations,
 					 const size_t chromosomeLength,
 					 const size_t populationSize,
-					 const size_t crossoverType,
+					 const int crossoverType,
 					 const bool repeatCrossoverPerIndividual,
 					 const double mutationProbability,
 					 const bool decreaseMutationProbabilityOverGenerations = false,
@@ -240,7 +240,7 @@ public:
 	GeneticAlgorithmCharacter(const size_t maxNumberOfGenerations,
 							  const size_t chromosomeLength,
 							  const size_t populationSize,
-							  const size_t crossoverType,
+							  const int crossoverType,
 							  const bool repeatCrossoverPerIndividual,
 							  const double mutationProbability,
 							  const bool decreaseMutationProbabilityOverGenerations,
@@ -291,7 +291,7 @@ public:
 	GeneticAlgorithmFloat(const size_t maxNumberOfGenerations,
 						  const size_t chromosomeLength,
 						  const size_t populationSize,
-						  const size_t crossoverType,
+						  const int crossoverType,
 						  const bool repeatCrossoverPerIndividual,
 						  const double mutationProbability,
 						  const bool decreaseMutationProbabilityOverGenerations,
@@ -351,7 +351,7 @@ public:
 	GeneticAlgorithmNeuron(const size_t maxNumberOfGenerations,
 						   const size_t chromosomeLength,
 						   const size_t populationSize,
-						   const size_t crossoverType,
+						   const int crossoverType,
 						   const bool repeatCrossoverPerIndividual,
 						   double mutationProbability,
 						   bool decreaseMutationProbabilityOverGenerations,
