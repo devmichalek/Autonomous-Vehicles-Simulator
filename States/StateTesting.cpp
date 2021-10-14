@@ -6,7 +6,7 @@
 #include "ArtificialNeuralNetwork.hpp"
 #include "TypeEventObserver.hpp"
 #include "FunctionEventObserver.hpp"
-#include "DrawableWorld.hpp"
+#include "SimulatedWorld.hpp"
 #include "MapPrototype.hpp"
 #include "FitnessSystem.hpp"
 #include "DrawableCheckpoint.hpp"
@@ -53,7 +53,7 @@ StateTesting::StateTesting() :
 	m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH] = "Error: One of artificial neural network number of output neurons mismatches number of vehicle (3) inputs!";
 	m_internalErrorsStrings[ERROR_NO_VEHICLES] = "Error: There are no vehicles! Please add first vehicle to continue.";
 
-	m_drawableWorld = nullptr;
+	m_simulatedWorld = nullptr;
 	m_fitnessSystem = nullptr;
 	m_mapPrototype = nullptr;
 
@@ -69,7 +69,7 @@ StateTesting::StateTesting() :
 
 StateTesting::~StateTesting()
 {
-	delete m_drawableWorld;
+	delete m_simulatedWorld;
 	delete m_fitnessSystem;
 	delete m_mapPrototype;
 	delete m_userVehiclePrototype;
@@ -102,8 +102,8 @@ void StateTesting::Reload()
 	m_viewTimer.Reset();
 
 	// Reset objects of environment
-	delete m_drawableWorld;
-	m_drawableWorld = nullptr;
+	delete m_simulatedWorld;
+	m_simulatedWorld = nullptr;
 	delete m_fitnessSystem;
 	m_fitnessSystem = nullptr;
 	delete m_mapPrototype;
@@ -216,22 +216,22 @@ void StateTesting::Capture()
 									break;
 								}
 
-								// Init drawable world
-								delete m_drawableWorld;
-								m_drawableWorld = new DrawableWorld;
-								m_drawableWorld->AddMap(m_mapPrototype);
+								// Init simulated world
+								delete m_simulatedWorld;
+								m_simulatedWorld = new SimulatedWorld;
+								m_simulatedWorld->AddMap(m_mapPrototype);
 								DrawableCheckpoint::SetVisibility(m_enableCheckpoints);
 								delete m_fitnessSystem;
 								m_fitnessSystem = new FitnessSystem(m_numberOfVehicles, m_mapPrototype->GetNumberOfCheckpoints(), 0.0);
-								m_drawableWorld->SetContactListener(m_fitnessSystem->GetContactListener());
+								m_simulatedWorld->AddBeginContactFunction(m_fitnessSystem->GetBeginContactFunction());
 
 								// Prepare user vehicle
 								if (m_enableUserVehicle)
-									m_userVehicle = m_drawableWorld->AddVehicle(m_userVehiclePrototype);
+									m_userVehicle = m_simulatedWorld->AddVehicle(m_userVehiclePrototype);
 
 								// Add bot vehicles to the world
 								for (size_t i = 0; i < m_numberOfVehicles; ++i)
-									m_simulatedVehicles[i] = m_drawableWorld->AddVehicle(m_vehiclePrototypes[i]);
+									m_simulatedVehicles[i] = m_simulatedWorld->AddVehicle(m_vehiclePrototypes[i]);
 
 								m_textObservers[MODE_TEXT]->Notify();
 								break;
@@ -266,11 +266,11 @@ void StateTesting::Capture()
 										OnAddVehicle();
 										break;
 									case ENABLE_USER_VEHICLE:
-										m_enableUserVehicle.SetValue(true);
+										m_enableUserVehicle.Increase();
 										m_textObservers[ENABLE_USER_VEHICLE_TEXT]->Notify();
 										break;
 									case ENABLE_CHECKPOINTS:
-										m_enableCheckpoints.SetValue(true);
+										m_enableCheckpoints.Increase();
 										m_textObservers[ENABLE_CHECKPOINTS_TEXT]->Notify();
 										break;
 								}
@@ -292,11 +292,11 @@ void StateTesting::Capture()
 										OnRemoveVehicle();
 										break;
 									case ENABLE_USER_VEHICLE:
-										m_enableUserVehicle.SetValue(false);
+										m_enableUserVehicle.Decrease();
 										m_textObservers[ENABLE_USER_VEHICLE_TEXT]->Notify();
 										break;
 									case ENABLE_CHECKPOINTS:
-										m_enableCheckpoints.SetValue(false);
+										m_enableCheckpoints.Decrease();
 										m_textObservers[ENABLE_CHECKPOINTS_TEXT]->Notify();
 										break;
 								}
@@ -488,7 +488,7 @@ void StateTesting::Update()
 		{
 			if (m_userVehicle)
 			{
-				m_userVehicle->Update(m_drawableWorld->GetStaticWorld());
+				m_userVehicle->Update(m_simulatedWorld->GetStaticWorld());
 
 				if (m_userVehicle->IsActive())
 				{
@@ -543,13 +543,13 @@ void StateTesting::Update()
 				if (!m_simulatedVehicles[i]->IsActive())
 					continue;
 
-				m_simulatedVehicles[i]->Update(m_drawableWorld->GetStaticWorld());
+				m_simulatedVehicles[i]->Update(m_simulatedWorld->GetStaticWorld());
 				const NeuronLayer& input = m_simulatedVehicles[i]->ProcessOutput();
 				const NeuronLayer& output = m_artificialNeuralNetworks[i]->Update(input);
 				m_simulatedVehicles[i]->ProcessInput(output);
 			}
 
-			m_drawableWorld->Update();
+			m_simulatedWorld->Update();
 			break;
 		}
 		case PAUSED_MODE:
@@ -640,7 +640,7 @@ void StateTesting::Draw()
 		case RUNNING_MODE:
 		case PAUSED_MODE:
 		{
-			m_drawableWorld->Draw();
+			m_simulatedWorld->Draw();
 
 			if (m_enableUserVehicle)
 				m_texts[USER_FITNESS_TEXT]->Draw();

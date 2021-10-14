@@ -1,6 +1,6 @@
 #pragma once
 
-class SimulatedInterface
+class SimulatedAbstract
 {
 public:
 
@@ -19,12 +19,8 @@ public:
 
 protected:
 
-	SimulatedInterface(size_t category) :
+	SimulatedAbstract(const size_t category) :
 		m_category(category)
-	{
-	}
-
-	virtual ~SimulatedInterface()
 	{
 	}
 

@@ -1,23 +1,24 @@
 #pragma once
 #include "DrawableMath.hpp"
 #include "CoreWindow.hpp"
+#include <functional>
 #include <Box2D\Box2D.h>
 
 class MapPrototype;
 class VehiclePrototype;
 class SimulatedVehicle;
-class DrawableInterface;
+class SimulatedAbstract;
 
 // This class is responsible for connection between simulator physics and drawing
 // Here we connect Box2D functionality and SFML functionality
 // This class can be used only in simulation states (it cannot be used in editor states)
-class DrawableWorld
+class SimulatedWorld
 {
 public:
 
-	DrawableWorld();
+	SimulatedWorld();
 
-	~DrawableWorld();
+	~SimulatedWorld();
 
 	// Update internal world state
 	inline void Update()
@@ -50,18 +51,17 @@ public:
 		return m_staticWorld;
 	}
 
-	// Sets contact listener
-	inline bool SetContactListener(b2ContactListener* contactListener)
+	// Adds contact listener
+	inline void AddBeginContactFunction(std::function<void(b2Contact*)> function)
 	{
-		if (!m_world)
-			return false;
-
-		m_world->SetContactListener(contactListener);
-		return true;
+		m_contactListener.AddBeginContactFunction(function);
 	}
 
+	// If called then vehicle will be inactive after it made contact with edge
+	void EnableDeathOnEdgeContact();
+
 	// Adds map to the world and returns true in case of success
-	bool AddMap(MapPrototype* prototype);
+	void AddMap(MapPrototype* prototype);
 
 	// Adds vehicle to the world and returns simulated vehicle
 	SimulatedVehicle* AddVehicle(VehiclePrototype* prototype);
@@ -80,12 +80,36 @@ private:
 	{
 	public:
 
+		// Draws reported fixture
 		bool ReportFixture(b2Fixture* fixture, int32 childIndex);
 	};
 	DrawQueryCallback m_drawQueryCallback;
 
+	// Contact listener wrapper
+	class ContactListener :
+		public b2ContactListener
+	{
+		std::vector<std::function<void(b2Contact*)>> m_beginContactFunctions;
+
+	public:
+
+		// Adds begin contact function
+		void AddBeginContactFunction(std::function<void(b2Contact*)> function)
+		{
+			m_beginContactFunctions.push_back(function);
+			m_beginContactFunctions.shrink_to_fit();
+		}
+
+		// Detects begin contact
+		void BeginContact(b2Contact* contact)
+		{
+			for (auto& function : m_beginContactFunctions)
+				function(contact);
+		}
+	};
+	ContactListener m_contactListener;
+
 	b2World* m_world; // World representation
 	b2World* m_staticWorld; // Static world representation used as dynamic tree for edges
-
-	std::vector<DrawableInterface*> m_drawableVector;
+	std::vector<SimulatedAbstract*> m_simulatedObjects;
 };

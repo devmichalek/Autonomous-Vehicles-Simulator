@@ -10,7 +10,7 @@
 class GeneticAlgorithmNeuron;
 class DoubleText;
 class ObserverInterface;
-class DrawableWorld;
+class SimulatedWorld;
 class FitnessSystem;
 
 class StateTraining final :
@@ -65,6 +65,7 @@ private:
 	{
 		POPULATION_SIZE,
 		NUMBER_OF_GENERATIONS,
+		DEATH_ON_EDGE_CONTACT,
 		CROSSOVER_TYPE,
 		REPEAT_CROSSOVER_PER_INDIVIDUAL,
 		MUTATION_PROBABILITY,
@@ -108,6 +109,7 @@ private:
 	// Simulation properties
 	Property<size_t> m_population;
 	Property<size_t> m_generation;
+	Property<bool> m_deathOnEdgeContact;
 	Property<int> m_crossoverType;
 	Property<bool> m_repeatCrossoverPerIndividual;
 	Property<double> m_mutationProbability;
@@ -125,7 +127,7 @@ private:
 	// Objects of environment
 	GeneticAlgorithmNeuron* m_geneticAlgorithm;
 	ArtificialNeuralNetworks m_artificialNeuralNetworks;
-	DrawableWorld* m_drawableWorld;
+	SimulatedWorld* m_simulatedWorld;
 	FitnessSystem* m_fitnessSystem;
 	SimulatedVehicles m_simulatedVehicles; // Bot vehicles, pointer are cleared by world
 
@@ -148,6 +150,7 @@ private:
 		PARAMETER_TYPE_TEXT,
 		POPULATION_SIZE_TEXT,
 		NUMBER_OF_GENERATIONS_TEXT,
+		DEATH_ON_EDGE_CONTACT_TEXT,
 		CROSSOVER_TYPE_TEXT,
 		REPEAT_CROSSOVER_PER_INDIVIDUAL_TEXT,
 		MUTATION_PROBABILITY_TEXT,

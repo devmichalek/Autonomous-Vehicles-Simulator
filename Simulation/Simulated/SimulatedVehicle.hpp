@@ -1,14 +1,13 @@
 #pragma once
-#include "SimulatedInterface.hpp"
+#include "SimulatedAbstract.hpp"
 #include "FitnessInterface.hpp"
 #include "DrawableVehicle.hpp"
 #include "PeriodicTimer.hpp"
 #include "ArtificialNeuralNetworkBuilder.hpp"
-#include "VehicleBuilder.hpp"
 #include <Box2D\Box2D.h>
 
 class SimulatedVehicle final :
-	public SimulatedInterface,
+	public SimulatedAbstract,
 	public FitnessInterface,
 	public DrawableVehicle
 {
@@ -18,7 +17,7 @@ public:
 					 const std::vector<sf::Vector2f>& sensorPoints,
 					 const std::vector<double>& beamAngles,
 					 const std::vector<PeriodicTimer>& motionRanges) :
-		SimulatedInterface(SimulatedInterface::CategoryVehicle),
+		SimulatedAbstract(SimulatedAbstract::CategoryVehicle),
 		FitnessInterface(),
 		DrawableVehicle(numberOfBodyPoints, sensorPoints.size()),
 		m_body(nullptr),
@@ -27,11 +26,7 @@ public:
 		m_sensorPoints(sensorPoints),
 		m_beamAngles(beamAngles),
 		m_motionRanges(motionRanges),
-		m_maxForwardSpeed(14),
-		m_maxBackwardSpeed(-8),
-		m_maxDriveForce(50000),
-		m_maxTorqueForce(40000),
-		m_maxLateralImpulse(2.5f),
+		m_sensors(sensorPoints.size(), ArtificialNeuralNetworkBuilder::GetMaxNeuronValue()),
 		m_active(true)
 	{
 		// Converts beam deegres angle to radians angles
@@ -45,8 +40,6 @@ public:
 			motionRange.SetMultiplier(DrawableMath::ToRadians(motionRange.GetMultiplier()));
 			motionRange.SetValue(DrawableMath::ToRadians(motionRange.GetValue()));
 		}
-
-		m_sensors.resize(m_sensorPoints.size());
 	}
 
 	~SimulatedVehicle()
@@ -161,13 +154,7 @@ public:
 		m_numberOfBodyPoints = shape->m_count;
 		m_bodyPoints = shape->m_vertices;
 
-		const float maxMass = VehicleBuilder::GetMaxVehicleMass();
-		const float mass = m_body->GetMass();
-		const float ratio = mass / maxMass;
-		const sf::Uint8 ceiling = sf::Uint8(0xFF * 0.9f);
-		const sf::Uint8 part = 0xFF - sf::Uint8(ceiling * ratio);
-		m_defaultColor = sf::Color(part, part, part, 0xFF);
-		m_bodyShape.setFillColor(m_defaultColor);
+		SetDefaultColor(m_body->GetMass());
 
 		// Calculate beam positions
 		const float radians = m_body->GetAngle();
@@ -253,11 +240,11 @@ private:
 	NeuronLayer m_sensors;
 
 	// Features
-	const double m_maxForwardSpeed;
-	const double m_maxBackwardSpeed;
-	const double m_maxDriveForce;
-	const double m_maxTorqueForce;
-	const float m_maxLateralImpulse;
+	inline static const double m_maxForwardSpeed = 14.0;
+	inline static const double m_maxBackwardSpeed = -8.0;
+	inline static const double m_maxDriveForce = 50000.0;
+	inline static const double m_maxTorqueForce = 40000.0;
+	inline static const float m_maxLateralImpulse = 2.5f;
 	bool m_active;
 
 	// Raycast callback
@@ -279,12 +266,12 @@ private:
 		{
 			switch (fixture->GetFilterData().categoryBits)
 			{
-				case SimulatedInterface::CategoryEdge:
+				case SimulatedAbstract::CategoryEdge:
 					m_beam[1].position = DrawableMath::ToSFMLPosition(point);
 					m_sensor = Neuron(fraction);
 					return fraction;
-				case SimulatedInterface::CategoryCheckpoint:
-				case SimulatedInterface::CategoryVehicle:
+				case SimulatedAbstract::CategoryCheckpoint:
+				case SimulatedAbstract::CategoryVehicle:
 				default:
 					break;
 			}

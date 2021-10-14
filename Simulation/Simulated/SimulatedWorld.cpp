@@ -1,4 +1,4 @@
-#include "DrawableWorld.hpp"
+#include "SimulatedWorld.hpp"
 #include "CoreWindow.hpp"
 #include "DrawableVehicle.hpp"
 #include "MapPrototype.hpp"
@@ -8,55 +8,62 @@
 #include "SimulatedVehicle.hpp"
 #include <Box2D\box2d.h>
 
-DrawableWorld::DrawableWorld()
+SimulatedWorld::SimulatedWorld()
 {
 	m_world = new b2World(b2Vec2(0.0f, 0.0f));
+	m_world->SetContactListener(&m_contactListener);
 	m_staticWorld = new b2World(b2Vec2(0.0f, 0.0f));
 }
 
-DrawableWorld::~DrawableWorld()
+SimulatedWorld::~SimulatedWorld()
 {
 	delete m_world;
 	delete m_staticWorld;
 
-	for (auto & item : m_drawableVector)
+	for (auto & item : m_simulatedObjects)
 	{
-		switch (((SimulatedInterface*)item)->GetCategory())
+		switch (((SimulatedAbstract*)item)->GetCategory())
 		{
-			case SimulatedInterface::CategoryEdge:
-					delete[] item;
-					break;
-			case SimulatedInterface::CategoryCheckpoint:
-			case SimulatedInterface::CategoryVehicle:
-					delete item;
-					break;
+			case SimulatedAbstract::CategoryEdge:
+				delete[] (SimulatedEdge*)item;
+				break;
+			case SimulatedAbstract::CategoryCheckpoint:
+				delete (SimulatedCheckpoint*)item;
+				break;
+			case SimulatedAbstract::CategoryVehicle:
+				delete (SimulatedVehicle*)item;
+				break;
 		}
 	}
 
-	m_drawableVector.clear();
+	m_simulatedObjects.clear();
 }
 
-bool DrawableWorld::AddMap(MapPrototype* prototype)
+void SimulatedWorld::EnableDeathOnEdgeContact()
 {
-	if (!m_world)
-		return false;
+	auto function = [&](b2Contact* contact)
+	{
+		if (contact->GetFixtureA()->GetFilterData().categoryBits == SimulatedAbstract::CategoryEdge &&
+			contact->GetFixtureB()->GetFilterData().categoryBits == SimulatedAbstract::CategoryVehicle)
+			((SimulatedVehicle*)contact->GetFixtureB()->GetUserData().pointer)->SetInactive();
+	};
+	m_contactListener.AddBeginContactFunction(function);
+}
 
+void SimulatedWorld::AddMap(MapPrototype* prototype)
+{
 	AddEdgesChain(prototype->GetEdges(), prototype->IsClockwise());
 	AddCheckpoints(prototype->GetCheckpoints());
-	return true;
 }
 
-SimulatedVehicle* DrawableWorld::AddVehicle(VehiclePrototype* prototype)
+SimulatedVehicle* SimulatedWorld::AddVehicle(VehiclePrototype* prototype)
 {
-	if (!m_world)
-		return nullptr;
-
 	// Create simulated vehicle
 	auto simulatedVehicle = new SimulatedVehicle(prototype->GetNumberOfBodyPoints(),
 												 prototype->GetSensorPoints(),
 												 prototype->GetSensorBeamAngles(),
 												 prototype->GetSensorMotionRanges());
-	m_drawableVector.push_back(simulatedVehicle);
+	m_simulatedObjects.push_back(simulatedVehicle);
 
 	// Create polygon shape
 	auto& description = prototype->GetBodyPoints();
@@ -72,8 +79,8 @@ SimulatedVehicle* DrawableWorld::AddVehicle(VehiclePrototype* prototype)
 
 	// Create fixture definition
 	b2FixtureDef fixtureDefinition;
-	fixtureDefinition.filter.categoryBits = SimulatedInterface::CategoryVehicle;
-	fixtureDefinition.filter.maskBits = SimulatedInterface::CategoryEdge | SimulatedInterface::CategoryCheckpoint;
+	fixtureDefinition.filter.categoryBits = SimulatedAbstract::CategoryVehicle;
+	fixtureDefinition.filter.maskBits = SimulatedAbstract::CategoryEdge | SimulatedAbstract::CategoryCheckpoint;
 	fixtureDefinition.shape = &polygonShape;
 	fixtureDefinition.userData.pointer = reinterpret_cast<uintptr_t>(simulatedVehicle);
 	fixtureDefinition.density = 1.0; // Set max density
@@ -98,13 +105,13 @@ SimulatedVehicle* DrawableWorld::AddVehicle(VehiclePrototype* prototype)
 	return simulatedVehicle;
 }
 
-void DrawableWorld::AddEdgesChain(const EdgeVector& edgesChain, const bool clockwise)
+void SimulatedWorld::AddEdgesChain(const EdgeVector& edgesChain, const bool clockwise)
 {
 	const size_t numberOfEdges = edgesChain.size();
 	const size_t offset = clockwise ? 1 : -1;
 	b2Vec2* vertices = new b2Vec2[numberOfEdges];
 	SimulatedEdge* simulatedEdge = new SimulatedEdge[numberOfEdges];
-	m_drawableVector.push_back(simulatedEdge);
+	m_simulatedObjects.push_back(simulatedEdge);
 	size_t j = clockwise ? 0 : (numberOfEdges - 1);
 	size_t part = clockwise ? 0 : 1;
 	for (size_t i = 0; i < numberOfEdges; ++i, j += offset)
@@ -124,14 +131,14 @@ void DrawableWorld::AddEdgesChain(const EdgeVector& edgesChain, const bool clock
 	b2Body* body = m_world->CreateBody(&bodyDefinition);
 	b2Body* staticBody = m_staticWorld->CreateBody(&bodyDefinition);
 	b2FixtureDef fixtureDefinition;
-	fixtureDefinition.filter.categoryBits = SimulatedInterface::CategoryEdge;
+	fixtureDefinition.filter.categoryBits = SimulatedAbstract::CategoryEdge;
 	fixtureDefinition.shape = &chainShape;
 	fixtureDefinition.userData.pointer = reinterpret_cast<uintptr_t>(simulatedEdge);
 	body->CreateFixture(&fixtureDefinition);
 	staticBody->CreateFixture(&fixtureDefinition);
 }
 
-void DrawableWorld::AddCheckpoints(const TriangleVector& checkpoints)
+void SimulatedWorld::AddCheckpoints(const TriangleVector& checkpoints)
 {
 	for (size_t i = 0; i < checkpoints.size(); ++i)
 	{
@@ -141,7 +148,7 @@ void DrawableWorld::AddCheckpoints(const TriangleVector& checkpoints)
 		points[1] = DrawableMath::ToBox2DPosition(checkpoints[i][1]);
 		points[2] = DrawableMath::ToBox2DPosition(checkpoints[i][2]);
 		SimulatedCheckpoint* simulatedCheckpoint = new SimulatedCheckpoint(i, checkpoints[i]);
-		m_drawableVector.push_back(simulatedCheckpoint);
+		m_simulatedObjects.push_back(simulatedCheckpoint);
 		polygonShape.Set(points, 3);
 
 		b2BodyDef bodyDefinition;
@@ -150,7 +157,7 @@ void DrawableWorld::AddCheckpoints(const TriangleVector& checkpoints)
 
 		b2Body* body = m_world->CreateBody(&bodyDefinition);
 		b2FixtureDef fixtureDefinition;
-		fixtureDefinition.filter.categoryBits = SimulatedInterface::CategoryCheckpoint;
+		fixtureDefinition.filter.categoryBits = SimulatedAbstract::CategoryCheckpoint;
 		fixtureDefinition.shape = &polygonShape;
 		fixtureDefinition.userData.pointer = reinterpret_cast<uintptr_t>(simulatedCheckpoint);
 		fixtureDefinition.isSensor = true;
@@ -158,18 +165,18 @@ void DrawableWorld::AddCheckpoints(const TriangleVector& checkpoints)
 	}
 }
 
-bool DrawableWorld::DrawQueryCallback::ReportFixture(b2Fixture* fixture, int32 childIndex)
+bool SimulatedWorld::DrawQueryCallback::ReportFixture(b2Fixture* fixture, int32 childIndex)
 {
 	switch (fixture->GetFilterData().categoryBits)
 	{
-		case SimulatedInterface::CategoryEdge:
-			((SimulatedEdge*)fixture->GetUserData().pointer)[childIndex].Draw(fixture);
+		case SimulatedAbstract::CategoryEdge:
+			((SimulatedEdge*)fixture->GetUserData().pointer)[childIndex].Draw();
 			break;
-		case SimulatedInterface::CategoryCheckpoint:
-			((SimulatedCheckpoint*)fixture->GetUserData().pointer)->Draw(fixture);
+		case SimulatedAbstract::CategoryCheckpoint:
+			((SimulatedCheckpoint*)fixture->GetUserData().pointer)->Draw();
 			break;
-		case SimulatedInterface::CategoryVehicle:
-			((SimulatedVehicle*)fixture->GetUserData().pointer)->Draw(fixture);
+		case SimulatedAbstract::CategoryVehicle:
+			((SimulatedVehicle*)fixture->GetUserData().pointer)->Draw();
 			break;
 	}
 	

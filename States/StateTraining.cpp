@@ -8,12 +8,13 @@
 #include "FilenameText.hpp"
 #include "CoreLogger.hpp"
 #include "DrawableCheckpoint.hpp"
-#include "DrawableWorld.hpp"
+#include "SimulatedWorld.hpp"
 #include "MapPrototype.hpp"
 
 StateTraining::StateTraining() :
 	m_population(12, 75, 1, 30),
 	m_generation(5, 300, 1, 60),
+	m_deathOnEdgeContact(false, true, true, true),
 	m_crossoverType(UNIFORM_CROSSOVER, TWO_POINT_CROSSOVER, 1, UNIFORM_CROSSOVER),
 	m_repeatCrossoverPerIndividual(false, true, true, true),
 	m_mutationProbability(0.01, 0.99, 0.01, 0.05),
@@ -41,6 +42,7 @@ StateTraining::StateTraining() :
 	// Initialize parameter types
 	m_parameterTypesStrings[POPULATION_SIZE] = "Population size";
 	m_parameterTypesStrings[NUMBER_OF_GENERATIONS] = "Number of generations";
+	m_parameterTypesStrings[DEATH_ON_EDGE_CONTACT] = "Death on edge contact";
 	m_parameterTypesStrings[CROSSOVER_TYPE] = "Crossover type";
 	m_parameterTypesStrings[REPEAT_CROSSOVER_PER_INDIVIDUAL] = "Repeat crossover per individual";
 	m_parameterTypesStrings[MUTATION_PROBABILITY] = "Mutation probability";
@@ -76,7 +78,7 @@ StateTraining::StateTraining() :
 	// Initialize objects of environment
 	m_geneticAlgorithm = nullptr;
 	m_artificialNeuralNetworks.resize(m_population, nullptr);
-	m_drawableWorld = nullptr;
+	m_simulatedWorld = nullptr;
 	m_fitnessSystem = nullptr;
 	m_simulatedVehicles.resize(m_population, nullptr);
 
@@ -95,7 +97,7 @@ StateTraining::~StateTraining()
 	delete m_geneticAlgorithm;
 	for (auto& ann : m_artificialNeuralNetworks)
 		delete ann;
-	delete m_drawableWorld;
+	delete m_simulatedWorld;
 	delete m_fitnessSystem;
 	delete m_artificialNeuralNetworkPrototype;
 	delete m_vehiclePrototype;
@@ -143,8 +145,8 @@ void StateTraining::Reload()
 		ann = nullptr;
 	}
 	m_artificialNeuralNetworks.resize(m_population, nullptr);
-	delete m_drawableWorld;
-	m_drawableWorld = nullptr;
+	delete m_simulatedWorld;
+	m_simulatedWorld = nullptr;
 	delete m_fitnessSystem;
 	m_fitnessSystem = nullptr;
 	for (auto& vehicle : m_simulatedVehicles)
@@ -251,20 +253,22 @@ void StateTraining::Capture()
 							for (auto& ann : m_artificialNeuralNetworks)
 								ann = ArtificialNeuralNetworkBuilder::Copy(m_artificialNeuralNetworkPrototype);
 
-							// Create drawable world
-							delete m_drawableWorld;
-							m_drawableWorld = new DrawableWorld;
-							m_drawableWorld->AddMap(m_mapPrototype);
+							// Create simulated world
+							delete m_simulatedWorld;
+							m_simulatedWorld = new SimulatedWorld;
+							m_simulatedWorld->AddMap(m_mapPrototype);
+							if (m_deathOnEdgeContact)
+								m_simulatedWorld->EnableDeathOnEdgeContact();
 							DrawableCheckpoint::SetVisibility(false);
 							delete m_fitnessSystem;
 							m_fitnessSystem = new FitnessSystem(m_population, m_mapPrototype->GetNumberOfCheckpoints(), m_requiredFitnessImprovement);
-							m_drawableWorld->SetContactListener(m_fitnessSystem->GetContactListener());
+							m_simulatedWorld->AddBeginContactFunction(m_fitnessSystem->GetBeginContactFunction());
 							m_textObservers[CURRENT_POPULATION_TEXT]->Notify();
 
 							// Create vehicles
 							m_simulatedVehicles.resize(m_population);
 							for (auto& vehicle : m_simulatedVehicles)
-								vehicle = m_drawableWorld->AddVehicle(m_vehiclePrototype);
+								vehicle = m_simulatedWorld->AddVehicle(m_vehiclePrototype);
 
 							// Reset filename type
 							m_filenameType = MAP_FILENAME_TYPE;
@@ -331,12 +335,16 @@ void StateTraining::Capture()
 										m_generation.Increase();
 										m_textObservers[NUMBER_OF_GENERATIONS_TEXT]->Notify();
 										break;
+									case DEATH_ON_EDGE_CONTACT:
+										m_deathOnEdgeContact.Increase();
+										m_textObservers[DEATH_ON_EDGE_CONTACT_TEXT]->Notify();
+										break;
 									case CROSSOVER_TYPE:
 										m_crossoverType.Increase();
 										m_textObservers[CROSSOVER_TYPE_TEXT]->Notify();
 										break;
 									case REPEAT_CROSSOVER_PER_INDIVIDUAL:
-										m_repeatCrossoverPerIndividual.SetValue(true);
+										m_repeatCrossoverPerIndividual.Increase();
 										m_textObservers[REPEAT_CROSSOVER_PER_INDIVIDUAL_TEXT]->Notify();
 										break;
 									case MUTATION_PROBABILITY:
@@ -344,7 +352,7 @@ void StateTraining::Capture()
 										m_textObservers[MUTATION_PROBABILITY_TEXT]->Notify();
 										break;
 									case DECREASE_MUTATION_PROBABILITY_OVER_GENERATIONS:
-										m_decreaseMutationProbabilityOverGenerations.SetValue(true);
+										m_decreaseMutationProbabilityOverGenerations.Increase();
 										m_textObservers[DECREASE_MUTATION_PROBABILITY_OVER_GENERATIONS_TEXT]->Notify();
 										break;
 									case NUMBER_OF_PARENTS:
@@ -379,12 +387,16 @@ void StateTraining::Capture()
 										m_generation.Decrease();
 										m_textObservers[NUMBER_OF_GENERATIONS_TEXT]->Notify();
 										break;
+									case DEATH_ON_EDGE_CONTACT:
+										m_deathOnEdgeContact.Decrease();
+										m_textObservers[DEATH_ON_EDGE_CONTACT_TEXT]->Notify();
+										break;
 									case CROSSOVER_TYPE:
 										m_crossoverType.Decrease();
 										m_textObservers[CROSSOVER_TYPE_TEXT]->Notify();
 										break;
 									case REPEAT_CROSSOVER_PER_INDIVIDUAL:
-										m_repeatCrossoverPerIndividual.SetValue(false);
+										m_repeatCrossoverPerIndividual.Decrease();
 										m_textObservers[REPEAT_CROSSOVER_PER_INDIVIDUAL_TEXT]->Notify();
 										break;
 									case MUTATION_PROBABILITY:
@@ -392,7 +404,7 @@ void StateTraining::Capture()
 										m_textObservers[MUTATION_PROBABILITY_TEXT]->Notify();
 										break;
 									case DECREASE_MUTATION_PROBABILITY_OVER_GENERATIONS:
-										m_decreaseMutationProbabilityOverGenerations.SetValue(false);
+										m_decreaseMutationProbabilityOverGenerations.Decrease();
 										m_textObservers[DECREASE_MUTATION_PROBABILITY_OVER_GENERATIONS_TEXT]->Notify();
 										break;
 									case NUMBER_OF_PARENTS:
@@ -651,17 +663,16 @@ void StateTraining::Update()
 			bool activity = false;
 			for (size_t i = 0; i < m_population; ++i)
 			{
+				m_simulatedVehicles[i]->Update(m_simulatedWorld->GetStaticWorld());
 				if (!m_simulatedVehicles[i]->IsActive())
 					continue;
-
 				activity = true;
-				m_simulatedVehicles[i]->Update(m_drawableWorld->GetStaticWorld());
 				const NeuronLayer& input = m_simulatedVehicles[i]->ProcessOutput();
 				const NeuronLayer& output = m_artificialNeuralNetworks[i]->Update(input);
 				m_simulatedVehicles[i]->ProcessInput(output);
 			}
 
-			m_drawableWorld->Update();
+			m_simulatedWorld->Update();
 
 			sf::Vector2f m_viewCenter;
 			if (!activity)
@@ -681,18 +692,19 @@ void StateTraining::Update()
 					for (size_t i = 0; i < m_artificialNeuralNetworks.size(); ++i)
 						m_artificialNeuralNetworks[i]->SetFromRawData(m_geneticAlgorithm->GetIndividualGenes(i));
 
-					// Reset drawable world
-					delete m_drawableWorld;
-					m_drawableWorld = new DrawableWorld;
-					m_drawableWorld->AddMap(m_mapPrototype);
+					// Reset simulated world
+					delete m_simulatedWorld;
+					m_simulatedWorld = new SimulatedWorld;
+					m_simulatedWorld->AddMap(m_mapPrototype);
+					if (m_deathOnEdgeContact)
+						m_simulatedWorld->EnableDeathOnEdgeContact();
 					DrawableCheckpoint::SetVisibility(false);
-					delete m_fitnessSystem;
-					m_fitnessSystem = new FitnessSystem(m_population, m_mapPrototype->GetNumberOfCheckpoints(), m_requiredFitnessImprovement);
-					m_drawableWorld->SetContactListener(m_fitnessSystem->GetContactListener());
+					m_fitnessSystem->Reset();
+					m_simulatedWorld->AddBeginContactFunction(m_fitnessSystem->GetBeginContactFunction());
 
 					// Reset vehicles
 					for (auto& vehicle : m_simulatedVehicles)
-						vehicle = m_drawableWorld->AddVehicle(m_vehiclePrototype);
+						vehicle = m_simulatedWorld->AddVehicle(m_vehiclePrototype);
 
 					// Reset required fitness improvement rise timer
 					m_requiredFitnessImprovementRiseTimer.Reset();
@@ -722,6 +734,8 @@ void StateTraining::Update()
 					m_textObservers[CURRENT_POPULATION_TEXT]->Notify();
 					m_textObservers[MEAN_REQUIRED_FITNESS_IMPROVEMENT]->Notify();
 				}
+
+				m_fitnessSystem->UpdateTimers();
 			}
 
 			// Update view
@@ -788,6 +802,7 @@ bool StateTraining::Load()
 	m_texts[PARAMETER_TYPE_TEXT] = new TripleText({ "Parameter type:", "", "| [P] [+] [-]" });
 	m_texts[POPULATION_SIZE_TEXT] = new DoubleText({ m_parameterTypesStrings[POPULATION_SIZE] + ":" });
 	m_texts[NUMBER_OF_GENERATIONS_TEXT] = new DoubleText({ m_parameterTypesStrings[NUMBER_OF_GENERATIONS] + ":" });
+	m_texts[DEATH_ON_EDGE_CONTACT_TEXT] = new DoubleText({ m_parameterTypesStrings[DEATH_ON_EDGE_CONTACT] + ":" });
 	m_texts[CROSSOVER_TYPE_TEXT] = new DoubleText({ m_parameterTypesStrings[CROSSOVER_TYPE] + ":" });
 	m_texts[REPEAT_CROSSOVER_PER_INDIVIDUAL_TEXT] = new DoubleText({ m_parameterTypesStrings[REPEAT_CROSSOVER_PER_INDIVIDUAL] + ":" });
 	m_texts[MUTATION_PROBABILITY_TEXT] = new DoubleText({ m_parameterTypesStrings[MUTATION_PROBABILITY] + ":" });
@@ -808,6 +823,7 @@ bool StateTraining::Load()
 	m_textObservers[PARAMETER_TYPE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_parameterTypesStrings[m_parameterType]; });
 	m_textObservers[POPULATION_SIZE_TEXT] = new FunctionEventObserver<size_t>([&] { return m_population; });
 	m_textObservers[NUMBER_OF_GENERATIONS_TEXT] = new FunctionEventObserver<size_t>([&] { return m_generation; });
+	m_textObservers[DEATH_ON_EDGE_CONTACT_TEXT] = new FunctionEventObserver<bool>([&] { return m_deathOnEdgeContact; });
 	m_textObservers[CROSSOVER_TYPE_TEXT] = new FunctionEventObserver<std::string>([&] { return crossoverTypeStrings[m_crossoverType]; });
 	m_textObservers[REPEAT_CROSSOVER_PER_INDIVIDUAL_TEXT] = new FunctionEventObserver<bool>([&] { return m_repeatCrossoverPerIndividual; });
 	m_textObservers[MUTATION_PROBABILITY_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(size_t(m_mutationProbability * 100.0)); }, "", "%");
@@ -830,9 +846,10 @@ bool StateTraining::Load()
 	m_texts[MODE_TEXT]->SetPosition({ FontContext::Component(0), {0}, {3}, {7}, {16} });
 	m_texts[FILENAME_TYPE_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {7} });
 	m_texts[FILENAME_TEXT]->SetPosition({ FontContext::Component(2), {0}, {3}, {7}, {16} });
-	m_texts[PARAMETER_TYPE_TEXT]->SetPosition({ FontContext::Component(10, true), {0}, {10}, {20} });
-	m_texts[POPULATION_SIZE_TEXT]->SetPosition({ FontContext::Component(9, true), {0}, {10} });
-	m_texts[NUMBER_OF_GENERATIONS_TEXT]->SetPosition({ FontContext::Component(8, true), {0}, {10} });
+	m_texts[PARAMETER_TYPE_TEXT]->SetPosition({ FontContext::Component(11, true), {0}, {10}, {20} });
+	m_texts[POPULATION_SIZE_TEXT]->SetPosition({ FontContext::Component(10, true), {0}, {10} });
+	m_texts[NUMBER_OF_GENERATIONS_TEXT]->SetPosition({ FontContext::Component(9, true), {0}, {10} });
+	m_texts[DEATH_ON_EDGE_CONTACT_TEXT]->SetPosition({ FontContext::Component(8, true), {0}, {10} });
 	m_texts[CROSSOVER_TYPE_TEXT]->SetPosition({ FontContext::Component(7, true), {0}, {10} });
 	m_texts[REPEAT_CROSSOVER_PER_INDIVIDUAL_TEXT]->SetPosition({ FontContext::Component(6, true), {0}, {10} });
 	m_texts[MUTATION_PROBABILITY_TEXT]->SetPosition({ FontContext::Component(5, true), {0}, {10} });
@@ -875,6 +892,7 @@ void StateTraining::Draw()
 			m_texts[PARAMETER_TYPE_TEXT]->Draw();
 			m_texts[POPULATION_SIZE_TEXT]->Draw();
 			m_texts[NUMBER_OF_GENERATIONS_TEXT]->Draw();
+			m_texts[DEATH_ON_EDGE_CONTACT_TEXT]->Draw();
 			break;
 		}
 		case PAUSED_MODE:
@@ -883,7 +901,7 @@ void StateTraining::Draw()
 			// No break
 		case RUNNING_MODE:
 		{
-			m_drawableWorld->Draw();
+			m_simulatedWorld->Draw();
 			m_texts[CURRENT_POPULATION_TEXT]->Draw();
 			m_texts[CURRENT_GENERATION_TEXT]->Draw();
 			m_texts[HIGHEST_FITNESS_TEXT]->Draw();

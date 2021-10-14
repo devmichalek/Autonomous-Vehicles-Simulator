@@ -9,7 +9,7 @@
 
 class DoubleText;
 class ObserverInterface;
-class DrawableWorld;
+class SimulatedWorld;
 class FitnessSystem;
 class Vehicle;
 
@@ -116,7 +116,7 @@ private:
 	const double m_viewMovementOffset;
 
 	// Objects of environment
-	DrawableWorld* m_drawableWorld;
+	SimulatedWorld* m_simulatedWorld;
 	FitnessSystem* m_fitnessSystem;
 	MapPrototype* m_mapPrototype;
 	SimulatedVehicle* m_userVehicle;

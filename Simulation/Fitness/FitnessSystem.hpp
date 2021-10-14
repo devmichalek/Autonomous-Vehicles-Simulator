@@ -1,7 +1,8 @@
 #pragma once
 #include "SimulatedVehicle.hpp"
 #include "StoppableTimer.hpp"
-#include <Box2D/b2_world_callbacks.h>
+
+class b2Contact;
 
 class FitnessSystem final
 {
@@ -10,11 +11,14 @@ public:
 	// Initiates internal fields, resizes vectors
 	FitnessSystem(const size_t populationSize,
 				  const size_t checkpointCount,
-				  double minFitnessImprovement);
+				  const double minFitnessImprovement);
 
 	~FitnessSystem()
 	{
 	}
+
+	// Resets internal fields
+	void Reset();
 
 	// Calculates highest fitness for this iteration and highest fitness overall
 	void Iterate(const SimulatedVehicles& vehicles);
@@ -24,6 +28,13 @@ public:
 
 	// Checks if vehicle has made improvement, if not then vehicle is set as inactive
 	void Punish(SimulatedVehicles& vehicles);
+
+	// Updates vehicle timers
+	void UpdateTimers()
+	{
+		for (auto& timer : m_timers)
+			timer.Update();
+	}
 
 	// Returns fitness vector
 	inline const FitnessVector& GetFitnessVector() const
@@ -56,36 +67,21 @@ public:
 	}
 
 	// Returns contact listener
-	inline b2ContactListener* GetContactListener()
+	inline std::function<void(b2Contact*)> GetBeginContactFunction()
 	{
-		return &m_fitnessListener;
+		return m_beginContactFunction;
 	}
 
 private:
 
-	class FitnessListener :
-		public b2ContactListener
-	{
-		Fitness m_fitnessCeiling;
-
-	public:
-		FitnessListener(Fitness fitnessCeiling) :
-			m_fitnessCeiling(fitnessCeiling)
-		{
-		}
-
-		// Detects begin contact
-		void BeginContact(b2Contact* contact);
-	};
-
-	FitnessListener m_fitnessListener;
+	std::function<void(b2Contact*)> m_beginContactFunction;
 	const Fitness m_maxFitness;
 	FitnessVector m_fitnessVector;
 	FitnessVector m_previousFitnessVector;
 	Fitness m_highestFitness;
 	Fitness m_highestFitnessOverall;
 	std::vector<StoppableTimer> m_timers; // To measure time that has passed since the beggining of iteration for specific vehicle
-	double m_minFitnessImprovement;
+	const double m_minFitnessImprovement;
 	double m_meanRequiredFitnessImprovement;
 	size_t m_numberOfPunishedVehicles;
 };

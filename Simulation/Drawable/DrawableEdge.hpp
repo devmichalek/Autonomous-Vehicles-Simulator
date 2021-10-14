@@ -18,8 +18,8 @@ protected:
 
 public:
 
-	// Draws edge based on provided fixture
-	void Draw(b2Fixture* fixture)
+	// Draws edge
+	void Draw()
 	{
 		CoreWindow::GetRenderWindow().draw(m_edgeShape.data(), m_edgeShape.size(), sf::Lines);
 	}

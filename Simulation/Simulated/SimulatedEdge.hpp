@@ -1,15 +1,15 @@
 #pragma once
-#include "SimulatedInterface.hpp"
+#include "SimulatedAbstract.hpp"
 #include "DrawableEdge.hpp"
 
 class SimulatedEdge final :
-	public SimulatedInterface,
+	public SimulatedAbstract,
 	public DrawableEdge
 {
 public:
 
 	SimulatedEdge() :
-		SimulatedInterface(SimulatedInterface::CategoryEdge),
+		SimulatedAbstract(SimulatedAbstract::CategoryEdge),
 		DrawableEdge()
 	{
 	}

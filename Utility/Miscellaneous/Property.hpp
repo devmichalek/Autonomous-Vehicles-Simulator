@@ -22,11 +22,6 @@ public:
 		return m_value;
 	}
 
-	inline void SetValue(Type value)
-	{
-		m_value = value;
-	}
-
 	inline void ResetValue()
 	{
 		m_value = m_resetValue;
@@ -34,16 +29,30 @@ public:
 
 	inline void Increase()
 	{
-		m_value += m_offsetValue;
-		if (m_value > m_maximumValue)
+		if constexpr (std::is_same<Type, bool>::value)
+		{
 			m_value = m_maximumValue;
+		}
+		else
+		{
+			m_value += m_offsetValue;
+			if (m_value > m_maximumValue)
+				m_value = m_maximumValue;
+		}
 	}
 
 	inline void Decrease()
 	{
-		m_value -= m_offsetValue;
-		if (m_value < m_minimumValue)
+		if constexpr (std::is_same<Type, bool>::value)
+		{
 			m_value = m_minimumValue;
+		}
+		else
+		{
+			m_value -= m_offsetValue;
+			if (m_value < m_minimumValue)
+				m_value = m_minimumValue;
+		}
 	}
 
 private:

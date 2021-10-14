@@ -22,8 +22,8 @@ protected:
 
 public:
 
-	// Draws checkpoint based on provided fixture
-	void Draw(b2Fixture* fixture)
+	// Draws checkpoint
+	void Draw()
 	{
 		if (DrawableCheckpoint::m_visibility)
 			CoreWindow::GetRenderWindow().draw(m_triangleShape.data(), m_triangleShape.size(), sf::Triangles);

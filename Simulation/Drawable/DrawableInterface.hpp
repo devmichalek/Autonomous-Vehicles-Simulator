@@ -1,15 +1,9 @@
 #pragma once
 
-class b2Fixture;
-
 class DrawableInterface
 {
 public:
 
-	virtual ~DrawableInterface()
-	{
-	}
-
-	// Draws specific shapes
-	virtual void Draw(b2Fixture* fixture) = 0;
+	// Draws specific polygons based on internal data
+	virtual void Draw() = 0;
 };
