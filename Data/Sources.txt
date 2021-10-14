@@ -46,3 +46,30 @@ https://en.wikipedia.org/wiki/Crossover_(genetic_algorithm)
 
 Experimental Comparison of Binary and Floating Point Representations in Genetic Algorithms
 http://www.cs.umsl.edu/~janikow/publications/1991/GAbin/text.pdf
+
+How to calculate area of closed polygon
+https://web.archive.org/web/20100405070507/http://valis.cs.uiuc.edu/~sariel/research/CG/compgeom/msg00831.html
+
+Box2D documentation
+https://box2d.org/
+
+Box2D example
+https://veendeta.wordpress.com/2012/02/16/tutorial-getting-started-with-box2d/
+
+How to get fixtures shapes points from a body in Box2D
+https://stackoverflow.com/questions/6618532/how-to-get-a-fixtures-shapes-points-from-a-body-in-box2d
+
+Determining if two consecutive line segments turn left or right
+https://algorithmtutor.com/Computational-Geometry/Determining-if-two-consecutive-segments-turn-left-or-right/
+
+How to determine if a list of polygon points are in clockwise order?
+https://stackoverflow.com/questions/1165647/how-to-determine-if-a-list-of-polygon-points-are-in-clockwise-order
+
+Box2D: Getting Child Index through Report Fixture
+https://stackoverflow.com/questions/20601728/box2d-getting-child-index-through-report-fixture
+
+Apply Force to Box2D body in related direction
+https://stackoverflow.com/questions/14422179/apply-force-to-box2d-body-in-related-direction
+
+Box2D C++ tutorials - Top-down car physics
+http://www.iforce2d.net/b2dtut/top-down-car

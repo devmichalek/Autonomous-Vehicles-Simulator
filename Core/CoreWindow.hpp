@@ -1,6 +1,7 @@
 #pragma once
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
+#include <random>
 
 class CoreWindow final
 {
@@ -9,9 +10,10 @@ class CoreWindow final
 	inline static sf::Clock m_clock;
 	inline static sf::Event m_event;
 	inline static bool m_open = false;
-	inline static double m_elapsedTime = 0;
+	inline static double m_elapsedTime = 0.0;
 	inline static const float m_widthRatio = 0.8333f;
 	inline static const float m_screenRatio = 0.5625f;
+	inline static sf::Vector2f m_windowSize;
 	inline static const sf::Color m_backgroundColor = sf::Color::Black;
 
 	CoreWindow();
@@ -57,8 +59,7 @@ public:
 	// Returns window size
 	inline static sf::Vector2f GetSize()
 	{
-		auto result = m_renderWindow.getSize();
-		return sf::Vector2f(float(result.x), float(result.y));
+		return m_windowSize;
 	}
 
 	// Returns window center
@@ -127,5 +128,12 @@ public:
 	inline static void RestartClock()
 	{
 		m_elapsedTime = static_cast<double>(m_clock.restart().asMicroseconds()) / 1000000;
+	}
+
+	// Returns mersenne twister
+	inline static std::mt19937& GetMersenneTwister()
+	{
+		static std::mt19937 mersenneTwister((std::random_device())());
+		return mersenneTwister;
 	}
 };

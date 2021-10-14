@@ -320,50 +320,6 @@ ArtificialNeuralNetworkBuilder::ArtificialNeuralNetworkBuilder() :
 	Clear();
 }
 
-ArtificialNeuralNetworkBuilder::~ArtificialNeuralNetworkBuilder()
-{
-}
-
-void ArtificialNeuralNetworkBuilder::SetNeuronLayerSizes(NeuronLayerSizes neuronLayerSizes)
-{
-	m_neuronLayerSizes = neuronLayerSizes;
-}
-
-void ArtificialNeuralNetworkBuilder::SetActivationFunctionIndexes(ActivationFunctionIndexes activationFunctionIndexes)
-{
-	m_activationFunctionIndexes = activationFunctionIndexes;
-}
-
-void ArtificialNeuralNetworkBuilder::SetBiasVector(BiasVector biasVector)
-{
-	m_biasVector = biasVector;
-}
-
-void ArtificialNeuralNetworkBuilder::SetRawNeuronData(NeuronLayer rawNeuronData)
-{
-	m_rawData = rawNeuronData;
-}
-
-NeuronLayerSizes ArtificialNeuralNetworkBuilder::GetNeuronLayerSizes() const
-{
-	return m_neuronLayerSizes;
-}
-
-ActivationFunctionIndexes ArtificialNeuralNetworkBuilder::GetActivationFunctionIndexes() const
-{
-	return m_activationFunctionIndexes;
-}
-
-BiasVector ArtificialNeuralNetworkBuilder::GetBiasVector() const
-{
-	return m_biasVector;
-}
-
-const Neuron* ArtificialNeuralNetworkBuilder::GetRawNeuronData() const
-{
-	return &m_rawData[0];
-}
-
 void ArtificialNeuralNetworkBuilder::Set(ArtificialNeuralNetwork* artificialNeuralNetwork)
 {
 	// Get number of neuron layers

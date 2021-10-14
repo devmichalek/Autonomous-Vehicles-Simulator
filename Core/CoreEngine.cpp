@@ -1,12 +1,11 @@
 #include "CoreEngine.hpp"
 #include "CoreWindow.hpp"
 #include "ActivationFunctionContext.hpp"
-#include "DrawableVehicle.hpp"
 #include "FontContext.hpp"
 #include "StateManager.hpp"
 #include "CoreLogger.hpp"
-#include "DrawableVehicleBuilder.hpp"
-#include "DrawableMapBuilder.hpp"
+#include "VehicleBuilder.hpp"
+#include "MapBuilder.hpp"
 #include "ArtificialNeuralNetworkBuilder.hpp"
 #include <limits>
 
@@ -67,12 +66,11 @@ bool CoreEngine::Load()
 	CoreLogger::Initialize();
 	CoreWindow::Initialize();
 	ActivationFunctionContext::Initialize();
-	DrawableVehicle::Initialize();
 	
-	if (!DrawableVehicleBuilder::Initialize())
+	if (!VehicleBuilder::Initialize())
 		return false;
 
-	if (!DrawableMapBuilder::Initialize())
+	if (!MapBuilder::Initialize())
 		return false;
 
 	if (!ArtificialNeuralNetworkBuilder::Initialize())

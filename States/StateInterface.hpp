@@ -2,7 +2,7 @@
 
 class StateInterface
 {
-protected:
+public:
 
 	StateInterface()
 	{
@@ -33,7 +33,4 @@ protected:
 	// Draws state internal drawable objects
 	// Function should be called in every frame
 	virtual void Draw() = 0;
-
-	// Friend classes
-	friend class StateManager;
 };

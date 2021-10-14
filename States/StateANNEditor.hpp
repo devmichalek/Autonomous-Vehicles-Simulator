@@ -2,14 +2,17 @@
 #include "StateInterface.hpp"
 #include "DrawableMath.hpp"
 #include "ArtificialNeuralNetworkBuilder.hpp"
-#include "DrawableTextAbstract.hpp"
 #include <SFML/Graphics/CircleShape.hpp>
+#include <SFML/Window/Keyboard.hpp>
 
+class TextAbstract;
 class ObserverInterface;
 
 class StateANNEditor final :
 	public StateInterface
 {
+public:
+
 	StateANNEditor(const StateANNEditor&) = delete;
 
 	const StateANNEditor& operator=(const StateANNEditor&) = delete;
@@ -27,6 +30,8 @@ class StateANNEditor final :
 	bool Load() override;
 
 	void Draw() override;
+
+private:
 
 	// Calculates positions of neuron shapes and weight shapes
 	void CalculatePositions();
@@ -78,7 +83,7 @@ class StateANNEditor final :
 	std::vector<Edge> m_weightPositions;
 	std::vector<sf::Color> m_weightStrengths;
 	sf::CircleShape m_neuronShape;
-	Line m_weightShape;
+	EdgeShape m_weightShape;
 
 	// Texts and text observers
 	enum
@@ -96,9 +101,6 @@ class StateANNEditor final :
 		NUMBER_OF_ACTIVATION_FUNCTIONS_TEXT,
 		TEXT_COUNT
 	};
-	std::vector<DrawableTextAbstract*> m_texts;
+	std::vector<TextAbstract*> m_texts;
 	std::vector<ObserverInterface*> m_textObservers;
-
-	// Friend classes
-	friend class StateManager;
 };

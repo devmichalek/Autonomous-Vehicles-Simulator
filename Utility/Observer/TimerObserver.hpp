@@ -10,8 +10,9 @@ protected:
 
 	// Delayed action observer constructor
 	TimerObserver(double timeout) :
-		m_timer(timeout + 1, timeout)
+		m_timer(0.0, timeout)
 	{
+		m_timer.MakeTimeout();
 	}
 
 public:

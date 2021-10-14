@@ -4,8 +4,8 @@
 #include "StateVehicleEditor.hpp"
 #include "StateTraining.hpp"
 #include "StateTesting.hpp"
-#include "DrawableTripleText.hpp"
 #include "FunctionEventObserver.hpp"
+#include "FunctionTimerObserver.hpp"
 
 StateManager::StateManager()
 {
@@ -17,6 +17,8 @@ StateManager::StateManager()
 	m_currentState = MAP_EDITOR_STATE;
 	m_stateText = nullptr;
 	m_stateTextObserver = nullptr;
+	m_framesPerSecondText = nullptr;
+	m_framesPerSecondTextObserver = nullptr;
 	m_statesStrings[MAP_EDITOR_STATE] = "Map Editor";
 	m_statesStrings[ANN_EDITOR_STATE] = "ANN Editor";
 	m_statesStrings[VEHICLE_EDITOR_STATE] = "Vehicle Editor";
@@ -31,6 +33,8 @@ StateManager::~StateManager()
 		delete state;
 	delete m_stateText;
 	delete m_stateTextObserver;
+	delete m_framesPerSecondText;
+	delete m_framesPerSecondTextObserver;
 }
 
 bool StateManager::Load()
@@ -41,11 +45,15 @@ bool StateManager::Load()
 			return false;
 	}
 
-	m_stateText = new DrawableTripleText({ "Active state:", "", "| [~]" });
+	m_stateText = new TripleText({ "Active state:", "", "| [~]" });
 	m_stateText->SetPosition({ FontContext::Component(1, true), {7, true}, {4, true}, {1, true} });
 	m_stateTextObserver = new FunctionEventObserver<std::string>([&] { return m_statesStrings[m_currentState]; });
 	m_stateText->SetObserver(m_stateTextObserver);
 
+	m_framesPerSecondText = new DoubleText({ "FPS:", "" });
+	m_framesPerSecondText->SetPosition({ FontContext::Component(0), {2, true}, {1, true} });
+	m_framesPerSecondTextObserver = new FunctionTimerObserver<size_t>([&] { return size_t(1.0 / CoreWindow::GetElapsedTime()); }, 0.3);
+	m_framesPerSecondText->SetObserver(m_framesPerSecondTextObserver);
 	return true;
 }
 
@@ -82,16 +90,4 @@ void StateManager::Capture()
 			m_controlKey.second = false;
 		}
 	}
-}
-
-void StateManager::Update()
-{
-	m_states[m_currentState]->Update();
-	m_stateText->Update();
-}
-
-void StateManager::Draw()
-{
-	m_states[m_currentState]->Draw();
-	m_stateText->Draw();
 }

@@ -13,7 +13,6 @@ class ArtificialNeuralNetwork
 	size_t m_numberOfNeurons;
 	size_t m_numberOfWeights;
 
-	// Friend classes
 	friend class ArtificialNeuralNetworkBuilder;
 
 	inline void UpdateInternal()
@@ -51,13 +50,28 @@ class ArtificialNeuralNetwork
 		}
 	}
 
+public:
+
+	ArtificialNeuralNetwork(const NeuronLayers neuronLayers,
+							const WeightLayers weightLayers,
+							const BiasVector biasVector,
+							const ActivationFunctionIndexes activationFunctionIndexes,
+							const size_t numberOfNeurons,
+							const size_t numberOfWeights) :
+		m_neuronLayers(neuronLayers),
+		m_weightLayers(weightLayers),
+		m_biasVector(biasVector),
+		m_activationFunctionIndexes(activationFunctionIndexes),
+		m_numberOfNeurons(numberOfNeurons),
+		m_numberOfWeights(numberOfWeights)
+	{
+	}
+
 	ArtificialNeuralNetwork() :
 		m_numberOfNeurons(0),
 		m_numberOfWeights(0)
 	{
 	}
-
-public:
 
 	~ArtificialNeuralNetwork()
 	{

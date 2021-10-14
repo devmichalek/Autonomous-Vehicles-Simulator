@@ -121,7 +121,7 @@ public:
 					 const bool repeatCrossoverPerIndividual,
 					 const double mutationProbability,
 					 const bool decreaseMutationProbabilityOverGenerations = false,
-					 const unsigned parentsCount = 2) :
+					 const size_t parentsCount = 2) :
 		m_maxNumberOfGenerations(maxNumberOfGenerations),
 		m_currentGeneration(0),
 		m_chromosomeLength(chromosomeLength),
@@ -355,7 +355,7 @@ public:
 						   const bool repeatCrossoverPerIndividual,
 						   double mutationProbability,
 						   bool decreaseMutationProbabilityOverGenerations,
-						   const unsigned parentsCount,
+						   const size_t parentsCount,
 						   unsigned precision,
 						   std::pair<Neuron, Neuron> range) :
 		GeneticAlgorithm(maxNumberOfGenerations,

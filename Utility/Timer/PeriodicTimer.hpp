@@ -53,6 +53,12 @@ public:
 		m_boundaryValue = boundaryValue;
 	}
 
+	// Returns boundary value
+	double GetBoundaryValue()
+	{
+		return m_boundaryValue;
+	}
+
 	// Returns value range - m_boundaryValue * 2
 	double GetValueRange() const
 	{
@@ -63,5 +69,11 @@ public:
 	void SetMultiplier(double multiplier)
 	{
 		m_multiplier = multiplier;
+	}
+
+	// Returns multiplier
+	double GetMultiplier()
+	{
+		return m_multiplier;
 	}
 };

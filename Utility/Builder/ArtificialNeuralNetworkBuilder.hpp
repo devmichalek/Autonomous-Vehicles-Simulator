@@ -3,8 +3,6 @@
 #include "Neural.hpp"
 #include "ActivationFunctionContext.hpp"
 
-class ArtificialNeuralNetwork;
-
 class ArtificialNeuralNetworkBuilder final :
 	public AbstractBuilder
 {
@@ -76,31 +74,57 @@ public:
 
 	ArtificialNeuralNetworkBuilder();
 
-	~ArtificialNeuralNetworkBuilder();
+	~ArtificialNeuralNetworkBuilder()
+	{
+	}
 
 	// Sets neuron layer sizes
-	void SetNeuronLayerSizes(NeuronLayerSizes neuronLayerSizes);
+	inline void SetNeuronLayerSizes(NeuronLayerSizes neuronLayerSizes)
+	{
+		m_neuronLayerSizes = neuronLayerSizes;
+	}
 
 	// Sets activation function indexes
-	void SetActivationFunctionIndexes(ActivationFunctionIndexes activationFunctionIndexes);
+	inline void SetActivationFunctionIndexes(ActivationFunctionIndexes activationFunctionIndexes)
+	{
+		m_activationFunctionIndexes = activationFunctionIndexes;
+	}
 
 	// Sets bias vector
-	void SetBiasVector(BiasVector biasVector);
+	inline void SetBiasVector(BiasVector biasVector)
+	{
+		m_biasVector = biasVector;
+	}
 
 	// Sets raw neuron data
-	void SetRawNeuronData(NeuronLayer rawNeuronData);
+	inline void SetRawNeuronData(NeuronLayer rawNeuronData)
+	{
+		m_rawData = rawNeuronData;
+	}
 
 	// Returns intermediate representation of neuron layers
-	NeuronLayerSizes GetNeuronLayerSizes() const;
+	inline NeuronLayerSizes GetNeuronLayerSizes() const
+	{
+		return m_neuronLayerSizes;
+	}
 
 	// Returns intermediate representation of activation functions
-	ActivationFunctionIndexes GetActivationFunctionIndexes() const;
+	inline ActivationFunctionIndexes GetActivationFunctionIndexes() const
+	{
+		return m_activationFunctionIndexes;
+	}
 
 	// Returns bias vector
-	BiasVector GetBiasVector() const;
+	inline BiasVector GetBiasVector() const
+	{
+		return m_biasVector;
+	}
 
 	// Returns raw neuron data
-	const Neuron* GetRawNeuronData() const;
+	inline const Neuron* GetRawNeuronData() const
+	{
+		return &m_rawData[0];
+	}
 
 	void Set(ArtificialNeuralNetwork* artificialNeuralNetwork);
 
@@ -111,34 +135,64 @@ public:
 	static ArtificialNeuralNetwork* Copy(const ArtificialNeuralNetwork* artificialNeuralNetwork);
 
 	// Get maximum number of hidden layers
-	inline static size_t GetMaxNumberOfHiddenLayers() { return 4; }
+	inline static size_t GetMaxNumberOfHiddenLayers()
+	{
+		return 4;
+	}
 
 	// Get minimum number of layers
-	inline static size_t GetMinNumberOfLayers() { return 3; }
+	inline static size_t GetMinNumberOfLayers()
+	{
+		return 3;
+	}
 
 	// Get maximum number of layers
-	inline static size_t GetMaxNumberOfLayers() { return GetMinNumberOfLayers() + GetMaxNumberOfHiddenLayers(); }
+	inline static size_t GetMaxNumberOfLayers()
+	{
+		return GetMinNumberOfLayers() + GetMaxNumberOfHiddenLayers();
+	}
 
 	// Get minimum number of neurons per layer
-	inline static size_t GetMinNumberOfNeuronsPerLayer() { return 1; }
+	inline static size_t GetMinNumberOfNeuronsPerLayer()
+	{
+		return 1;
+	}
 
 	// Get maximum number of neurons per layer
-	inline static size_t GetMaxNumberOfNeuronsPerLayer() { return 12; }
+	inline static size_t GetMaxNumberOfNeuronsPerLayer()
+	{
+		return 12;
+	}
 
 	// Get minimum bias value
-	inline static double GetMinBiasValue() { return -4.0; }
+	inline static double GetMinBiasValue()
+	{
+		return -4.0;
+	}
 
 	// Get maximum bias value
-	inline static double GetMaxBiasValue() { return 4.0; }
+	inline static double GetMaxBiasValue()
+	{
+		return 4.0;
+	}
 
 	// Get default bias value
-	inline static double GetDefaultBiasValue() { return 0.0; }
+	inline static double GetDefaultBiasValue()
+	{
+		return 0.0;
+	}
 
 	// Get min neuron value
-	inline static double GetMinNeuronValue() { return 0.0; }
+	inline static double GetMinNeuronValue()
+	{
+		return 0.0;
+	}
 
 	// Get max neuron value
-	inline static double GetMaxNeuronValue() { return 1.0; }
+	inline static double GetMaxNeuronValue()
+	{
+		return 1.0;
+	}
 
 	// Checks if dummy can be created
 	static bool Initialize();

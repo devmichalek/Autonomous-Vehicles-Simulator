@@ -1,18 +1,23 @@
 #pragma once
 #include "StateInterface.hpp"
 #include "ArtificialNeuralNetworkBuilder.hpp"
-#include "DrawableMapBuilder.hpp"
-#include "DrawableVehicleBuilder.hpp"
+#include "MapBuilder.hpp"
+#include "VehicleBuilder.hpp"
 #include "ContinuousTimer.hpp"
 #include "Property.hpp"
+#include "SimulatedVehicle.hpp"
 
 class GeneticAlgorithmNeuron;
-class DrawableDoubleText;
+class DoubleText;
 class ObserverInterface;
+class DrawableWorld;
+class FitnessSystem;
 
 class StateTraining final :
 	public StateInterface
 {
+public:
+
 	StateTraining(const StateTraining&) = delete;
 
 	const StateTraining& operator=(const StateTraining&) = delete;
@@ -30,6 +35,8 @@ class StateTraining final :
 	bool Load() override;
 
 	void Draw() override;
+
+private:
 
 	// Modes
 	enum
@@ -88,8 +95,8 @@ class StateTraining final :
 	enum
 	{
 		ERROR_NO_ARTIFICIAL_NEURAL_NETWORK_SPECIFIED,
-		ERROR_NO_DRAWABLE_MAP_SPECIFIED,
-		ERROR_NO_DRAWABLE_VEHICLE_SPECIFIED,
+		ERROR_NO_MAP_SPECIFIED,
+		ERROR_NO_VEHICLE_SPECIFIED,
 		ERROR_ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH,
 		ERROR_ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH,
 		ERROR_SAVE_IS_ALLOWED_ONLY_IN_PAUSED_MODE,
@@ -118,18 +125,19 @@ class StateTraining final :
 	// Objects of environment
 	GeneticAlgorithmNeuron* m_geneticAlgorithm;
 	ArtificialNeuralNetworks m_artificialNeuralNetworks;
-	DrawableMap* m_drawableMap;
-	DrawableVehicleFactory m_drawableVehicleFactory;
+	DrawableWorld* m_drawableWorld;
+	FitnessSystem* m_fitnessSystem;
+	SimulatedVehicles m_simulatedVehicles; // Bot vehicles, pointer are cleared by world
 
-	// Backups
-	ArtificialNeuralNetwork* m_artificialNeuralNetworkBackup;
-	DrawableVehicle* m_drawableVehicleBackup;
-	DrawableMap* m_drawableMapBackup;
+	// Prototypes
+	ArtificialNeuralNetwork* m_artificialNeuralNetworkPrototype;
+	VehiclePrototype* m_vehiclePrototype; // Bot vehicle prototype
+	MapPrototype* m_mapPrototype;
 
 	// Builders
 	ArtificialNeuralNetworkBuilder m_artificialNeuralNetworkBuilder;
-	DrawableMapBuilder m_drawableMapBuilder;
-	DrawableVehicleBuilder m_drawableVehicleBuilder;
+	MapBuilder m_mapBuilder;
+	VehicleBuilder m_vehicleBuilder;
 
 	// Texts and text observers
 	enum
@@ -155,9 +163,6 @@ class StateTraining final :
 		MEAN_REQUIRED_FITNESS_IMPROVEMENT,
 		TEXT_COUNT
 	};
-	std::vector<DrawableDoubleText*> m_texts;
+	std::vector<DoubleText*> m_texts;
 	std::vector<ObserverInterface*> m_textObservers;
-
-	// Friend classes
-	friend class StateManager;
 };

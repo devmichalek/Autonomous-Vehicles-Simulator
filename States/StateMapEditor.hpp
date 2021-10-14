@@ -1,17 +1,18 @@
 #pragma once
 #include "StateInterface.hpp"
-#include "DrawableVehicle.hpp"
-#include "DrawableMapBuilder.hpp"
-#include "DrawableVehicleBuilder.hpp"
+#include "MapBuilder.hpp"
+#include "VehicleBuilder.hpp"
 #include "ContinuousTimer.hpp"
 #include "Property.hpp"
 
-class DrawableDoubleText;
+class DoubleText;
 class ObserverInterface;
 
 class StateMapEditor final :
 	public StateInterface
 {
+public:
+
 	StateMapEditor(const StateMapEditor&) = delete;
 
 	const StateMapEditor& operator=(const StateMapEditor&) = delete;
@@ -30,6 +31,8 @@ class StateMapEditor final :
 
 	void Draw() override;
 
+private:
+
 	enum class ActiveMode
 	{
 		EDGE_MODE,
@@ -44,21 +47,13 @@ class StateMapEditor final :
 	} m_edgeSubmode;
 	std::map<EdgeSubmode, std::string> m_edgeSubmodeMap;
 
-	enum class VehicleSubmode
-	{
-		INSERT,
-		REMOVE
-	} m_vehicleSubmode;
-	std::map<VehicleSubmode, std::string> m_vehicleSubmodeMap;
-
-	Line m_edgeLine;
-	EdgeVector m_edges;
+	VehiclePrototype* m_vehiclePrototype;
+	MapPrototype m_mapPrototype;
 	bool m_insertEdge;
 	bool m_removeEdge;
 	sf::Vector2f m_edgeBeggining;
 	bool m_upToDate;
 	bool m_vehiclePositioned;
-	DrawableVehicle* m_drawableVehicle;
 	sf::RectangleShape m_allowedMapAreaShape;
 	sf::RectangleShape m_allowedViewAreaShape;
 
@@ -67,8 +62,8 @@ class StateMapEditor final :
 	Property<double> m_viewMovement;
 
 	// Builders
-	DrawableMapBuilder m_drawableMapBuilder;
-	DrawableVehicleBuilder m_drawableVehicleBuilder;
+	MapBuilder m_mapBuilder;
+	VehicleBuilder m_vehicleBuilder;
 
 	// Texts and text observers
 	enum
@@ -80,13 +75,10 @@ class StateMapEditor final :
 		FILENAME_TEXT,
 		EDGE_SUBMODE_TEXT,
 		EDGE_COUNT_TEXT,
-		VEHICLE_SUBMODE_TEXT,
+		VEHICLE_POSITIONED_TEXT,
 		VEHICLE_ANGLE_TEXT,
 		TEXT_COUNT
 	};
-	std::vector<DrawableDoubleText*> m_texts;
+	std::vector<DoubleText*> m_texts;
 	std::vector<ObserverInterface*> m_textObservers;
-
-	// Friend classes
-	friend class StateManager;
 };

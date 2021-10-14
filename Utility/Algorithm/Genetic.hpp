@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 
 using Fitness = double;
 using FitnessVector = std::vector<Fitness>;

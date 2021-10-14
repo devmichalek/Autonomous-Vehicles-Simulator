@@ -15,6 +15,7 @@ CoreWindow::CoreWindow()
 	m_view.setSize(sf::Vector2f(m_screenWidth, m_screenHeight));
 	m_view.setCenter(sf::Vector2f(m_screenWidth / 2, m_screenHeight / 2));
 	m_renderWindow.setView(m_view);
+	m_windowSize = sf::Vector2f(m_screenWidth, m_screenHeight);
 
 	// Load window icon
 	sf::Image icon;

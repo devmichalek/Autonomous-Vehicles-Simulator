@@ -1,17 +1,23 @@
 #pragma once
 #include "StateInterface.hpp"
-#include "DrawableMapBuilder.hpp"
-#include "DrawableVehicleBuilder.hpp"
+#include "MapBuilder.hpp"
+#include "VehicleBuilder.hpp"
 #include "ArtificialNeuralNetworkBuilder.hpp"
-#include "DrawableMap.hpp"
 #include "ContinuousTimer.hpp"
+#include "Property.hpp"
+#include "SimulatedVehicle.hpp"
 
-class DrawableDoubleText;
+class DoubleText;
 class ObserverInterface;
+class DrawableWorld;
+class FitnessSystem;
+class Vehicle;
 
 class StateTesting final :
 	public StateInterface
 {
+public:
+
 	StateTesting(const StateTesting&) = delete;
 
 	const StateTesting& operator=(const StateTesting&) = delete;
@@ -29,6 +35,8 @@ class StateTesting final :
 	bool Load() override;
 
 	void Draw() override;
+
+private:
 
 	// Called when new vehicle is being added
 	void OnAddVehicle();
@@ -64,8 +72,8 @@ class StateTesting final :
 	{
 		SWITCH_VEHICLE,
 		NUMBER_OF_VEHICLES,
-		ACTIVATE_USER_VEHICLE,
-		SHOW_CHECKPOINTS,
+		ENABLE_USER_VEHICLE,
+		ENABLE_CHECKPOINTS,
 		PARAMETERS_COUNT
 	};
 	std::array<std::string, PARAMETERS_COUNT> m_parameterTypesStrings;
@@ -89,11 +97,11 @@ class StateTesting final :
 	enum
 	{
 		ERROR_NO_ARTIFICIAL_NEURAL_NETWORK_SPECIFIED,
-		ERROR_NO_DRAWABLE_MAP_SPECIFIED,
-		ERROR_NO_DRAWABLE_VEHICLE_SPECIFIED,
+		ERROR_NO_MAP_SPECIFIED,
+		ERROR_NO_VEHICLE_SPECIFIED,
 		ERROR_ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH,
 		ERROR_ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH,
-		ERROR_NO_DRAWABLE_VEHICLES,
+		ERROR_NO_VEHICLES,
 		INTERNAL_ERRORS_COUNT
 	};
 	std::array<std::string, INTERNAL_ERRORS_COUNT> m_internalErrorsStrings;
@@ -102,22 +110,24 @@ class StateTesting final :
 	size_t m_numberOfVehicles;
 	size_t m_currentVehicle;
 	const size_t m_maxNumberOfVehicles;
-	bool m_activateUserVehicle;
-	bool m_showCheckpoints;
+	Property<bool> m_enableUserVehicle;
+	Property<bool> m_enableCheckpoints;
 	ContinuousTimer m_viewTimer;
 	const double m_viewMovementOffset;
 
 	// Objects of environment
-	DrawableMap* m_drawableMap;
-	DrawableVehicle* m_userVehicle;
-	DrawableVehicle* m_dummyVehicle;
-	DrawableVehicleFactory m_drawableVehicleFactory;
-	DrawableVehicleFactory m_drawableVehicleBackup;
-	ArtificialNeuralNetworks m_artificialNeuralNetworks;
+	DrawableWorld* m_drawableWorld;
+	FitnessSystem* m_fitnessSystem;
+	MapPrototype* m_mapPrototype;
+	SimulatedVehicle* m_userVehicle;
+	VehiclePrototype* m_userVehiclePrototype;
+	SimulatedVehicles m_simulatedVehicles; // Bot vehicles, pointers are cleared by world
+	VehiclePrototypes m_vehiclePrototypes; // Bot vehicle prototypes
+	ArtificialNeuralNetworks m_artificialNeuralNetworks; // Bot anns
 
 	// Builders
-	DrawableMapBuilder m_drawableMapBuilder;
-	DrawableVehicleBuilder m_drawableVehicleBuilder;
+	MapBuilder m_mapBuilder;
+	VehicleBuilder m_vehicleBuilder;
 	ArtificialNeuralNetworkBuilder m_artificialNeuralNetworkBuilder;
 
 	// Texts and text observers
@@ -129,14 +139,11 @@ class StateTesting final :
 		PARAMETER_TYPE_TEXT,
 		CURRENT_VEHICLE_TEXT,
 		NUMBER_OF_VEHICLES_TEXT,
-		SHOW_CHECKPOINTS_TEXT,
-		IS_USER_VEHICLE_ACTIVE_TEXT,
+		ENABLE_CHECKPOINTS_TEXT,
+		ENABLE_USER_VEHICLE_TEXT,
 		USER_FITNESS_TEXT,
 		TEXT_COUNT
 	};
-	std::vector<DrawableDoubleText*> m_texts;
+	std::vector<DoubleText*> m_texts;
 	std::vector<ObserverInterface*> m_textObservers;
-
-	// Friend classes
-	friend class StateManager;
 };

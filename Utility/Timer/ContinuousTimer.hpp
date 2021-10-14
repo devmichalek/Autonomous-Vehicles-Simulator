@@ -17,7 +17,7 @@ public:
 	}
 
 	// Updates value, in case of timeout calculation is keep on running
-	bool Update() override
+	inline bool Update() override
 	{
 		m_value += CoreWindow::GetElapsedTime() * m_multiplier;
 		if (m_value > m_timeout)

@@ -1,12 +1,15 @@
 #pragma once
 #include "StateTraining.hpp"
-#include "DrawableMap.hpp"
+#include "FitnessSystem.hpp"
 #include "GeneticAlgorithm.hpp"
 #include "FunctionEventObserver.hpp"
 #include "TypeEventObserver.hpp"
 #include "FunctionTimerObserver.hpp"
-#include "DrawableFilenameText.hpp"
+#include "FilenameText.hpp"
 #include "CoreLogger.hpp"
+#include "DrawableCheckpoint.hpp"
+#include "DrawableWorld.hpp"
+#include "MapPrototype.hpp"
 
 StateTraining::StateTraining() :
 	m_population(12, 75, 1, 30),
@@ -59,8 +62,8 @@ StateTraining::StateTraining() :
 
 	// Initialize internal errors
 	m_internalErrorsStrings[ERROR_NO_ARTIFICIAL_NEURAL_NETWORK_SPECIFIED] = "Error: No artificial neural network is specified!";
-	m_internalErrorsStrings[ERROR_NO_DRAWABLE_MAP_SPECIFIED] = "Error: No drawable map is specified!";
-	m_internalErrorsStrings[ERROR_NO_DRAWABLE_VEHICLE_SPECIFIED] = "Error: No drawable vehicle is specified!";
+	m_internalErrorsStrings[ERROR_NO_MAP_SPECIFIED] = "Error: No map is specified!";
+	m_internalErrorsStrings[ERROR_NO_VEHICLE_SPECIFIED] = "Error: No vehicle is specified!";
 	m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH] = "Error: Artificial neural network number of input neurons mismatches number of vehicle sensors!";
 	m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH] = "Error: Artificial neural network number of output neurons mismatches number of vehicle (3) inputs!";
 	m_internalErrorsStrings[ERROR_SAVE_IS_ALLOWED_ONLY_IN_PAUSED_MODE] = "Error: Save mode is allowed only in paused mode!";
@@ -73,13 +76,14 @@ StateTraining::StateTraining() :
 	// Initialize objects of environment
 	m_geneticAlgorithm = nullptr;
 	m_artificialNeuralNetworks.resize(m_population, nullptr);
-	m_drawableMap = nullptr;
-	m_drawableVehicleFactory.resize(m_population, nullptr);
+	m_drawableWorld = nullptr;
+	m_fitnessSystem = nullptr;
+	m_simulatedVehicles.resize(m_population, nullptr);
 
-	// Initialize backups
-	m_artificialNeuralNetworkBackup = nullptr;
-	m_drawableVehicleBackup = nullptr;
-	m_drawableMapBackup = nullptr;
+	// Initialize prototypes
+	m_artificialNeuralNetworkPrototype = nullptr;
+	m_vehiclePrototype = nullptr;
+	m_mapPrototype = nullptr;
 
 	// Initialize text and their observers
 	m_texts.resize(TEXT_COUNT, nullptr);
@@ -91,12 +95,11 @@ StateTraining::~StateTraining()
 	delete m_geneticAlgorithm;
 	for (auto& ann : m_artificialNeuralNetworks)
 		delete ann;
-	delete m_drawableMap;
-	for (auto& vehicle : m_drawableVehicleFactory)
-		delete vehicle;
-	delete m_artificialNeuralNetworkBackup;
-	delete m_drawableVehicleBackup;
-	delete m_drawableMapBackup;
+	delete m_drawableWorld;
+	delete m_fitnessSystem;
+	delete m_artificialNeuralNetworkPrototype;
+	delete m_vehiclePrototype;
+	delete m_mapPrototype;
 	for (auto& text : m_texts)
 		delete text;
 	for (auto& observer : m_textObservers)
@@ -140,27 +143,26 @@ void StateTraining::Reload()
 		ann = nullptr;
 	}
 	m_artificialNeuralNetworks.resize(m_population, nullptr);
-	delete m_drawableMap;
-	m_drawableMap = nullptr;
-	for (auto& vehicle : m_drawableVehicleFactory)
-	{
-		delete vehicle;
+	delete m_drawableWorld;
+	m_drawableWorld = nullptr;
+	delete m_fitnessSystem;
+	m_fitnessSystem = nullptr;
+	for (auto& vehicle : m_simulatedVehicles)
 		vehicle = nullptr;
-	}
-	m_drawableVehicleFactory.resize(m_population, nullptr);
+	m_simulatedVehicles.resize(m_population, nullptr);
 
-	// Reset backups
-	delete m_artificialNeuralNetworkBackup;
-	m_artificialNeuralNetworkBackup = nullptr;
-	delete m_drawableVehicleBackup;
-	m_drawableVehicleBackup = nullptr;
-	delete m_drawableMapBackup;
-	m_drawableMapBackup = nullptr;
+	// Reset prototypes
+	delete m_artificialNeuralNetworkPrototype;
+	m_artificialNeuralNetworkPrototype = nullptr;
+	delete m_vehiclePrototype;
+	m_vehiclePrototype = nullptr;
+	delete m_mapPrototype;
+	m_mapPrototype = nullptr;
 
 	// Reset builders
 	m_artificialNeuralNetworkBuilder.Clear();
-	m_drawableMapBuilder.Clear();
-	m_drawableVehicleBuilder.Clear();
+	m_mapBuilder.Clear();
+	m_vehicleBuilder.Clear();
 
 	// Reset view
 	auto& view = CoreWindow::GetView();
@@ -179,7 +181,7 @@ void StateTraining::Reload()
 
 void StateTraining::Capture()
 {
-	auto* filenameText = static_cast<DrawableFilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
+	auto* filenameText = static_cast<FilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
 	if (!filenameText->IsRenaming())
 	{
 		switch (m_mode)
@@ -201,8 +203,8 @@ void StateTraining::Capture()
 							if (m_pressedKeys[iterator->second])
 								break;
 							m_mode = RUNNING_MODE;
-							DrawableStatusText* modeText = static_cast<DrawableStatusText*>(m_texts[MODE_TEXT]);
-							if (!m_artificialNeuralNetworkBackup)
+							StatusText* modeText = static_cast<StatusText*>(m_texts[MODE_TEXT]);
+							if (!m_artificialNeuralNetworkPrototype)
 							{
 								modeText->ShowStatusText();
 								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_ARTIFICIAL_NEURAL_NETWORK_SPECIFIED]);
@@ -210,23 +212,23 @@ void StateTraining::Capture()
 								break;
 							}
 
-							if (!m_drawableVehicleBackup)
+							if (!m_vehiclePrototype)
 							{
 								modeText->ShowStatusText();
-								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_DRAWABLE_VEHICLE_SPECIFIED]);
+								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_VEHICLE_SPECIFIED]);
 								m_mode = STOPPED_MODE;
 								break;
 							}
 
-							if (!m_drawableMapBackup)
+							if (!m_mapPrototype)
 							{
 								modeText->ShowStatusText();
-								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_DRAWABLE_MAP_SPECIFIED]);
+								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_MAP_SPECIFIED]);
 								m_mode = STOPPED_MODE;
 								break;
 							}
 
-							if (m_artificialNeuralNetworkBackup->GetNumberOfInputNeurons() != m_drawableVehicleBackup->GetNumberOfOutputs())
+							if (m_artificialNeuralNetworkPrototype->GetNumberOfInputNeurons() != m_vehiclePrototype->GetNumberOfSensors())
 							{
 								modeText->ShowStatusText();
 								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH]);
@@ -234,7 +236,7 @@ void StateTraining::Capture()
 								break;
 							}
 
-							if (m_artificialNeuralNetworkBackup->GetNumberOfOutputNeurons() != m_drawableVehicleBackup->GetNumberOfInputs())
+							if (m_artificialNeuralNetworkPrototype->GetNumberOfOutputNeurons() != VehicleBuilder::GetDefaultNumberOfInputs())
 							{
 								modeText->ShowStatusText();
 								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH]);
@@ -247,22 +249,22 @@ void StateTraining::Capture()
 								delete ann;
 							m_artificialNeuralNetworks.resize(m_population);
 							for (auto& ann : m_artificialNeuralNetworks)
-								ann = ArtificialNeuralNetworkBuilder::Copy(m_artificialNeuralNetworkBackup);
+								ann = ArtificialNeuralNetworkBuilder::Copy(m_artificialNeuralNetworkPrototype);
 
-							// Create drawable map
-							delete m_drawableMap;
-							m_drawableMap = DrawableMapBuilder::Copy(m_drawableMapBackup);
-							m_drawableMap->Init(m_population, m_requiredFitnessImprovement);
+							// Create drawable world
+							delete m_drawableWorld;
+							m_drawableWorld = new DrawableWorld;
+							m_drawableWorld->AddMap(m_mapPrototype);
+							DrawableCheckpoint::SetVisibility(false);
+							delete m_fitnessSystem;
+							m_fitnessSystem = new FitnessSystem(m_population, m_mapPrototype->GetNumberOfCheckpoints(), m_requiredFitnessImprovement);
+							m_drawableWorld->SetContactListener(m_fitnessSystem->GetContactListener());
 							m_textObservers[CURRENT_POPULATION_TEXT]->Notify();
 
-							// Create drawable vehicles
-							for (auto& vehicle : m_drawableVehicleFactory)
-								delete vehicle;
-							m_drawableVehicleFactory.resize(m_population);
-							for (auto& vehicle : m_drawableVehicleFactory)
-							{
-								vehicle = DrawableVehicleBuilder::Copy(m_drawableVehicleBackup);
-							}
+							// Create vehicles
+							m_simulatedVehicles.resize(m_population);
+							for (auto& vehicle : m_simulatedVehicles)
+								vehicle = m_drawableWorld->AddVehicle(m_vehiclePrototype);
 
 							// Reset filename type
 							m_filenameType = MAP_FILENAME_TYPE;
@@ -275,7 +277,7 @@ void StateTraining::Capture()
 							// Create genetic algorithm
 							delete m_geneticAlgorithm;
 							m_geneticAlgorithm = new GeneticAlgorithmNeuron(m_generation,
-																			m_artificialNeuralNetworkBackup->GetNumberOfWeights(),
+																			m_artificialNeuralNetworkPrototype->GetNumberOfWeights(),
 																			m_population,
 																			m_crossoverType,
 																			m_repeatCrossoverPerIndividual,
@@ -440,7 +442,7 @@ void StateTraining::Capture()
 
 							// Reset view so that the center is car starting position
 							auto& view = CoreWindow::GetView();
-							view.setCenter(m_drawableVehicleBackup->GetCenter());
+							view.setCenter(m_vehiclePrototype->GetCenter());
 							CoreWindow::GetRenderWindow().setView(view);
 							break;
 						}
@@ -524,45 +526,46 @@ void StateTraining::Update()
 	{
 		case STOPPED_MODE:
 		{
-			auto* filenameText = static_cast<DrawableFilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
+			auto* filenameText = static_cast<FilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
 			if (filenameText->IsReading())
 			{
 				switch (m_filenameType)
 				{
 					case MAP_FILENAME_TYPE:
 					{
-						bool success = m_drawableMapBuilder.Load(filenameText->GetFilename());
-						auto status = m_drawableMapBuilder.GetLastOperationStatus();
+						bool success = m_mapBuilder.Load(filenameText->GetFilename());
+						auto status = m_mapBuilder.GetLastOperationStatus();
 
 						// Set filename text
 						filenameText->ShowStatusText();
 						if (!success)
 						{
 							filenameText->SetErrorStatusText(status.second);
-							delete m_drawableMapBackup;
-							m_drawableMapBackup = nullptr;
+							delete m_mapPrototype;
+							m_mapPrototype = nullptr;
 							break;
 						}
 						filenameText->SetSuccessStatusText(status.second);
 
-						// Prepare drawable map
-						delete m_drawableMapBackup;
-						m_drawableMapBackup = m_drawableMapBuilder.Get();
-						m_drawableMapBackup->Init(0, 0.0);
+						// Prepare map prototype
+						delete m_mapPrototype;
+						m_mapPrototype = m_mapBuilder.Get();
 
-						if (!m_drawableVehicleBackup)
+						if (!m_vehiclePrototype)
 						{
-							// Drawable vehicle hasn't been created yet, in this case create dummy
-							m_drawableVehicleBuilder.CreateDummy();
-							m_drawableVehicleBackup = m_drawableVehicleBuilder.Get();
+							// Vehicle prototype hasn't been created yet, in this case create dummy
+							m_vehicleBuilder.CreateDummy();
+							m_vehiclePrototype = m_vehicleBuilder.Get();
 						}
 
 						// Update vehicle starting position
-						m_drawableMapBuilder.UpdateVehicle(m_drawableVehicleBackup);
+						m_vehiclePrototype->SetCenter(m_mapBuilder.GetVehicleCenter());
+						m_vehiclePrototype->SetAngle(m_mapBuilder.GetVehicleAngle());
+						m_vehiclePrototype->Update();
 
 						// Reset view so that the center is car starting position
 						auto& view = CoreWindow::GetView();
-						view.setCenter(m_drawableVehicleBackup->GetCenter());
+						view.setCenter(m_vehiclePrototype->GetCenter());
 						CoreWindow::GetRenderWindow().setView(view);
 						break;
 					}
@@ -580,45 +583,46 @@ void StateTraining::Update()
 						}
 						filenameText->SetSuccessStatusText(status.second);
 
-						delete m_artificialNeuralNetworkBackup;
-						m_artificialNeuralNetworkBackup = m_artificialNeuralNetworkBuilder.Get();
-						m_artificialNeuralNetworkBackup->SetFromRawData(m_artificialNeuralNetworkBuilder.GetRawNeuronData());
+						delete m_artificialNeuralNetworkPrototype;
+						m_artificialNeuralNetworkPrototype = m_artificialNeuralNetworkBuilder.Get();
+						m_artificialNeuralNetworkPrototype->SetFromRawData(m_artificialNeuralNetworkBuilder.GetRawNeuronData());
 						break;
 					}
 					case VEHICLE_FILENAME_TYPE:
 					{
-						bool success = m_drawableVehicleBuilder.Load(filenameText->GetFilename());
-						auto status = m_drawableVehicleBuilder.GetLastOperationStatus();
+						bool success = m_vehicleBuilder.Load(filenameText->GetFilename());
+						auto status = m_vehicleBuilder.GetLastOperationStatus();
 
 						// Set filename text
 						filenameText->ShowStatusText();
 						if (!success)
 						{
 							filenameText->SetErrorStatusText(status.second);
-							delete m_drawableVehicleBackup;
-							m_drawableVehicleBackup = nullptr;
+							delete m_vehiclePrototype;
+							m_vehiclePrototype = nullptr;
 							break;
 						}
 						filenameText->SetSuccessStatusText(status.second);
 
-						if (!m_drawableMapBackup)
+						if (!m_mapPrototype)
 						{
-							// Drawable map hasn't been created yet, create dummy
-							m_drawableMapBuilder.CreateDummy();
-							m_drawableMapBackup = m_drawableMapBuilder.Get();
-							m_drawableMapBackup->Init(0, 0.0);
+							// Map hasn't been created yet, create dummy
+							m_mapBuilder.CreateDummy();
+							m_mapPrototype = m_mapBuilder.Get();
 						}
 
-						// Remove old vehicle backup and prepare new one
-						delete m_drawableVehicleBackup;
-						m_drawableVehicleBackup = m_drawableVehicleBuilder.Get();
+						// Remove old vehicle prototype and prepare new one
+						delete m_vehiclePrototype;
+						m_vehiclePrototype = m_vehicleBuilder.Get();
 
 						// Update vehicle starting position
-						m_drawableMapBuilder.UpdateVehicle(m_drawableVehicleBackup);
+						m_vehiclePrototype->SetCenter(m_mapBuilder.GetVehicleCenter());
+						m_vehiclePrototype->SetAngle(m_mapBuilder.GetVehicleAngle());
+						m_vehiclePrototype->Update();
 
 						// Reset view so that the center is car starting position
 						auto& view = CoreWindow::GetView();
-						view.setCenter(m_drawableVehicleBackup->GetCenter());
+						view.setCenter(m_vehiclePrototype->GetCenter());
 						CoreWindow::GetRenderWindow().setView(view);
 						break;
 					}
@@ -645,31 +649,30 @@ void StateTraining::Update()
 		case RUNNING_MODE:
 		{
 			bool activity = false;
-			for (size_t i = 0; i < m_drawableVehicleFactory.size(); ++i)
+			for (size_t i = 0; i < m_population; ++i)
 			{
-				if (!m_drawableVehicleFactory[i]->IsActive())
+				if (!m_simulatedVehicles[i]->IsActive())
 					continue;
 
 				activity = true;
-				const NeuronLayer& input = m_drawableVehicleFactory[i]->ProcessOutput();
+				m_simulatedVehicles[i]->Update(m_drawableWorld->GetStaticWorld());
+				const NeuronLayer& input = m_simulatedVehicles[i]->ProcessOutput();
 				const NeuronLayer& output = m_artificialNeuralNetworks[i]->Update(input);
-				m_drawableVehicleFactory[i]->ProcessInput(output);
-				m_drawableVehicleFactory[i]->Update();
+				m_simulatedVehicles[i]->ProcessInput(output);
 			}
 
-			m_drawableMap->Update(m_drawableVehicleFactory);
+			m_drawableWorld->Update();
 
 			sf::Vector2f m_viewCenter;
 			if (!activity)
 			{
 				// Set highest fitness overall
-				m_drawableMap->Iterate(m_drawableVehicleFactory);
+				m_fitnessSystem->Iterate(m_simulatedVehicles);
 				m_textObservers[HIGHEST_FITNESS_OVERALL_TEXT]->Notify();
 
 				// Generate new generation
-				if (m_geneticAlgorithm->Iterate(m_drawableMap->GetFitnessVector()))
+				if (m_geneticAlgorithm->Iterate(m_fitnessSystem->GetFitnessVector()))
 				{
-					m_drawableMap->Reset();
 					m_textObservers[CURRENT_GENERATION_TEXT]->Notify();
 					m_textObservers[CURRENT_POPULATION_TEXT]->Notify();
 					m_textObservers[MEAN_REQUIRED_FITNESS_IMPROVEMENT]->Notify();
@@ -678,12 +681,18 @@ void StateTraining::Update()
 					for (size_t i = 0; i < m_artificialNeuralNetworks.size(); ++i)
 						m_artificialNeuralNetworks[i]->SetFromRawData(m_geneticAlgorithm->GetIndividualGenes(i));
 
+					// Reset drawable world
+					delete m_drawableWorld;
+					m_drawableWorld = new DrawableWorld;
+					m_drawableWorld->AddMap(m_mapPrototype);
+					DrawableCheckpoint::SetVisibility(false);
+					delete m_fitnessSystem;
+					m_fitnessSystem = new FitnessSystem(m_population, m_mapPrototype->GetNumberOfCheckpoints(), m_requiredFitnessImprovement);
+					m_drawableWorld->SetContactListener(m_fitnessSystem->GetContactListener());
+
 					// Reset vehicles
-					for (auto & vehicle : m_drawableVehicleFactory)
-					{
-						delete vehicle;
-						vehicle = DrawableVehicleBuilder::Copy(m_drawableVehicleBackup);
-					}
+					for (auto& vehicle : m_simulatedVehicles)
+						vehicle = m_drawableWorld->AddVehicle(m_vehiclePrototype);
 
 					// Reset required fitness improvement rise timer
 					m_requiredFitnessImprovementRiseTimer.Reset();
@@ -701,15 +710,15 @@ void StateTraining::Update()
 			{
 				if (m_viewTimer.Update())
 				{
-					auto index = m_drawableMap->MarkLeader(m_drawableVehicleFactory);
+					auto index = m_fitnessSystem->MarkLeader(m_simulatedVehicles);
+					m_viewCenter = m_simulatedVehicles[index]->GetCenter();
 					m_textObservers[HIGHEST_FITNESS_TEXT]->Notify();
 					m_textObservers[HIGHEST_FITNESS_OVERALL_TEXT]->Notify();
-					m_viewCenter = m_drawableVehicleFactory[index]->GetCenter();
 				}
 
 				if (m_requiredFitnessImprovementRiseTimer.Update())
 				{
-					m_drawableMap->Punish(m_drawableVehicleFactory);
+					m_fitnessSystem->Punish(m_simulatedVehicles);
 					m_textObservers[CURRENT_POPULATION_TEXT]->Notify();
 					m_textObservers[MEAN_REQUIRED_FITNESS_IMPROVEMENT]->Notify();
 				}
@@ -727,7 +736,7 @@ void StateTraining::Update()
 		}
 		case PAUSED_MODE:
 		{
-			auto* filenameText = static_cast<DrawableFilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
+			auto* filenameText = static_cast<FilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
 			if (filenameText->IsWriting())
 			{
 				switch (m_filenameType)
@@ -773,25 +782,25 @@ void StateTraining::Update()
 bool StateTraining::Load()
 {
 	// Create texts
-	m_texts[MODE_TEXT] = new DrawableStatusText({ "Mode:", "", "| [M] [P]" });
-	m_texts[FILENAME_TEXT] = new DrawableFilenameText<true, true>("map.bin");
-	m_texts[FILENAME_TYPE_TEXT] = new DrawableTripleText({ "Filename type:", "", "| [F]"});
-	m_texts[PARAMETER_TYPE_TEXT] = new DrawableTripleText({ "Parameter type:", "", "| [P] [+] [-]" });
-	m_texts[POPULATION_SIZE_TEXT] = new DrawableDoubleText({ m_parameterTypesStrings[POPULATION_SIZE] + ":" });
-	m_texts[NUMBER_OF_GENERATIONS_TEXT] = new DrawableDoubleText({ m_parameterTypesStrings[NUMBER_OF_GENERATIONS] + ":" });
-	m_texts[CROSSOVER_TYPE_TEXT] = new DrawableDoubleText({ m_parameterTypesStrings[CROSSOVER_TYPE] + ":" });
-	m_texts[REPEAT_CROSSOVER_PER_INDIVIDUAL_TEXT] = new DrawableDoubleText({ m_parameterTypesStrings[REPEAT_CROSSOVER_PER_INDIVIDUAL] + ":" });
-	m_texts[MUTATION_PROBABILITY_TEXT] = new DrawableDoubleText({ m_parameterTypesStrings[MUTATION_PROBABILITY] + ":" });
-	m_texts[DECREASE_MUTATION_PROBABILITY_OVER_GENERATIONS_TEXT] = new DrawableDoubleText({ m_parameterTypesStrings[DECREASE_MUTATION_PROBABILITY_OVER_GENERATIONS] + ":" });
-	m_texts[NUMBER_OF_PARENTS_TEXT] = new DrawableDoubleText({ m_parameterTypesStrings[NUMBER_OF_PARENTS] + ":" });
-	m_texts[REQUIRED_FITNESS_IMPROVEMENT_RISE_TEXT] = new DrawableDoubleText({ m_parameterTypesStrings[REQUIRED_FITNESS_IMPROVEMENT_RISE] + ":" });
-	m_texts[REQUIRED_FITNESS_IMPROVEMENT_TEXT] = new DrawableDoubleText({ m_parameterTypesStrings[REQUIRED_FITNESS_IMPROVEMENT] + ":" });
-	m_texts[CURRENT_POPULATION_TEXT] = new DrawableDoubleText({ "Current population size:" });
-	m_texts[CURRENT_GENERATION_TEXT] = new DrawableDoubleText({ "Current generation:" });
-	m_texts[HIGHEST_FITNESS_TEXT] = new DrawableDoubleText({ "Highest fitness:" });
-	m_texts[HIGHEST_FITNESS_OVERALL_TEXT] = new DrawableDoubleText({ "Highest fitness overall:" });
-	m_texts[RAISING_REQUIRED_FITNESS_IMPROVEMENT_TEXT] = new DrawableDoubleText({ "Raising required fitness improvement in:" });
-	m_texts[MEAN_REQUIRED_FITNESS_IMPROVEMENT] = new DrawableDoubleText({ "Mean required fitness improvement:" });
+	m_texts[MODE_TEXT] = new StatusText({ "Mode:", "", "| [M] [P]" });
+	m_texts[FILENAME_TEXT] = new FilenameText<true, true>("map.bin");
+	m_texts[FILENAME_TYPE_TEXT] = new TripleText({ "Filename type:", "", "| [F]"});
+	m_texts[PARAMETER_TYPE_TEXT] = new TripleText({ "Parameter type:", "", "| [P] [+] [-]" });
+	m_texts[POPULATION_SIZE_TEXT] = new DoubleText({ m_parameterTypesStrings[POPULATION_SIZE] + ":" });
+	m_texts[NUMBER_OF_GENERATIONS_TEXT] = new DoubleText({ m_parameterTypesStrings[NUMBER_OF_GENERATIONS] + ":" });
+	m_texts[CROSSOVER_TYPE_TEXT] = new DoubleText({ m_parameterTypesStrings[CROSSOVER_TYPE] + ":" });
+	m_texts[REPEAT_CROSSOVER_PER_INDIVIDUAL_TEXT] = new DoubleText({ m_parameterTypesStrings[REPEAT_CROSSOVER_PER_INDIVIDUAL] + ":" });
+	m_texts[MUTATION_PROBABILITY_TEXT] = new DoubleText({ m_parameterTypesStrings[MUTATION_PROBABILITY] + ":" });
+	m_texts[DECREASE_MUTATION_PROBABILITY_OVER_GENERATIONS_TEXT] = new DoubleText({ m_parameterTypesStrings[DECREASE_MUTATION_PROBABILITY_OVER_GENERATIONS] + ":" });
+	m_texts[NUMBER_OF_PARENTS_TEXT] = new DoubleText({ m_parameterTypesStrings[NUMBER_OF_PARENTS] + ":" });
+	m_texts[REQUIRED_FITNESS_IMPROVEMENT_RISE_TEXT] = new DoubleText({ m_parameterTypesStrings[REQUIRED_FITNESS_IMPROVEMENT_RISE] + ":" });
+	m_texts[REQUIRED_FITNESS_IMPROVEMENT_TEXT] = new DoubleText({ m_parameterTypesStrings[REQUIRED_FITNESS_IMPROVEMENT] + ":" });
+	m_texts[CURRENT_POPULATION_TEXT] = new DoubleText({ "Current population size:" });
+	m_texts[CURRENT_GENERATION_TEXT] = new DoubleText({ "Current generation:" });
+	m_texts[HIGHEST_FITNESS_TEXT] = new DoubleText({ "Highest fitness:" });
+	m_texts[HIGHEST_FITNESS_OVERALL_TEXT] = new DoubleText({ "Highest fitness overall:" });
+	m_texts[RAISING_REQUIRED_FITNESS_IMPROVEMENT_TEXT] = new DoubleText({ "Raising required fitness improvement in:" });
+	m_texts[MEAN_REQUIRED_FITNESS_IMPROVEMENT] = new DoubleText({ "Mean required fitness improvement:" });
 
 	// Create observers
 	m_textObservers[MODE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_modeStrings[m_mode]; });
@@ -806,12 +815,12 @@ bool StateTraining::Load()
 	m_textObservers[NUMBER_OF_PARENTS_TEXT] = new FunctionEventObserver<size_t>([&] { return m_numberOfParents; });
 	m_textObservers[REQUIRED_FITNESS_IMPROVEMENT_RISE_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(m_requiredFitnessImprovementRiseTimer.GetTimeout()) + " seconds"; });
 	m_textObservers[REQUIRED_FITNESS_IMPROVEMENT_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(size_t(m_requiredFitnessImprovement * 100.0)); }, "", "%");
-	m_textObservers[CURRENT_POPULATION_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(m_drawableMap ? (m_population - m_drawableMap->GetNumberOfPunishedVehicles()) : m_population) + "/" + std::to_string(m_population); });
+	m_textObservers[CURRENT_POPULATION_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(m_fitnessSystem ? (m_population - m_fitnessSystem->GetNumberOfPunishedVehicles()) : m_population) + "/" + std::to_string(m_population); });
 	m_textObservers[CURRENT_GENERATION_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(m_geneticAlgorithm ? m_geneticAlgorithm->GetCurrentGeneration() : m_generation) + "/" + std::to_string(m_generation); });
-	m_textObservers[HIGHEST_FITNESS_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(!m_drawableMap ? 0 : size_t(m_drawableMap->GetHighestFitness() * 100.0)); }, "", "%");
-	m_textObservers[HIGHEST_FITNESS_OVERALL_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(!m_drawableMap ? 0 : size_t(m_drawableMap->GetHighestFitnessOverall()* 100.0)); }, "", "%");
+	m_textObservers[HIGHEST_FITNESS_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(!m_fitnessSystem ? 0 : size_t(m_fitnessSystem->GetHighestFitness() * 100.0)); }, "", "%");
+	m_textObservers[HIGHEST_FITNESS_OVERALL_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(!m_fitnessSystem ? 0 : size_t(m_fitnessSystem->GetHighestFitnessOverall()* 100.0)); }, "", "%");
 	m_textObservers[RAISING_REQUIRED_FITNESS_IMPROVEMENT_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(m_requiredFitnessImprovementRiseTimer.GetTimeout() - m_requiredFitnessImprovementRiseTimer.GetValue()); }, 0.3, "", " seconds");
-	m_textObservers[MEAN_REQUIRED_FITNESS_IMPROVEMENT] = new FunctionEventObserver<std::string>([&] { return std::to_string(size_t((m_drawableMap ? m_drawableMap->GetMeanRequiredFitnessImprovement() : 0) * 100.0)); }, "", "%");
+	m_textObservers[MEAN_REQUIRED_FITNESS_IMPROVEMENT] = new FunctionEventObserver<std::string>([&] { return std::to_string(size_t((m_fitnessSystem ? m_fitnessSystem->GetMeanRequiredFitnessImprovement() : 0) * 100.0)); }, "", "%");
 
 	// Set text observers
 	for (size_t i = 0; i < TEXT_COUNT; ++i)
@@ -848,15 +857,18 @@ void StateTraining::Draw()
 	{
 		case STOPPED_MODE:
 		{
-			if (m_drawableVehicleBackup)
+			if (m_vehiclePrototype)
 			{
-				m_drawableVehicleBackup->DrawBody();
-				if (m_artificialNeuralNetworkBackup)
-					m_drawableVehicleBackup->DrawBeams();
+				m_vehiclePrototype->DrawBody();
+				if (m_artificialNeuralNetworkPrototype)
+					m_vehiclePrototype->DrawBeams();
 			}
 
-			if (m_drawableMapBackup)
-				m_drawableMapBackup->Draw();
+			if (m_mapPrototype)
+			{
+				// We do not draw checkpoints in training state
+				m_mapPrototype->DrawEdges();
+			}
 
 			m_texts[FILENAME_TYPE_TEXT]->Draw();
 			m_texts[FILENAME_TEXT]->Draw();
@@ -871,18 +883,7 @@ void StateTraining::Draw()
 			// No break
 		case RUNNING_MODE:
 		{
-			for (auto& vehicle : m_drawableVehicleFactory)
-			{
-				vehicle->DrawBody();
-
-				if (!vehicle->IsActive())
-					continue;
-
-				vehicle->DrawBeams();
-			}
-
-			m_drawableMap->Draw();
-
+			m_drawableWorld->Draw();
 			m_texts[CURRENT_POPULATION_TEXT]->Draw();
 			m_texts[CURRENT_GENERATION_TEXT]->Draw();
 			m_texts[HIGHEST_FITNESS_TEXT]->Draw();

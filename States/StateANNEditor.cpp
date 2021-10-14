@@ -2,8 +2,8 @@
 #include "CoreLogger.hpp"
 #include "FunctionTimerObserver.hpp"
 #include "TypeTimerObserver.hpp"
-#include "DrawableVariableText.hpp"
-#include "DrawableFilenameText.hpp"
+#include "VariableText.hpp"
+#include "FilenameText.hpp"
 
 StateANNEditor::StateANNEditor() :
 	m_biasOffset(0.2)
@@ -80,7 +80,7 @@ void StateANNEditor::Reload()
 
 void StateANNEditor::Capture()
 {
-	auto* filenameText = static_cast<DrawableFilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
+	auto* filenameText = static_cast<FilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
 	filenameText->Capture();
 	if (!filenameText->IsRenaming())
 	{
@@ -152,11 +152,13 @@ void StateANNEditor::Capture()
 				m_pressedKeys[iterator->second] = false;
 		}
 	}
+	else
+		m_upToDate = false;
 }
 
 void StateANNEditor::Update()
 {
-	auto* filenameText = static_cast<DrawableFilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
+	auto* filenameText = static_cast<FilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
 	if (filenameText->IsWriting())
 	{
 		if (!m_upToDate)
@@ -214,17 +216,17 @@ void StateANNEditor::Update()
 bool StateANNEditor::Load()
 {
 	// Create texts
-	m_texts[INPUT_TEXT] = new DrawableVariableText({ "Input" });
-	m_texts[OUTPUT_TEXT] = new DrawableVariableText({ "Output" });
-	m_texts[CURRENT_LAYER_TEXT] = new DrawableTripleText({ "Current layer:", "", "| [Tab] [Enter] [Backspace]" });
-	m_texts[CURRENT_LAYER_NUMBER_OF_NEURONS_TEXT] = new DrawableTripleText({ "Current layer number of neurons:", "", "| [+] [-]" });
-	m_texts[CURRENT_LAYER_ACTIVATION_FUNCTION_TEXT] = new DrawableTripleText({ "Current layer activation function:", "", "| [*]" });
-	m_texts[CURRENT_LAYER_BIAS_TEXT] = new DrawableTripleText({ "Current layer bias:", "", "| [Z] [X]" });
-	m_texts[FILENAME_TEXT] = new DrawableFilenameText<true, true>("ann.bin");
-	m_texts[NUMBER_OF_LAYERS_TEXT] = new DrawableDoubleText({ "Total number of layers:" });
-	m_texts[NUMBER_OF_NEURONS_TEXT] = new DrawableDoubleText({ "Total number of neurons:" });
-	m_texts[NUMBER_OF_WEIGHTS_TEXT] = new DrawableDoubleText({ "Total number of weights:" });
-	m_texts[NUMBER_OF_ACTIVATION_FUNCTIONS_TEXT] = new DrawableDoubleText({ "Total number of activation functions:" });
+	m_texts[INPUT_TEXT] = new VariableText({ "Input" });
+	m_texts[OUTPUT_TEXT] = new VariableText({ "Output" });
+	m_texts[CURRENT_LAYER_TEXT] = new TripleText({ "Current layer:", "", "| [Tab] [Enter] [Backspace]" });
+	m_texts[CURRENT_LAYER_NUMBER_OF_NEURONS_TEXT] = new TripleText({ "Current layer number of neurons:", "", "| [+] [-]" });
+	m_texts[CURRENT_LAYER_ACTIVATION_FUNCTION_TEXT] = new TripleText({ "Current layer activation function:", "", "| [*]" });
+	m_texts[CURRENT_LAYER_BIAS_TEXT] = new TripleText({ "Current layer bias:", "", "| [Z] [X]" });
+	m_texts[FILENAME_TEXT] = new FilenameText<true, true>("ann.bin");
+	m_texts[NUMBER_OF_LAYERS_TEXT] = new DoubleText({ "Total number of layers:" });
+	m_texts[NUMBER_OF_NEURONS_TEXT] = new DoubleText({ "Total number of neurons:" });
+	m_texts[NUMBER_OF_WEIGHTS_TEXT] = new DoubleText({ "Total number of weights:" });
+	m_texts[NUMBER_OF_ACTIVATION_FUNCTIONS_TEXT] = new DoubleText({ "Total number of activation functions:" });
 
 	// Create observers
 	m_textObservers[INPUT_TEXT] = nullptr;
@@ -249,11 +251,11 @@ bool StateANNEditor::Load()
 
 	// Set text observers
 	for (size_t i = CURRENT_LAYER_TEXT; i < TEXT_COUNT; ++i)
-		((DrawableDoubleText*)m_texts[i])->SetObserver(m_textObservers[i]);
+		((DoubleText*)m_texts[i])->SetObserver(m_textObservers[i]);
 
 	// Set text character size and rotation
-	auto* inputText = static_cast<DrawableVariableText*>(m_texts[INPUT_TEXT]);
-	auto* outputText = static_cast<DrawableVariableText*>(m_texts[OUTPUT_TEXT]);
+	auto* inputText = static_cast<VariableText*>(m_texts[INPUT_TEXT]);
+	auto* outputText = static_cast<VariableText*>(m_texts[OUTPUT_TEXT]);
 	inputText->SetCharacterSize(4);
 	outputText->SetCharacterSize(4);
 	inputText->SetRotation(270.0f);

@@ -1,14 +1,16 @@
 #pragma once
 #include "StateInterface.hpp"
 #include "DrawableMath.hpp"
-#include "DrawableVehicleBuilder.hpp"
+#include "VehicleBuilder.hpp"
 
-class DrawableTextAbstract;
+class TextAbstract;
 class ObserverInterface;
 
 class StateVehicleEditor final :
 	public StateInterface
 {
+public:
+
 	StateVehicleEditor(const StateVehicleEditor&) = delete;
 
 	const StateVehicleEditor& operator=(const StateVehicleEditor&) = delete;
@@ -27,6 +29,8 @@ class StateVehicleEditor final :
 
 	void Draw() override;
 
+private:
+
 	enum
 	{
 		MODE_VEHICLE_BODY,
@@ -37,11 +41,11 @@ class StateVehicleEditor final :
 
 	enum
 	{
-		INSERT,
-		REMOVE
+		VEHICLE_SENSORS_INSERT,
+		VEHICLE_SENSORS_REMOVE
 	};
-	std::map<size_t, std::string> m_submodeStrings;
-	size_t m_submode;
+	std::map<size_t, std::string> m_vehicleSensorsSubmodeStrings;
+	size_t m_vehicleSensorsSubmode;
 
 	enum
 	{
@@ -49,6 +53,7 @@ class StateVehicleEditor final :
 		CHANGE_TO_VEHICLE_SENSORS_MODE,
 		CHANGE_TO_INSERT_STATE,
 		CHANGE_TO_REMOVE_STATE,
+		REMOVE_LAST_VEHICLE_BODY_POINT,
 		CHANGE_SENSOR,
 		DEACREASE_SENSOR_ANGLE,
 		INCREASE_SENSOR_ANGLE,
@@ -64,12 +69,11 @@ class StateVehicleEditor final :
 	size_t m_currentSensorIndex;
 	double m_currentSensorAngle;
 	double m_currentSensorMotionRange;
-	DrawableVehicleBuilder m_drawableVehicleBuilder;
-	VehicleBody m_vehicleBody;
-	VehicleSensors m_vehicleSensors;
+	VehicleBuilder m_vehicleBuilder;
+	VehiclePrototype* m_vehiclePrototype;
 	bool m_upToDate;
-	Line m_xAxis;
-	Line m_yAxis;
+	EdgeShape m_xAxis;
+	EdgeShape m_yAxis;
 
 	// Texts and text observers
 	enum
@@ -77,18 +81,15 @@ class StateVehicleEditor final :
 		BACK_TEXT,
 		FRONT_TEXT,
 		ACTIVE_MODE_TEXT,
-		ACTIVE_SUBMODE_TEXT,
 		TOTAL_NUMBER_OF_EDGES_TEXT,
 		TOTAL_NUMBER_OF_SENSORS_TEXT,
 		FILENAME_TEXT,
+		VEHICLE_SENSORS_SUBMODE_TEXT,
 		CURRENT_SENSOR_TEXT,
 		CURRENT_SENSOR_ANGLE_TEXT,
 		CURRENT_SENSOR_MOTION_RANGE_TEXT,
 		TEXT_COUNT
 	};
-	std::vector<DrawableTextAbstract*> m_texts;
+	std::vector<TextAbstract*> m_texts;
 	std::vector<ObserverInterface*> m_textObservers;
-
-	// Friend classes
-	friend class StateManager;
 };
