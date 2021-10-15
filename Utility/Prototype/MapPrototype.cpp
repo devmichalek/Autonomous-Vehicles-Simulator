@@ -1,7 +1,7 @@
 #include "MapPrototype.hpp"
 #include "CoreWindow.hpp"
 
-bool MapPrototype::FindClosestPointOnIntersection(const Edge& edge, sf::Vector2f& point)
+bool MapPrototype::FindClosestPointOnIntersection(Edge edge, sf::Vector2f& point)
 {
 	const size_t size = m_edges.size() - 1;
 	for (size_t i = 0; i < size; ++i)
@@ -69,7 +69,7 @@ bool MapPrototype::RemoveEdgesOnInterscetion(const Edge& edge)
 		}
 	}
 
-	return true;
+	return result;
 }
 
 void MapPrototype::DrawEdges()

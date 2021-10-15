@@ -80,7 +80,6 @@ StateTraining::StateTraining() :
 	m_artificialNeuralNetworks.resize(m_population, nullptr);
 	m_simulatedWorld = nullptr;
 	m_fitnessSystem = nullptr;
-	m_simulatedVehicles.resize(m_population, nullptr);
 
 	// Initialize prototypes
 	m_artificialNeuralNetworkPrototype = nullptr;
@@ -149,9 +148,7 @@ void StateTraining::Reload()
 	m_simulatedWorld = nullptr;
 	delete m_fitnessSystem;
 	m_fitnessSystem = nullptr;
-	for (auto& vehicle : m_simulatedVehicles)
-		vehicle = nullptr;
-	m_simulatedVehicles.resize(m_population, nullptr);
+	m_simulatedVehicles.clear();
 
 	// Reset prototypes
 	delete m_artificialNeuralNetworkPrototype;
@@ -266,7 +263,7 @@ void StateTraining::Capture()
 							m_textObservers[CURRENT_POPULATION_TEXT]->Notify();
 
 							// Create vehicles
-							m_simulatedVehicles.resize(m_population);
+							m_simulatedVehicles.resize(m_population, nullptr);
 							for (auto& vehicle : m_simulatedVehicles)
 								vehicle = m_simulatedWorld->AddVehicle(m_vehiclePrototype);
 
@@ -843,9 +840,9 @@ bool StateTraining::Load()
 		m_texts[i]->SetObserver(m_textObservers[i]);
 
 	// Set texts positions
-	m_texts[MODE_TEXT]->SetPosition({ FontContext::Component(0), {0}, {3}, {7}, {16} });
-	m_texts[FILENAME_TYPE_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {7} });
-	m_texts[FILENAME_TEXT]->SetPosition({ FontContext::Component(2), {0}, {3}, {7}, {16} });
+	m_texts[MODE_TEXT]->SetPosition({ FontContext::Component(0), {0}, {3}, {6}, {15} });
+	m_texts[FILENAME_TYPE_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {6} });
+	m_texts[FILENAME_TEXT]->SetPosition({ FontContext::Component(2), {0}, {3}, {6}, {15} });
 	m_texts[PARAMETER_TYPE_TEXT]->SetPosition({ FontContext::Component(11, true), {0}, {10}, {20} });
 	m_texts[POPULATION_SIZE_TEXT]->SetPosition({ FontContext::Component(10, true), {0}, {10} });
 	m_texts[NUMBER_OF_GENERATIONS_TEXT]->SetPosition({ FontContext::Component(9, true), {0}, {10} });

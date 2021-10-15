@@ -40,6 +40,18 @@ public:
 		m_timer.MakeTimeout();
 	}
 
+	// Returns true since it is a timer observer
+	inline bool IsTimerType()
+	{
+		return true;
+	}
+
+	// Returns false since it is a timer observer
+	bool IsEventType()
+	{
+		return false;
+	}
+
 private:
 
 	ContinuousTimer m_timer;

@@ -11,7 +11,6 @@ class DoubleText;
 class ObserverInterface;
 class SimulatedWorld;
 class FitnessSystem;
-class Vehicle;
 
 class StateTesting final :
 	public StateInterface
@@ -47,6 +46,7 @@ private:
 	// Returns current vehicle name
 	std::string GetCurrentVehicleName() const;
 
+	// Modes
 	enum
 	{
 		STOPPED_MODE,
@@ -57,6 +57,7 @@ private:
 	std::array<std::string, MODES_COUNT> m_modeStrings;
 	size_t m_mode;
 	
+	// Filename types
 	enum
 	{
 		MAP_FILENAME_TYPE,

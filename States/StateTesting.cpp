@@ -1,11 +1,11 @@
 #pragma once
 #include "StateTesting.hpp"
 #include "CoreLogger.hpp"
-#include "FunctionTimerObserver.hpp"
 #include "FilenameText.hpp"
 #include "ArtificialNeuralNetwork.hpp"
 #include "TypeEventObserver.hpp"
 #include "FunctionEventObserver.hpp"
+#include "FunctionTimerObserver.hpp"
 #include "SimulatedWorld.hpp"
 #include "MapPrototype.hpp"
 #include "FitnessSystem.hpp"
@@ -163,13 +163,11 @@ void StateTesting::Capture()
 						{
 							case CHANGE_MODE:
 							{
-								m_mode = RUNNING_MODE;
 								StatusText* modeText = static_cast<StatusText*>(m_texts[MODE_TEXT]);
 								if (!m_mapPrototype)
 								{
 									modeText->ShowStatusText();
 									modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_MAP_SPECIFIED]);
-									m_mode = STOPPED_MODE;
 									break;
 								}
 
@@ -198,23 +196,18 @@ void StateTesting::Capture()
 									if (m_artificialNeuralNetworks[i]->GetNumberOfInputNeurons() != m_vehiclePrototypes[i]->GetNumberOfSensors())
 									{
 										modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH]);
-										m_mode = STOPPED_MODE;
 										break;
 									}
 
 									if (m_artificialNeuralNetworks[i]->GetNumberOfOutputNeurons() != VehicleBuilder::GetDefaultNumberOfInputs())
 									{
 										modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH]);
-										m_mode = STOPPED_MODE;
 										break;
 									}
 								}
 
 								if (error)
-								{
-									m_mode = STOPPED_MODE;
 									break;
-								}
 
 								// Init simulated world
 								delete m_simulatedWorld;
@@ -230,9 +223,11 @@ void StateTesting::Capture()
 									m_userVehicle = m_simulatedWorld->AddVehicle(m_userVehiclePrototype);
 
 								// Add bot vehicles to the world
+								m_simulatedVehicles.resize(m_numberOfVehicles, nullptr);
 								for (size_t i = 0; i < m_numberOfVehicles; ++i)
 									m_simulatedVehicles[i] = m_simulatedWorld->AddVehicle(m_vehiclePrototypes[i]);
 
+								m_mode = RUNNING_MODE;
 								m_textObservers[MODE_TEXT]->Notify();
 								break;
 							}
@@ -257,21 +252,30 @@ void StateTesting::Capture()
 								switch (m_parameterType)
 								{
 									case SWITCH_VEHICLE:
-										++m_currentVehicle;
-										if (m_currentVehicle >= m_numberOfVehicles)
-											m_currentVehicle = 0;
-										m_textObservers[CURRENT_VEHICLE_TEXT]->Notify();
+										if (m_numberOfVehicles > 1)
+										{
+											++m_currentVehicle;
+											if (m_currentVehicle >= m_numberOfVehicles)
+												m_currentVehicle = 0;
+											m_textObservers[CURRENT_VEHICLE_TEXT]->Notify();
+										}
 										break;
 									case NUMBER_OF_VEHICLES:
 										OnAddVehicle();
 										break;
 									case ENABLE_USER_VEHICLE:
-										m_enableUserVehicle.Increase();
-										m_textObservers[ENABLE_USER_VEHICLE_TEXT]->Notify();
+										if (!m_enableUserVehicle)
+										{
+											m_enableUserVehicle.Increase();
+											m_textObservers[ENABLE_USER_VEHICLE_TEXT]->Notify();
+										}
 										break;
 									case ENABLE_CHECKPOINTS:
-										m_enableCheckpoints.Increase();
-										m_textObservers[ENABLE_CHECKPOINTS_TEXT]->Notify();
+										if (!m_enableCheckpoints)
+										{
+											m_enableCheckpoints.Increase();
+											m_textObservers[ENABLE_CHECKPOINTS_TEXT]->Notify();
+										}
 										break;
 								}
 								
@@ -282,22 +286,31 @@ void StateTesting::Capture()
 								switch (m_parameterType)
 								{
 									case SWITCH_VEHICLE:
-										if (m_currentVehicle == 0)
-											m_currentVehicle = m_numberOfVehicles - 1;
-										else
-											--m_currentVehicle;
-										m_textObservers[CURRENT_VEHICLE_TEXT]->Notify();
+										if (m_numberOfVehicles > 1)
+										{
+											if (m_currentVehicle == 0)
+												m_currentVehicle = m_numberOfVehicles - 1;
+											else
+												--m_currentVehicle;
+											m_textObservers[CURRENT_VEHICLE_TEXT]->Notify();
+										}
 										break;
 									case NUMBER_OF_VEHICLES:
 										OnRemoveVehicle();
 										break;
 									case ENABLE_USER_VEHICLE:
-										m_enableUserVehicle.Decrease();
-										m_textObservers[ENABLE_USER_VEHICLE_TEXT]->Notify();
+										if (m_enableUserVehicle)
+										{
+											m_enableUserVehicle.Decrease();
+											m_textObservers[ENABLE_USER_VEHICLE_TEXT]->Notify();
+										}
 										break;
 									case ENABLE_CHECKPOINTS:
-										m_enableCheckpoints.Decrease();
-										m_textObservers[ENABLE_CHECKPOINTS_TEXT]->Notify();
+										if (m_enableCheckpoints)
+										{
+											m_enableCheckpoints.Decrease();
+											m_textObservers[ENABLE_CHECKPOINTS_TEXT]->Notify();
+										}
 										break;
 								}
 
@@ -326,6 +339,7 @@ void StateTesting::Capture()
 							if (m_pressedKeys[iterator->second])
 								break;
 							m_mode = STOPPED_MODE;
+							m_textObservers[MODE_TEXT]->Notify();
 
 							// Reset vehicles
 							for (auto &vehiclePrototype : m_vehiclePrototypes)
@@ -540,10 +554,9 @@ void StateTesting::Update()
 
 			for (size_t i = 0; i < m_numberOfVehicles; ++i)
 			{
+				m_simulatedVehicles[i]->Update(m_simulatedWorld->GetStaticWorld());
 				if (!m_simulatedVehicles[i]->IsActive())
 					continue;
-
-				m_simulatedVehicles[i]->Update(m_simulatedWorld->GetStaticWorld());
 				const NeuronLayer& input = m_simulatedVehicles[i]->ProcessOutput();
 				const NeuronLayer& output = m_artificialNeuralNetworks[i]->Update(input);
 				m_simulatedVehicles[i]->ProcessInput(output);
@@ -575,8 +588,8 @@ bool StateTesting::Load()
 	m_texts[USER_FITNESS_TEXT] = new DoubleText({ "User fitness:" });
 
 	// Create observers
-	m_textObservers[MODE_TEXT] = new FunctionTimerObserver<std::string>([&] { return m_modeStrings[m_mode]; }, 0.05);
-	m_textObservers[FILENAME_TYPE_TEXT] = new FunctionTimerObserver<std::string>([&] { return m_filenameTypeStrings[m_filenameType]; }, 0.2);
+	m_textObservers[MODE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_modeStrings[m_mode]; });
+	m_textObservers[FILENAME_TYPE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_filenameTypeStrings[m_filenameType]; });
 	m_textObservers[PARAMETER_TYPE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_parameterTypesStrings[m_parameterType]; });
 	m_textObservers[CURRENT_VEHICLE_TEXT] = new FunctionEventObserver<std::string>([&] { return GetCurrentVehicleName(); });
 	m_textObservers[NUMBER_OF_VEHICLES_TEXT] = new TypeEventObserver<size_t>(m_numberOfVehicles);
@@ -589,15 +602,15 @@ bool StateTesting::Load()
 		m_texts[i]->SetObserver(m_textObservers[i]);
 
 	// Set texts positions
-	m_texts[MODE_TEXT]->SetPosition({ FontContext::Component(0), {0}, {4}, {8}, {14} });
-	m_texts[FILENAME_TYPE_TEXT]->SetPosition({ FontContext::Component(1), {0}, {4}, {8} });
-	m_texts[FILENAME_TEXT]->SetPosition({ FontContext::Component(2), {0}, {4}, {8}, {14} });
-	m_texts[PARAMETER_TYPE_TEXT]->SetPosition({ FontContext::Component(5, true), {0}, {5}, {10} });
+	m_texts[MODE_TEXT]->SetPosition({ FontContext::Component(0), {0}, {3}, {6}, {13} });
+	m_texts[FILENAME_TYPE_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {6} });
+	m_texts[FILENAME_TEXT]->SetPosition({ FontContext::Component(2), {0}, {3}, {6}, {13} });
+	m_texts[PARAMETER_TYPE_TEXT]->SetPosition({ FontContext::Component(5, true), {0}, {5}, {9} });
 	m_texts[CURRENT_VEHICLE_TEXT]->SetPosition({ FontContext::Component(4, true), {0}, {5} });
 	m_texts[NUMBER_OF_VEHICLES_TEXT]->SetPosition({ FontContext::Component(3, true), {0}, {5} });
 	m_texts[ENABLE_CHECKPOINTS_TEXT]->SetPosition({ FontContext::Component(2, true), {0}, {5} });
 	m_texts[ENABLE_USER_VEHICLE_TEXT]->SetPosition({ FontContext::Component(1, true), {0}, {5} });
-	m_texts[USER_FITNESS_TEXT]->SetPosition({ FontContext::Component(1, true), {7}, {11} });
+	m_texts[USER_FITNESS_TEXT]->SetPosition({ FontContext::Component(1, true), {7}, {10} });
 
 	CoreLogger::PrintSuccess("State \"Testing\" dependencies loaded correctly");
 	return true;
@@ -725,8 +738,8 @@ std::string StateTesting::GetCurrentVehicleName() const
 	if (m_numberOfVehicles == 0)
 		return "None";
 
-	std::string data = " [ ][ ]";
-	data[2] = m_vehiclePrototypes[m_currentVehicle] ? 'X' : ' ';
-	data[5] = m_artificialNeuralNetworks[m_currentVehicle] ? 'X' : ' ';
+	std::string data = " - Body [ ] Artificial Neural Network [ ]";
+	data[9] = m_vehiclePrototypes[m_currentVehicle] ? 'X' : ' ';
+	data[39] = m_artificialNeuralNetworks[m_currentVehicle] ? 'X' : ' ';
 	return std::string("Vehicle ") + std::to_string(m_currentVehicle) + data;
 }

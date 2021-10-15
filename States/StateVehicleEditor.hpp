@@ -31,20 +31,23 @@ public:
 
 private:
 
+	// Modes
 	enum
 	{
 		MODE_VEHICLE_BODY,
-		MODE_VEHICLE_SENSORS
+		MODE_VEHICLE_SENSORS,
+		MODES_COUNT
 	};
-	std::map<size_t, std::string> m_modeStrings;
+	std::array<std::string, MODES_COUNT> m_modeStrings;
 	size_t m_mode;
 
 	enum
 	{
 		VEHICLE_SENSORS_INSERT,
-		VEHICLE_SENSORS_REMOVE
+		VEHICLE_SENSORS_REMOVE,
+		VEHICLE_SENSORS_SUBMODE_COUNT
 	};
-	std::map<size_t, std::string> m_vehicleSensorsSubmodeStrings;
+	std::array<std::string, VEHICLE_SENSORS_SUBMODE_COUNT> m_vehicleSensorsSubmodeStrings;
 	size_t m_vehicleSensorsSubmode;
 
 	enum
@@ -80,10 +83,11 @@ private:
 	{
 		BACK_TEXT,
 		FRONT_TEXT,
-		ACTIVE_MODE_TEXT,
-		TOTAL_NUMBER_OF_EDGES_TEXT,
+		MODE_TEXT,
+		TOTAL_NUMBER_OF_BODY_POINTS_TEXT,
 		TOTAL_NUMBER_OF_SENSORS_TEXT,
 		FILENAME_TEXT,
+		VEHICLE_BODY_MASS,
 		VEHICLE_SENSORS_SUBMODE_TEXT,
 		CURRENT_SENSOR_TEXT,
 		CURRENT_SENSOR_ANGLE_TEXT,

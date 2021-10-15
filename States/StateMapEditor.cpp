@@ -1,9 +1,7 @@
 #include "StateMapEditor.hpp"
 #include "CoreWindow.hpp"
 #include "FilenameText.hpp"
-#include "TypeTimerObserver.hpp"
 #include "TypeEventObserver.hpp"
-#include "FunctionTimerObserver.hpp"
 #include "FunctionEventObserver.hpp"
 #include "CoreLogger.hpp"
 #include <functional>
@@ -13,8 +11,14 @@ StateMapEditor::StateMapEditor() :
 	m_viewMovementTimer(0.0, 0.1),
 	m_viewMovement(500.0, 1500.0, 50.0, 900.0)
 {
-	m_activeMode = ActiveMode::EDGE_MODE;
-	m_edgeSubmode = EdgeSubmode::GLUED_INSERT;
+	m_modeStrings[EDGE_MODE] = "Edge mode";
+	m_modeStrings[VEHICLE_MODE] = "Vehicle mode";
+	m_mode = EDGE_MODE;
+
+	m_edgeSubmodeStrings[GLUED_INSERT_EDGE_SUBMODE] = "Glued insert mode";
+	m_edgeSubmodeStrings[REMOVE_EDGE_SUBMODE] = "Remove mode";
+	m_edgeSubmode = GLUED_INSERT_EDGE_SUBMODE;
+
 	m_insertEdge = false;
 	m_removeEdge = false;
 	m_upToDate = false;
@@ -56,8 +60,8 @@ StateMapEditor::~StateMapEditor()
 void StateMapEditor::Reload()
 {
 	// Reset internal states
-	m_activeMode = ActiveMode::EDGE_MODE;
-	m_edgeSubmode = EdgeSubmode::GLUED_INSERT;
+	m_mode = EDGE_MODE;
+	m_edgeSubmode = GLUED_INSERT_EDGE_SUBMODE;
 	m_insertEdge = false;
 	m_removeEdge = false;
 	m_edgeBeggining = sf::Vector2f(0.0, 0.0);
@@ -76,6 +80,12 @@ void StateMapEditor::Reload()
 	m_vehiclePrototype->SetAngle(m_mapBuilder.GetVehicleAngle());
 	m_vehiclePrototype->Update();
 
+	// Reset view
+	auto& view = CoreWindow::GetView();
+	auto viewOffset = CoreWindow::GetViewOffset();
+	view.move(-viewOffset);
+	CoreWindow::GetRenderWindow().setView(view);
+
 	// Reset texts and text observers
 	for (size_t i = 0; i < TEXT_COUNT; ++i)
 	{
@@ -83,12 +93,6 @@ void StateMapEditor::Reload()
 			m_textObservers[i]->Notify();
 		m_texts[i]->Reset();
 	}
-
-	// Reset view
-	auto& view = CoreWindow::GetView();
-	auto viewOffset = CoreWindow::GetViewOffset();
-	view.move(-viewOffset);
-	CoreWindow::GetRenderWindow().setView(view);
 }
 
 void StateMapEditor::Capture()
@@ -98,50 +102,34 @@ void StateMapEditor::Capture()
 		sf::Vector2f correctPosition = CoreWindow::GetMousePosition() + CoreWindow::GetViewOffset();
 		if (DrawableMath::IsPointInsideRectangle(m_allowedMapAreaShape.getSize(), m_allowedMapAreaShape.getPosition(), correctPosition))
 		{
-			switch (m_activeMode)
+			switch (m_mode)
 			{
-				case ActiveMode::EDGE_MODE:
+				case EDGE_MODE:
 				{
 					switch (m_edgeSubmode)
 					{
-						case EdgeSubmode::GLUED_INSERT:
-						{
-							if (m_insertEdge)
-							{
-								if (!m_mapPrototype.IsEmpty())
-								{
-									Edge temporaryEdge = { m_edgeBeggining, correctPosition };
-									m_insertEdge = !m_mapPrototype.FindClosestPointOnIntersection(temporaryEdge, correctPosition);
-								}
-
-								m_mapPrototype.AddEdge({ m_edgeBeggining, correctPosition });
-								m_upToDate = false;
-							}
-							else
-								m_insertEdge = true;
-
-							m_edgeBeggining = correctPosition;
+						case GLUED_INSERT_EDGE_SUBMODE:
+							InsertEdge(correctPosition);
 							break;
-						}
-						case EdgeSubmode::REMOVE:
-						{
-							if (m_removeEdge)
-								m_upToDate = !m_mapPrototype.RemoveEdgesOnInterscetion({ m_edgeBeggining, correctPosition });
-							else
-								m_edgeBeggining = correctPosition;
-
-							m_removeEdge = !m_removeEdge;
+						case REMOVE_EDGE_SUBMODE:
+							RemoveEdge(correctPosition);
 							break;
-						}
 					}
 					break;
 				}
-				case ActiveMode::VEHICLE_MODE:
+				case VEHICLE_MODE:
 				{
-					m_vehiclePositioned = true;
-					m_textObservers[VEHICLE_POSITIONED_TEXT]->Notify();
 					m_vehiclePrototype->SetCenter(correctPosition);
 					m_vehiclePrototype->Update();
+
+					if (!m_vehiclePositioned)
+					{
+						m_vehiclePositioned = true;
+						// If vehicle was not previously positioned notify observers
+						m_textObservers[VEHICLE_POSITIONED_TEXT]->Notify();
+						m_textObservers[VEHICLE_ANGLE_TEXT]->Notify();
+					}
+					
 					m_upToDate = false;
 					break;
 				}
@@ -166,10 +154,12 @@ void StateMapEditor::Update()
 		{
 			filenameText->SetSuccessStatusText(status.second);
 			m_mapPrototype.SetEdges(m_mapBuilder.GetEdges());
+			m_textObservers[EDGE_COUNT_TEXT]->Notify();
 			m_vehiclePositioned = true;
 			m_vehiclePrototype->SetCenter(m_mapBuilder.GetVehicleCenter());
 			m_vehiclePrototype->SetAngle(m_mapBuilder.GetVehicleAngle());
 			m_vehiclePrototype->Update();
+			m_textObservers[VEHICLE_ANGLE_TEXT]->Notify();
 			m_upToDate = true;
 		}
 		else
@@ -195,19 +185,20 @@ void StateMapEditor::Update()
 	}
 	else if (!filenameText->IsRenaming())
 	{
-		switch (m_activeMode)
+		switch (m_mode)
 		{
-			case ActiveMode::EDGE_MODE:
+			case EDGE_MODE:
 			{
 				if (sf::Keyboard::isKeyPressed(sf::Keyboard::F2))
 				{
+					m_mode = VEHICLE_MODE;
+					m_textObservers[MODE_TEXT]->Notify();
 					m_textObservers[VEHICLE_POSITIONED_TEXT]->Notify();
-					m_activeMode = ActiveMode::VEHICLE_MODE;
-					m_textObservers[ACTIVE_MODE_TEXT]->Notify();
+					m_textObservers[VEHICLE_ANGLE_TEXT]->Notify();
 				}
 				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::LAlt) || sf::Keyboard::isKeyPressed(sf::Keyboard::RAlt))
 				{
-					if (!m_mapPrototype.IsEmpty() && m_edgeSubmode == EdgeSubmode::GLUED_INSERT)
+					if (!m_mapPrototype.IsEmpty() && m_edgeSubmode == GLUED_INSERT_EDGE_SUBMODE)
 					{
 						sf::Vector2f correctPosition = CoreWindow::GetMousePosition() + CoreWindow::GetViewOffset();
 						m_edgeBeggining = correctPosition;
@@ -224,16 +215,16 @@ void StateMapEditor::Update()
 				}
 				else
 				{
-					EdgeSubmode mode = m_edgeSubmode;
+					size_t mode = m_edgeSubmode;
 					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1) ||
 						sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad1))
 					{
-						mode = EdgeSubmode::GLUED_INSERT;
+						mode = GLUED_INSERT_EDGE_SUBMODE;
 					}
 					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2) ||
 						sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad2))
 					{
-						mode = EdgeSubmode::REMOVE;
+						mode = REMOVE_EDGE_SUBMODE;
 					}
 
 					if (m_edgeSubmode != mode)
@@ -247,16 +238,16 @@ void StateMapEditor::Update()
 
 				break;
 			}
-			case ActiveMode::VEHICLE_MODE:
+			case VEHICLE_MODE:
 			{
 				if (sf::Keyboard::isKeyPressed(sf::Keyboard::F1))
 				{
-					m_edgeSubmode = EdgeSubmode::GLUED_INSERT;
+					m_edgeSubmode = GLUED_INSERT_EDGE_SUBMODE;
+					m_textObservers[EDGE_SUBMODE_TEXT]->Notify();
 					m_insertEdge = false;
 					m_removeEdge = false;
-					m_textObservers[EDGE_SUBMODE_TEXT]->Notify();
-					m_activeMode = ActiveMode::EDGE_MODE;
-					m_textObservers[ACTIVE_MODE_TEXT]->Notify();
+					m_mode = EDGE_MODE;
+					m_textObservers[MODE_TEXT]->Notify();
 				}
 				else
 				{
@@ -265,7 +256,10 @@ void StateMapEditor::Update()
 						if (m_vehiclePositioned)
 						{
 							m_vehiclePositioned = false;
+							m_vehiclePrototype->SetAngle(0.0);
+							m_vehiclePrototype->Update();
 							m_textObservers[VEHICLE_POSITIONED_TEXT]->Notify();
+							m_textObservers[VEHICLE_ANGLE_TEXT]->Notify();
 						}
 					}
 					else if (m_vehiclePositioned)
@@ -278,6 +272,7 @@ void StateMapEditor::Update()
 								angle = MapBuilder::GetMaxVehicleAngle();
 							m_vehiclePrototype->SetAngle(angle);
 							m_vehiclePrototype->Update();
+							m_textObservers[VEHICLE_ANGLE_TEXT]->Notify();
 						}
 						else if (sf::Keyboard::isKeyPressed(sf::Keyboard::X))
 						{
@@ -287,6 +282,7 @@ void StateMapEditor::Update()
 								angle = MapBuilder::GetMinVehicleAngle();
 							m_vehiclePrototype->SetAngle(angle);
 							m_vehiclePrototype->Update();
+							m_textObservers[VEHICLE_ANGLE_TEXT]->Notify();
 						}
 					}
 				}
@@ -301,26 +297,44 @@ void StateMapEditor::Update()
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Add))
 		{
 			if (m_viewMovementTimer.Update())
+			{
 				m_viewMovement.Increase();
+				m_textObservers[MOVEMENT_TEXT]->Notify();
+			}
 		}
 		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Subtract))
 		{
 			if (m_viewMovementTimer.Update())
+			{
 				m_viewMovement.Decrease();
+				m_textObservers[MOVEMENT_TEXT]->Notify();
+			}
 		}
 
 		auto& view = CoreWindow::GetView();
 		auto viewPosition = view.getCenter() - (CoreWindow::GetSize() / 2.0f);
 		float moveOffset = static_cast<float>(m_viewMovement * elapsedTime);
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+		{
 			view.move(sf::Vector2f(-moveOffset, 0));
+			m_textObservers[VIEW_OFFSET_X_TEXT]->Notify();
+		}
 		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+		{
 			view.move(sf::Vector2f(moveOffset, 0));
+			m_textObservers[VIEW_OFFSET_X_TEXT]->Notify();
+		}
 
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+		{
 			view.move(sf::Vector2f(0, -moveOffset));
+			m_textObservers[VIEW_OFFSET_Y_TEXT]->Notify();
+		}
 		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+		{
 			view.move(sf::Vector2f(0, moveOffset));
+			m_textObservers[VIEW_OFFSET_Y_TEXT]->Notify();
+		}
 
 		view = CoreWindow::GetView();
 		viewPosition = view.getCenter() - (CoreWindow::GetSize() / 2.0f);
@@ -350,14 +364,8 @@ void StateMapEditor::Update()
 
 bool StateMapEditor::Load()
 {
-	// Set strigs map
-	m_activeModeMap[ActiveMode::EDGE_MODE] = "Edge mode";
-	m_activeModeMap[ActiveMode::VEHICLE_MODE] = "Vehicle mode";
-	m_edgeSubmodeMap[EdgeSubmode::GLUED_INSERT] = "Glued insert mode";
-	m_edgeSubmodeMap[EdgeSubmode::REMOVE] = "Remove mode";
-
 	// Create texts
-	m_texts[ACTIVE_MODE_TEXT] = new TripleText({ "Active mode:", "",  "| [F1] [F2]" });
+	m_texts[MODE_TEXT] = new TripleText({ "Mode:", "",  "| [F1] [F2]" });
 	m_texts[MOVEMENT_TEXT] = new TripleText({ "Movement:", "", "| [+] [-]" });
 	m_texts[VIEW_OFFSET_X_TEXT] = new TripleText({ "View offset x:", "", "| [A] [D]" });
 	m_texts[VIEW_OFFSET_Y_TEXT] = new TripleText({ "View offset y:", "", "| [W] [S]" });
@@ -368,22 +376,22 @@ bool StateMapEditor::Load()
 	m_texts[VEHICLE_ANGLE_TEXT] = new TripleText({ "Vehicle angle:", "", "| [Z] [X]" });
 
 	// Create observers
-	m_textObservers[ACTIVE_MODE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_activeModeMap[m_activeMode]; });
-	m_textObservers[MOVEMENT_TEXT] = new FunctionTimerObserver<size_t>([&] { return size_t(m_viewMovement); }, 0.05);
-	m_textObservers[VIEW_OFFSET_X_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(int(CoreWindow::GetViewOffset().x)); }, 0.05);
-	m_textObservers[VIEW_OFFSET_Y_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(int(CoreWindow::GetViewOffset().y)); }, 0.05);
+	m_textObservers[MODE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_modeStrings[m_mode]; });
+	m_textObservers[MOVEMENT_TEXT] = new FunctionEventObserver<size_t>([&] { return size_t(m_viewMovement); });
+	m_textObservers[VIEW_OFFSET_X_TEXT] = new FunctionEventObserver<int>([&] { return int(CoreWindow::GetViewOffset().x); });
+	m_textObservers[VIEW_OFFSET_Y_TEXT] = new FunctionEventObserver<int>([&] { return int(CoreWindow::GetViewOffset().y); });
 	m_textObservers[FILENAME_TEXT] = nullptr;
-	m_textObservers[EDGE_SUBMODE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_edgeSubmodeMap[m_edgeSubmode]; });
-	m_textObservers[EDGE_COUNT_TEXT] = new FunctionTimerObserver<size_t>([&] { return m_mapPrototype.GetNumberOfEdges(); }, 0.5);
+	m_textObservers[EDGE_SUBMODE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_edgeSubmodeStrings[m_edgeSubmode]; });
+	m_textObservers[EDGE_COUNT_TEXT] = new FunctionEventObserver<size_t>([&] { return m_mapPrototype.GetNumberOfEdges(); });
 	m_textObservers[VEHICLE_POSITIONED_TEXT] = new TypeEventObserver<bool>(m_vehiclePositioned);
-	m_textObservers[VEHICLE_ANGLE_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(m_vehiclePrototype->GetAngle()); }, 0.2);
+	m_textObservers[VEHICLE_ANGLE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_vehiclePositioned ? std::to_string(m_vehiclePrototype->GetAngle()) : "Unknown"; });
 
 	// Set text observers
 	for (size_t i = 0; i < TEXT_COUNT; ++i)
 		m_texts[i]->SetObserver(m_textObservers[i]);
 	
 	// Set text positions
-	m_texts[ACTIVE_MODE_TEXT]->SetPosition({ FontContext::Component(0), {0}, {3}, {7} });
+	m_texts[MODE_TEXT]->SetPosition({ FontContext::Component(0), {0}, {3}, {7} });
 	m_texts[MOVEMENT_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {7} });
 	m_texts[VIEW_OFFSET_X_TEXT]->SetPosition({ FontContext::Component(2), {0}, {3}, {7} });
 	m_texts[VIEW_OFFSET_Y_TEXT]->SetPosition({ FontContext::Component(3), {0}, {3}, {7} });
@@ -409,9 +417,9 @@ void StateMapEditor::Draw()
 
 	CoreWindow::GetRenderWindow().draw(m_allowedMapAreaShape);
 
-	switch (m_activeMode)
+	switch (m_mode)
 	{
-		case ActiveMode::EDGE_MODE:
+		case EDGE_MODE:
 		{
 			if (m_insertEdge)
 			{
@@ -436,7 +444,7 @@ void StateMapEditor::Draw()
 			m_texts[EDGE_COUNT_TEXT]->Draw();
 			break;
 		}
-		case ActiveMode::VEHICLE_MODE:
+		case VEHICLE_MODE:
 		{
 			m_texts[VEHICLE_POSITIONED_TEXT]->Draw();
 			m_texts[VEHICLE_ANGLE_TEXT]->Draw();
@@ -446,9 +454,42 @@ void StateMapEditor::Draw()
 			break;
 	}
 
-	m_texts[ACTIVE_MODE_TEXT]->Draw();
+	m_texts[MODE_TEXT]->Draw();
 	m_texts[MOVEMENT_TEXT]->Draw();
 	m_texts[VIEW_OFFSET_X_TEXT]->Draw();
 	m_texts[VIEW_OFFSET_Y_TEXT]->Draw();
 	m_texts[FILENAME_TEXT]->Draw();
+}
+
+void StateMapEditor::InsertEdge(sf::Vector2f edgeEndPoint)
+{
+	if (m_insertEdge)
+	{
+		if (!m_mapPrototype.IsEmpty())
+			m_insertEdge = !m_mapPrototype.FindClosestPointOnIntersection({ m_edgeBeggining, edgeEndPoint }, edgeEndPoint);
+
+		m_mapPrototype.AddEdge({ m_edgeBeggining, edgeEndPoint });
+		m_textObservers[EDGE_COUNT_TEXT]->Notify();
+		m_upToDate = false;
+	}
+	else
+		m_insertEdge = true;
+
+	m_edgeBeggining = edgeEndPoint;
+}
+
+void StateMapEditor::RemoveEdge(sf::Vector2f edgeEndPoint)
+{
+	if (m_removeEdge)
+	{
+		if (m_mapPrototype.RemoveEdgesOnInterscetion({ m_edgeBeggining, edgeEndPoint }))
+		{
+			m_upToDate = false;
+			m_textObservers[EDGE_COUNT_TEXT]->Notify();
+		}
+	}
+	else
+		m_edgeBeggining = edgeEndPoint;
+
+	m_removeEdge = !m_removeEdge;
 }

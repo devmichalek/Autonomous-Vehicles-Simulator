@@ -56,8 +56,8 @@ void FilenameText<ReadOperations, WriteOperations>::Reset()
 	m_filename = m_filenameDummy;
 	m_texts[VARIABLE_TEXT].setString(m_filename);
 
-	// Set variable text to default color
-	SetVariableTextColor();
+	// Set variable text to inactive color
+	SetVariableTextInactiveColor();
 
 	// Reset status text
 	StatusText::Reset();
@@ -165,7 +165,7 @@ void FilenameText<ReadOperations, WriteOperations>::OnControlKeyPressedEvent(sf:
 					}
 
 					m_pressedControlKeys[sf::Keyboard::Escape] = false;
-					SetVariableTextColor();
+					SetVariableTextInactiveColor();
 					m_activeActions[RENAMING_ACTION] = false;
 				}
 			}
@@ -199,7 +199,7 @@ void FilenameText<ReadOperations, WriteOperations>::OnControlKeyPressedEvent(sf:
 				m_pressedControlKeys[sf::Keyboard::R] = false;
 				m_pressedControlKeys[sf::Keyboard::LControl] = false;
 				m_pressedControlKeys[sf::Keyboard::RControl] = false;
-				SetVariableTextColor(sf::Color::Yellow);
+				SetVariableTextActiveColor();
 			}
 		}
 	}

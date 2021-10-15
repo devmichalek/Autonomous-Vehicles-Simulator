@@ -39,6 +39,15 @@ public:
 		m_edges.push_back(edge);
 	}
 
+	// Inserts edge to the specific place in container
+	inline void InsertEdge(Edge edge, size_t index)
+	{
+		if (index < m_edges.size())
+			m_edges.insert(m_edges.begin() + index, edge);
+		else
+			AddEdge(edge);
+	}
+
 	// Sets edges
 	inline void SetEdges(const EdgeVector& edges)
 	{
@@ -82,7 +91,7 @@ public:
 	}
 
 	// Finds closest point based on intersection
-	bool FindClosestPointOnIntersection(const Edge& edge, sf::Vector2f& point);
+	bool FindClosestPointOnIntersection(Edge edge, sf::Vector2f& point);
 
 	// Finds closest point based on distance
 	bool FindClosestPointOnDistance(const sf::Vector2f& base, sf::Vector2f& point);

@@ -10,13 +10,13 @@ float VehicleBuilder::m_maxVehicleMass;
 
 bool VehicleBuilder::ValidateVehicleBodyNumberOfPoints(size_t count)
 {
-	if (count < GetMinVehicleBodyNumberOfPoints())
+	if (count < GetMinNumberOfBodyPoints())
 	{
 		m_lastOperationStatus = ERROR_TOO_LITTLE_VEHICLE_BODY_POINTS;
 		return false;
 	}
 
-	if (count > GetMaxVehicleBodyNumberOfPoints())
+	if (count > GetMaxNumberOfBodyPoints())
 	{
 		m_lastOperationStatus = ERROR_TOO_MANY_VEHICLE_BODY_POINTS;
 		return false;
@@ -353,8 +353,11 @@ VehicleBuilder::~VehicleBuilder()
 {
 }
 
-float VehicleBuilder::CalculateMass(std::vector<sf::Vector2f> vehicleBodyPoints)
+float VehicleBuilder::CalculateMass(const std::vector<sf::Vector2f>& vehicleBodyPoints)
 {
+	if (vehicleBodyPoints.size() < GetMinNumberOfBodyPoints())
+		return 0.f;
+
 	// Create shape
 	b2World world(b2Vec2(0.f, 0.f));
 	const size_t numberOfPoints = vehicleBodyPoints.size();

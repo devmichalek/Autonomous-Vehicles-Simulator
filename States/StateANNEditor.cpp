@@ -1,7 +1,7 @@
 #include "StateANNEditor.hpp"
 #include "CoreLogger.hpp"
-#include "FunctionTimerObserver.hpp"
-#include "TypeTimerObserver.hpp"
+#include "FunctionEventObserver.hpp"
+#include "TypeEventObserver.hpp"
 #include "VariableText.hpp"
 #include "FilenameText.hpp"
 
@@ -94,9 +94,17 @@ void StateANNEditor::Capture()
 				switch (iterator->second)
 				{
 					case SWITCH_LAYER:
-						++m_currentLayer;
-						if (m_currentLayer >= m_neuronLayerSizes.size())
-							m_currentLayer = 0;
+						if (m_neuronLayerSizes.size() > 1)
+						{
+							++m_currentLayer;
+							if (m_currentLayer >= m_neuronLayerSizes.size())
+								m_currentLayer = 0;
+
+							m_textObservers[CURRENT_LAYER_TEXT]->Notify();
+							m_textObservers[CURRENT_LAYER_NUMBER_OF_NEURONS_TEXT]->Notify();
+							m_textObservers[CURRENT_LAYER_ACTIVATION_FUNCTION_TEXT]->Notify();
+							m_textObservers[CURRENT_LAYER_BIAS_TEXT]->Notify();
+						}
 						break;
 					case ADD_LAYER:
 						AddLayer();
@@ -121,6 +129,7 @@ void StateANNEditor::Capture()
 							if (m_activationFunctionIndexes[m_currentLayer - 1] >= ActivationFunctionContext::GetActivationFunctionsCount())
 								m_activationFunctionIndexes[m_currentLayer - 1] = ActivationFunctionContext::GetMinActivationFunctionIndex();
 							m_upToDate = false;
+							m_textObservers[CURRENT_LAYER_ACTIVATION_FUNCTION_TEXT]->Notify();
 						}
 						break;
 					case INCREASE_BIAS:
@@ -130,6 +139,7 @@ void StateANNEditor::Capture()
 							if (m_biasVector[m_currentLayer - 1] > ArtificialNeuralNetworkBuilder::GetMaxBiasValue())
 								m_biasVector[m_currentLayer - 1] = ArtificialNeuralNetworkBuilder::GetMaxBiasValue();
 							m_upToDate = false;
+							m_textObservers[CURRENT_LAYER_BIAS_TEXT]->Notify();
 						}
 						break;
 					case DECREASE_BIAS:
@@ -139,6 +149,7 @@ void StateANNEditor::Capture()
 							if (m_biasVector[m_currentLayer - 1] < ArtificialNeuralNetworkBuilder::GetMinBiasValue())
 								m_biasVector[m_currentLayer - 1] = ArtificialNeuralNetworkBuilder::GetMinBiasValue();
 							m_upToDate = false;
+							m_textObservers[CURRENT_LAYER_BIAS_TEXT]->Notify();
 						}
 						break;
 				}
@@ -204,6 +215,14 @@ void StateANNEditor::Update()
 			// Calculate strengths
 			for (size_t i = 0; i < m_weightStrengths.size(); ++i)
 				m_weightStrengths[i] = GetWeightStrength(max, weights[i]);
+
+			// Notify observers
+			m_textObservers[CURRENT_LAYER_TEXT]->Notify();
+			m_textObservers[CURRENT_LAYER_NUMBER_OF_NEURONS_TEXT]->Notify();
+			m_textObservers[CURRENT_LAYER_ACTIVATION_FUNCTION_TEXT]->Notify();
+			m_textObservers[CURRENT_LAYER_BIAS_TEXT]->Notify();
+			m_textObservers[TOTAL_NUMBER_OF_LAYERS_TEXT]->Notify();
+			m_textObservers[TOTAL_NUMBER_OF_ACTIVATION_FUNCTIONS_TEXT]->Notify();
 		}
 		else
 			filenameText->SetErrorStatusText(status.second);
@@ -223,31 +242,23 @@ bool StateANNEditor::Load()
 	m_texts[CURRENT_LAYER_ACTIVATION_FUNCTION_TEXT] = new TripleText({ "Current layer activation function:", "", "| [*]" });
 	m_texts[CURRENT_LAYER_BIAS_TEXT] = new TripleText({ "Current layer bias:", "", "| [Z] [X]" });
 	m_texts[FILENAME_TEXT] = new FilenameText<true, true>("ann.bin");
-	m_texts[NUMBER_OF_LAYERS_TEXT] = new DoubleText({ "Total number of layers:" });
-	m_texts[NUMBER_OF_NEURONS_TEXT] = new DoubleText({ "Total number of neurons:" });
-	m_texts[NUMBER_OF_WEIGHTS_TEXT] = new DoubleText({ "Total number of weights:" });
-	m_texts[NUMBER_OF_ACTIVATION_FUNCTIONS_TEXT] = new DoubleText({ "Total number of activation functions:" });
+	m_texts[TOTAL_NUMBER_OF_LAYERS_TEXT] = new DoubleText({ "Total number of layers:" });
+	m_texts[TOTAL_NUMBER_OF_NEURONS_TEXT] = new DoubleText({ "Total number of neurons:" });
+	m_texts[TOTAL_NUMBER_OF_WEIGHTS_TEXT] = new DoubleText({ "Total number of weights:" });
+	m_texts[TOTAL_NUMBER_OF_ACTIVATION_FUNCTIONS_TEXT] = new DoubleText({ "Total number of activation functions:" });
 
 	// Create observers
 	m_textObservers[INPUT_TEXT] = nullptr;
 	m_textObservers[OUTPUT_TEXT] = nullptr;
-	m_textObservers[CURRENT_LAYER_TEXT] = new FunctionTimerObserver<std::string>([&] { return m_neuronLayerSizes.empty() ? "None" : ("L" + std::to_string(m_currentLayer)); }, 0.1);
-	m_textObservers[CURRENT_LAYER_NUMBER_OF_NEURONS_TEXT] = new FunctionTimerObserver<std::string>([&] { return m_neuronLayerSizes.empty() ? "None" : std::to_string(m_neuronLayerSizes[m_currentLayer]); }, 0.1);
-	m_textObservers[CURRENT_LAYER_ACTIVATION_FUNCTION_TEXT] = new FunctionTimerObserver<std::string>([&] {
-			if (m_activationFunctionIndexes.empty() || m_currentLayer == 0)
-				return std::string("None");
-			return ActivationFunctionContext::GetString(m_activationFunctionIndexes[m_currentLayer - 1]);
-		}, 0.3);
-	m_textObservers[CURRENT_LAYER_BIAS_TEXT] = new FunctionTimerObserver<std::string>([&] {
-			if (m_biasVector.empty() || m_currentLayer == 0)
-				return std::string("None");
-			return std::to_string(m_biasVector[m_currentLayer - 1]);
-		}, 0.05);
+	m_textObservers[CURRENT_LAYER_TEXT] = new FunctionEventObserver<std::string>([&] { return m_neuronLayerSizes.empty() ? "None" : ("Layer " + std::to_string(m_currentLayer)); });
+	m_textObservers[CURRENT_LAYER_NUMBER_OF_NEURONS_TEXT] = new FunctionEventObserver<std::string>([&] { return m_neuronLayerSizes.empty() ? "None" : std::to_string(m_neuronLayerSizes[m_currentLayer]); });
+	m_textObservers[CURRENT_LAYER_ACTIVATION_FUNCTION_TEXT] = new FunctionEventObserver<std::string>([&] { return m_currentLayer == 0 ? std::string("None") : ActivationFunctionContext::GetString(m_activationFunctionIndexes[m_currentLayer - 1]); });
+	m_textObservers[CURRENT_LAYER_BIAS_TEXT] = new FunctionEventObserver<std::string>([&] { return m_currentLayer == 0 ? std::string("None") : std::to_string(m_biasVector[m_currentLayer - 1]); });
 	m_textObservers[FILENAME_TEXT] = nullptr;
-	m_textObservers[NUMBER_OF_LAYERS_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(m_neuronLayerSizes.size()); }, 0.5);
-	m_textObservers[NUMBER_OF_NEURONS_TEXT] = new TypeTimerObserver<size_t>(m_totalNumberOfNeurons, 0.2);
-	m_textObservers[NUMBER_OF_WEIGHTS_TEXT] = new TypeTimerObserver<size_t>(m_totalNumberOfWeights, 0.2);
-	m_textObservers[NUMBER_OF_ACTIVATION_FUNCTIONS_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(m_activationFunctionIndexes.size()); }, 0.5);
+	m_textObservers[TOTAL_NUMBER_OF_LAYERS_TEXT] = new FunctionEventObserver<size_t>([&] { return m_neuronLayerSizes.size(); });
+	m_textObservers[TOTAL_NUMBER_OF_NEURONS_TEXT] = new TypeEventObserver<size_t>(m_totalNumberOfNeurons);
+	m_textObservers[TOTAL_NUMBER_OF_WEIGHTS_TEXT] = new TypeEventObserver<size_t>(m_totalNumberOfWeights);
+	m_textObservers[TOTAL_NUMBER_OF_ACTIVATION_FUNCTIONS_TEXT] = new FunctionEventObserver<size_t>([&] { return m_activationFunctionIndexes.size(); });
 
 	// Set text observers
 	for (size_t i = CURRENT_LAYER_TEXT; i < TEXT_COUNT; ++i)
@@ -269,10 +280,10 @@ bool StateANNEditor::Load()
 	m_texts[CURRENT_LAYER_ACTIVATION_FUNCTION_TEXT]->SetPosition({ FontContext::Component(2), {0}, {7}, {14} });
 	m_texts[CURRENT_LAYER_BIAS_TEXT]->SetPosition({ FontContext::Component(3), {0}, {7}, {14} });
 	m_texts[FILENAME_TEXT]->SetPosition({ FontContext::Component(4), {0}, {7}, {14}, {23} });
-	m_texts[NUMBER_OF_LAYERS_TEXT]->SetPosition({ FontContext::Component(4, true), {0}, {8} });
-	m_texts[NUMBER_OF_NEURONS_TEXT]->SetPosition({ FontContext::Component(3, true), {0}, {8} });
-	m_texts[NUMBER_OF_WEIGHTS_TEXT]->SetPosition({ FontContext::Component(2, true), {0}, {8} });
-	m_texts[NUMBER_OF_ACTIVATION_FUNCTIONS_TEXT]->SetPosition({ FontContext::Component(1, true), {0}, {8} });
+	m_texts[TOTAL_NUMBER_OF_LAYERS_TEXT]->SetPosition({ FontContext::Component(4, true), {0}, {8} });
+	m_texts[TOTAL_NUMBER_OF_NEURONS_TEXT]->SetPosition({ FontContext::Component(3, true), {0}, {8} });
+	m_texts[TOTAL_NUMBER_OF_WEIGHTS_TEXT]->SetPosition({ FontContext::Component(2, true), {0}, {8} });
+	m_texts[TOTAL_NUMBER_OF_ACTIVATION_FUNCTIONS_TEXT]->SetPosition({ FontContext::Component(1, true), {0}, {8} });
 
 	CoreLogger::PrintSuccess("State \"Artificial Neural Network Editor\" dependencies loaded correctly");
 	return true;
@@ -369,6 +380,12 @@ void StateANNEditor::CalculatePositions()
 			position.y -= m_neuronShape.getRadius();
 		}
 	}
+
+	if (!m_textObservers.empty())
+	{
+		m_textObservers[TOTAL_NUMBER_OF_NEURONS_TEXT]->Notify();
+		m_textObservers[TOTAL_NUMBER_OF_WEIGHTS_TEXT]->Notify();
+	}
 }
 
 void StateANNEditor::AddLayer()
@@ -377,13 +394,25 @@ void StateANNEditor::AddLayer()
 	{
 		m_currentLayer = m_neuronLayerSizes.empty() ? 0 : m_currentLayer + 1;
 		m_neuronLayerSizes.insert(m_neuronLayerSizes.begin() + m_currentLayer, 0);
+
 		if (m_currentLayer != 0)
 		{
 			m_activationFunctionIndexes.insert(m_activationFunctionIndexes.begin() + (m_currentLayer - 1), ActivationFunctionContext::GetMinActivationFunctionIndex());
 			m_biasVector.insert(m_biasVector.begin() + (m_currentLayer - 1), ArtificialNeuralNetworkBuilder::GetDefaultBiasValue());
+			m_textObservers[TOTAL_NUMBER_OF_ACTIVATION_FUNCTIONS_TEXT]->Notify();
 		}
 
+		// Add neuron to newly created neuron layer
 		AddNeuron();
+
+		// Notify observers
+		m_textObservers[CURRENT_LAYER_TEXT]->Notify();
+		m_textObservers[CURRENT_LAYER_NUMBER_OF_NEURONS_TEXT]->Notify();
+		m_textObservers[CURRENT_LAYER_ACTIVATION_FUNCTION_TEXT]->Notify();
+		m_textObservers[CURRENT_LAYER_BIAS_TEXT]->Notify();
+		m_textObservers[TOTAL_NUMBER_OF_LAYERS_TEXT]->Notify();
+
+		// Set it as not up to date
 		m_upToDate = false;
 	}
 }
@@ -399,14 +428,25 @@ void StateANNEditor::RemoveLayer()
 			auto correctedIndex = m_currentLayer == 0 ? m_currentLayer : (m_currentLayer - 1);
 			m_activationFunctionIndexes.erase(m_activationFunctionIndexes.begin() + correctedIndex);
 			m_biasVector.erase(m_biasVector.begin() + correctedIndex);
+			m_textObservers[TOTAL_NUMBER_OF_ACTIVATION_FUNCTIONS_TEXT]->Notify();
 		}
 
 		if (m_currentLayer == previousNumberOfNeuronLayers - 1)
 		{
 			if (m_currentLayer > 0)
+			{
 				--m_currentLayer;
+			}
 		}
 
+		// Notify observers
+		m_textObservers[CURRENT_LAYER_TEXT]->Notify();
+		m_textObservers[CURRENT_LAYER_NUMBER_OF_NEURONS_TEXT]->Notify();
+		m_textObservers[CURRENT_LAYER_ACTIVATION_FUNCTION_TEXT]->Notify();
+		m_textObservers[CURRENT_LAYER_BIAS_TEXT]->Notify();
+		m_textObservers[TOTAL_NUMBER_OF_LAYERS_TEXT]->Notify();
+
+		// Set it as not up to date
 		m_upToDate = false;
 	}
 }
@@ -418,6 +458,7 @@ void StateANNEditor::AddNeuron()
 		if (m_neuronLayerSizes[m_currentLayer] + 1 <= ArtificialNeuralNetworkBuilder::GetMaxNumberOfNeuronsPerLayer())
 		{
 			++m_neuronLayerSizes[m_currentLayer];
+			m_textObservers[CURRENT_LAYER_NUMBER_OF_NEURONS_TEXT]->Notify();
 		}
 
 		m_upToDate = false;
@@ -431,6 +472,7 @@ void StateANNEditor::RemoveNeuron()
 		if (m_neuronLayerSizes[m_currentLayer] > 0)
 		{
 			--m_neuronLayerSizes[m_currentLayer];
+			m_textObservers[CURRENT_LAYER_NUMBER_OF_NEURONS_TEXT]->Notify();
 			if (m_neuronLayerSizes[m_currentLayer] == 0)
 				RemoveLayer();
 		}

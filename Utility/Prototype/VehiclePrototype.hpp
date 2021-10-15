@@ -21,6 +21,8 @@ class VehiclePrototype final
 	sf::ConvexShape m_bodyShape;
 	EdgeShape m_beamShape;
 	sf::CircleShape m_sensorShape;
+	static const sf::Color m_defaultSensorShapeColor;
+	static const sf::Color m_markedSensorShapeColor;
 
 public:
 
@@ -135,6 +137,9 @@ public:
 
 	// Draws vehicle sensor beams
 	void DrawBeams();
+
+	// Draws marked sensor shape
+	void DrawMarkedSensor(size_t index);
 };
 
 using VehiclePrototypes = std::vector<VehiclePrototype*>;

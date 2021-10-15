@@ -2,6 +2,7 @@
 #include "TextAbstract.hpp"
 
 class ObserverInterface;
+class TimerAbstract;
 
 class DoubleText :
 	public TextAbstract
@@ -25,13 +26,19 @@ public:
 	// Sets observer for variable text string
 	void SetObserver(ObserverInterface* observer);
 
+	// Returns the result of two blended colors based on alpha factor
+	sf::Color BlendColors(sf::Color a, sf::Color b, float alpha);
+
 protected:
 
 	// If observer is ready text string is set
 	virtual void UpdateInternal() override;
 
-	// Sets second (variable) text color
-	void SetVariableTextColor(sf::Color color = sf::Color(0xC0, 0xC0, 0xC0, 0xFF));
+	// Sets second (variable) text inactive color
+	void SetVariableTextInactiveColor();
+
+	// Sets second (variable) text active color
+	void SetVariableTextActiveColor();
 
 	enum
 	{
@@ -40,4 +47,7 @@ protected:
 	};
 
 	ObserverInterface* m_observer;
+	TimerAbstract* m_blendTimer;
+	static const sf::Color m_activeColor;
+	static const sf::Color m_inactiveColor;
 };

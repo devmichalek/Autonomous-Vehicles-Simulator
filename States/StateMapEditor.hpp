@@ -33,19 +33,31 @@ public:
 
 private:
 
-	enum class ActiveMode
+	// Called on edge insertion
+	void InsertEdge(sf::Vector2f edgeEndPoint);
+
+	// Called on edge removal
+	void RemoveEdge(sf::Vector2f edgeEndPoint);
+
+	// Modes
+	enum
 	{
 		EDGE_MODE,
-		VEHICLE_MODE
-	} m_activeMode;
-	std::map<ActiveMode, std::string> m_activeModeMap;
+		VEHICLE_MODE,
+		MODES_COUNT
+	};
+	std::array<std::string, MODES_COUNT> m_modeStrings;
+	size_t m_mode;
 
-	enum class EdgeSubmode
+	// Edge submodes
+	enum
 	{
-		GLUED_INSERT,
-		REMOVE
-	} m_edgeSubmode;
-	std::map<EdgeSubmode, std::string> m_edgeSubmodeMap;
+		GLUED_INSERT_EDGE_SUBMODE,
+		REMOVE_EDGE_SUBMODE,
+		EDGE_SUBMODE_COUNT
+	};
+	std::array<std::string, EDGE_SUBMODE_COUNT> m_edgeSubmodeStrings;
+	size_t m_edgeSubmode;
 
 	VehiclePrototype* m_vehiclePrototype;
 	MapPrototype m_mapPrototype;
@@ -68,7 +80,7 @@ private:
 	// Texts and text observers
 	enum
 	{
-		ACTIVE_MODE_TEXT,
+		MODE_TEXT,
 		MOVEMENT_TEXT,
 		VIEW_OFFSET_X_TEXT,
 		VIEW_OFFSET_Y_TEXT,

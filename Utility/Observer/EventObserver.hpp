@@ -31,6 +31,18 @@ public:
 		m_ready = true;
 	}
 
+	// Returns false since it is a event observer
+	inline bool IsTimerType()
+	{
+		return false;
+	}
+
+	// Returns true since it is a event observer
+	bool IsEventType()
+	{
+		return true;
+	}
+
 protected:
 
 	EventObserver() :

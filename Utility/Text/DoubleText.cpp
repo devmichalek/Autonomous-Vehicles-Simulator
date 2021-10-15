@@ -1,16 +1,22 @@
 #include "DoubleText.hpp"
 #include "ObserverInterface.hpp"
 #include "CoreLogger.hpp"
+#include "StoppableTimer.hpp"
+
+const sf::Color DoubleText::m_activeColor = sf::Color(0xFF, 0xD7, 0x00, 0xFF);
+const sf::Color DoubleText::m_inactiveColor = sf::Color(0xC0, 0xC0, 0xC0, 0xFF);
 
 DoubleText::DoubleText(std::vector<std::string> strings, size_t size) :
 	TextAbstract(strings, size),
 	m_observer(nullptr)
 {
-	SetVariableTextColor();
+	SetVariableTextInactiveColor();
+	m_blendTimer = nullptr;
 }
 
 DoubleText::~DoubleText()
 {
+	delete m_blendTimer;
 }
 
 void DoubleText::Reset()
@@ -18,6 +24,8 @@ void DoubleText::Reset()
 	UpdateInternal();
 	if (m_observer)
 		m_observer->Reset();
+	if (m_blendTimer)
+		m_blendTimer->MakeTimeout();
 }
 
 void DoubleText::SetPosition(std::vector<FontContext::Component> components)
@@ -35,17 +43,46 @@ void DoubleText::SetPosition(std::vector<FontContext::Component> components)
 
 void DoubleText::SetObserver(ObserverInterface* observer)
 {
-	m_observer = observer;
-	Update();
+	if (observer)
+	{
+		delete m_blendTimer;
+		m_blendTimer = new StoppableTimer(0.0, 1.0);
+		m_observer = observer;
+		Update();
+		m_blendTimer->MakeTimeout();
+	}
+}
+
+sf::Color DoubleText::BlendColors(sf::Color a, sf::Color b, float alpha)
+{
+	sf::Color result;
+	result.r = (1.f - alpha) * a.r + alpha * b.r;
+	result.g = (1.f - alpha) * a.g + alpha * b.g;
+	result.b = (1.f - alpha) * a.b + alpha * b.b;
+	return result;
 }
 
 void DoubleText::UpdateInternal()
 {
-	if (m_observer && m_observer->Ready())
-		m_texts[VARIABLE_TEXT].setString(m_observer->Read());
+	if (m_observer)
+	{
+		if (m_observer->Ready())
+		{
+			m_texts[VARIABLE_TEXT].setString(m_observer->Read());
+			m_blendTimer->Reset();
+		}
+
+		m_blendTimer->Update();
+		m_texts[VARIABLE_TEXT].setFillColor(BlendColors(m_activeColor, m_inactiveColor, m_blendTimer->GetValue()));
+	}
 }
 
-void DoubleText::SetVariableTextColor(sf::Color color)
+void DoubleText::SetVariableTextInactiveColor()
 {
-	m_texts[VARIABLE_TEXT].setFillColor(color);
+	m_texts[VARIABLE_TEXT].setFillColor(m_inactiveColor);
+}
+
+void DoubleText::SetVariableTextActiveColor()
+{
+	m_texts[VARIABLE_TEXT].setFillColor(m_activeColor);
 }

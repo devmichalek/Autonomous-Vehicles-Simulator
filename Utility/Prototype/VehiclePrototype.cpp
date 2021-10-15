@@ -4,6 +4,9 @@
 #include "VehicleBuilder.hpp"
 #include "ArtificialNeuralNetworkBuilder.hpp"
 
+const sf::Color VehiclePrototype::m_defaultSensorShapeColor = sf::Color(0xAA, 0x4A, 0x44, 0xFF);
+const sf::Color VehiclePrototype::m_markedSensorShapeColor = sf::Color(0x7F, 0xFF, 0x00, 0xFF);
+
 VehiclePrototype::VehiclePrototype() :
 	m_center(CoreWindow::GetSize() / 2.f),
 	m_angle(0.0)
@@ -12,7 +15,7 @@ VehiclePrototype::VehiclePrototype() :
 	m_beamShape[0].color = sf::Color(255, 255, 255, 144);
 	m_beamShape[1].color = sf::Color(255, 255, 255, 32);
 	m_sensorShape.setRadius(VehicleBuilder::GetDefaultSensorSize().x);
-	m_sensorShape.setFillColor(sf::Color(0xAA, 0x4A, 0x44, 0xFF));
+	m_sensorShape.setFillColor(m_defaultSensorShapeColor);
 	Update();
 }
 
@@ -215,5 +218,16 @@ void VehiclePrototype::DrawBeams()
 		m_beamShape[0].position = beam[0];
 		m_beamShape[1].position = beam[1];
 		CoreWindow::GetRenderWindow().draw(m_beamShape.data(), m_beamShape.size(), sf::Lines);
+	}
+}
+
+void VehiclePrototype::DrawMarkedSensor(size_t index)
+{
+	if (index < m_sensorPoints.size())
+	{
+		m_sensorShape.setPosition(m_beamVector[index][0] - VehicleBuilder::GetDefaultSensorSize());
+		m_sensorShape.setFillColor(m_markedSensorShapeColor);
+		CoreWindow::GetRenderWindow().draw(m_sensorShape);
+		m_sensorShape.setFillColor(m_defaultSensorShapeColor);
 	}
 }

@@ -96,13 +96,13 @@ public:
 	}
 
 	// Returns minimum vehicle body number of points
-	inline static size_t GetMinVehicleBodyNumberOfPoints()
+	inline static size_t GetMinNumberOfBodyPoints()
 	{
 		return 3;
 	}
 
 	// Returns maximum vehicle body number of points
-	inline static size_t GetMaxVehicleBodyNumberOfPoints()
+	inline static size_t GetMaxNumberOfBodyPoints()
 	{
 		return b2_maxPolygonVertices;
 	}
@@ -185,8 +185,8 @@ public:
 		return m_maxVehicleMass;
 	}
 
-	// Slowly calculates vehicle mass based on its body points
-	static float CalculateMass(std::vector<sf::Vector2f> vehicleBodyPoints);
+	// Slowly calculates vehicle mass based on provided body points
+	static float CalculateMass(const std::vector<sf::Vector2f>& vehicleBodyPoints);
 
 	// Returns vehicle prototype
 	VehiclePrototype* Get();
