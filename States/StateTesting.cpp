@@ -17,8 +17,10 @@ StateTesting::StateTesting() :
 	m_maxNumberOfVehicles(10),
 	m_enableUserVehicle(false, true, true, false),
 	m_enableCheckpoints(false, true, true, false),
+	m_zoom(1.f, 4.f, 0.3f, 1.f),
 	m_viewTimer(1.0, 0.1),
-	m_viewMovementOffset(500.0)
+	m_viewMovementOffset(3.0),
+	m_pressedKeyTimer(0.0, 1.0, 5000)
 {
 	m_modeStrings[STOPPED_MODE] = "Stopped";
 	m_modeStrings[RUNNING_MODE] = "Running";
@@ -53,6 +55,7 @@ StateTesting::StateTesting() :
 	m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH] = "Error: One of artificial neural network number of output neurons mismatches number of vehicle (3) inputs!";
 	m_internalErrorsStrings[ERROR_NO_VEHICLES] = "Error: There are no vehicles! Please add first vehicle to continue.";
 
+	m_pressedKeyTimer.MakeTimeout();
 	m_simulatedWorld = nullptr;
 	m_fitnessSystem = nullptr;
 	m_mapPrototype = nullptr;
@@ -99,7 +102,9 @@ void StateTesting::Reload()
 	m_currentVehicle = 0;
 	m_enableUserVehicle.ResetValue();
 	m_enableCheckpoints.ResetValue();
+	m_zoom.ResetValue();
 	m_viewTimer.Reset();
+	m_pressedKeyTimer.MakeTimeout();
 
 	// Reset objects of environment
 	delete m_simulatedWorld;
@@ -135,11 +140,7 @@ void StateTesting::Reload()
 		m_texts[i]->Reset();
 	}
 
-	// Reset view
-	auto& view = CoreWindow::GetView();
-	auto viewOffset = CoreWindow::GetViewOffset();
-	view.move(-viewOffset);
-	CoreWindow::GetRenderWindow().setView(view);
+	CoreWindow::Reset();
 }
 
 void StateTesting::Capture()
@@ -323,8 +324,70 @@ void StateTesting::Capture()
 				break;
 			}
 			case RUNNING_MODE:
+				if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
+				{
+					auto eventKey = CoreWindow::GetEvent().key.code;
+					auto iterator = m_controlKeys.find(eventKey);
+					if (iterator == m_controlKeys.end())
+						break;
+
+					switch (iterator->second)
+					{
+						case CHANGE_MODE:
+						{
+							if (m_pressedKeys[iterator->second])
+								break;
+							m_mode = STOPPED_MODE;
+							m_textObservers[MODE_TEXT]->Notify();
+
+							// Reset vehicles
+							for (auto& vehiclePrototype : m_vehiclePrototypes)
+							{
+								vehiclePrototype->SetAngle(m_userVehiclePrototype->GetAngle());
+								vehiclePrototype->SetCenter(m_userVehiclePrototype->GetCenter());
+							}
+
+							// Reset view so that the center is vehicle starting position
+							m_zoom.ResetValue();
+							m_textObservers[ZOOM_TEXT]->Notify();
+							CoreWindow::Reset();
+							CoreWindow::SetViewCenter(m_userVehiclePrototype->GetCenter());
+							break;
+						}
+						case CHANGE_FILENAME_TYPE:
+							break;
+						case INCREASE_PARAMETER:
+							if (m_pressedKeyTimer.Update())
+							{
+								m_zoom.Decrease();
+								CoreWindow::SetViewZoom(m_zoom);
+								m_textObservers[ZOOM_TEXT]->Notify();
+							}
+							break;
+						case DECREASE_PARAMETER:
+							if (m_pressedKeyTimer.Update())
+							{
+								m_zoom.Increase();
+								CoreWindow::SetViewZoom(m_zoom);
+								m_textObservers[ZOOM_TEXT]->Notify();
+							}
+							break;
+						case PAUSED_CHANGE_MODE:
+						{
+							if (m_pressedKeys[iterator->second])
+								break;
+							m_mode = PAUSED_MODE;
+							m_textObservers[MODE_TEXT]->Notify();
+							break;
+						}
+						default:
+							break;
+					}
+
+					m_pressedKeys[iterator->second] = true;
+				}
+				break;
 			case PAUSED_MODE:
-			{
 				if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
 				{
 					auto eventKey = CoreWindow::GetEvent().key.code;
@@ -348,10 +411,11 @@ void StateTesting::Capture()
 								vehiclePrototype->SetCenter(m_userVehiclePrototype->GetCenter());
 							}
 
-							// Reset view so that the center is car starting position
-							auto& view = CoreWindow::GetView();
-							view.setCenter(m_userVehiclePrototype->GetCenter());
-							CoreWindow::GetRenderWindow().setView(view);
+							// Reset view so that the center is vehicle starting position
+							m_zoom.ResetValue();
+							m_textObservers[ZOOM_TEXT]->Notify();
+							CoreWindow::Reset();
+							CoreWindow::SetViewCenter(m_userVehiclePrototype->GetCenter());
 							break;
 						}
 						case CHANGE_FILENAME_TYPE:
@@ -362,11 +426,7 @@ void StateTesting::Capture()
 						{
 							if (m_pressedKeys[iterator->second])
 								break;
-
-							if (m_mode == RUNNING_MODE)
-								m_mode = PAUSED_MODE;
-							else
-								m_mode = RUNNING_MODE;
+							m_mode = RUNNING_MODE;
 							m_textObservers[MODE_TEXT]->Notify();
 							break;
 						}
@@ -377,7 +437,6 @@ void StateTesting::Capture()
 					m_pressedKeys[iterator->second] = true;
 				}
 				break;
-			}
 			default:
 				break;
 		}
@@ -391,7 +450,22 @@ void StateTesting::Capture()
 		auto eventKey = CoreWindow::GetEvent().key.code;
 		auto iterator = m_controlKeys.find(eventKey);
 		if (iterator != m_controlKeys.end())
+		{
 			m_pressedKeys[iterator->second] = false;
+			switch (iterator->second)
+			{
+				case CHANGE_MODE:
+				case CHANGE_FILENAME_TYPE:
+				case CHANGE_PARAMETER:
+					break;
+				case INCREASE_PARAMETER:
+				case DECREASE_PARAMETER:
+					m_pressedKeyTimer.MakeTimeout();
+					break;
+				default:
+					break;
+			}
+		}
 	}
 }
 
@@ -428,10 +502,8 @@ void StateTesting::Update()
 						m_userVehiclePrototype->SetAngle(m_mapBuilder.GetVehicleAngle());
 						m_userVehiclePrototype->Update();
 
-						// Reset view so that the center is car starting position
-						auto& view = CoreWindow::GetView();
-						view.setCenter(m_userVehiclePrototype->GetCenter());
-						CoreWindow::GetRenderWindow().setView(view);
+						// Reset view so that the center is vehicle starting position
+						CoreWindow::SetViewCenter(m_userVehiclePrototype->GetCenter());
 						break;
 					}
 					case ANN_FILENAME_TYPE:
@@ -526,10 +598,7 @@ void StateTesting::Update()
 					}
 				}
 
-				// Update view
-				auto& view = CoreWindow::GetView();
-				view.setCenter(m_userVehicle->GetCenter());
-				CoreWindow::GetRenderWindow().setView(view);
+				CoreWindow::SetViewCenter(m_userVehicle->GetCenter());
 			}
 			else if (m_viewTimer.Update())
 			{
@@ -543,13 +612,11 @@ void StateTesting::Update()
 					m_viewCenter = m_userVehiclePrototype->GetCenter();
 
 				// Update view
-				auto& view = CoreWindow::GetView();
-				auto currentViewCenter = view.getCenter();
-				auto distance = DrawableMath::Distance(currentViewCenter, m_viewCenter);
-				auto angle = DrawableMath::DifferenceVectorAngle(currentViewCenter, m_viewCenter);
-				auto newCenter = DrawableMath::GetEndPoint(currentViewCenter, angle, float(-distance / m_viewMovementOffset));
-				view.setCenter(newCenter);
-				CoreWindow::GetRenderWindow().setView(view);
+				auto viewCenter = CoreWindow::GetViewCenter();
+				auto distance = DrawableMath::Distance(viewCenter, m_viewCenter);
+				auto angle = DrawableMath::DifferenceVectorAngle(viewCenter, m_viewCenter);
+				viewCenter = DrawableMath::GetEndPoint(viewCenter, angle, float(-distance * m_viewMovementOffset * CoreWindow::GetElapsedTime()));
+				CoreWindow::SetViewCenter(viewCenter);
 			}
 
 			for (size_t i = 0; i < m_numberOfVehicles; ++i)
@@ -586,6 +653,7 @@ bool StateTesting::Load()
 	m_texts[ENABLE_CHECKPOINTS_TEXT] = new DoubleText({ "Enable checkpoints:" });
 	m_texts[ENABLE_USER_VEHICLE_TEXT] = new DoubleText({ "Enable user vehicle:" });
 	m_texts[USER_FITNESS_TEXT] = new DoubleText({ "User fitness:" });
+	m_texts[ZOOM_TEXT] = new TripleText({ "Zoom:", "", "| [+] [-]" });
 
 	// Create observers
 	m_textObservers[MODE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_modeStrings[m_mode]; });
@@ -595,7 +663,8 @@ bool StateTesting::Load()
 	m_textObservers[NUMBER_OF_VEHICLES_TEXT] = new TypeEventObserver<size_t>(m_numberOfVehicles);
 	m_textObservers[ENABLE_CHECKPOINTS_TEXT] = new FunctionEventObserver<bool>([&] { return m_enableCheckpoints; });
 	m_textObservers[ENABLE_USER_VEHICLE_TEXT] = new FunctionEventObserver<bool>([&] { return m_enableUserVehicle; });
-	m_textObservers[USER_FITNESS_TEXT] = new FunctionTimerObserver<std::string>([&]{ return !m_userVehicle ? "Unknown" : std::to_string(m_userVehicle->GetFitness()); }, 0.5);
+	m_textObservers[USER_FITNESS_TEXT] = new FunctionTimerObserver<std::string>([&]{ return !m_userVehicle ? "Unknown" : std::to_string(size_t(m_userVehicle->GetFitness() / m_fitnessSystem->GetMaxFitness() * 100.0)) + "%"; }, 0.5);
+	m_textObservers[ZOOM_TEXT] = new FunctionEventObserver<float>([&] { return m_zoom; });
 
 	// Set text observers
 	for (size_t i = 0; i < TEXT_COUNT; ++i)
@@ -611,6 +680,7 @@ bool StateTesting::Load()
 	m_texts[ENABLE_CHECKPOINTS_TEXT]->SetPosition({ FontContext::Component(2, true), {0}, {5} });
 	m_texts[ENABLE_USER_VEHICLE_TEXT]->SetPosition({ FontContext::Component(1, true), {0}, {5} });
 	m_texts[USER_FITNESS_TEXT]->SetPosition({ FontContext::Component(1, true), {7}, {10} });
+	m_texts[ZOOM_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {6} });
 
 	CoreLogger::PrintSuccess("State \"Testing\" dependencies loaded correctly");
 	return true;
@@ -621,7 +691,6 @@ void StateTesting::Draw()
 	switch (m_mode)
 	{
 		case STOPPED_MODE:
-		{
 			if (m_mapPrototype)
 			{
 				if (m_enableCheckpoints)
@@ -649,16 +718,17 @@ void StateTesting::Draw()
 			m_texts[CURRENT_VEHICLE_TEXT]->Draw();
 			m_texts[NUMBER_OF_VEHICLES_TEXT]->Draw();
 			break;
-		}
 		case RUNNING_MODE:
-		case PAUSED_MODE:
-		{
 			m_simulatedWorld->Draw();
-
+			if (m_enableUserVehicle)
+				m_texts[USER_FITNESS_TEXT]->Draw();
+			m_texts[ZOOM_TEXT]->Draw();
+			break;
+		case PAUSED_MODE:
+			m_simulatedWorld->Draw();
 			if (m_enableUserVehicle)
 				m_texts[USER_FITNESS_TEXT]->Draw();
 			break;
-		}
 		default:
 			break;
 	}

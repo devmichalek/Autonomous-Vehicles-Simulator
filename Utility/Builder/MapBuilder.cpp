@@ -157,7 +157,7 @@ std::vector<EdgeVector> MapBuilder::TriangleCheckpointsGenerator::GetLineCheckpo
 		std::sort(edgePrecedences.begin(), edgePrecedences.end(), Compare);
 
 	// Add more edge precedences to have optimal number of checkpoints per edge
-	double maxDistanceBetweenEndPoints = CoreWindow::GetSize().x / 16;
+	double maxDistanceBetweenEndPoints = CoreWindow::GetWindowSize().x / 16;
 	auto checkpointCount = edgePrecedencesVector.size();
 	for (size_t i = 1; i < checkpointCount; ++i)
 	{
@@ -537,7 +537,7 @@ bool MapBuilder::SaveInternal(std::ofstream& output)
 
 void MapBuilder::CreateDummyInternal()
 {
-	auto windowSize = CoreWindow::GetSize();
+	auto windowSize = CoreWindow::GetWindowSize();
 	float xOffset = windowSize.x / 5.0f;
 	float yOffset = windowSize.y / 5.0f;
 
@@ -615,7 +615,7 @@ bool MapBuilder::Initialize()
 {
 	// Initialize max allowed map area
 	{
-		auto size = CoreWindow::GetSize() * 3.0f;
+		auto size = CoreWindow::GetWindowSize() * 3.0f;
 		auto position = sf::Vector2f(size.x / 20.0f, size.y / 20.0f);
 		m_maxAllowedMapArea = std::make_pair(position, size);
 	}

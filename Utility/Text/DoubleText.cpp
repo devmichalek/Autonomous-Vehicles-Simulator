@@ -56,9 +56,9 @@ void DoubleText::SetObserver(ObserverInterface* observer)
 sf::Color DoubleText::BlendColors(sf::Color a, sf::Color b, float alpha)
 {
 	sf::Color result;
-	result.r = (1.f - alpha) * a.r + alpha * b.r;
-	result.g = (1.f - alpha) * a.g + alpha * b.g;
-	result.b = (1.f - alpha) * a.b + alpha * b.b;
+	result.r = sf::Uint8((1.f - alpha) * float(a.r) + alpha * float(b.r));
+	result.g = sf::Uint8((1.f - alpha) * float(a.g) + alpha * float(b.g));
+	result.b = sf::Uint8((1.f - alpha) * float(a.b) + alpha * float(b.b));
 	return result;
 }
 
@@ -73,7 +73,7 @@ void DoubleText::UpdateInternal()
 		}
 
 		m_blendTimer->Update();
-		m_texts[VARIABLE_TEXT].setFillColor(BlendColors(m_activeColor, m_inactiveColor, m_blendTimer->GetValue()));
+		m_texts[VARIABLE_TEXT].setFillColor(BlendColors(m_activeColor, m_inactiveColor, float(m_blendTimer->GetValue())));
 	}
 }
 

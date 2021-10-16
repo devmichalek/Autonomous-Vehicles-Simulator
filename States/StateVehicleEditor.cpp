@@ -32,7 +32,7 @@ StateVehicleEditor::StateVehicleEditor()
 		m_pressedKeys[i] = false;
 
 	auto maxVehicleSize = VehicleBuilder::GetMaxVehicleBodyBound();
-	auto windowSize = CoreWindow::GetSize();
+	auto windowSize = CoreWindow::GetWindowSize();
 	m_allowedAreaShape.setFillColor(sf::Color(255, 255, 255, 0));
 	m_allowedAreaShape.setOutlineColor(sf::Color(0, 0, 255, 64));
 	m_allowedAreaShape.setOutlineThickness(2);
@@ -48,7 +48,7 @@ StateVehicleEditor::StateVehicleEditor()
 	m_upToDate = false;
 
 	// Set axes
-	auto windowCenter = CoreWindow::GetCenter();
+	auto windowCenter = CoreWindow::GetWindowCenter();
 	m_yAxis[0].color = m_yAxis[1].color = m_xAxis[0].color = m_xAxis[1].color = sf::Color(0, 0, 255, 64);
 	m_xAxis[0].position = sf::Vector2f(windowCenter.x, 0);
 	m_xAxis[1].position = sf::Vector2f(windowCenter.x, windowSize.y);
@@ -95,11 +95,7 @@ void StateVehicleEditor::Reload()
 		m_texts[i]->Reset();
 	}
 
-	// Reset view
-	auto& view = CoreWindow::GetView();
-	auto viewOffset = CoreWindow::GetViewOffset();
-	view.move(-viewOffset);
-	CoreWindow::GetRenderWindow().setView(view);
+	CoreWindow::Reset();
 }
 
 void StateVehicleEditor::Capture()
@@ -234,7 +230,7 @@ void StateVehicleEditor::Capture()
 			auto relativePosition = CoreWindow::GetMousePosition();
 			if (DrawableMath::IsPointInsideRectangle(m_allowedAreaShape.getSize(), m_allowedAreaShape.getPosition(), relativePosition))
 			{
-				relativePosition -= CoreWindow::GetCenter();
+				relativePosition -= CoreWindow::GetWindowCenter();
 				switch (m_mode)
 				{
 					case MODE_VEHICLE_BODY:
@@ -437,9 +433,9 @@ void StateVehicleEditor::Draw()
 	if (m_mode == MODE_VEHICLE_SENSORS)
 		m_vehiclePrototype->DrawMarkedSensor(m_currentSensorIndex);
 
-	CoreWindow::GetRenderWindow().draw(m_xAxis.data(), m_xAxis.size(), sf::Lines);
-	CoreWindow::GetRenderWindow().draw(m_yAxis.data(), m_xAxis.size(), sf::Lines);
-	CoreWindow::GetRenderWindow().draw(m_allowedAreaShape);
+	CoreWindow::Draw(m_xAxis.data(), m_xAxis.size(), sf::Lines);
+	CoreWindow::Draw(m_yAxis.data(), m_xAxis.size(), sf::Lines);
+	CoreWindow::Draw(m_allowedAreaShape);
 
 	m_texts[BACK_TEXT]->Draw();
 	m_texts[FRONT_TEXT]->Draw();

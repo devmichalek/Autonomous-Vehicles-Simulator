@@ -8,7 +8,7 @@ const sf::Color VehiclePrototype::m_defaultSensorShapeColor = sf::Color(0xAA, 0x
 const sf::Color VehiclePrototype::m_markedSensorShapeColor = sf::Color(0x7F, 0xFF, 0x00, 0xFF);
 
 VehiclePrototype::VehiclePrototype() :
-	m_center(CoreWindow::GetSize() / 2.f),
+	m_center(CoreWindow::GetWindowSize() / 2.f),
 	m_angle(0.0)
 {
 	m_bodyShape.setPointCount(0);
@@ -203,11 +203,11 @@ void VehiclePrototype::Update()
 
 void VehiclePrototype::DrawBody()
 {
-	CoreWindow::GetRenderWindow().draw(m_bodyShape);
+	CoreWindow::Draw(m_bodyShape);
 	for (const auto& beam : m_beamVector)
 	{
 		m_sensorShape.setPosition(beam[0] - VehicleBuilder::GetDefaultSensorSize());
-		CoreWindow::GetRenderWindow().draw(m_sensorShape);
+		CoreWindow::Draw(m_sensorShape);
 	}
 }
 
@@ -217,7 +217,7 @@ void VehiclePrototype::DrawBeams()
 	{
 		m_beamShape[0].position = beam[0];
 		m_beamShape[1].position = beam[1];
-		CoreWindow::GetRenderWindow().draw(m_beamShape.data(), m_beamShape.size(), sf::Lines);
+		CoreWindow::Draw(m_beamShape.data(), m_beamShape.size(), sf::Lines);
 	}
 }
 
@@ -227,7 +227,7 @@ void VehiclePrototype::DrawMarkedSensor(size_t index)
 	{
 		m_sensorShape.setPosition(m_beamVector[index][0] - VehicleBuilder::GetDefaultSensorSize());
 		m_sensorShape.setFillColor(m_markedSensorShapeColor);
-		CoreWindow::GetRenderWindow().draw(m_sensorShape);
+		CoreWindow::Draw(m_sensorShape);
 		m_sensorShape.setFillColor(m_defaultSensorShapeColor);
 	}
 }

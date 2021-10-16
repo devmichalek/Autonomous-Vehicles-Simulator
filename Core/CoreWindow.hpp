@@ -1,20 +1,23 @@
 #pragma once
 #include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Graphics/RenderTexture.hpp>
+#include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Window/Event.hpp>
 #include <random>
 
 class CoreWindow final
 {
 	inline static sf::RenderWindow m_renderWindow;
-	inline static sf::View m_view;
+	inline static sf::RenderTexture m_renderTextureBackground;
+	inline static sf::RenderTexture m_renderTextureForeground;
+	inline static sf::Sprite m_backgroundSprite;
+	inline static sf::Sprite m_foregroundSprite;
+	inline static sf::View m_view, m_defaultView;
 	inline static sf::Clock m_clock;
 	inline static sf::Event m_event;
 	inline static bool m_open = false;
 	inline static double m_elapsedTime = 0.0;
-	inline static const float m_widthRatio = 0.8333f;
-	inline static const float m_screenRatio = 0.5625f;
 	inline static sf::Vector2f m_windowSize;
-	inline static const sf::Color m_backgroundColor = sf::Color::Black;
 
 	CoreWindow();
 
@@ -50,24 +53,6 @@ public:
 		return sf::Vector2f(float(result.x), float(result.y));
 	}
 
-	// Returns window position
-	inline static sf::Vector2i GetPosition()
-	{
-		return m_renderWindow.getPosition();
-	}
-
-	// Returns window size
-	inline static sf::Vector2f GetSize()
-	{
-		return m_windowSize;
-	}
-
-	// Returns window center
-	inline static sf::Vector2f GetCenter()
-	{
-		return GetSize() / 2.0f;
-	}
-
 	// Closes window
 	inline static void Close()
 	{
@@ -78,12 +63,20 @@ public:
 	// Clears window drawing area with background color
 	inline static void Clear()
 	{
-		m_renderWindow.clear(m_backgroundColor);
+		m_renderTextureBackground.clear(sf::Color(0, 0, 0, 0));
+		m_renderTextureForeground.clear(sf::Color(0xFF, 0xFF, 0xFF, 0));
 	}
 
 	// Displays on window what has been rendered so far
 	inline static void Display()
 	{
+		m_renderTextureBackground.display();
+		m_renderTextureForeground.display();
+		m_renderWindow.clear(sf::Color::Black);
+		m_backgroundSprite.setTexture(m_renderTextureBackground.getTexture());
+		m_foregroundSprite.setTexture(m_renderTextureForeground.getTexture());
+		m_renderWindow.draw(m_backgroundSprite, sf::BlendNone);
+		m_renderWindow.draw(m_foregroundSprite, sf::BlendAdd);
 		m_renderWindow.display();
 	}
 
@@ -99,10 +92,60 @@ public:
 		return m_event;
 	}
 
-	// Returns render window
-	inline static sf::RenderWindow& GetRenderWindow()
+	// Sets background render texture view
+	inline static void SetView(sf::View view)
 	{
-		return m_renderWindow;
+		m_view = view;
+		m_renderTextureBackground.setView(view);
+	}
+
+	// Draw drawable on the background
+	inline static void Draw(const sf::Drawable& drawable)
+	{
+		return m_renderTextureBackground.draw(drawable);
+	}
+
+	// Draw vertices on the background
+	inline static void Draw(const sf::Vertex* vertices, size_t vertexCount, sf::PrimitiveType type)
+	{
+		return m_renderTextureBackground.draw(vertices, vertexCount, type);
+	}
+
+	// Draw drawable on the foreground
+	inline static void DrawForeground(const sf::Drawable& drawable)
+	{
+		return m_renderTextureForeground.draw(drawable);
+	}
+
+	// Returns window size
+	inline static const sf::Vector2f& GetWindowSize()
+	{
+		return m_windowSize;
+	}
+
+	// Returns window center
+	inline static sf::Vector2f GetWindowCenter()
+	{
+		return GetWindowSize() / 2.0f;
+	}
+
+	// Returns view size
+	inline static const sf::Vector2f& GetViewSize()
+	{
+		return m_view.getSize();
+	}
+
+	// Returns view center
+	inline static const sf::Vector2f& GetViewCenter()
+	{
+		return m_view.getCenter();
+	}
+
+	// Sets view center
+	inline static void SetViewCenter(sf::Vector2f center)
+	{
+		m_view.setCenter(center);
+		m_renderTextureBackground.setView(m_view);
 	}
 
 	// Returns current window view
@@ -114,8 +157,19 @@ public:
 	// Returns current view offset
 	inline static sf::Vector2f GetViewOffset()
 	{
-		auto& size = m_view.getSize();
+		auto& size = GetViewSize();
 		return m_view.getCenter() - sf::Vector2f(size.x / 2, size.y / 2);
+	}
+
+	// Sets view zoom
+	inline static void SetViewZoom(float zoom)
+	{
+		m_renderTextureBackground.setView(m_defaultView);
+		auto center = m_view.getCenter();
+		m_view = m_defaultView;
+		m_view.setCenter(center);
+		m_view.zoom(zoom);
+		m_renderTextureBackground.setView(m_view);
 	}
 
 	// Returns elapsed time since last clock reset
@@ -128,6 +182,13 @@ public:
 	inline static void RestartClock()
 	{
 		m_elapsedTime = static_cast<double>(m_clock.restart().asMicroseconds()) / 1000000;
+	}
+
+	// Resets to default settings
+	inline static void Reset()
+	{
+		m_view = m_defaultView;
+		m_renderTextureBackground.setView(m_defaultView);
 	}
 
 	// Returns mersenne twister

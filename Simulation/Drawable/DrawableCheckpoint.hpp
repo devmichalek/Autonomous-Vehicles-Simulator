@@ -26,7 +26,7 @@ public:
 	void Draw()
 	{
 		if (DrawableCheckpoint::m_visibility)
-			CoreWindow::GetRenderWindow().draw(m_triangleShape.data(), m_triangleShape.size(), sf::Triangles);
+			CoreWindow::Draw(m_triangleShape.data(), m_triangleShape.size(), sf::Triangles);
 	}
 
 	// Sets visibility of checkpoints

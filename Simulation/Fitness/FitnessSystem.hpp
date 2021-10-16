@@ -42,6 +42,12 @@ public:
 		return m_fitnessVector;
 	}
 
+	// Returns max available fitness for this system
+	inline Fitness GetMaxFitness()
+	{
+		return m_maxFitness;
+	}
+
 	// Returns highest fitness in the current iteration in ratio
 	inline Fitness GetHighestFitness() const
 	{

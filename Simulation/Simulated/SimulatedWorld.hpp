@@ -41,7 +41,7 @@ public:
 	{
 		b2AABB aabb;
 		aabb.lowerBound = DrawableMath::ToBox2DPosition(CoreWindow::GetViewOffset());
-		aabb.upperBound = DrawableMath::ToBox2DPosition(CoreWindow::GetViewOffset() + CoreWindow::GetSize());
+		aabb.upperBound = DrawableMath::ToBox2DPosition(CoreWindow::GetViewOffset() + CoreWindow::GetViewSize());
 		m_world->QueryAABB(&m_drawQueryCallback, aabb);
 	}
 

@@ -187,7 +187,7 @@ void VehicleBuilder::ClearInternal()
 bool VehicleBuilder::LoadInternal(std::ifstream& input)
 {
 	// Get window size
-	auto windowSize = CoreWindow::GetSize();
+	auto windowSize = CoreWindow::GetWindowSize();
 	
 	// Read number of vehicle body points
 	size_t vehicleBodyNumberOfPoints = 0;
@@ -269,7 +269,7 @@ bool VehicleBuilder::LoadInternal(std::ifstream& input)
 bool VehicleBuilder::SaveInternal(std::ofstream& output)
 {
 	// Get window size
-	auto windowSize = CoreWindow::GetSize();
+	auto windowSize = CoreWindow::GetWindowSize();
 
 	// Save number of vehicle body points
 	size_t vehicleBodyNumberOfPoints = m_vehiclePrototype.GetNumberOfBodyPoints();
@@ -396,10 +396,10 @@ VehiclePrototype* VehicleBuilder::Get()
 bool VehicleBuilder::Initialize()
 {
 	// Initialize static fields
-	m_maxVehicleBodyBound = sf::Vector2f(CoreWindow::GetSize().y / 5.0f, CoreWindow::GetSize().x / 15.0f);
+	m_maxVehicleBodyBound = sf::Vector2f(CoreWindow::GetWindowSize().y / 5.0f, CoreWindow::GetWindowSize().x / 15.0f);
 	m_minVehicleBodyBound = m_maxVehicleBodyBound / 4.0f;
-	m_defaultVehicleBeamLength = double(CoreWindow::GetSize().y) * 0.75;
-	m_defaultVehicleSensorSize = sf::Vector2f(CoreWindow::GetSize().x / 400.0f, CoreWindow::GetSize().x / 400.0f);
+	m_defaultVehicleBeamLength = double(CoreWindow::GetWindowSize().y) * 0.75;
+	m_defaultVehicleSensorSize = sf::Vector2f(CoreWindow::GetWindowSize().x / 400.0f, CoreWindow::GetWindowSize().x / 400.0f);
 
 	// Call internal implementation
 	VehicleBuilder builder;

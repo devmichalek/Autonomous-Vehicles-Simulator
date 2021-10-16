@@ -117,6 +117,7 @@ private:
 	Property<size_t> m_numberOfParents;
 	Property<double> m_requiredFitnessImprovement;
 	Property<double> m_requiredFitnessImprovementRise;
+	Property<float> m_zoom;
 
 	// Offsets, timers
 	const double m_viewMovementOffset;
@@ -164,6 +165,7 @@ private:
 		HIGHEST_FITNESS_OVERALL_TEXT,
 		RAISING_REQUIRED_FITNESS_IMPROVEMENT_TEXT,
 		MEAN_REQUIRED_FITNESS_IMPROVEMENT,
+		ZOOM_TEXT,
 		TEXT_COUNT
 	};
 	std::vector<DoubleText*> m_texts;

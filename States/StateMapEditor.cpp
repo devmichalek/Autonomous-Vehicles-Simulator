@@ -80,11 +80,7 @@ void StateMapEditor::Reload()
 	m_vehiclePrototype->SetAngle(m_mapBuilder.GetVehicleAngle());
 	m_vehiclePrototype->Update();
 
-	// Reset view
-	auto& view = CoreWindow::GetView();
-	auto viewOffset = CoreWindow::GetViewOffset();
-	view.move(-viewOffset);
-	CoreWindow::GetRenderWindow().setView(view);
+	CoreWindow::Reset();
 
 	// Reset texts and text observers
 	for (size_t i = 0; i < TEXT_COUNT; ++i)
@@ -312,7 +308,7 @@ void StateMapEditor::Update()
 		}
 
 		auto& view = CoreWindow::GetView();
-		auto viewPosition = view.getCenter() - (CoreWindow::GetSize() / 2.0f);
+		auto viewPosition = view.getCenter() - (CoreWindow::GetWindowSize() / 2.0f);
 		float moveOffset = static_cast<float>(m_viewMovement * elapsedTime);
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
 		{
@@ -337,7 +333,7 @@ void StateMapEditor::Update()
 		}
 
 		view = CoreWindow::GetView();
-		viewPosition = view.getCenter() - (CoreWindow::GetSize() / 2.0f);
+		viewPosition = view.getCenter() - (CoreWindow::GetWindowSize() / 2.0f);
 		float left = m_allowedViewAreaShape.getPosition().x;
 		float right = m_allowedViewAreaShape.getPosition().x + m_allowedViewAreaShape.getSize().x;
 		float top = m_allowedViewAreaShape.getPosition().y;
@@ -345,15 +341,15 @@ void StateMapEditor::Update()
 
 		if (viewPosition.x < left)
 			view.move(sf::Vector2f(left - viewPosition.x, 0));
-		else if (viewPosition.x + CoreWindow::GetSize().x > right)
-			view.move(sf::Vector2f(-(viewPosition.x + CoreWindow::GetSize().x - right), 0));
+		else if (viewPosition.x + CoreWindow::GetWindowSize().x > right)
+			view.move(sf::Vector2f(-(viewPosition.x + CoreWindow::GetWindowSize().x - right), 0));
 
 		if (viewPosition.y < top)
 			view.move(sf::Vector2f(0, top - viewPosition.y));
-		else if (viewPosition.y + CoreWindow::GetSize().y > bot)
-			view.move(sf::Vector2f(0, -(viewPosition.y + CoreWindow::GetSize().y - bot)));
+		else if (viewPosition.y + CoreWindow::GetWindowSize().y > bot)
+			view.move(sf::Vector2f(0, -(viewPosition.y + CoreWindow::GetWindowSize().y - bot)));
 
-		CoreWindow::GetRenderWindow().setView(view);
+		CoreWindow::SetView(view);
 	}
 	else
 		m_upToDate = false;
@@ -415,7 +411,7 @@ void StateMapEditor::Draw()
 
 	m_mapPrototype.DrawEdges();
 
-	CoreWindow::GetRenderWindow().draw(m_allowedMapAreaShape);
+	CoreWindow::Draw(m_allowedMapAreaShape);
 
 	switch (m_mode)
 	{
@@ -428,7 +424,7 @@ void StateMapEditor::Draw()
 				edgeShape[1].position = CoreWindow::GetMousePosition() + CoreWindow::GetViewOffset();
 				edgeShape[0].color = sf::Color::White;
 				edgeShape[1].color = edgeShape[0].color;
-				CoreWindow::GetRenderWindow().draw(edgeShape.data(), edgeShape.size(), sf::Lines);
+				CoreWindow::Draw(edgeShape.data(), edgeShape.size(), sf::Lines);
 			}
 			else if (m_removeEdge)
 			{
@@ -437,7 +433,7 @@ void StateMapEditor::Draw()
 				edgeShape[1].position = CoreWindow::GetMousePosition() + CoreWindow::GetViewOffset();
 				edgeShape[0].color = sf::Color::Red;
 				edgeShape[1].color = edgeShape[0].color;
-				CoreWindow::GetRenderWindow().draw(edgeShape.data(), edgeShape.size(), sf::Lines);
+				CoreWindow::Draw(edgeShape.data(), edgeShape.size(), sf::Lines);
 			}
 
 			m_texts[EDGE_SUBMODE_TEXT]->Draw();

@@ -32,7 +32,7 @@ StateANNEditor::StateANNEditor() :
 
 	m_neuronShape.setFillColor(sf::Color::White);
 	m_neuronShape.setOutlineColor(sf::Color::White);
-	m_neuronShape.setRadius(CoreWindow::GetSize().x * 0.008f);
+	m_neuronShape.setRadius(CoreWindow::GetWindowSize().x * 0.008f);
 	m_weightShape[0].color = sf::Color(255, 255, 255, 128);
 	m_weightShape[1].color = m_weightShape[0].color;
 
@@ -71,11 +71,7 @@ void StateANNEditor::Reload()
 		m_texts[i]->Reset();
 	}
 
-	// Reset view
-	auto& view = CoreWindow::GetView();
-	auto viewOffset = CoreWindow::GetViewOffset();
-	view.move(-viewOffset);
-	CoreWindow::GetRenderWindow().setView(view);
+	CoreWindow::Reset();
 }
 
 void StateANNEditor::Capture()
@@ -297,7 +293,7 @@ void StateANNEditor::Draw()
 		m_weightShape[1].position = m_weightPositions[i][1];
 		m_weightShape[0].color = m_weightStrengths[i];
 		m_weightShape[1].color = m_weightShape[0].color;
-		CoreWindow::GetRenderWindow().draw(m_weightShape.data(), m_weightShape.size(), sf::Lines);
+		CoreWindow::Draw(m_weightShape.data(), m_weightShape.size(), sf::Lines);
 	}
 
 	for (size_t layerNr = 0; layerNr < m_layersPositions.size(); ++layerNr)
@@ -306,7 +302,7 @@ void StateANNEditor::Draw()
 		for (const auto& position : m_layersPositions[layerNr])
 		{
 			m_neuronShape.setPosition(position);
-			CoreWindow::GetRenderWindow().draw(m_neuronShape);
+			CoreWindow::Draw(m_neuronShape);
 		}
 	}
 
@@ -320,7 +316,7 @@ void StateANNEditor::CalculatePositions()
 	m_weightPositions.clear();
 	m_weightStrengths.clear();
 
-	auto windowSize = CoreWindow::GetSize();
+	auto windowSize = CoreWindow::GetWindowSize();
 	const float screenWidth = windowSize.x;
 	const float screenHeight = windowSize.y;
 	const float availableWidth = screenWidth * 0.8f;

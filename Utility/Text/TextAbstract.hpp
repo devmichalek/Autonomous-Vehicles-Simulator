@@ -61,15 +61,14 @@ public:
 	void Update()
 	{
 		UpdateInternal();
-		sf::Vector2f viewOffset = CoreWindow::GetViewOffset();
 		for (size_t i = 0; i < m_size; ++i)
-			m_texts[i].setPosition(m_textPositions[i] + viewOffset);
+			m_texts[i].setPosition(m_textPositions[i]);
 	}
 
 	// Draws texts
 	void Draw()
 	{
 		for (size_t i = 0; i < m_size; ++i)
-			CoreWindow::GetRenderWindow().draw(m_texts[i]);
+			CoreWindow::DrawForeground(m_texts[i]);
 	}
 };

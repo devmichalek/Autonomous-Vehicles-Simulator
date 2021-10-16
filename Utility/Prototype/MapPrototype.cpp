@@ -78,7 +78,7 @@ void MapPrototype::DrawEdges()
 	{
 		m_edgeShape[0].position = edge[0];
 		m_edgeShape[1].position = edge[1];
-		CoreWindow::GetRenderWindow().draw(m_edgeShape.data(), m_edgeShape.size(), sf::Lines);
+		CoreWindow::Draw(m_edgeShape.data(), m_edgeShape.size(), sf::Lines);
 	}
 }
 
@@ -92,6 +92,6 @@ void MapPrototype::DrawCheckpoints()
 		m_checkpointShape.setFillColor(sf::Color(red, green, blue, 48));
 		for (size_t j = 0; j < m_checkpointShape.getPointCount(); ++j)
 			m_checkpointShape.setPoint(j, m_checkpoints[i][j]);
-		CoreWindow::GetRenderWindow().draw(m_checkpointShape);
+		CoreWindow::Draw(m_checkpointShape);
 	}
 }

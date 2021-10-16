@@ -21,7 +21,7 @@ public:
 	// Draws edge
 	void Draw()
 	{
-		CoreWindow::GetRenderWindow().draw(m_edgeShape.data(), m_edgeShape.size(), sf::Lines);
+		CoreWindow::Draw(m_edgeShape.data(), m_edgeShape.size(), sf::Lines);
 	}
 
 	// Sets edges position

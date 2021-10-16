@@ -58,14 +58,14 @@ public:
 	void Draw()
 	{
 		// Draw body
-		CoreWindow::GetRenderWindow().draw(m_bodyShape);
+		CoreWindow::Draw(m_bodyShape);
 
 		// Draw sensors and its beams
 		for (auto& beam : m_beams)
 		{
-			CoreWindow::GetRenderWindow().draw(beam.data(), beam.size(), sf::Lines);
+			CoreWindow::Draw(beam.data(), beam.size(), sf::Lines);
 			m_sensorShape.setPosition(beam[0].position - VehicleBuilder::GetDefaultSensorSize());
-			CoreWindow::GetRenderWindow().draw(m_sensorShape);
+			CoreWindow::Draw(m_sensorShape);
 		}
 	}
 };

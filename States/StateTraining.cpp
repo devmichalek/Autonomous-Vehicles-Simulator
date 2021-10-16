@@ -22,7 +22,8 @@ StateTraining::StateTraining() :
 	m_numberOfParents(1, 10, 1, 2),
 	m_requiredFitnessImprovement(0.01, 0.2, 0.01, 0.05),
 	m_requiredFitnessImprovementRise(1.0, 15.0, 0.5, 3.0),
-	m_viewMovementOffset(2.0),
+	m_zoom(1.f, 4.f, 0.3f, 1.f),
+	m_viewMovementOffset(3.0),
 	m_viewTimer(1.0, 0.1),
 	m_pressedKeyTimer(0.0, 1.0, 5000),
 	m_requiredFitnessImprovementRiseTimer(0.0, 0.0)
@@ -128,6 +129,7 @@ void StateTraining::Reload()
 	m_numberOfParents.ResetValue();
 	m_requiredFitnessImprovement.ResetValue();
 	m_requiredFitnessImprovementRise.ResetValue();
+	m_zoom.ResetValue();
 
 	// Reset timers
 	m_viewTimer.Reset();
@@ -163,11 +165,7 @@ void StateTraining::Reload()
 	m_mapBuilder.Clear();
 	m_vehicleBuilder.Clear();
 
-	// Reset view
-	auto& view = CoreWindow::GetView();
-	auto viewOffset = CoreWindow::GetViewOffset();
-	view.move(-viewOffset);
-	CoreWindow::GetRenderWindow().setView(view);
+	CoreWindow::Reset();
 
 	// Reset texts and text observers
 	for (size_t i = 0; i < TEXT_COUNT; ++i)
@@ -430,9 +428,6 @@ void StateTraining::Capture()
 			}
 			case PAUSED_MODE:
 				filenameText->Capture();
-				// No break
-			case RUNNING_MODE:
-			{
 				if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
 				{
 					auto eventKey = CoreWindow::GetEvent().key.code;
@@ -449,43 +444,30 @@ void StateTraining::Capture()
 							m_mode = STOPPED_MODE;
 							m_textObservers[MODE_TEXT]->Notify();
 
-							// Reset view so that the center is car starting position
-							auto& view = CoreWindow::GetView();
-							view.setCenter(m_vehiclePrototype->GetCenter());
-							CoreWindow::GetRenderWindow().setView(view);
+							// Reset view so that the center is vehicle starting position
+							m_zoom.ResetValue();
+							m_textObservers[ZOOM_TEXT]->Notify();
+							CoreWindow::Reset();
+							CoreWindow::SetViewCenter(m_vehiclePrototype->GetCenter());
 							break;
 						}
 						case CHANGE_FILENAME_TYPE:
 						{
-							if (m_mode == PAUSED_MODE)
-							{
-								if (m_pressedKeys[iterator->second])
-									break;
+							if (m_pressedKeys[iterator->second])
+								break;
 
-								++m_filenameType;
-								if (m_filenameType >= FILENAME_TYPES_COUNT)
-									m_filenameType = MAP_FILENAME_TYPE;
-								m_textObservers[FILENAME_TYPE_TEXT]->Notify();
-							}
-
+							++m_filenameType;
+							if (m_filenameType >= FILENAME_TYPES_COUNT)
+								m_filenameType = MAP_FILENAME_TYPE;
+							m_textObservers[FILENAME_TYPE_TEXT]->Notify();
 							break;
 						}
 						case PAUSED_CHANGE_MODE:
 						{
 							if (m_pressedKeys[iterator->second])
 								break;
-
-							if (m_mode == RUNNING_MODE)
-							{
-								m_mode = PAUSED_MODE;
-								m_textObservers[MODE_TEXT]->Notify();
-							}
-							else if (m_geneticAlgorithm)
-							{
-								m_mode = RUNNING_MODE;
-								m_textObservers[MODE_TEXT]->Notify();
-							}
-
+							m_mode = RUNNING_MODE;
+							m_textObservers[MODE_TEXT]->Notify();
 							break;
 						}
 						case INCREASE_PARAMETER:
@@ -497,7 +479,63 @@ void StateTraining::Capture()
 					m_pressedKeys[iterator->second] = true;
 				}
 				break;
-			}
+			case RUNNING_MODE:
+				if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
+				{
+					auto eventKey = CoreWindow::GetEvent().key.code;
+					auto iterator = m_controlKeys.find(eventKey);
+					if (iterator == m_controlKeys.end())
+						break;
+
+					switch (iterator->second)
+					{
+						case CHANGE_MODE:
+						{
+							if (m_pressedKeys[iterator->second])
+								break;
+							m_mode = STOPPED_MODE;
+							m_textObservers[MODE_TEXT]->Notify();
+
+							// Reset view so that the center is vehicle starting position
+							m_zoom.ResetValue();
+							m_textObservers[ZOOM_TEXT]->Notify();
+							CoreWindow::Reset();
+							CoreWindow::SetViewCenter(m_vehiclePrototype->GetCenter());
+							break;
+						}
+						case CHANGE_FILENAME_TYPE:
+							break;
+						case PAUSED_CHANGE_MODE:
+						{
+							if (m_pressedKeys[iterator->second])
+								break;
+							m_mode = PAUSED_MODE;
+							m_textObservers[MODE_TEXT]->Notify();
+							break;
+						}
+						case INCREASE_PARAMETER:
+							if (m_pressedKeyTimer.Update())
+							{
+								m_zoom.Decrease();
+								CoreWindow::SetViewZoom(m_zoom);
+								m_textObservers[ZOOM_TEXT]->Notify();
+							}
+							break;
+						case DECREASE_PARAMETER:
+							if (m_pressedKeyTimer.Update())
+							{
+								m_zoom.Increase();
+								CoreWindow::SetViewZoom(m_zoom);
+								m_textObservers[ZOOM_TEXT]->Notify();
+							}
+							break;
+						default:
+							break;
+					}
+
+					m_pressedKeys[iterator->second] = true;
+				}
+				break;
 			default:
 				break;
 		}
@@ -572,10 +610,8 @@ void StateTraining::Update()
 						m_vehiclePrototype->SetAngle(m_mapBuilder.GetVehicleAngle());
 						m_vehiclePrototype->Update();
 
-						// Reset view so that the center is car starting position
-						auto& view = CoreWindow::GetView();
-						view.setCenter(m_vehiclePrototype->GetCenter());
-						CoreWindow::GetRenderWindow().setView(view);
+						// Reset view so that the center is vehicle starting position
+						CoreWindow::SetViewCenter(m_vehiclePrototype->GetCenter());
 						break;
 					}
 					case ANN_FILENAME_TYPE:
@@ -629,10 +665,8 @@ void StateTraining::Update()
 						m_vehiclePrototype->SetAngle(m_mapBuilder.GetVehicleAngle());
 						m_vehiclePrototype->Update();
 
-						// Reset view so that the center is car starting position
-						auto& view = CoreWindow::GetView();
-						view.setCenter(m_vehiclePrototype->GetCenter());
-						CoreWindow::GetRenderWindow().setView(view);
+						// Reset view so that the center is vehicle starting position
+						CoreWindow::SetViewCenter(m_vehiclePrototype->GetCenter());
 						break;
 					}
 					default:
@@ -736,13 +770,11 @@ void StateTraining::Update()
 			}
 
 			// Update view
-			auto& view = CoreWindow::GetView();
-			auto currentViewCenter = view.getCenter();
-			auto distance = DrawableMath::Distance(currentViewCenter, m_viewCenter);
-			auto angle = DrawableMath::DifferenceVectorAngle(currentViewCenter, m_viewCenter);
-			auto newCenter = DrawableMath::GetEndPoint(currentViewCenter, angle, float(-distance * m_viewMovementOffset * CoreWindow::GetElapsedTime()));
-			view.setCenter(newCenter);
-			CoreWindow::GetRenderWindow().setView(view);
+			auto viewCenter = CoreWindow::GetViewCenter();
+			auto distance = DrawableMath::Distance(viewCenter, m_viewCenter);
+			auto angle = DrawableMath::DifferenceVectorAngle(viewCenter, m_viewCenter);
+			viewCenter = DrawableMath::GetEndPoint(viewCenter, angle, float(-distance * m_viewMovementOffset * CoreWindow::GetElapsedTime()));
+			CoreWindow::SetViewCenter(viewCenter);
 			break;
 		}
 		case PAUSED_MODE:
@@ -813,6 +845,7 @@ bool StateTraining::Load()
 	m_texts[HIGHEST_FITNESS_OVERALL_TEXT] = new DoubleText({ "Highest fitness overall:" });
 	m_texts[RAISING_REQUIRED_FITNESS_IMPROVEMENT_TEXT] = new DoubleText({ "Raising required fitness improvement in:" });
 	m_texts[MEAN_REQUIRED_FITNESS_IMPROVEMENT] = new DoubleText({ "Mean required fitness improvement:" });
+	m_texts[ZOOM_TEXT] = new TripleText({ "Zoom:", "", "| [+] [-]" });
 
 	// Create observers
 	m_textObservers[MODE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_modeStrings[m_mode]; });
@@ -834,6 +867,7 @@ bool StateTraining::Load()
 	m_textObservers[HIGHEST_FITNESS_OVERALL_TEXT] = new FunctionEventObserver<std::string>([&] { return std::to_string(!m_fitnessSystem ? 0 : size_t(m_fitnessSystem->GetHighestFitnessOverall()* 100.0)); }, "", "%");
 	m_textObservers[RAISING_REQUIRED_FITNESS_IMPROVEMENT_TEXT] = new FunctionTimerObserver<std::string>([&] { return std::to_string(m_requiredFitnessImprovementRiseTimer.GetTimeout() - m_requiredFitnessImprovementRiseTimer.GetValue()); }, 0.3, "", " seconds");
 	m_textObservers[MEAN_REQUIRED_FITNESS_IMPROVEMENT] = new FunctionEventObserver<std::string>([&] { return std::to_string(size_t((m_fitnessSystem ? m_fitnessSystem->GetMeanRequiredFitnessImprovement() : 0) * 100.0)); }, "", "%");
+	m_textObservers[ZOOM_TEXT] = new FunctionEventObserver<float>([&] { return m_zoom; });
 
 	// Set text observers
 	for (size_t i = 0; i < TEXT_COUNT; ++i)
@@ -860,6 +894,7 @@ bool StateTraining::Load()
 	m_texts[HIGHEST_FITNESS_OVERALL_TEXT]->SetPosition({ FontContext::Component(3, true), {14}, {23} });
 	m_texts[RAISING_REQUIRED_FITNESS_IMPROVEMENT_TEXT]->SetPosition({ FontContext::Component(2, true), {14}, {23} });
 	m_texts[MEAN_REQUIRED_FITNESS_IMPROVEMENT]->SetPosition({ FontContext::Component(1, true), {14}, {23} });
+	m_texts[ZOOM_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {6} });
 
 	CoreLogger::PrintSuccess("State \"Training\" dependencies loaded correctly");
 	return true;
@@ -870,7 +905,6 @@ void StateTraining::Draw()
 	switch (m_mode)
 	{
 		case STOPPED_MODE:
-		{
 			if (m_vehiclePrototype)
 			{
 				m_vehiclePrototype->DrawBody();
@@ -891,14 +925,10 @@ void StateTraining::Draw()
 			m_texts[NUMBER_OF_GENERATIONS_TEXT]->Draw();
 			m_texts[DEATH_ON_EDGE_CONTACT_TEXT]->Draw();
 			break;
-		}
 		case PAUSED_MODE:
+			m_simulatedWorld->Draw();
 			m_texts[FILENAME_TYPE_TEXT]->Draw();
 			m_texts[FILENAME_TEXT]->Draw();
-			// No break
-		case RUNNING_MODE:
-		{
-			m_simulatedWorld->Draw();
 			m_texts[CURRENT_POPULATION_TEXT]->Draw();
 			m_texts[CURRENT_GENERATION_TEXT]->Draw();
 			m_texts[HIGHEST_FITNESS_TEXT]->Draw();
@@ -906,7 +936,16 @@ void StateTraining::Draw()
 			m_texts[RAISING_REQUIRED_FITNESS_IMPROVEMENT_TEXT]->Draw();
 			m_texts[MEAN_REQUIRED_FITNESS_IMPROVEMENT]->Draw();
 			break;
-		}
+		case RUNNING_MODE:
+			m_simulatedWorld->Draw();
+			m_texts[CURRENT_POPULATION_TEXT]->Draw();
+			m_texts[CURRENT_GENERATION_TEXT]->Draw();
+			m_texts[HIGHEST_FITNESS_TEXT]->Draw();
+			m_texts[HIGHEST_FITNESS_OVERALL_TEXT]->Draw();
+			m_texts[RAISING_REQUIRED_FITNESS_IMPROVEMENT_TEXT]->Draw();
+			m_texts[MEAN_REQUIRED_FITNESS_IMPROVEMENT]->Draw();
+			m_texts[ZOOM_TEXT]->Draw();
+			break;
 		default:
 			break;
 	}
