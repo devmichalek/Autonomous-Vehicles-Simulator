@@ -73,3 +73,12 @@ https://stackoverflow.com/questions/14422179/apply-force-to-box2d-body-in-relate
 
 Box2D C++ tutorials - Top-down car physics
 http://www.iforce2d.net/b2dtut/top-down-car
+
+SFML Controlling the 2D camera with views
+https://www.sfml-dev.org/tutorials/2.5/graphics-view.php
+
+To dynamically increment from blue to red using C++
+https://stackoverflow.com/questions/1700211/to-dynamically-increment-from-blue-to-red-using-c
+
+Box2D move bodies at same rate regardless of FPS
+https://stackoverflow.com/questions/41493043/box2d-move-bodies-at-same-rate-regardless-of-fps

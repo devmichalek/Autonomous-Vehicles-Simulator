@@ -110,19 +110,6 @@ public:
         return Distance(edge[0], edge[1]);
     }
 
-    // Returns true if point is inside triangle and false otherwise
-    inline static bool IsPointInsideTriangle(const Triangle& triangle, const sf::Vector2f& point)
-    {
-        float d1 = TriangleSign(point, triangle[0], triangle[1]);
-        float d2 = TriangleSign(point, triangle[1], triangle[2]);
-        float d3 = TriangleSign(point, triangle[2], triangle[0]);
-
-        bool negative = (d1 < 0) || (d2 < 0) || (d3 < 0);
-        bool positive = (d1 > 0) || (d2 > 0) || (d3 > 0);
-
-        return !(negative && positive);
-    }
-
     // Returns true if point is inside circle
     inline static bool IsPointInsideCircle(const sf::Vector2f& center, double radius, const sf::Vector2f& point)
     {

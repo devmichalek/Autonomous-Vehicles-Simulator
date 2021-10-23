@@ -34,7 +34,7 @@ StateVehicleEditor::StateVehicleEditor()
 	auto maxVehicleSize = VehicleBuilder::GetMaxVehicleBodyBound();
 	auto windowSize = CoreWindow::GetWindowSize();
 	m_allowedAreaShape.setFillColor(sf::Color(255, 255, 255, 0));
-	m_allowedAreaShape.setOutlineColor(sf::Color(0, 0, 255, 64));
+	m_allowedAreaShape.setOutlineColor(sf::Color(0, 0, 255, 96));
 	m_allowedAreaShape.setOutlineThickness(2);
 	m_allowedAreaShape.setSize(maxVehicleSize);
 	m_allowedAreaShape.setPosition((windowSize.x / 2.0f - maxVehicleSize.x / 2.0f), (windowSize.y / 2.0f - maxVehicleSize.y / 2.0f));
@@ -49,7 +49,7 @@ StateVehicleEditor::StateVehicleEditor()
 
 	// Set axes
 	auto windowCenter = CoreWindow::GetWindowCenter();
-	m_yAxis[0].color = m_yAxis[1].color = m_xAxis[0].color = m_xAxis[1].color = sf::Color(0, 0, 255, 64);
+	m_yAxis[0].color = m_yAxis[1].color = m_xAxis[0].color = m_xAxis[1].color = sf::Color(0, 0, 255, 96);
 	m_xAxis[0].position = sf::Vector2f(windowCenter.x, 0);
 	m_xAxis[1].position = sf::Vector2f(windowCenter.x, windowSize.y);
 	m_yAxis[0].position = sf::Vector2f(0, windowCenter.y);
