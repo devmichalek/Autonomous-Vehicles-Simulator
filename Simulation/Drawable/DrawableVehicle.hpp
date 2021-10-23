@@ -33,10 +33,7 @@ protected:
 	// Sets default color that will be used to color body
 	inline void SetDefaultColor(const float mass)
 	{
-		const float ratio = mass / VehicleBuilder::GetMaxVehicleMass();
-		const sf::Uint8 ceiling = sf::Uint8(0xFF * 0.9f);
-		const sf::Uint8 part = 0xFF - sf::Uint8(ceiling * ratio);
-		m_defaultColor = sf::Color(part, part, part, 0xFF);
+		m_defaultColor = VehicleBuilder::CalculateDefaultColor(mass);
 		m_bodyShape.setFillColor(m_defaultColor);
 	}
 

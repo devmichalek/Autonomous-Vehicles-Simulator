@@ -48,6 +48,4 @@ protected:
 
 	ObserverInterface* m_observer;
 	TimerAbstract* m_blendTimer;
-	static const sf::Color m_activeColor;
-	static const sf::Color m_inactiveColor;
 };

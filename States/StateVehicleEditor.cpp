@@ -31,7 +31,7 @@ StateVehicleEditor::StateVehicleEditor()
 	for (size_t i = 0; i < CONTROL_KEYS_COUNT; ++i)
 		m_pressedKeys[i] = false;
 
-	auto maxVehicleSize = VehicleBuilder::GetMaxVehicleBodyBound();
+	auto maxVehicleSize = VehicleBuilder::GetMaxBodyBound();
 	auto windowSize = CoreWindow::GetWindowSize();
 	m_allowedAreaShape.setFillColor(sf::Color(255, 255, 255, 0));
 	m_allowedAreaShape.setOutlineColor(sf::Color(0, 0, 255, 96));
@@ -324,12 +324,12 @@ void StateVehicleEditor::Update()
 		{
 			m_vehicleBuilder.Clear();
 			for (const auto& point : m_vehiclePrototype->GetBodyPoints())
-				m_vehicleBuilder.AddVehicleBodyPoint(point);
+				m_vehicleBuilder.AddBodyPoint(point);
 			size_t numberOfSensors = m_vehiclePrototype->GetNumberOfSensors();
 			for (size_t i = 0; i < numberOfSensors; ++i)
-				m_vehicleBuilder.AddVehicleSensor(m_vehiclePrototype->GetSensorPoint(i),
-												  m_vehiclePrototype->GetSensorBeamAngle(i),
-												  m_vehiclePrototype->GetSensorMotionRange(i));
+				m_vehicleBuilder.AddSensor(m_vehiclePrototype->GetSensorPoint(i),
+										   m_vehiclePrototype->GetSensorBeamAngle(i),
+										   m_vehiclePrototype->GetSensorMotionRange(i));
 
 			bool success = m_vehicleBuilder.Save(filenameText->GetFilename());
 			auto status = m_vehicleBuilder.GetLastOperationStatus();

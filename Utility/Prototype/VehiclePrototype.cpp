@@ -39,6 +39,9 @@ void VehiclePrototype::AddBodyPoint(sf::Vector2f point)
 	m_bodyPoints.shrink_to_fit();
 	m_bodyShape.setPointCount(m_bodyPoints.size());
 	m_bodyShape.setPoint(m_bodyPoints.size() - 1, point);
+	auto mass = VehicleBuilder::CalculateMass(m_bodyPoints);
+	auto color = VehicleBuilder::CalculateDefaultColor(mass);
+	m_bodyShape.setFillColor(color);
 }
 
 void VehiclePrototype::RemoveLastBodyPoint()

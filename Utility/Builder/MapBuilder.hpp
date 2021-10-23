@@ -8,8 +8,8 @@ class MapBuilder final :
 	enum
 	{
 		ERROR_VEHICLE_IS_NOT_POSITIONED = LAST_ENUM_OPERATION_INDEX,
-		ERROR_VEHICLE_OUTSIDE_ALLOWED_MAP_AREA,
-		ERROR_VEHICLE_OUTSIDE_ALLOWED_ROAD_AREA,
+		ERROR_VEHICLE_OUTSIDE_MAP_AREA,
+		ERROR_VEHICLE_OUTSIDE_ROAD_AREA,
 		ERROR_VEHICLE_ANGLE_IS_TOO_LITTLE,
 		ERROR_VEHICLE_ANGLE_IS_TOO_LARGE,
 		ERROR_EDGES_ARE_NOT_SPECIFIED,
@@ -63,10 +63,10 @@ class MapBuilder final :
 		static TriangleVector Generate(const EdgeVector& edges, const size_t pivot);
 	};
 
-	// Validates if vehicle position is inside allowed area
-	bool ValidateAllowedAreaVehiclePosition();
+	// Validates if vehicle position is inside map area
+	bool ValidateMapAreaVehiclePosition();
 
-	// Validates if vehicle position is inside road are
+	// Validates if vehicle position is inside road area
 	bool ValidateRoadAreaVehiclePosition();
 
 	// Validates if vehicle's angle is correct

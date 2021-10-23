@@ -268,12 +268,12 @@ TriangleVector MapBuilder::TriangleCheckpointsGenerator::Generate(const EdgeVect
 	return GetTriangleCheckpoints(edgeVectors);
 }
 
-bool MapBuilder::ValidateAllowedAreaVehiclePosition()
+bool MapBuilder::ValidateMapAreaVehiclePosition()
 {
 	auto allowedMapArea = GetMaxAllowedMapArea();
 	if (!DrawableMath::IsPointInsideRectangle(allowedMapArea.second, allowedMapArea.first, m_vehicleCenter))
 	{
-		m_lastOperationStatus = ERROR_VEHICLE_OUTSIDE_ALLOWED_MAP_AREA;
+		m_lastOperationStatus = ERROR_VEHICLE_OUTSIDE_MAP_AREA;
 		return false;
 	}
 
@@ -282,6 +282,27 @@ bool MapBuilder::ValidateAllowedAreaVehiclePosition()
 
 bool MapBuilder::ValidateRoadAreaVehiclePosition()
 {
+	std::vector<sf::Vector2f> innerPoints(m_edgesPivot);
+	for (size_t i = 0; i < innerPoints.size(); ++i)
+		innerPoints[i] = m_edges[i][0];
+
+	// If vehicle center is inside inner polygon return error
+	if (DrawableMath::IsPointInsidePolygon(innerPoints, m_vehicleCenter))
+	{
+		m_lastOperationStatus = ERROR_VEHICLE_OUTSIDE_ROAD_AREA;
+		return false;
+	}
+
+	std::vector<sf::Vector2f> outerPoints(m_edges.size() - m_edgesPivot);
+	for (size_t i = 0; i < outerPoints.size(); ++i)
+		outerPoints[i] = m_edges[i + m_edgesPivot][0];
+
+	// If vehicle is not inside outer polygon return error
+	if (!DrawableMath::IsPointInsidePolygon(outerPoints, m_vehicleCenter))
+	{
+		m_lastOperationStatus = ERROR_VEHICLE_OUTSIDE_ROAD_AREA;
+		return false;
+	}
 
 	return true;
 }
@@ -357,7 +378,7 @@ bool MapBuilder::ValidateNumberOfEdgeSequences()
 		if (m_edges[i - 1][1] == m_edges[i][0])
 		{
 			// If the end of the previous edge is the beggining of the current edge
-			// It meanse there is no gap
+			// It means that there is no gap
 			if (edge[0] == m_edges[i][1])
 			{
 				result.push_back(i + 1);
@@ -365,7 +386,19 @@ bool MapBuilder::ValidateNumberOfEdgeSequences()
 					break;
 				edge = m_edges[i + 1];
 				++i;
+
+				if (i + 1 >= m_edges.size())
+				{
+					// n edge sequences were found and we are left with one edge alone which is incorrect
+					m_lastOperationStatus = ERROR_INCORRECT_EDGE_SEQUENCE_COUNT;
+					return false;
+				}
 			}
+		}
+		else
+		{
+			m_lastOperationStatus = ERROR_INCORRECT_EDGE_SEQUENCE_COUNT;
+			return false;
 		}
 	}
 
@@ -418,7 +451,7 @@ bool MapBuilder::ValidateInternal()
 		return false;
 	}
 
-	if (!ValidateAllowedAreaVehiclePosition())
+	if (!ValidateMapAreaVehiclePosition())
 		return false;
 
 	if (!ValidateRoadAreaVehiclePosition())
@@ -459,7 +492,8 @@ bool MapBuilder::LoadInternal(std::ifstream& input)
 	input.read((char*)&m_vehicleCenter.y, sizeof(m_vehicleCenter.y));
 	m_vehiclePositioned = true;
 
-	if (!ValidateAllowedAreaVehiclePosition())
+	// Validate if vehicle center is inside map area
+	if (!ValidateMapAreaVehiclePosition())
 		return false;
 
 	// Read vehicle angle
@@ -504,6 +538,10 @@ bool MapBuilder::LoadInternal(std::ifstream& input)
 
 	// Validate triangle checkpoints
 	if (!ValidateTriangleCheckpoints())
+		return false;
+
+	// Validate if vehicle center is inside road area
+	if (!ValidateRoadAreaVehiclePosition())
 		return false;
 
 	return true;
@@ -574,8 +612,8 @@ MapBuilder::MapBuilder() :
 	m_vehicleAngle(0.0)
 {
 	m_operationsMap[ERROR_VEHICLE_IS_NOT_POSITIONED] = "Error: Vehicle is not positioned!";
-	m_operationsMap[ERROR_VEHICLE_OUTSIDE_ALLOWED_MAP_AREA] = "Error: Vehicle is outside allowed map area!";
-	m_operationsMap[ERROR_VEHICLE_OUTSIDE_ALLOWED_ROAD_AREA] = "Error: Vehicle is outside allowed road area!";
+	m_operationsMap[ERROR_VEHICLE_OUTSIDE_MAP_AREA] = "Error: Vehicle is outside map area!";
+	m_operationsMap[ERROR_VEHICLE_OUTSIDE_ROAD_AREA] = "Error: Vehicle is outside road area!";
 	m_operationsMap[ERROR_VEHICLE_ANGLE_IS_TOO_LITTLE] = "Error: Vehicle's angle is too little!";
 	m_operationsMap[ERROR_VEHICLE_ANGLE_IS_TOO_LARGE] = "Error: Vehicle's angle is too large!";
 	m_operationsMap[ERROR_EDGES_ARE_NOT_SPECIFIED] = "Error: Edges are not specified!";

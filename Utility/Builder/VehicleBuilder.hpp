@@ -22,18 +22,18 @@ class VehicleBuilder final :
 		ERROR_SENSOR_IS_OUTSIDE_OF_VEHICLE_BODY
 	};
 
-	VehiclePrototype m_vehiclePrototype;
-	static sf::Vector2f m_maxVehicleBodyBound;
-	static sf::Vector2f m_minVehicleBodyBound;
-	static double m_defaultVehicleBeamLength;
-	static sf::Vector2f m_defaultVehicleSensorSize;
-	static float m_maxVehicleMass;
+	VehiclePrototype m_prototype;
+	static sf::Vector2f m_maxBodyBound;
+	static sf::Vector2f m_minBodyBound;
+	static double m_defaultBeamLength;
+	static sf::Vector2f m_defaultSensorSize;
+	static float m_maxMass;
 
 	// Validates number of vehicle body points
-	bool ValidateVehicleBodyNumberOfPoints(size_t count);
+	bool ValidateNumberOfBodyPoints(size_t count);
 
 	// Validates vehicle body area
-	bool ValidateVehicleBodyArea();
+	bool ValidateBodyArea();
 	
 	// Validate vehicle body edges
 	bool ValidateRelativePositions(const std::vector<sf::Vector2f>& points);
@@ -48,7 +48,7 @@ class VehicleBuilder final :
 	bool ValidateSensorMotionRange(double motionRange);
 
 	// Validates sensor's position over vehicle body
-	bool ValidateSensorPositionsOverVehicleBody();
+	bool ValidateSensorPositionsOverBody();
 
 	// Validate internal fields
 	bool ValidateInternal();
@@ -71,28 +71,28 @@ public:
 
 	~VehicleBuilder();
 
-	// Adds part of vehicle body
-	inline void AddVehicleBodyPoint(sf::Vector2f point)
+	// Adds descriptive vehicle body point
+	inline void AddBodyPoint(sf::Vector2f point)
 	{
-		m_vehiclePrototype.AddBodyPoint(point);
+		m_prototype.AddBodyPoint(point);
 	}
 
 	// Adds vehicle sensor
-	void AddVehicleSensor(sf::Vector2f point, double angle, double motionRange)
+	inline void AddSensor(sf::Vector2f point, double angle, double motionRange)
 	{
-		m_vehiclePrototype.AddSensor(point, angle, motionRange);
+		m_prototype.AddSensor(point, angle, motionRange);
 	}
 
 	// Returns maximum vehicle body bound
-	inline static sf::Vector2f GetMaxVehicleBodyBound()
+	inline static sf::Vector2f GetMaxBodyBound()
 	{
-		return m_maxVehicleBodyBound;
+		return m_maxBodyBound;
 	}
 
 	// Returns minimum vehicle body bound
-	inline static sf::Vector2f GetMinVehicleBodyBound()
+	inline static sf::Vector2f GetMinBodyBound()
 	{
-		return m_minVehicleBodyBound;
+		return m_minBodyBound;
 	}
 
 	// Returns minimum vehicle body number of points
@@ -170,23 +170,32 @@ public:
 	// Returns default sensor's beam length
 	inline static double GetDefaultBeamLength()
 	{
-		return m_defaultVehicleBeamLength;
+		return m_defaultBeamLength;
 	}
 
 	// Returns default sensor's size
 	inline static sf::Vector2f GetDefaultSensorSize()
 	{
-		return m_defaultVehicleSensorSize;
+		return m_defaultSensorSize;
 	}
 
 	// Returns maximum vehicle mass
-	inline static float GetMaxVehicleMass()
+	inline static float GetMaxMass()
 	{
-		return m_maxVehicleMass;
+		return m_maxMass;
 	}
 
-	// Slowly calculates vehicle mass based on provided body points
-	static float CalculateMass(const std::vector<sf::Vector2f>& vehicleBodyPoints);
+	// Returns default color that will be used to color vehicle body based on provided mass
+	inline static sf::Color CalculateDefaultColor(const float mass)
+	{
+		const float ratio = mass / m_maxMass;
+		const sf::Uint8 ceiling = sf::Uint8(0xFF * 0.9f);
+		const sf::Uint8 channel = 0xFF - sf::Uint8(ceiling * ratio);
+		return sf::Color(channel, channel, channel, 0xFF);
+	}
+
+	// Slowly calculates vehicle mass based on provided vehicle body points
+	static float CalculateMass(const std::vector<sf::Vector2f>& bodyPoints);
 
 	// Returns vehicle prototype
 	VehiclePrototype* Get();

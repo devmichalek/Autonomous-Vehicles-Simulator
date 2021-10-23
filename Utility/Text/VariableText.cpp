@@ -5,6 +5,7 @@
 VariableText::VariableText(std::vector<std::string> strings) :
 	TextAbstract(strings, 1)
 {
+	m_texts.front().setFillColor(m_inactiveColor);
 }
 
 void VariableText::SetCharacterSize(unsigned int multiplier)

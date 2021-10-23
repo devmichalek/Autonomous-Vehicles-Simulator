@@ -2,13 +2,13 @@
 #include "CoreLogger.hpp"
 #include <Box2D/box2d.h>
 
-sf::Vector2f VehicleBuilder::m_maxVehicleBodyBound;
-sf::Vector2f VehicleBuilder::m_minVehicleBodyBound;
-double VehicleBuilder::m_defaultVehicleBeamLength;
-sf::Vector2f VehicleBuilder::m_defaultVehicleSensorSize;
-float VehicleBuilder::m_maxVehicleMass;
+sf::Vector2f VehicleBuilder::m_maxBodyBound;
+sf::Vector2f VehicleBuilder::m_minBodyBound;
+double VehicleBuilder::m_defaultBeamLength;
+sf::Vector2f VehicleBuilder::m_defaultSensorSize;
+float VehicleBuilder::m_maxMass;
 
-bool VehicleBuilder::ValidateVehicleBodyNumberOfPoints(size_t count)
+bool VehicleBuilder::ValidateNumberOfBodyPoints(size_t count)
 {
 	if (count < GetMinNumberOfBodyPoints())
 	{
@@ -25,11 +25,11 @@ bool VehicleBuilder::ValidateVehicleBodyNumberOfPoints(size_t count)
 	return true;
 }
 
-bool VehicleBuilder::ValidateVehicleBodyArea()
+bool VehicleBuilder::ValidateBodyArea()
 {
-	auto minBound = GetMinVehicleBodyBound();
+	auto minBound = GetMinBodyBound();
 	auto minimumArea = minBound.x * minBound.y;
-	auto totalArea = DrawableMath::CalculateArea(m_vehiclePrototype.GetBodyPoints());
+	auto totalArea = DrawableMath::CalculateArea(m_prototype.GetBodyPoints());
 
 	if (totalArea < minimumArea)
 	{
@@ -65,7 +65,7 @@ bool VehicleBuilder::ValidateRelativePositions(const std::vector<sf::Vector2f>& 
 
 	float x = float(std::fabs(left - right));
 	float y = float(std::fabs(top - down));
-	auto maxSize = GetMaxVehicleBodyBound();
+	auto maxSize = GetMaxBodyBound();
 
 	if (x > maxSize.x || y > maxSize.y)
 	{
@@ -133,11 +133,11 @@ bool VehicleBuilder::ValidateSensorMotionRange(double motionRange)
 	return true;
 }
 
-bool VehicleBuilder::ValidateSensorPositionsOverVehicleBody()
+bool VehicleBuilder::ValidateSensorPositionsOverBody()
 {
-	for (const auto& position : m_vehiclePrototype.GetSensorPoints())
+	for (const auto& position : m_prototype.GetSensorPoints())
 	{
-		if (!DrawableMath::IsPointInsidePolygon(m_vehiclePrototype.GetBodyPoints(), position))
+		if (!DrawableMath::IsPointInsidePolygon(m_prototype.GetBodyPoints(), position))
 		{
 			m_lastOperationStatus = ERROR_SENSOR_IS_OUTSIDE_OF_VEHICLE_BODY;
 			return false;
@@ -149,30 +149,30 @@ bool VehicleBuilder::ValidateSensorPositionsOverVehicleBody()
 
 bool VehicleBuilder::ValidateInternal()
 {
-	if (!ValidateVehicleBodyNumberOfPoints(m_vehiclePrototype.GetNumberOfBodyPoints()))
+	if (!ValidateNumberOfBodyPoints(m_prototype.GetNumberOfBodyPoints()))
 		return false;
 
-	if (!ValidateVehicleBodyArea())
+	if (!ValidateBodyArea())
 		return false;
 
-	if (!ValidateRelativePositions(m_vehiclePrototype.GetBodyPoints()))
+	if (!ValidateRelativePositions(m_prototype.GetBodyPoints()))
 		return false;
 
-	if (!ValidateNumberOfSensors(m_vehiclePrototype.GetNumberOfSensors()))
+	if (!ValidateNumberOfSensors(m_prototype.GetNumberOfSensors()))
 		return false;
 
-	if (!ValidateRelativePositions(m_vehiclePrototype.GetSensorPoints()))
+	if (!ValidateRelativePositions(m_prototype.GetSensorPoints()))
 		return false;
 
-	if (!ValidateSensorPositionsOverVehicleBody())
+	if (!ValidateSensorPositionsOverBody())
 		return false;
 	
-	for (size_t i = 0; i < m_vehiclePrototype.GetNumberOfSensors(); ++i)
+	for (size_t i = 0; i < m_prototype.GetNumberOfSensors(); ++i)
 	{
-		if (!ValidateSensorAngle(m_vehiclePrototype.GetSensorBeamAngle(i)))
+		if (!ValidateSensorAngle(m_prototype.GetSensorBeamAngle(i)))
 			return false;
 
-		if (!ValidateSensorMotionRange(m_vehiclePrototype.GetSensorMotionRange(i)))
+		if (!ValidateSensorMotionRange(m_prototype.GetSensorMotionRange(i)))
 			return false;
 	}
 
@@ -181,7 +181,7 @@ bool VehicleBuilder::ValidateInternal()
 
 void VehicleBuilder::ClearInternal()
 {
-	m_vehiclePrototype.Clear();
+	m_prototype.Clear();
 }
 
 bool VehicleBuilder::LoadInternal(std::ifstream& input)
@@ -193,7 +193,7 @@ bool VehicleBuilder::LoadInternal(std::ifstream& input)
 	size_t vehicleBodyNumberOfPoints = 0;
 	input.read((char*)&vehicleBodyNumberOfPoints, sizeof(vehicleBodyNumberOfPoints));
 
-	if (!ValidateVehicleBodyNumberOfPoints(vehicleBodyNumberOfPoints))
+	if (!ValidateNumberOfBodyPoints(vehicleBodyNumberOfPoints))
 		return false;
 
 	// Read vehicle body points
@@ -205,13 +205,13 @@ bool VehicleBuilder::LoadInternal(std::ifstream& input)
 		input.read((char*)&y, sizeof(y));
 		x *= double(windowSize.x);
 		y *= double(windowSize.y);
-		m_vehiclePrototype.AddBodyPoint(sf::Vector2f(float(x), float(y)));
+		m_prototype.AddBodyPoint(sf::Vector2f(float(x), float(y)));
 	}
 
-	if (!ValidateVehicleBodyArea())
+	if (!ValidateBodyArea())
 		return false;
 
-	if (!ValidateRelativePositions(m_vehiclePrototype.GetBodyPoints()))
+	if (!ValidateRelativePositions(m_prototype.GetBodyPoints()))
 		return false;
 
 	// Read number of vehicle sensors
@@ -230,13 +230,13 @@ bool VehicleBuilder::LoadInternal(std::ifstream& input)
 		input.read((char*)&y, sizeof(y));
 		x *= double(windowSize.x);
 		y *= double(windowSize.y);
-		m_vehiclePrototype.AddSensor(sf::Vector2f(float(x), float(y)), 0.0, GetDefaultSensorMotionRange());
+		m_prototype.AddSensor(sf::Vector2f(float(x), float(y)), 0.0, GetDefaultSensorMotionRange());
 	}
 
-	if (!ValidateRelativePositions(m_vehiclePrototype.GetSensorPoints()))
+	if (!ValidateRelativePositions(m_prototype.GetSensorPoints()))
 		return false;
 
-	if (!ValidateSensorPositionsOverVehicleBody())
+	if (!ValidateSensorPositionsOverBody())
 		return false;
 
 	// Read vehicle sensor's angles
@@ -248,7 +248,7 @@ bool VehicleBuilder::LoadInternal(std::ifstream& input)
 		if (!ValidateSensorAngle(angle))
 			return false;
 
-		m_vehiclePrototype.SetSensorBeamAngle(i, angle);
+		m_prototype.SetSensorBeamAngle(i, angle);
 	}
 
 	// Read vehicle sensor's motion range
@@ -260,7 +260,7 @@ bool VehicleBuilder::LoadInternal(std::ifstream& input)
 		if (!ValidateSensorMotionRange(motionRange))
 			return false;
 
-		m_vehiclePrototype.SetSensorMotionRange(i, motionRange);
+		m_prototype.SetSensorMotionRange(i, motionRange);
 	}
 
 	return true;
@@ -272,27 +272,27 @@ bool VehicleBuilder::SaveInternal(std::ofstream& output)
 	auto windowSize = CoreWindow::GetWindowSize();
 
 	// Save number of vehicle body points
-	size_t vehicleBodyNumberOfPoints = m_vehiclePrototype.GetNumberOfBodyPoints();
+	size_t vehicleBodyNumberOfPoints = m_prototype.GetNumberOfBodyPoints();
 	output.write((const char*)&vehicleBodyNumberOfPoints, sizeof(vehicleBodyNumberOfPoints));
 
 	// Save vehicle body points
 	for (size_t i = 0; i < vehicleBodyNumberOfPoints; ++i)
 	{
-		double x = double(m_vehiclePrototype.GetBodyPoint(i).x) / double(windowSize.x);
-		double y = double(m_vehiclePrototype.GetBodyPoint(i).y) / double(windowSize.y);
+		double x = double(m_prototype.GetBodyPoint(i).x) / double(windowSize.x);
+		double y = double(m_prototype.GetBodyPoint(i).y) / double(windowSize.y);
 		output.write((const char*)&x, sizeof(x));
 		output.write((const char*)&y, sizeof(y));
 	}
 
 	// Save number of vehicle sensors
-	size_t numberOfSensors = m_vehiclePrototype.GetNumberOfSensors();
+	size_t numberOfSensors = m_prototype.GetNumberOfSensors();
 	output.write((const char*)&numberOfSensors, sizeof(numberOfSensors));
 
 	// Save vehicle sensor's positions
 	for (size_t i = 0; i < numberOfSensors; ++i)
 	{
-		double x = double(m_vehiclePrototype.GetSensorPoint(i).x) / double(windowSize.x);
-		double y = double(m_vehiclePrototype.GetSensorPoint(i).y) / double(windowSize.y);
+		double x = double(m_prototype.GetSensorPoint(i).x) / double(windowSize.x);
+		double y = double(m_prototype.GetSensorPoint(i).y) / double(windowSize.y);
 		output.write((const char*)&x, sizeof(x));
 		output.write((const char*)&y, sizeof(y));
 	}
@@ -300,14 +300,14 @@ bool VehicleBuilder::SaveInternal(std::ofstream& output)
 	// Save vehicle sensor's angles
 	for (size_t i = 0; i < numberOfSensors; ++i)
 	{
-		double angle = m_vehiclePrototype.GetSensorBeamAngle(i);
+		double angle = m_prototype.GetSensorBeamAngle(i);
 		output.write((const char*)&angle, sizeof(angle));
 	}
 
 	// Save vehicle sensor's motion range
 	for (size_t i = 0; i < numberOfSensors; ++i)
 	{
-		double motionRange = m_vehiclePrototype.GetSensorMotionRange(i);
+		double motionRange = m_prototype.GetSensorMotionRange(i);
 		output.write((const char*)&motionRange, sizeof(motionRange));
 	}
 
@@ -316,19 +316,19 @@ bool VehicleBuilder::SaveInternal(std::ofstream& output)
 
 void VehicleBuilder::CreateDummyInternal()
 {
-	sf::Vector2f dummySize = GetMaxVehicleBodyBound();
+	sf::Vector2f dummySize = GetMaxBodyBound();
 	dummySize /= 2.0f;
 
-	m_vehiclePrototype.AddBodyPoint(sf::Vector2f(-dummySize.x / 2, -dummySize.y / 2));
-	m_vehiclePrototype.AddBodyPoint(sf::Vector2f(dummySize.x / 2, -dummySize.y / 2));
-	m_vehiclePrototype.AddBodyPoint(sf::Vector2f(dummySize.x / 2, dummySize.y / 2));
-	m_vehiclePrototype.AddBodyPoint(sf::Vector2f(-dummySize.x / 2, dummySize.y / 2));
+	m_prototype.AddBodyPoint(sf::Vector2f(-dummySize.x / 2, -dummySize.y / 2));
+	m_prototype.AddBodyPoint(sf::Vector2f(dummySize.x / 2, -dummySize.y / 2));
+	m_prototype.AddBodyPoint(sf::Vector2f(dummySize.x / 2, dummySize.y / 2));
+	m_prototype.AddBodyPoint(sf::Vector2f(-dummySize.x / 2, dummySize.y / 2));
 
-	m_vehiclePrototype.AddSensor(sf::Vector2f(0, -dummySize.y / 2 + 1), 270.0, GetDefaultSensorMotionRange());
-	m_vehiclePrototype.AddSensor(sf::Vector2f(dummySize.x / 2 - 1, -dummySize.y / 2 + 1), 315.0, GetDefaultSensorMotionRange());
-	m_vehiclePrototype.AddSensor(sf::Vector2f(dummySize.x / 2 - 1, 0), 0, GetDefaultSensorMotionRange());
-	m_vehiclePrototype.AddSensor(sf::Vector2f(dummySize.x / 2 - 1, dummySize.y / 2 - 1), 45.0, GetDefaultSensorMotionRange());
-	m_vehiclePrototype.AddSensor(sf::Vector2f(0, dummySize.y / 2 - 1), 90.0, GetDefaultSensorMotionRange());
+	m_prototype.AddSensor(sf::Vector2f(0, -dummySize.y / 2 + 1), 270.0, GetDefaultSensorMotionRange());
+	m_prototype.AddSensor(sf::Vector2f(dummySize.x / 2 - 1, -dummySize.y / 2 + 1), 315.0, GetDefaultSensorMotionRange());
+	m_prototype.AddSensor(sf::Vector2f(dummySize.x / 2 - 1, 0), 0, GetDefaultSensorMotionRange());
+	m_prototype.AddSensor(sf::Vector2f(dummySize.x / 2 - 1, dummySize.y / 2 - 1), 45.0, GetDefaultSensorMotionRange());
+	m_prototype.AddSensor(sf::Vector2f(0, dummySize.y / 2 - 1), 90.0, GetDefaultSensorMotionRange());
 }
 
 VehicleBuilder::VehicleBuilder() :
@@ -353,17 +353,17 @@ VehicleBuilder::~VehicleBuilder()
 {
 }
 
-float VehicleBuilder::CalculateMass(const std::vector<sf::Vector2f>& vehicleBodyPoints)
+float VehicleBuilder::CalculateMass(const std::vector<sf::Vector2f>& bodyPoints)
 {
-	if (vehicleBodyPoints.size() < GetMinNumberOfBodyPoints())
+	if (bodyPoints.size() < GetMinNumberOfBodyPoints())
 		return 0.f;
 
 	// Create shape
 	b2World world(b2Vec2(0.f, 0.f));
-	const size_t numberOfPoints = vehicleBodyPoints.size();
+	const size_t numberOfPoints = bodyPoints.size();
 	b2Vec2* vertices = new b2Vec2[numberOfPoints];
 	for (size_t i = 0; i < numberOfPoints; ++i)
-		vertices[i] = DrawableMath::ToBox2DPosition(vehicleBodyPoints[i]);
+		vertices[i] = DrawableMath::ToBox2DPosition(bodyPoints[i]);
 	b2PolygonShape polygonShape;
 	polygonShape.Set(vertices, int32(numberOfPoints));
 	delete[] vertices;
@@ -390,16 +390,16 @@ VehiclePrototype* VehicleBuilder::Get()
 	if (!Validate())
 		return nullptr;
 
-	return new VehiclePrototype(m_vehiclePrototype);
+	return new VehiclePrototype(m_prototype);
 }
 
 bool VehicleBuilder::Initialize()
 {
 	// Initialize static fields
-	m_maxVehicleBodyBound = sf::Vector2f(CoreWindow::GetWindowSize().y / 5.0f, CoreWindow::GetWindowSize().x / 15.0f);
-	m_minVehicleBodyBound = m_maxVehicleBodyBound / 4.0f;
-	m_defaultVehicleBeamLength = double(CoreWindow::GetWindowSize().y) * 0.75;
-	m_defaultVehicleSensorSize = sf::Vector2f(CoreWindow::GetWindowSize().x / 400.0f, CoreWindow::GetWindowSize().x / 400.0f);
+	m_maxBodyBound = sf::Vector2f(CoreWindow::GetWindowSize().y / 5.0f, CoreWindow::GetWindowSize().x / 15.0f);
+	m_minBodyBound = m_maxBodyBound / 4.0f;
+	m_defaultBeamLength = double(CoreWindow::GetWindowSize().y) * 0.75;
+	m_defaultSensorSize = sf::Vector2f(CoreWindow::GetWindowSize().x / 400.0f, CoreWindow::GetWindowSize().x / 400.0f);
 
 	// Call internal implementation
 	VehicleBuilder builder;
@@ -413,12 +413,12 @@ bool VehicleBuilder::Initialize()
 
 	// Initialize max vehicle mass field
 	std::vector<sf::Vector2f> bodyPoints;
-	sf::Vector2f size = GetMaxVehicleBodyBound();
+	sf::Vector2f size = GetMaxBodyBound();
 	bodyPoints.push_back(sf::Vector2f(-size.x / 2, -size.y / 2));
 	bodyPoints.push_back(sf::Vector2f(size.x / 2, -size.y / 2));
 	bodyPoints.push_back(sf::Vector2f(size.x / 2, size.y / 2));
 	bodyPoints.push_back(sf::Vector2f(-size.x / 2, size.y / 2));
-	m_maxVehicleMass = CalculateMass(bodyPoints);
+	m_maxMass = CalculateMass(bodyPoints);
 
 	return true;
 }

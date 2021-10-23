@@ -20,13 +20,13 @@ void StatusText::Reset()
 void StatusText::SetErrorStatusText(std::string text)
 {
 	m_texts[STATUS_TEXT].setString(text);
-	m_texts[STATUS_TEXT].setFillColor(sf::Color::Red);
+	m_texts[STATUS_TEXT].setFillColor(sf::Color(0xEE, 0x4B, 0x2B, 0xFF));
 }
 
 void StatusText::SetSuccessStatusText(std::string text)
 {
 	m_texts[STATUS_TEXT].setString(text);
-	m_texts[STATUS_TEXT].setFillColor(sf::Color::Green);
+	m_texts[STATUS_TEXT].setFillColor(sf::Color(0x22, 0x8B, 0x22, 0xFF));
 }
 
 void StatusText::ShowStatusText()

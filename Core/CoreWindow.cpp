@@ -12,7 +12,7 @@ CoreWindow::CoreWindow()
 	auto windowSize = sf::VideoMode(unsigned(screenWidth), unsigned(screenHeight));
 
 	// Create window
-	auto windowTitle = "Simulator ~ created by Adrian Michalek";
+	auto windowTitle = "Artificial Neural Network Self Driving Vehicles Simulator";
 	m_renderWindow.create(windowSize, windowTitle, sf::Style::Close);
 	m_view.setSize(sf::Vector2f(screenWidth, screenHeight));
 	m_view.setCenter(sf::Vector2f(screenWidth / 2.f, screenHeight / 2.f));
@@ -43,4 +43,33 @@ CoreWindow::CoreWindow()
 	// Set window as open
 	m_open = true;
 	CoreLogger::PrintSuccess("Window initialized correctly");
+
+	const std::string fragmentShader = \
+		"uniform bool invert;" \
+		"uniform sampler2D texture;" \
+		"" \
+		"void main()" \
+		"{" \
+		"	vec4 ref = texture2D(texture, gl_TexCoord[0].xy) * gl_Color;" \
+		"	if (invert)" \
+		"	{" \
+		"" \
+		"		gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0) - ref;" \
+		"		gl_FragColor.a = ref.a;" \
+		"	}" \
+		"	else" \
+		"		gl_FragColor = ref;" \
+		"}";
+
+	if (!m_invertColorShader.loadFromMemory(fragmentShader, sf::Shader::Fragment))
+	{
+		CoreLogger::PrintSuccess("Cannot intialize inverting colors shader!");
+	}
+
+	m_invertColorShader.setUniform("texture", sf::Shader::CurrentTexture);
+	m_invertColorShader.setUniform("invert", false);
+
+	m_currentRenderColor = 0;
+	m_renderWindowColors[0] = sf::Color(0x19, 0x19, 0x19, 0xFF);
+	m_renderWindowColors[1] = sf::Color(0xE5, 0xE5, 0xE5, 0xFF);
 }

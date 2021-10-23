@@ -95,7 +95,7 @@ public:
 			auto factor = m_maxLateralImpulse / impulseLength;
 			impulse *= factor;
 		}
-		impulse *= 20 * elapsedTime;
+		impulse *= 35 * elapsedTime;
 		m_body->ApplyLinearImpulse(impulse, m_body->GetWorldCenter(), true);
 
 		// Angular velocity
@@ -264,20 +264,20 @@ private:
 		
 		float ReportFixture(b2Fixture* fixture, const b2Vec2& point, const b2Vec2& normal, float fraction)
 		{
-			switch (fixture->GetFilterData().categoryBits)
-			{
-				case SimulatedAbstract::CategoryEdge:
+			//switch (fixture->GetFilterData().categoryBits)
+			//{
+			//	case SimulatedAbstract::CategoryEdge:
 					m_beam[1].position = DrawableMath::ToSFMLPosition(point);
 					m_sensor = Neuron(fraction);
 					return fraction;
-				case SimulatedAbstract::CategoryCheckpoint:
-				case SimulatedAbstract::CategoryVehicle:
-				default:
-					break;
-			}
+			//	case SimulatedAbstract::CategoryCheckpoint:
+			//	case SimulatedAbstract::CategoryVehicle:
+			//	default:
+			//		break;
+			//}
 
 			// Don't clip the ray and continue
-			return 1;
+			//return 1;
 		}
 	};
 

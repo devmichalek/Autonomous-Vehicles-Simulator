@@ -3,6 +3,8 @@
 #include <SFML/Graphics/RenderTexture.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Window/Event.hpp>
+#include <SFML/Graphics/Shader.hpp>
+#include <array>
 #include <random>
 
 class CoreWindow final
@@ -18,6 +20,9 @@ class CoreWindow final
 	inline static bool m_open = false;
 	inline static double m_elapsedTime = 0.0;
 	inline static sf::Vector2f m_windowSize;
+	inline static sf::Shader m_invertColorShader;
+	inline static size_t m_currentRenderColor;
+	inline static std::array<sf::Color, 2> m_renderWindowColors;
 
 	CoreWindow();
 
@@ -63,7 +68,7 @@ public:
 	// Clears window drawing area with background color
 	inline static void Clear()
 	{
-		m_renderTextureBackground.clear(sf::Color(0, 0, 0, 0));
+		m_renderTextureBackground.clear(sf::Color(0xFF, 0xFF, 0xFF, 0));
 		m_renderTextureForeground.clear(sf::Color(0xFF, 0xFF, 0xFF, 0));
 	}
 
@@ -72,11 +77,11 @@ public:
 	{
 		m_renderTextureBackground.display();
 		m_renderTextureForeground.display();
-		m_renderWindow.clear(sf::Color::Black);
+		m_renderWindow.clear(m_renderWindowColors[m_currentRenderColor]);
 		m_backgroundSprite.setTexture(m_renderTextureBackground.getTexture());
 		m_foregroundSprite.setTexture(m_renderTextureForeground.getTexture());
-		m_renderWindow.draw(m_backgroundSprite, sf::BlendNone);
-		m_renderWindow.draw(m_foregroundSprite, sf::BlendAdd);
+		m_renderWindow.draw(m_backgroundSprite, &m_invertColorShader);
+		m_renderWindow.draw(m_foregroundSprite, &m_invertColorShader);
 		m_renderWindow.display();
 	}
 
@@ -196,5 +201,19 @@ public:
 	{
 		static std::mt19937 mersenneTwister((std::random_device())());
 		return mersenneTwister;
+	}
+
+	// Switches display color from dark mode to light mode depending on current mode
+	inline static void SwitchDisplayColorMode()
+	{
+		m_currentRenderColor = !m_currentRenderColor;
+		m_invertColorShader.setUniform("invert", static_cast<bool>(m_currentRenderColor));
+	}
+
+	// Returns number of display color modes
+	inline static std::string GetDisplayColorModeString()
+	{
+		static std::array<std::string, m_renderWindowColors.size()> strings = { "Dark mode", "Light mode" };
+		return strings[m_currentRenderColor];
 	}
 };

@@ -28,6 +28,7 @@ public:
 		m_states[m_currentState]->Update();
 		m_stateText->Update();
 		m_framesPerSecondText->Update();
+		m_displayModeText->Update();
 	}
 
 	// Draw active state resources and its text representation
@@ -36,6 +37,7 @@ public:
 		m_states[m_currentState]->Draw();
 		m_stateText->Draw();
 		m_framesPerSecondText->Draw();
+		m_displayModeText->Draw();
 	}
 
 private:
@@ -64,9 +66,20 @@ private:
 	DoubleText* m_framesPerSecondText;
 	TimerObserver* m_framesPerSecondTextObserver;
 
+	// Display mode settings
+	TripleText* m_displayModeText;
+	EventObserver* m_displayModeTextObserver;
+
 	// String representations of states
 	std::array<std::string, STATE_TABLE_SIZE> m_statesStrings;
 
-	// Control key that can change the state
-	std::pair<size_t, bool> m_controlKey;
+	// Control keys
+	enum
+	{
+		CHANGE_STATE,
+		CHANGE_DISPLAY_MODE,
+		CONTROLS_COUNT
+	};
+	std::map<sf::Keyboard::Key, size_t> m_controlKeys;
+	std::array<bool, CONTROLS_COUNT> m_pressedKeys;
 };

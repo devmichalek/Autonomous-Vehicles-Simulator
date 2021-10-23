@@ -298,7 +298,7 @@ void StateANNEditor::Draw()
 
 	for (size_t layerNr = 0; layerNr < m_layersPositions.size(); ++layerNr)
 	{
-		m_neuronShape.setFillColor(m_currentLayer == layerNr ? sf::Color::Yellow : sf::Color::White);
+		m_neuronShape.setFillColor(m_currentLayer == layerNr ? sf::Color(0xFD, 0xDA, 0x0D, 0xFF) : sf::Color(0xE5, 0xE5, 0xE5, 0xFF));
 		for (const auto& position : m_layersPositions[layerNr])
 		{
 			m_neuronShape.setPosition(position);

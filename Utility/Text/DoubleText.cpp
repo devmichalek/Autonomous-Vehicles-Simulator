@@ -3,9 +3,6 @@
 #include "CoreLogger.hpp"
 #include "StoppableTimer.hpp"
 
-const sf::Color DoubleText::m_activeColor = sf::Color(0xFF, 0xD7, 0x00, 0xFF);
-const sf::Color DoubleText::m_inactiveColor = sf::Color(0xC0, 0xC0, 0xC0, 0xFF);
-
 DoubleText::DoubleText(std::vector<std::string> strings, size_t size) :
 	TextAbstract(strings, size),
 	m_observer(nullptr)
