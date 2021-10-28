@@ -5,7 +5,7 @@
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Window/Keyboard.hpp>
 
-class TextAbstract;
+class AbstractText;
 class ObserverInterface;
 
 class StateANNEditor final :
@@ -101,6 +101,6 @@ private:
 		TOTAL_NUMBER_OF_ACTIVATION_FUNCTIONS_TEXT,
 		TEXT_COUNT
 	};
-	std::vector<TextAbstract*> m_texts;
+	std::vector<AbstractText*> m_texts;
 	std::vector<ObserverInterface*> m_textObservers;
 };

@@ -10,7 +10,7 @@
 StateManager::StateManager()
 {
 	m_states[MAP_EDITOR_STATE] = new StateMapEditor();
-	m_states[ANN_EDITOR_STATE] = new StateANNEditor();
+	m_states[ARTIFICIAL_NEURAL_NETWORK_EDITOR_STATE] = new StateANNEditor();
 	m_states[VEHICLE_EDITOR_STATE] = new StateVehicleEditor();
 	m_states[TRAINING_STATE] = new StateTraining();
 	m_states[TESTING_STATE] = new StateTesting();
@@ -22,7 +22,7 @@ StateManager::StateManager()
 	m_displayModeText = nullptr;
 	m_displayModeTextObserver = nullptr;
 	m_statesStrings[MAP_EDITOR_STATE] = "Map Editor";
-	m_statesStrings[ANN_EDITOR_STATE] = "ANN Editor";
+	m_statesStrings[ARTIFICIAL_NEURAL_NETWORK_EDITOR_STATE] = "ANN Editor";
 	m_statesStrings[VEHICLE_EDITOR_STATE] = "Vehicle Editor";
 	m_statesStrings[TRAINING_STATE] = "Training";
 	m_statesStrings[TESTING_STATE] = "Testing";
@@ -50,20 +50,25 @@ bool StateManager::Load()
 			return false;
 	}
 
+	// Create texts
 	m_stateText = new TripleText({ "Active state:", "", "| [~]" });
-	m_stateText->SetPosition({ FontContext::Component(2, true), {7, true}, {4, true}, {1, true} });
-	m_stateTextObserver = new FunctionEventObserver<std::string>([&] { return m_statesStrings[m_currentState]; });
-	m_stateText->SetObserver(m_stateTextObserver);
-
 	m_framesPerSecondText = new DoubleText({ "FPS:", "" });
-	m_framesPerSecondText->SetPosition({ FontContext::Component(0), {2, true}, {1, true} });
-	m_framesPerSecondTextObserver = new FunctionTimerObserver<size_t>([&] { return size_t(1.0 / CoreWindow::GetElapsedTime()); }, 0.3);
-	m_framesPerSecondText->SetObserver(m_framesPerSecondTextObserver);
-
 	m_displayModeText = new TripleText({ "Display mode:", "", "| [\\]" });
-	m_displayModeText->SetPosition({ FontContext::Component(1, true), {7, true}, {4, true}, {1, true} });
+
+	// Create observers
+	m_stateTextObserver = new FunctionEventObserver<std::string>([&] { return m_statesStrings[m_currentState]; });
+	m_framesPerSecondTextObserver = new FunctionTimerObserver<size_t>([&] { return size_t(1.0 / CoreWindow::GetElapsedTime()); }, 0.3);
 	m_displayModeTextObserver = new FunctionEventObserver<std::string>([&] { return CoreWindow::GetDisplayColorModeString(); });
+
+	// Set text observers
+	m_stateText->SetObserver(m_stateTextObserver);
+	m_framesPerSecondText->SetObserver(m_framesPerSecondTextObserver);
 	m_displayModeText->SetObserver(m_displayModeTextObserver);
+
+	// Set text positions
+	m_stateText->SetPosition({ FontContext::Component(2, true), {7, true}, {4, true}, {1, true} });
+	m_framesPerSecondText->SetPosition({ FontContext::Component(0), {2, true}, {1, true} });
+	m_displayModeText->SetPosition({ FontContext::Component(1, true), {7, true}, {4, true}, {1, true} });
 
 	return true;
 }

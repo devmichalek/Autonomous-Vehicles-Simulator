@@ -61,13 +61,13 @@ class ArtificialNeuralNetworkBuilder final :
 	// Clears internal fields
 	void ClearInternal();
 
-	// Loads ANN from file
+	// Loads artificial neural network from file
 	bool LoadInternal(std::ifstream& input);
 
-	// Saves ANN to file
+	// Saves artificial neural network to file
 	bool SaveInternal(std::ofstream& output);
 
-	// Creates dummy ANN
+	// Creates dummy artificial neural network
 	void CreateDummyInternal();
 
 public:

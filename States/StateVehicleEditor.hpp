@@ -3,7 +3,7 @@
 #include "DrawableMath.hpp"
 #include "VehicleBuilder.hpp"
 
-class TextAbstract;
+class AbstractText;
 class ObserverInterface;
 
 class StateVehicleEditor final :
@@ -94,6 +94,6 @@ private:
 		CURRENT_SENSOR_MOTION_RANGE_TEXT,
 		TEXT_COUNT
 	};
-	std::vector<TextAbstract*> m_texts;
+	std::vector<AbstractText*> m_texts;
 	std::vector<ObserverInterface*> m_textObservers;
 };

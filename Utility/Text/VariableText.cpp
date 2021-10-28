@@ -3,7 +3,7 @@
 #include "CoreWindow.hpp"
 
 VariableText::VariableText(std::vector<std::string> strings) :
-	TextAbstract(strings, 1)
+	AbstractText(strings, 1)
 {
 	m_texts.front().setFillColor(m_inactiveColor);
 }

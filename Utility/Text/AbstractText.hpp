@@ -3,7 +3,7 @@
 #include "CoreWindow.hpp"
 #include "CoreLogger.hpp"
 
-class TextAbstract
+class AbstractText
 {
 protected:
 
@@ -23,7 +23,7 @@ protected:
 		}
 	}
 
-	TextAbstract(std::vector<std::string>& strings, size_t size) :
+	AbstractText(std::vector<std::string>& strings, size_t size) :
 		m_size(size)
 	{
 		m_texts.resize(m_size);
@@ -49,7 +49,7 @@ protected:
 
 public:
 
-	virtual ~TextAbstract()
+	virtual ~AbstractText()
 	{
 	}
 

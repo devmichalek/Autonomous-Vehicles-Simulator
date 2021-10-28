@@ -6,6 +6,7 @@
 #include "ContinuousTimer.hpp"
 #include "Property.hpp"
 #include "SimulatedVehicle.hpp"
+#include "StatisticsBuilder.hpp"
 
 class GeneticAlgorithmNeuron;
 class DoubleText;
@@ -53,12 +54,22 @@ private:
 	enum
 	{
 		MAP_FILENAME_TYPE,
-		ANN_FILENAME_TYPE,
+		ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE,
 		VEHICLE_FILENAME_TYPE,
 		FILENAME_TYPES_COUNT
 	};
 	std::array<std::string, FILENAME_TYPES_COUNT> m_filenameTypeStrings;
 	size_t m_filenameType;
+
+	// Filename types in paused mode
+	enum
+	{
+		ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE_PAUSED,
+		STATISTICS_FILENAME_TYPE_PAUSED,
+		FILENAME_TYPES_PAUSED_COUNT
+	};
+	std::array<std::string, FILENAME_TYPES_PAUSED_COUNT> m_filenameTypePausedStrings;
+	size_t m_filenameTypePaused;
 
 	// Parameter types
 	enum
@@ -100,8 +111,8 @@ private:
 		ERROR_NO_VEHICLE_SPECIFIED,
 		ERROR_ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH,
 		ERROR_ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH,
-		ERROR_SAVE_IS_ALLOWED_ONLY_IN_PAUSED_MODE,
-		ERROR_SAVE_IS_ALLOWED_ONLY_FOR_ANN,
+		ERROR_SAVE_MODE_IS_ALLOWED_ONLY_IN_PAUSED_MODE,
+		ERROR_ONLY_SAVE_MODE_IS_ALLOWED_IN_THIS_STATE,
 		INTERNAL_ERRORS_COUNT
 	};
 	std::array<std::string, INTERNAL_ERRORS_COUNT> m_internalErrorsStrings;
@@ -141,12 +152,14 @@ private:
 	ArtificialNeuralNetworkBuilder m_artificialNeuralNetworkBuilder;
 	MapBuilder m_mapBuilder;
 	VehicleBuilder m_vehicleBuilder;
+	StatisticsBuilder m_statisticsBuilder;
 
 	// Texts and text observers
 	enum
 	{
 		MODE_TEXT,
 		FILENAME_TYPE_TEXT,
+		FILENAME_TYPE_PAUSED_TEXT,
 		FILENAME_TEXT,
 		PARAMETER_TYPE_TEXT,
 		POPULATION_SIZE_TEXT,
@@ -166,6 +179,8 @@ private:
 		RAISING_REQUIRED_FITNESS_IMPROVEMENT_TEXT,
 		MEAN_REQUIRED_FITNESS_IMPROVEMENT,
 		ZOOM_TEXT,
+		BEST_TIME_TEXT,
+		BEST_TIME_OVERALL_TEXT,
 		TEXT_COUNT
 	};
 	std::vector<DoubleText*> m_texts;

@@ -1,11 +1,11 @@
 #pragma once
-#include "TextAbstract.hpp"
+#include "AbstractText.hpp"
 
 class ObserverInterface;
 class TimerAbstract;
 
 class DoubleText :
-	public TextAbstract
+	public AbstractText
 {
 public:
 

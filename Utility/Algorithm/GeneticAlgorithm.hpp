@@ -1,7 +1,6 @@
 #pragma once
 #include <string>
 #include <random>
-#include <iostream>
 #include <cassert>
 #include <iomanip>
 #include "ArtificialNeuralNetwork.hpp"
@@ -23,7 +22,7 @@ protected:
 	const bool m_repeatCrossoverPerIndividual;
 	const double m_mutationProbability;
 	const bool m_decreaseMutationProbabilityOverGenerations;
-	const size_t m_parentsCount;
+	const size_t m_numberOfParents;
 	static inline std::mt19937 m_mersenneTwister = std::mt19937((std::random_device())());
 	static inline std::uniform_int_distribution<std::mt19937::result_type> m_hundredDistribution =
 		std::uniform_int_distribution<std::mt19937::result_type>(0, 100);
@@ -36,12 +35,13 @@ protected:
 		{
 			case UNIFORM_CROSSOVER:
 			{
-				const size_t probabilityPerParent = 100 / m_parentsCount;
+				const double probabilityPerParent = 100.0 / double(m_numberOfParents);
 				for (size_t i = 0; i < m_chromosomeLength; ++i)
 				{
-					size_t parentIndex = m_hundredDistribution(m_mersenneTwister) % probabilityPerParent;
-					if (parentIndex >= m_parentsCount)
-						parentIndex = m_parentsCount - 1;
+					// You have a chance to get a gene from each parent with the same probability
+					size_t parentIndex = static_cast<size_t>(std::floor(double(m_hundredDistribution(m_mersenneTwister)) / probabilityPerParent));
+					if (parentIndex >= m_numberOfParents)
+						parentIndex = m_numberOfParents - 1;
 					newChromosome[i] = m_population[parentIndex][i];
 				}
 				break;
@@ -50,10 +50,11 @@ protected:
 			{
 				for (size_t i = 0; i < m_chromosomeLength; ++i)
 				{
+					// Calculate mean value based on all parents gene
 					Gene gene = m_population[0][i];
-					for (size_t j = 1; j < m_parentsCount; ++j)
+					for (size_t j = 1; j < m_numberOfParents; ++j)
 						gene += m_population[j][i];
-					newChromosome[i] = gene / Gene(m_parentsCount);
+					newChromosome[i] = gene / Gene(m_numberOfParents);
 				}
 				break;
 			}
@@ -97,7 +98,7 @@ private:
 
 		// Find best ones
 		std::vector<Chromosome> newPopulation;
-		for (size_t i = 0; i < m_parentsCount; ++i)
+		for (size_t i = 0; i < m_numberOfParents; ++i)
 		{
 			// Select parent
 			auto bestChromosomeIndex = std::distance(dummy.begin(), std::max_element(dummy.begin(), dummy.end()));
@@ -121,7 +122,7 @@ public:
 					 const bool repeatCrossoverPerIndividual,
 					 const double mutationProbability,
 					 const bool decreaseMutationProbabilityOverGenerations = false,
-					 const size_t parentsCount = 2) :
+					 const size_t numberOfParents = 2) :
 		m_maxNumberOfGenerations(maxNumberOfGenerations),
 		m_currentGeneration(0),
 		m_chromosomeLength(chromosomeLength),
@@ -130,14 +131,20 @@ public:
 		m_repeatCrossoverPerIndividual(repeatCrossoverPerIndividual),
 		m_mutationProbability(mutationProbability),
 		m_decreaseMutationProbabilityOverGenerations(decreaseMutationProbabilityOverGenerations),
-		m_parentsCount(parentsCount)
+		m_numberOfParents(numberOfParents)
 	{
-		assert(m_populationSize > m_parentsCount);
+		assert(m_populationSize > m_numberOfParents);
 		m_population.resize(m_populationSize);
 		m_population.shrink_to_fit();
 	}
 
-	inline size_t GetCurrentGeneration() const
+	// Returns number of max generations
+	inline const size_t GetNumberOfGenerations() const
+	{
+		return m_maxNumberOfGenerations;
+	}
+
+	inline const size_t GetCurrentGeneration() const
 	{
 		return m_currentGeneration;
 	}
@@ -167,7 +174,7 @@ public:
 
 		Select(points);
 
-		const size_t repeatCount = m_populationSize - m_parentsCount;
+		const size_t repeatCount = m_populationSize - m_numberOfParents;
 		if (m_repeatCrossoverPerIndividual)
 		{
 			for (size_t i = 0; i < repeatCount; ++i)
@@ -208,6 +215,31 @@ public:
 	inline const size_t GetPopulationSize() const
 	{
 		return m_populationSize;
+	}
+
+	inline const int GetCrossoverType() const
+	{
+		return m_crossoverType;
+	}
+
+	inline const bool IsRepeatCrossoverPerIndividual() const
+	{
+		return m_repeatCrossoverPerIndividual;
+	}
+
+	inline const double GetMutationProbability() const
+	{
+		return m_mutationProbability;
+	}
+
+	inline const bool IsDecreaseMutationProbabilityOverGenerations() const
+	{
+		return m_decreaseMutationProbabilityOverGenerations;
+	}
+
+	inline size_t GetNumberOfParents() const
+	{
+		return m_numberOfParents;
 	}
 };
 
@@ -355,7 +387,7 @@ public:
 						   const bool repeatCrossoverPerIndividual,
 						   double mutationProbability,
 						   bool decreaseMutationProbabilityOverGenerations,
-						   const size_t parentsCount,
+						   const size_t numberOfParents,
 						   unsigned precision,
 						   std::pair<Neuron, Neuron> range) :
 		GeneticAlgorithm(maxNumberOfGenerations,
@@ -365,7 +397,7 @@ public:
 						 repeatCrossoverPerIndividual,
 						 mutationProbability,
 						 decreaseMutationProbabilityOverGenerations,
-						 parentsCount),
+						 numberOfParents),
 		m_precision(precision),
 		m_range(range)
 	{
@@ -383,5 +415,23 @@ public:
 				gene = newGene;
 			}
 		}
+	}
+
+	// Returns precision
+	inline size_t GetPrecision() const
+	{
+		return m_precision;
+	}
+
+	// Returns lower bound of range
+	inline Neuron GetLowerBoundOfRange() const
+	{
+		return m_range.first;
+	}
+
+	// Returns upper bound of range
+	inline Neuron GetUpperBoundOfRange() const
+	{
+		return m_range.second;
 	}
 };

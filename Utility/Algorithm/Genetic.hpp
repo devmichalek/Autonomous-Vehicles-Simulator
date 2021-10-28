@@ -13,7 +13,7 @@ enum : int
 	NUMBER_OF_CROSSOVER_TYPES
 };
 
-const char* const crossoverTypeStrings[NUMBER_OF_CROSSOVER_TYPES] = {
+const char* const CrossoverTypeStrings[NUMBER_OF_CROSSOVER_TYPES] = {
 	"Uniform crossover",
 	"Mean crossover",
 	"One point crossover",

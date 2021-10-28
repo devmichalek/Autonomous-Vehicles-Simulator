@@ -1,8 +1,8 @@
 #pragma once
-#include "TextAbstract.hpp"
+#include "AbstractText.hpp"
 
 class VariableText :
-	public TextAbstract
+	public AbstractText
 {
 public:
 

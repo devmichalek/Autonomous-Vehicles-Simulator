@@ -28,7 +28,7 @@ StateTesting::StateTesting() :
 	m_mode = STOPPED_MODE;
 
 	m_filenameTypeStrings[MAP_FILENAME_TYPE] = "Map";
-	m_filenameTypeStrings[ANN_FILENAME_TYPE] = "ANN";
+	m_filenameTypeStrings[ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE] = "Artificial Neural Network";
 	m_filenameTypeStrings[VEHICLE_FILENAME_TYPE] = "Vehicle";
 	m_filenameType = MAP_FILENAME_TYPE;
 
@@ -115,16 +115,10 @@ void StateTesting::Reload()
 	m_mapPrototype = nullptr;
 	m_simulatedVehicles.clear();
 	for (auto& vehiclePrototype : m_vehiclePrototypes)
-	{
 		delete vehiclePrototype;
-		vehiclePrototype = nullptr;
-	}
 	m_vehiclePrototypes.clear();
-	for (auto& ann : m_artificialNeuralNetworks)
-	{
-		delete ann;
-		ann = nullptr;
-	}
+	for (auto& artificialNeuralNetwork : m_artificialNeuralNetworks)
+		delete artificialNeuralNetwork;
 	m_artificialNeuralNetworks.clear();
 
 	// Clear builders
@@ -210,23 +204,31 @@ void StateTesting::Capture()
 								if (error)
 									break;
 
+								// Calculate total number of simulated vehicles
+								size_t totalNumberOfSimulatedVehicles = m_numberOfVehicles;
+								if (m_enableUserVehicle)
+									++totalNumberOfSimulatedVehicles;
+
 								// Init simulated world
 								delete m_simulatedWorld;
 								m_simulatedWorld = new SimulatedWorld;
 								m_simulatedWorld->AddMap(m_mapPrototype);
 								DrawableCheckpoint::SetVisibility(m_enableCheckpoints);
 								delete m_fitnessSystem;
-								m_fitnessSystem = new FitnessSystem(m_numberOfVehicles, m_mapPrototype->GetNumberOfCheckpoints(), 0.0);
+								m_fitnessSystem = new FitnessSystem(totalNumberOfSimulatedVehicles, m_mapPrototype->GetNumberOfCheckpoints(), 0.0);
 								m_simulatedWorld->AddBeginContactFunction(m_fitnessSystem->GetBeginContactFunction());
+
+								// Add bot vehicles to the world
+								m_simulatedVehicles.resize(totalNumberOfSimulatedVehicles, nullptr);
+								for (size_t i = 0; i < m_numberOfVehicles; ++i)
+									m_simulatedVehicles[i] = m_simulatedWorld->AddVehicle(m_vehiclePrototypes[i]);
 
 								// Prepare user vehicle
 								if (m_enableUserVehicle)
+								{
 									m_userVehicle = m_simulatedWorld->AddVehicle(m_userVehiclePrototype);
-
-								// Add bot vehicles to the world
-								m_simulatedVehicles.resize(m_numberOfVehicles, nullptr);
-								for (size_t i = 0; i < m_numberOfVehicles; ++i)
-									m_simulatedVehicles[i] = m_simulatedWorld->AddVehicle(m_vehiclePrototypes[i]);
+									m_simulatedVehicles.back() = m_userVehicle;
+								}
 
 								m_mode = RUNNING_MODE;
 								m_textObservers[MODE_TEXT]->Notify();
@@ -506,7 +508,7 @@ void StateTesting::Update()
 						CoreWindow::SetViewCenter(m_userVehiclePrototype->GetCenter());
 						break;
 					}
-					case ANN_FILENAME_TYPE:
+					case ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE:
 					{
 						if (m_numberOfVehicles == 0)
 						{
@@ -572,6 +574,7 @@ void StateTesting::Update()
 		}
 		case RUNNING_MODE:
 		{
+			auto currentLeaderindex = m_fitnessSystem->MarkLeader(m_simulatedVehicles);
 			if (m_userVehicle)
 			{
 				m_userVehicle->Update(m_simulatedWorld->GetStaticWorld());
@@ -602,14 +605,9 @@ void StateTesting::Update()
 			}
 			else if (m_viewTimer.Update())
 			{
-				sf::Vector2f m_viewCenter;
+				sf::Vector2f m_viewCenter = m_userVehiclePrototype->GetCenter();
 				if (m_numberOfVehicles)
-				{
-					auto index = m_fitnessSystem->MarkLeader(m_simulatedVehicles);
-					m_viewCenter = m_simulatedVehicles[index]->GetCenter();
-				}
-				else
-					m_viewCenter = m_userVehiclePrototype->GetCenter();
+					m_viewCenter = m_simulatedVehicles[currentLeaderindex]->GetCenter();
 
 				// Update view
 				auto viewCenter = CoreWindow::GetViewCenter();
@@ -619,6 +617,8 @@ void StateTesting::Update()
 				CoreWindow::SetViewCenter(viewCenter);
 			}
 
+			// Iterate over all bot vehicles, remember that in simulated vehicles
+			// the last vehicle is user vehicle
 			for (size_t i = 0; i < m_numberOfVehicles; ++i)
 			{
 				m_simulatedVehicles[i]->Update(m_simulatedWorld->GetStaticWorld());
@@ -663,7 +663,7 @@ bool StateTesting::Load()
 	m_textObservers[NUMBER_OF_VEHICLES_TEXT] = new TypeEventObserver<size_t>(m_numberOfVehicles);
 	m_textObservers[ENABLE_CHECKPOINTS_TEXT] = new FunctionEventObserver<bool>([&] { return m_enableCheckpoints; });
 	m_textObservers[ENABLE_USER_VEHICLE_TEXT] = new FunctionEventObserver<bool>([&] { return m_enableUserVehicle; });
-	m_textObservers[USER_FITNESS_TEXT] = new FunctionTimerObserver<std::string>([&]{ return !m_userVehicle ? "Unknown" : std::to_string(size_t(m_userVehicle->GetFitness() / m_fitnessSystem->GetMaxFitness() * 100.0)) + "%"; }, 0.5);
+	m_textObservers[USER_FITNESS_TEXT] = new FunctionTimerObserver<std::string>([&]{ return !m_userVehicle ? "Unknown" : std::to_string(size_t(m_fitnessSystem->ToFitnessRatio(m_userVehicle->GetFitness()))) + "%"; }, 0.5);
 	m_textObservers[ZOOM_TEXT] = new FunctionEventObserver<float>([&] { return m_zoom; });
 
 	// Set text observers
@@ -671,16 +671,16 @@ bool StateTesting::Load()
 		m_texts[i]->SetObserver(m_textObservers[i]);
 
 	// Set texts positions
-	m_texts[MODE_TEXT]->SetPosition({ FontContext::Component(0), {0}, {3}, {6}, {13} });
-	m_texts[FILENAME_TYPE_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {6} });
-	m_texts[FILENAME_TEXT]->SetPosition({ FontContext::Component(2), {0}, {3}, {6}, {13} });
+	m_texts[MODE_TEXT]->SetPosition({ FontContext::Component(0), {0}, {3}, {8}, {15} });
+	m_texts[FILENAME_TYPE_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {8} });
+	m_texts[FILENAME_TEXT]->SetPosition({ FontContext::Component(2), {0}, {3}, {8}, {15} });
 	m_texts[PARAMETER_TYPE_TEXT]->SetPosition({ FontContext::Component(5, true), {0}, {5}, {9} });
 	m_texts[CURRENT_VEHICLE_TEXT]->SetPosition({ FontContext::Component(4, true), {0}, {5} });
 	m_texts[NUMBER_OF_VEHICLES_TEXT]->SetPosition({ FontContext::Component(3, true), {0}, {5} });
 	m_texts[ENABLE_CHECKPOINTS_TEXT]->SetPosition({ FontContext::Component(2, true), {0}, {5} });
 	m_texts[ENABLE_USER_VEHICLE_TEXT]->SetPosition({ FontContext::Component(1, true), {0}, {5} });
 	m_texts[USER_FITNESS_TEXT]->SetPosition({ FontContext::Component(1, true), {7}, {10} });
-	m_texts[ZOOM_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {6} });
+	m_texts[ZOOM_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {8} });
 
 	CoreLogger::PrintSuccess("State \"Testing\" dependencies loaded correctly");
 	return true;

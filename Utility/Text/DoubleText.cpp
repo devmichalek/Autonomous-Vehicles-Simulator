@@ -4,7 +4,7 @@
 #include "StoppableTimer.hpp"
 
 DoubleText::DoubleText(std::vector<std::string> strings, size_t size) :
-	TextAbstract(strings, size),
+	AbstractText(strings, size),
 	m_observer(nullptr)
 {
 	SetVariableTextInactiveColor();
