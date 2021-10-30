@@ -2,7 +2,7 @@
 #include "AbstractText.hpp"
 
 class ObserverInterface;
-class TimerAbstract;
+class AbstractTimer;
 
 class DoubleText :
 	public AbstractText
@@ -47,5 +47,5 @@ protected:
 	};
 
 	ObserverInterface* m_observer;
-	TimerAbstract* m_blendTimer;
+	AbstractTimer* m_blendTimer;
 };

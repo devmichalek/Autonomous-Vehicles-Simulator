@@ -1,24 +1,24 @@
-#include "VariableText.hpp"
+#include "ConsistentText.hpp"
 #include "FontContext.hpp"
 #include "CoreWindow.hpp"
 
-VariableText::VariableText(std::vector<std::string> strings) :
+ConsistentText::ConsistentText(std::vector<std::string> strings) :
 	AbstractText(strings, 1)
 {
 	m_texts.front().setFillColor(m_inactiveColor);
 }
 
-void VariableText::SetCharacterSize(unsigned int multiplier)
+void ConsistentText::SetCharacterSize(unsigned int multiplier)
 {
 	m_texts[0].setCharacterSize(FontContext::GetCharacterSize(multiplier));
 }
 
-void VariableText::SetRotation(float rotation)
+void ConsistentText::SetRotation(float rotation)
 {
 	m_texts[0].setRotation(rotation);
 }
 
-void VariableText::SetPosition(std::vector<FontContext::Component> components)
+void ConsistentText::SetPosition(std::vector<FontContext::Component> components)
 {
 	ValidateNumberOfComponents(components, 2);
 

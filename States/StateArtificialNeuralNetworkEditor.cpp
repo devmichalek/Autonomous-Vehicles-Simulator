@@ -1,11 +1,11 @@
-#include "StateANNEditor.hpp"
+#include "StateArtificialNeuralNetworkEditor.hpp"
 #include "CoreLogger.hpp"
 #include "FunctionEventObserver.hpp"
 #include "TypeEventObserver.hpp"
-#include "VariableText.hpp"
+#include "ConsistentText.hpp"
 #include "FilenameText.hpp"
 
-StateANNEditor::StateANNEditor() :
+StateArtificialNeuralNetworkEditor::StateArtificialNeuralNetworkEditor() :
 	m_biasOffset(0.2)
 {
 	m_controlKeys[sf::Keyboard::Tab] = SWITCH_LAYER;
@@ -16,7 +16,9 @@ StateANNEditor::StateANNEditor() :
 	m_controlKeys[sf::Keyboard::Multiply] = SWITCH_ACTIVATION_FUNCTION;
 	m_controlKeys[sf::Keyboard::Z] = INCREASE_BIAS;
 	m_controlKeys[sf::Keyboard::X] = DECREASE_BIAS;
-	m_pressedKeys.resize(CONTROLS_COUNT, false);
+
+	for (auto& i : m_pressedKeys)
+		i = false;
 
 	m_totalNumberOfNeurons = 0;
 	m_totalNumberOfWeights = 0;
@@ -40,7 +42,7 @@ StateANNEditor::StateANNEditor() :
 	m_textObservers.resize(TEXT_COUNT, nullptr);
 }
 
-StateANNEditor::~StateANNEditor()
+StateArtificialNeuralNetworkEditor::~StateArtificialNeuralNetworkEditor()
 {
 	for (auto& text : m_texts)
 		delete text;
@@ -48,7 +50,7 @@ StateANNEditor::~StateANNEditor()
 		delete observer;
 }
 
-void StateANNEditor::Reload()
+void StateArtificialNeuralNetworkEditor::Reload()
 {
 	// Create dummy
 	m_artificialNeuralNetworkBuilder.CreateDummy();
@@ -60,8 +62,8 @@ void StateANNEditor::Reload()
 	CalculatePositions();
 
 	// Reset pressed keys
-	for (size_t i = 0; i < CONTROLS_COUNT; ++i)
-		m_pressedKeys[i] = false;
+	for (auto & i : m_pressedKeys)
+		i = false;
 
 	// Reset texts and text observers
 	for (size_t i = 0; i < TEXT_COUNT; ++i)
@@ -74,7 +76,7 @@ void StateANNEditor::Reload()
 	CoreWindow::Reset();
 }
 
-void StateANNEditor::Capture()
+void StateArtificialNeuralNetworkEditor::Capture()
 {
 	auto* filenameText = static_cast<FilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
 	filenameText->Capture();
@@ -163,7 +165,7 @@ void StateANNEditor::Capture()
 		m_upToDate = false;
 }
 
-void StateANNEditor::Update()
+void StateArtificialNeuralNetworkEditor::Update()
 {
 	auto* filenameText = static_cast<FilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
 	if (filenameText->IsWriting())
@@ -228,11 +230,11 @@ void StateANNEditor::Update()
 		text->Update();
 }
 
-bool StateANNEditor::Load()
+bool StateArtificialNeuralNetworkEditor::Load()
 {
 	// Create texts
-	m_texts[INPUT_TEXT] = new VariableText({ "Input" });
-	m_texts[OUTPUT_TEXT] = new VariableText({ "Output" });
+	m_texts[INPUT_TEXT] = new ConsistentText({ "Input" });
+	m_texts[OUTPUT_TEXT] = new ConsistentText({ "Output" });
 	m_texts[CURRENT_LAYER_TEXT] = new TripleText({ "Current layer:", "", "| [Tab] [Enter] [Backspace]" });
 	m_texts[CURRENT_LAYER_NUMBER_OF_NEURONS_TEXT] = new TripleText({ "Current layer number of neurons:", "", "| [+] [-]" });
 	m_texts[CURRENT_LAYER_ACTIVATION_FUNCTION_TEXT] = new TripleText({ "Current layer activation function:", "", "| [*]" });
@@ -261,8 +263,8 @@ bool StateANNEditor::Load()
 		((DoubleText*)m_texts[i])->SetObserver(m_textObservers[i]);
 
 	// Set text character size and rotation
-	auto* inputText = static_cast<VariableText*>(m_texts[INPUT_TEXT]);
-	auto* outputText = static_cast<VariableText*>(m_texts[OUTPUT_TEXT]);
+	auto* inputText = static_cast<ConsistentText*>(m_texts[INPUT_TEXT]);
+	auto* outputText = static_cast<ConsistentText*>(m_texts[OUTPUT_TEXT]);
 	inputText->SetCharacterSize(4);
 	outputText->SetCharacterSize(4);
 	inputText->SetRotation(270.0f);
@@ -285,7 +287,7 @@ bool StateANNEditor::Load()
 	return true;
 }
 
-void StateANNEditor::Draw()
+void StateArtificialNeuralNetworkEditor::Draw()
 {
 	for (size_t i = 0; i < m_weightPositions.size(); ++i)
 	{
@@ -310,7 +312,7 @@ void StateANNEditor::Draw()
 		text->Draw();
 }
 
-void StateANNEditor::CalculatePositions()
+void StateArtificialNeuralNetworkEditor::CalculatePositions()
 {
 	m_layersPositions.clear();
 	m_weightPositions.clear();
@@ -384,7 +386,7 @@ void StateANNEditor::CalculatePositions()
 	}
 }
 
-void StateANNEditor::AddLayer()
+void StateArtificialNeuralNetworkEditor::AddLayer()
 {
 	if (m_neuronLayerSizes.size() < ArtificialNeuralNetworkBuilder::GetMaxNumberOfLayers())
 	{
@@ -413,7 +415,7 @@ void StateANNEditor::AddLayer()
 	}
 }
 
-void StateANNEditor::RemoveLayer()
+void StateArtificialNeuralNetworkEditor::RemoveLayer()
 {
 	if (!m_neuronLayerSizes.empty())
 	{
@@ -447,7 +449,7 @@ void StateANNEditor::RemoveLayer()
 	}
 }
 
-void StateANNEditor::AddNeuron()
+void StateArtificialNeuralNetworkEditor::AddNeuron()
 {
 	if (!m_neuronLayerSizes.empty())
 	{
@@ -461,7 +463,7 @@ void StateANNEditor::AddNeuron()
 	}
 }
 
-void StateANNEditor::RemoveNeuron()
+void StateArtificialNeuralNetworkEditor::RemoveNeuron()
 {
 	if (!m_neuronLayerSizes.empty())
 	{
@@ -477,7 +479,7 @@ void StateANNEditor::RemoveNeuron()
 	}
 }
 
-sf::Color StateANNEditor::GetWeightStrength(double max, double value) const
+sf::Color StateArtificialNeuralNetworkEditor::GetWeightStrength(double max, double value) const
 {
 	return sf::Color(255, 255, 255, 32 + sf::Uint8(128.0 * (value / max)));
 }

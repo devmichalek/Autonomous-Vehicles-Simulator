@@ -4,7 +4,6 @@
 #include "GeneticAlgorithm.hpp"
 #include "FunctionEventObserver.hpp"
 #include "TypeEventObserver.hpp"
-#include "FunctionTimerObserver.hpp"
 #include "FilenameText.hpp"
 #include "CoreLogger.hpp"
 #include "DrawableCheckpoint.hpp"

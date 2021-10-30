@@ -1,14 +1,14 @@
 #pragma once
-#include "TimerAbstract.hpp"
+#include "AbstractTimer.hpp"
 #include "CoreWindow.hpp"
 
 class ContinuousTimer final :
-	public TimerAbstract
+	public AbstractTimer
 {
 public:
 
 	explicit ContinuousTimer(double resetValue, double timeout, double multiplier = 1) :
-		TimerAbstract(resetValue, timeout, multiplier)
+		AbstractTimer(resetValue, timeout, multiplier)
 	{
 	}
 

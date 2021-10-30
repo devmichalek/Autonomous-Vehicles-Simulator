@@ -1,6 +1,6 @@
 #include "StateVehicleEditor.hpp"
 #include "FunctionEventObserver.hpp"
-#include "VariableText.hpp"
+#include "ConsistentText.hpp"
 #include "FilenameText.hpp"
 #include "CoreLogger.hpp"
 #include <functional>
@@ -28,8 +28,8 @@ StateVehicleEditor::StateVehicleEditor()
 	m_controlKeys[sf::Keyboard::C] = DECREASE_SENSOR_MOTION_RANGE;
 	m_controlKeys[sf::Keyboard::V] = INCREASE_SENSOR_MOTION_RANGE;
 
-	for (size_t i = 0; i < CONTROL_KEYS_COUNT; ++i)
-		m_pressedKeys[i] = false;
+	for (auto& i : m_pressedKeys)
+		i = false;
 
 	auto maxVehicleSize = VehicleBuilder::GetMaxBodyBound();
 	auto windowSize = CoreWindow::GetWindowSize();
@@ -375,8 +375,8 @@ void StateVehicleEditor::Update()
 bool StateVehicleEditor::Load()
 {
 	// Create texts
-	m_texts[BACK_TEXT] = new VariableText({ "Back" });
-	m_texts[FRONT_TEXT] = new VariableText({ "Front" });
+	m_texts[BACK_TEXT] = new ConsistentText({ "Back" });
+	m_texts[FRONT_TEXT] = new ConsistentText({ "Front" });
 	m_texts[MODE_TEXT] = new TripleText({ "Mode:", "", "| [F1] [F2]" });
 	m_texts[TOTAL_NUMBER_OF_BODY_POINTS_TEXT] = new TripleText({ "Total number of body points:", "", "| [RMB] [Backspace]" });
 	m_texts[TOTAL_NUMBER_OF_SENSORS_TEXT] = new TripleText({ "Total number of sensors:", "", "| [RMB]" });
@@ -402,8 +402,8 @@ bool StateVehicleEditor::Load()
 		((DoubleText*)m_texts[i])->SetObserver(m_textObservers[i]);
 
 	// Set text character size and rotation
-	auto* backText = static_cast<VariableText*>(m_texts[BACK_TEXT]);
-	auto* frontText = static_cast<VariableText*>(m_texts[FRONT_TEXT]);
+	auto* backText = static_cast<ConsistentText*>(m_texts[BACK_TEXT]);
+	auto* frontText = static_cast<ConsistentText*>(m_texts[FRONT_TEXT]);
 	backText->SetCharacterSize(4);
 	frontText->SetCharacterSize(4);
 	backText->SetRotation(270.0f);

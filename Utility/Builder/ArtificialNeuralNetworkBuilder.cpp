@@ -1,5 +1,4 @@
 #include "ArtificialNeuralNetworkBuilder.hpp"
-#include "ArtificialNeuralNetwork.hpp"
 #include "CoreLogger.hpp"
 #include <random>
 

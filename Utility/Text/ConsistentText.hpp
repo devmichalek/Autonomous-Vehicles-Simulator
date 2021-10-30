@@ -1,14 +1,14 @@
 #pragma once
 #include "AbstractText.hpp"
 
-class VariableText :
+class ConsistentText :
 	public AbstractText
 {
 public:
 
-	VariableText(std::vector<std::string> strings);
+	ConsistentText(std::vector<std::string> strings);
 
-	virtual ~VariableText()
+	virtual ~ConsistentText()
 	{
 	}
 

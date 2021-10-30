@@ -41,6 +41,7 @@ private:
 	std::array<std::string, MODES_COUNT> m_modeStrings;
 	size_t m_mode;
 
+	// Vehicle sensors submodes
 	enum
 	{
 		VEHICLE_SENSORS_INSERT,
@@ -50,6 +51,7 @@ private:
 	std::array<std::string, VEHICLE_SENSORS_SUBMODE_COUNT> m_vehicleSensorsSubmodeStrings;
 	size_t m_vehicleSensorsSubmode;
 
+	// Control keys
 	enum
 	{
 		CHANGE_TO_VEHICLE_BODY_MODE,
@@ -65,7 +67,7 @@ private:
 		CONTROL_KEYS_COUNT
 	};
 	std::map<sf::Keyboard::Key, size_t> m_controlKeys;
-	std::map<size_t, bool> m_pressedKeys;
+	std::array<bool, CONTROL_KEYS_COUNT> m_pressedKeys;
 
 	// Subjects of change
 	sf::RectangleShape m_allowedAreaShape;

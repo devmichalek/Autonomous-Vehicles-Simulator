@@ -8,18 +8,18 @@
 class AbstractText;
 class ObserverInterface;
 
-class StateANNEditor final :
+class StateArtificialNeuralNetworkEditor final :
 	public StateInterface
 {
 public:
 
-	StateANNEditor(const StateANNEditor&) = delete;
+	StateArtificialNeuralNetworkEditor(const StateArtificialNeuralNetworkEditor&) = delete;
 
-	const StateANNEditor& operator=(const StateANNEditor&) = delete;
+	const StateArtificialNeuralNetworkEditor& operator=(const StateArtificialNeuralNetworkEditor&) = delete;
 
-	StateANNEditor();
+	StateArtificialNeuralNetworkEditor();
 
-	~StateANNEditor();
+	~StateArtificialNeuralNetworkEditor();
 
 	void Reload() override;
 
@@ -51,7 +51,7 @@ private:
 	// Returns weight strength representation in color
 	sf::Color GetWeightStrength(double max, double value) const;
 
-	// Control states
+	// Control keys
 	enum
 	{
 		SWITCH_LAYER,
@@ -62,10 +62,10 @@ private:
 		SWITCH_ACTIVATION_FUNCTION,
 		INCREASE_BIAS,
 		DECREASE_BIAS,
-		CONTROLS_COUNT
+		CONTROL_KEYS_COUNT
 	};
 	std::map<sf::Keyboard::Key, size_t> m_controlKeys;
-	std::vector<bool> m_pressedKeys;
+	std::array<bool, CONTROL_KEYS_COUNT> m_pressedKeys;
 
 	// Subjects of change
 	NeuronLayerSizes m_neuronLayerSizes;

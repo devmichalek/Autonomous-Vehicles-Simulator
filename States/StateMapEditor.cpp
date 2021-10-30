@@ -4,11 +4,10 @@
 #include "TypeEventObserver.hpp"
 #include "FunctionEventObserver.hpp"
 #include "CoreLogger.hpp"
-#include <functional>
 
 StateMapEditor::StateMapEditor() :
+	m_pressedKeyTimer(0.0, 1.0, 5000),
 	m_vehiclePrototype(nullptr),
-	m_viewMovementTimer(0.0, 0.1),
 	m_viewMovement(500.0, 1500.0, 50.0, 900.0)
 {
 	m_modeStrings[EDGE_MODE] = "Edge mode";
@@ -18,6 +17,28 @@ StateMapEditor::StateMapEditor() :
 	m_edgeSubmodeStrings[GLUED_INSERT_EDGE_SUBMODE] = "Glued insert mode";
 	m_edgeSubmodeStrings[REMOVE_EDGE_SUBMODE] = "Remove mode";
 	m_edgeSubmode = GLUED_INSERT_EDGE_SUBMODE;
+
+	m_controlKeys[sf::Keyboard::F1] = CHANGE_TO_EDGE_MODE;
+	m_controlKeys[sf::Keyboard::F2] = CHANGE_TO_VEHICLE_MODE;
+	m_controlKeys[sf::Keyboard::Add] = INCREASE_MOVEMENT;
+	m_controlKeys[sf::Keyboard::Subtract] = DECREASE_MOVEMENT;
+	m_controlKeys[sf::Keyboard::A] = MOVE_OFFSET_LEFT;
+	m_controlKeys[sf::Keyboard::D] = MOVE_OFFSET_RIGHT;
+	m_controlKeys[sf::Keyboard::W] = MOVE_OFFSET_UP;
+	m_controlKeys[sf::Keyboard::S] = MOVE_OFFSET_DOWN;
+	m_controlKeys[sf::Keyboard::Num1] = CHANGE_TO_EDGE_MODE_INSERT_STATE;
+	m_controlKeys[sf::Keyboard::Num2] = CHANGE_TO_EDGE_MODE_REMOVE_STATE;
+	m_controlKeys[sf::Keyboard::LAlt] = FIND_NEAREST_EDGE_POINT;
+	m_controlKeys[sf::Keyboard::Escape] = CANCEL_EDGE;
+	m_controlKeys[sf::Keyboard::X] = INCREASE_VEHICLE_ANGLE;
+	m_controlKeys[sf::Keyboard::Z] = DECREASE_VEHICLE_ANGLE;
+	m_controlKeys[sf::Keyboard::BackSpace] = REMOVE_VEHICLE;
+
+	for (auto& i : m_pressedKeys)
+		i = false;
+
+	// Initialize timer
+	m_pressedKeyTimer.MakeTimeout();
 
 	m_insertEdge = false;
 	m_removeEdge = false;
@@ -62,15 +83,15 @@ void StateMapEditor::Reload()
 	// Reset internal states
 	m_mode = EDGE_MODE;
 	m_edgeSubmode = GLUED_INSERT_EDGE_SUBMODE;
+	for (auto& i : m_pressedKeys)
+		i = false;
+	m_pressedKeyTimer.MakeTimeout();
 	m_insertEdge = false;
 	m_removeEdge = false;
 	m_edgeBeggining = sf::Vector2f(0.0, 0.0);
 	m_upToDate = false;
 	delete m_vehiclePrototype;
 	m_vehiclePrototype = m_vehicleBuilder.Get();
-
-	// Reset view movement
-	m_viewMovementTimer.Reset();
 	m_viewMovement.ResetValue();
 
 	m_mapBuilder.CreateDummy();
@@ -93,49 +114,198 @@ void StateMapEditor::Reload()
 
 void StateMapEditor::Capture()
 {
-	if (CoreWindow::GetEvent().type == sf::Event::MouseButtonPressed)
+	auto* filenameText = static_cast<FilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
+	filenameText->Capture();
+	if (!filenameText->IsRenaming())
 	{
-		sf::Vector2f correctPosition = CoreWindow::GetMousePosition() + CoreWindow::GetViewOffset();
-		if (DrawableMath::IsPointInsideRectangle(m_allowedMapAreaShape.getSize(), m_allowedMapAreaShape.getPosition(), correctPosition))
+		if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
 		{
-			switch (m_mode)
+			auto eventKey = CoreWindow::GetEvent().key.code;
+			auto iterator = m_controlKeys.find(eventKey);
+			if (iterator != m_controlKeys.end() && !m_pressedKeys[iterator->second])
 			{
-				case EDGE_MODE:
+				switch (iterator->second)
 				{
-					switch (m_edgeSubmode)
+					case CHANGE_TO_EDGE_MODE:
+						m_pressedKeys[iterator->second] = true;
+						if (m_mode == VEHICLE_MODE)
+						{
+							m_edgeSubmode = GLUED_INSERT_EDGE_SUBMODE;
+							m_textObservers[EDGE_SUBMODE_TEXT]->Notify();
+							m_insertEdge = false;
+							m_removeEdge = false;
+							m_mode = EDGE_MODE;
+							m_textObservers[MODE_TEXT]->Notify();
+						}
+						break;
+					case CHANGE_TO_VEHICLE_MODE:
+						m_pressedKeys[iterator->second] = true;
+						if (m_mode == EDGE_MODE)
+						{
+							m_mode = VEHICLE_MODE;
+							m_textObservers[MODE_TEXT]->Notify();
+							m_textObservers[VEHICLE_POSITIONED_TEXT]->Notify();
+							m_textObservers[VEHICLE_ANGLE_TEXT]->Notify();
+						}
+						break;
+					case INCREASE_MOVEMENT:
+						if (m_pressedKeyTimer.Update())
+						{
+							m_viewMovement.Increase();
+							m_textObservers[MOVEMENT_TEXT]->Notify();
+						}
+						break;
+					case DECREASE_MOVEMENT:
+						if (m_pressedKeyTimer.Update())
+						{
+							m_viewMovement.Decrease();
+							m_textObservers[MOVEMENT_TEXT]->Notify();
+						}
+						break;
+					case MOVE_OFFSET_LEFT:
+					case MOVE_OFFSET_RIGHT:
+					case MOVE_OFFSET_UP:
+					case MOVE_OFFSET_DOWN:
+						m_pressedKeys[iterator->second] = true;
+						break;
+					case CHANGE_TO_EDGE_MODE_INSERT_STATE:
+						m_pressedKeys[iterator->second] = true;
+						if (m_mode == EDGE_MODE && m_edgeSubmode != GLUED_INSERT_EDGE_SUBMODE)
+						{
+							m_edgeSubmode = GLUED_INSERT_EDGE_SUBMODE;
+							m_insertEdge = false;
+							m_removeEdge = false;
+							m_textObservers[EDGE_SUBMODE_TEXT]->Notify();
+						}
+						break;
+					case CHANGE_TO_EDGE_MODE_REMOVE_STATE:
+						m_pressedKeys[iterator->second] = true;
+						if (m_mode == EDGE_MODE && m_edgeSubmode != REMOVE_EDGE_SUBMODE)
+						{
+							m_edgeSubmode = REMOVE_EDGE_SUBMODE;
+							m_insertEdge = false;
+							m_removeEdge = false;
+							m_textObservers[EDGE_SUBMODE_TEXT]->Notify();
+						}
+						break;
+					case FIND_NEAREST_EDGE_POINT:
+						m_pressedKeys[iterator->second] = true;
+						if (m_mode == EDGE_MODE && !m_mapPrototype.IsEmpty() && m_edgeSubmode == GLUED_INSERT_EDGE_SUBMODE)
+						{
+							sf::Vector2f correctPosition = CoreWindow::GetMousePosition() + CoreWindow::GetViewOffset();
+							m_edgeBeggining = correctPosition;
+							m_insertEdge = true;
+
+							// Find closest point to mouse position
+							m_mapPrototype.FindClosestPointOnDistance(correctPosition, m_edgeBeggining);
+						}
+						break;
+					case CANCEL_EDGE:
+						m_pressedKeys[iterator->second] = true;
+						if (m_mode == EDGE_MODE)
+						{
+							m_insertEdge = false;
+							m_removeEdge = false;
+						}
+						break;
+					case INCREASE_VEHICLE_ANGLE:
+						if (m_pressedKeyTimer.Update())
+						{
+							if (m_mode == VEHICLE_MODE && m_vehiclePositioned)
+							{
+								auto angle = m_vehiclePrototype->GetAngle();
+								angle += 150.0 * CoreWindow::GetElapsedTime();
+								if (angle > MapBuilder::GetMaxVehicleAngle())
+									angle = MapBuilder::GetMinVehicleAngle();
+								m_vehiclePrototype->SetAngle(angle);
+								m_vehiclePrototype->Update();
+								m_textObservers[VEHICLE_ANGLE_TEXT]->Notify();
+							}
+						}
+						break;
+					case DECREASE_VEHICLE_ANGLE:
+						if (m_pressedKeyTimer.Update())
+						{
+							if (m_mode == VEHICLE_MODE && m_vehiclePositioned)
+							{
+								auto angle = m_vehiclePrototype->GetAngle();
+								angle -= 150.0 * CoreWindow::GetElapsedTime();
+								if (angle < MapBuilder::GetMinVehicleAngle())
+									angle = MapBuilder::GetMaxVehicleAngle();
+								m_vehiclePrototype->SetAngle(angle);
+								m_vehiclePrototype->Update();
+								m_textObservers[VEHICLE_ANGLE_TEXT]->Notify();
+							}
+						}
+						break;
+					case REMOVE_VEHICLE:
+						m_pressedKeys[iterator->second] = true;
+						if (m_mode == VEHICLE_MODE && m_vehiclePositioned)
+						{
+							m_vehiclePositioned = false;
+							m_vehiclePrototype->SetAngle(0.0);
+							m_vehiclePrototype->Update();
+							m_textObservers[VEHICLE_POSITIONED_TEXT]->Notify();
+							m_textObservers[VEHICLE_ANGLE_TEXT]->Notify();
+						}
+						break;
+				}
+			}
+		}
+		else if (CoreWindow::GetEvent().type == sf::Event::KeyReleased)
+		{
+			auto eventKey = CoreWindow::GetEvent().key.code;
+			auto iterator = m_controlKeys.find(eventKey);
+			if (iterator != m_controlKeys.end())
+			{
+				m_pressedKeys[iterator->second] = false;
+				m_pressedKeyTimer.MakeTimeout();
+			}
+		}
+		else if (CoreWindow::GetEvent().type == sf::Event::MouseButtonPressed)
+		{
+			sf::Vector2f correctPosition = CoreWindow::GetMousePosition() + CoreWindow::GetViewOffset();
+			if (DrawableMath::IsPointInsideRectangle(m_allowedMapAreaShape.getSize(), m_allowedMapAreaShape.getPosition(), correctPosition))
+			{
+				switch (m_mode)
+				{
+					case EDGE_MODE:
 					{
+						switch (m_edgeSubmode)
+						{
 						case GLUED_INSERT_EDGE_SUBMODE:
 							InsertEdge(correctPosition);
 							break;
 						case REMOVE_EDGE_SUBMODE:
 							RemoveEdge(correctPosition);
 							break;
+						}
+						break;
 					}
-					break;
-				}
-				case VEHICLE_MODE:
-				{
-					m_vehiclePrototype->SetCenter(correctPosition);
-					m_vehiclePrototype->Update();
-
-					if (!m_vehiclePositioned)
+					case VEHICLE_MODE:
 					{
-						m_vehiclePositioned = true;
-						// If vehicle was not previously positioned notify observers
-						m_textObservers[VEHICLE_POSITIONED_TEXT]->Notify();
-						m_textObservers[VEHICLE_ANGLE_TEXT]->Notify();
+						m_vehiclePrototype->SetCenter(correctPosition);
+						m_vehiclePrototype->Update();
+
+						if (!m_vehiclePositioned)
+						{
+							m_vehiclePositioned = true;
+							// If vehicle was not previously positioned notify observers
+							m_textObservers[VEHICLE_POSITIONED_TEXT]->Notify();
+							m_textObservers[VEHICLE_ANGLE_TEXT]->Notify();
+						}
+
+						m_upToDate = false;
+						break;
 					}
-					
-					m_upToDate = false;
-					break;
+					default:
+						break;
 				}
-				default:
-					break;
 			}
 		}
 	}
-
-	static_cast<FilenameText<true, true>*>(m_texts[FILENAME_TEXT])->Capture();
+	else
+		m_upToDate = false;
 }
 
 void StateMapEditor::Update()
@@ -181,152 +351,27 @@ void StateMapEditor::Update()
 	}
 	else if (!filenameText->IsRenaming())
 	{
-		switch (m_mode)
-		{
-			case EDGE_MODE:
-			{
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::F2))
-				{
-					m_mode = VEHICLE_MODE;
-					m_textObservers[MODE_TEXT]->Notify();
-					m_textObservers[VEHICLE_POSITIONED_TEXT]->Notify();
-					m_textObservers[VEHICLE_ANGLE_TEXT]->Notify();
-				}
-				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::LAlt) || sf::Keyboard::isKeyPressed(sf::Keyboard::RAlt))
-				{
-					if (!m_mapPrototype.IsEmpty() && m_edgeSubmode == GLUED_INSERT_EDGE_SUBMODE)
-					{
-						sf::Vector2f correctPosition = CoreWindow::GetMousePosition() + CoreWindow::GetViewOffset();
-						m_edgeBeggining = correctPosition;
-						m_insertEdge = true;
-
-						// Find closest point to mouse position
-						m_mapPrototype.FindClosestPointOnDistance(correctPosition, m_edgeBeggining);
-					}
-				}
-				else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
-				{
-					m_insertEdge = false;
-					m_removeEdge = false;
-				}
-				else
-				{
-					size_t mode = m_edgeSubmode;
-					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1) ||
-						sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad1))
-					{
-						mode = GLUED_INSERT_EDGE_SUBMODE;
-					}
-					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2) ||
-						sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad2))
-					{
-						mode = REMOVE_EDGE_SUBMODE;
-					}
-
-					if (m_edgeSubmode != mode)
-					{
-						m_edgeSubmode = mode;
-						m_insertEdge = false;
-						m_removeEdge = false;
-						m_textObservers[EDGE_SUBMODE_TEXT]->Notify();
-					}
-				}
-
-				break;
-			}
-			case VEHICLE_MODE:
-			{
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::F1))
-				{
-					m_edgeSubmode = GLUED_INSERT_EDGE_SUBMODE;
-					m_textObservers[EDGE_SUBMODE_TEXT]->Notify();
-					m_insertEdge = false;
-					m_removeEdge = false;
-					m_mode = EDGE_MODE;
-					m_textObservers[MODE_TEXT]->Notify();
-				}
-				else
-				{
-					if (sf::Keyboard::isKeyPressed(sf::Keyboard::BackSpace))
-					{
-						if (m_vehiclePositioned)
-						{
-							m_vehiclePositioned = false;
-							m_vehiclePrototype->SetAngle(0.0);
-							m_vehiclePrototype->Update();
-							m_textObservers[VEHICLE_POSITIONED_TEXT]->Notify();
-							m_textObservers[VEHICLE_ANGLE_TEXT]->Notify();
-						}
-					}
-					else if (m_vehiclePositioned)
-					{
-						if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z))
-						{
-							auto angle = m_vehiclePrototype->GetAngle();
-							angle -= 150.0 * CoreWindow::GetElapsedTime();
-							if (angle < MapBuilder::GetMinVehicleAngle())
-								angle = MapBuilder::GetMaxVehicleAngle();
-							m_vehiclePrototype->SetAngle(angle);
-							m_vehiclePrototype->Update();
-							m_textObservers[VEHICLE_ANGLE_TEXT]->Notify();
-						}
-						else if (sf::Keyboard::isKeyPressed(sf::Keyboard::X))
-						{
-							auto angle = m_vehiclePrototype->GetAngle();
-							angle += 150.0 * CoreWindow::GetElapsedTime();
-							if (angle > MapBuilder::GetMaxVehicleAngle())
-								angle = MapBuilder::GetMinVehicleAngle();
-							m_vehiclePrototype->SetAngle(angle);
-							m_vehiclePrototype->Update();
-							m_textObservers[VEHICLE_ANGLE_TEXT]->Notify();
-						}
-					}
-				}
-
-				break;
-			}
-			default:
-				break;
-		}
-
 		float elapsedTime = float(CoreWindow::GetElapsedTime());
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Add))
-		{
-			if (m_viewMovementTimer.Update())
-			{
-				m_viewMovement.Increase();
-				m_textObservers[MOVEMENT_TEXT]->Notify();
-			}
-		}
-		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Subtract))
-		{
-			if (m_viewMovementTimer.Update())
-			{
-				m_viewMovement.Decrease();
-				m_textObservers[MOVEMENT_TEXT]->Notify();
-			}
-		}
-
 		auto& view = CoreWindow::GetView();
 		auto viewPosition = view.getCenter() - (CoreWindow::GetWindowSize() / 2.0f);
 		float moveOffset = static_cast<float>(m_viewMovement * elapsedTime);
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+		if (m_pressedKeys[MOVE_OFFSET_LEFT])
 		{
 			view.move(sf::Vector2f(-moveOffset, 0));
 			m_textObservers[VIEW_OFFSET_X_TEXT]->Notify();
 		}
-		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+		else if (m_pressedKeys[MOVE_OFFSET_RIGHT])
 		{
 			view.move(sf::Vector2f(moveOffset, 0));
 			m_textObservers[VIEW_OFFSET_X_TEXT]->Notify();
 		}
 
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+		if (m_pressedKeys[MOVE_OFFSET_UP])
 		{
 			view.move(sf::Vector2f(0, -moveOffset));
 			m_textObservers[VIEW_OFFSET_Y_TEXT]->Notify();
 		}
-		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+		else if (m_pressedKeys[MOVE_OFFSET_DOWN])
 		{
 			view.move(sf::Vector2f(0, moveOffset));
 			m_textObservers[VIEW_OFFSET_Y_TEXT]->Notify();
@@ -384,7 +429,7 @@ bool StateMapEditor::Load()
 
 	// Set text observers
 	for (size_t i = 0; i < TEXT_COUNT; ++i)
-		m_texts[i]->SetObserver(m_textObservers[i]);
+		((DoubleText*)m_texts[i])->SetObserver(m_textObservers[i]);
 	
 	// Set text positions
 	m_texts[MODE_TEXT]->SetPosition({ FontContext::Component(0), {0}, {3}, {7} });

@@ -173,8 +173,12 @@ void FilenameText<ReadOperations, WriteOperations>::OnControlKeyPressedEvent(sf:
 	}
 	else
 	{
-		auto result = m_pressedControlKeys.find(eventKey);
-		if (result != m_pressedControlKeys.end() && !result->second)
+		auto result = m_pressedFilenameKeys.find(eventKey);
+		if (result != m_pressedFilenameKeys.end())
+			result->second = true;
+
+		result = m_pressedControlKeys.find(eventKey);
+		if (result != m_pressedControlKeys.end())
 			result->second = true;
 
 		if (m_pressedControlKeys[sf::Keyboard::LControl] || m_pressedControlKeys[sf::Keyboard::RControl])
@@ -211,15 +215,13 @@ void FilenameText<ReadOperations, WriteOperations>::OnControlKeyReleasedEvent(sf
 	auto result = m_pressedFilenameKeys.find(eventKey);
 	if (result != m_pressedFilenameKeys.end())
 		result->second = false;
-	else
+	
+	result = m_pressedControlKeys.find(eventKey);
+	if (result != m_pressedControlKeys.end())
 	{
-		result = m_pressedControlKeys.find(eventKey);
-		if (result != m_pressedControlKeys.end())
-		{
-			result->second = false;
-			if (result->first == sf::Keyboard::BackSpace)
-				m_pressedBackspaceKeyTimer.MakeTimeout();
-		}
+		result->second = false;
+		if (result->first == sf::Keyboard::BackSpace)
+			m_pressedBackspaceKeyTimer.MakeTimeout();
 	}
 }
 

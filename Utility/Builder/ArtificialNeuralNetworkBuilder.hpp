@@ -1,7 +1,7 @@
 #pragma once
 #include "AbstractBuilder.hpp"
 #include "Neural.hpp"
-#include "ActivationFunctionContext.hpp"
+#include "ArtificialNeuralNetwork.hpp"
 
 class ArtificialNeuralNetworkBuilder final :
 	public AbstractBuilder

@@ -1,6 +1,6 @@
 #include "StateManager.hpp"
 #include "StateMapEditor.hpp"
-#include "StateANNEditor.hpp"
+#include "StateArtificialNeuralNetworkEditor.hpp"
 #include "StateVehicleEditor.hpp"
 #include "StateTraining.hpp"
 #include "StateTesting.hpp"
@@ -10,7 +10,7 @@
 StateManager::StateManager()
 {
 	m_states[MAP_EDITOR_STATE] = new StateMapEditor();
-	m_states[ARTIFICIAL_NEURAL_NETWORK_EDITOR_STATE] = new StateANNEditor();
+	m_states[ARTIFICIAL_NEURAL_NETWORK_EDITOR_STATE] = new StateArtificialNeuralNetworkEditor();
 	m_states[VEHICLE_EDITOR_STATE] = new StateVehicleEditor();
 	m_states[TRAINING_STATE] = new StateTraining();
 	m_states[TESTING_STATE] = new StateTesting();

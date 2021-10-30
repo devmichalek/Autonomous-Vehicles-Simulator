@@ -1,6 +1,6 @@
 #pragma once
 
-class TimerAbstract
+class AbstractTimer
 {
 protected:
 
@@ -9,7 +9,7 @@ protected:
 	double m_timeout;
 	const double m_multiplier;
 
-	explicit TimerAbstract(double resetValue, double timeout, double multiplier = 1) :
+	explicit AbstractTimer(double resetValue, double timeout, double multiplier = 1) :
 		m_value(resetValue),
 		m_resetValue(resetValue),
 		m_timeout(timeout),
@@ -19,7 +19,7 @@ protected:
 
 public:
 
-	virtual ~TimerAbstract()
+	virtual ~AbstractTimer()
 	{
 	}
 

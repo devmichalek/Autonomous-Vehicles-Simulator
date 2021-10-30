@@ -5,7 +5,7 @@
 #include "ContinuousTimer.hpp"
 #include "Property.hpp"
 
-class DoubleText;
+class AbstractText;
 class ObserverInterface;
 
 class StateMapEditor final :
@@ -59,6 +59,29 @@ private:
 	std::array<std::string, EDGE_SUBMODE_COUNT> m_edgeSubmodeStrings;
 	size_t m_edgeSubmode;
 
+	enum
+	{
+		CHANGE_TO_EDGE_MODE,
+		CHANGE_TO_VEHICLE_MODE,
+		INCREASE_MOVEMENT,
+		DECREASE_MOVEMENT,
+		MOVE_OFFSET_LEFT,
+		MOVE_OFFSET_RIGHT,
+		MOVE_OFFSET_UP,
+		MOVE_OFFSET_DOWN,
+		CHANGE_TO_EDGE_MODE_INSERT_STATE,
+		CHANGE_TO_EDGE_MODE_REMOVE_STATE,
+		FIND_NEAREST_EDGE_POINT,
+		CANCEL_EDGE,
+		INCREASE_VEHICLE_ANGLE,
+		DECREASE_VEHICLE_ANGLE,
+		REMOVE_VEHICLE,
+		CONTROL_KEYS_COUNT
+	};
+	std::map<sf::Keyboard::Key, size_t> m_controlKeys;
+	std::array<bool, CONTROL_KEYS_COUNT> m_pressedKeys;
+	ContinuousTimer m_pressedKeyTimer;
+
 	VehiclePrototype* m_vehiclePrototype;
 	MapPrototype m_mapPrototype;
 	bool m_insertEdge;
@@ -68,9 +91,6 @@ private:
 	bool m_vehiclePositioned;
 	sf::RectangleShape m_allowedMapAreaShape;
 	sf::RectangleShape m_allowedViewAreaShape;
-
-	// View movement
-	ContinuousTimer m_viewMovementTimer;
 	Property<double> m_viewMovement;
 
 	// Builders
@@ -91,6 +111,6 @@ private:
 		VEHICLE_ANGLE_TEXT,
 		TEXT_COUNT
 	};
-	std::vector<DoubleText*> m_texts;
+	std::vector<AbstractText*> m_texts;
 	std::vector<ObserverInterface*> m_textObservers;
 };
