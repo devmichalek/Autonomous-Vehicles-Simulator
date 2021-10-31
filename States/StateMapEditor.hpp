@@ -65,6 +65,8 @@ private:
 		CHANGE_TO_VEHICLE_MODE,
 		INCREASE_MOVEMENT,
 		DECREASE_MOVEMENT,
+		INCREASE_ZOOM,
+		DECREASE_ZOOM,
 		MOVE_OFFSET_LEFT,
 		MOVE_OFFSET_RIGHT,
 		MOVE_OFFSET_UP,
@@ -92,6 +94,7 @@ private:
 	sf::RectangleShape m_allowedMapAreaShape;
 	sf::RectangleShape m_allowedViewAreaShape;
 	Property<double> m_viewMovement;
+	Property<float> m_zoom;
 
 	// Builders
 	MapBuilder m_mapBuilder;
@@ -102,8 +105,8 @@ private:
 	{
 		MODE_TEXT,
 		MOVEMENT_TEXT,
-		VIEW_OFFSET_X_TEXT,
-		VIEW_OFFSET_Y_TEXT,
+		ZOOM_TEXT,
+		VIEW_OFFSET_TEXT,
 		FILENAME_TEXT,
 		EDGE_SUBMODE_TEXT,
 		EDGE_COUNT_TEXT,

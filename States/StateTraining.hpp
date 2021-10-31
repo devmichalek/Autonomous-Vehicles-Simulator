@@ -9,7 +9,7 @@
 #include "StatisticsBuilder.hpp"
 
 class GeneticAlgorithmNeuron;
-class DoubleText;
+class AbstractText;
 class ObserverInterface;
 class SimulatedWorld;
 class FitnessSystem;
@@ -98,6 +98,8 @@ private:
 		PAUSED_CHANGE_MODE = CHANGE_SIMULATION_PARAMETER,
 		INCREASE_PARAMETER,
 		DECREASE_PARAMETER,
+		INCREASE_ZOOM,
+		DECREASE_ZOOM,
 		CONTROLS_COUNT
 	};
 	std::map<sf::Keyboard::Key, size_t> m_controlKeys;
@@ -183,6 +185,6 @@ private:
 		BEST_TIME_OVERALL_TEXT,
 		TEXT_COUNT
 	};
-	std::vector<DoubleText*> m_texts;
+	std::vector<AbstractText*> m_texts;
 	std::vector<ObserverInterface*> m_textObservers;
 };

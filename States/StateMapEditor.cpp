@@ -8,7 +8,8 @@
 StateMapEditor::StateMapEditor() :
 	m_pressedKeyTimer(0.0, 1.0, 5000),
 	m_vehiclePrototype(nullptr),
-	m_viewMovement(500.0, 1500.0, 50.0, 900.0)
+	m_viewMovement(500.0, 1500.0, 50.0, 900.0),
+	m_zoom(1.f, 4.f, 0.3f, 1.f)
 {
 	m_modeStrings[EDGE_MODE] = "Edge mode";
 	m_modeStrings[VEHICLE_MODE] = "Vehicle mode";
@@ -22,6 +23,8 @@ StateMapEditor::StateMapEditor() :
 	m_controlKeys[sf::Keyboard::F2] = CHANGE_TO_VEHICLE_MODE;
 	m_controlKeys[sf::Keyboard::Add] = INCREASE_MOVEMENT;
 	m_controlKeys[sf::Keyboard::Subtract] = DECREASE_MOVEMENT;
+	m_controlKeys[sf::Keyboard::Multiply] = INCREASE_ZOOM;
+	m_controlKeys[sf::Keyboard::Divide] = DECREASE_ZOOM;
 	m_controlKeys[sf::Keyboard::A] = MOVE_OFFSET_LEFT;
 	m_controlKeys[sf::Keyboard::D] = MOVE_OFFSET_RIGHT;
 	m_controlKeys[sf::Keyboard::W] = MOVE_OFFSET_UP;
@@ -49,7 +52,7 @@ StateMapEditor::StateMapEditor() :
 	auto allowedViewArea = m_mapBuilder.GetMaxAllowedViewArea();
 	m_allowedMapAreaShape.setFillColor(sf::Color(255, 255, 255, 0));
 	m_allowedMapAreaShape.setOutlineColor(sf::Color(255, 255, 255, 64));
-	m_allowedMapAreaShape.setOutlineThickness(2);
+	m_allowedMapAreaShape.setOutlineThickness(5);
 	m_allowedMapAreaShape.setPosition(allowedMapArea.first);
 	m_allowedMapAreaShape.setSize(allowedMapArea.second);
 	m_allowedViewAreaShape.setPosition(allowedViewArea.first);
@@ -93,6 +96,7 @@ void StateMapEditor::Reload()
 	delete m_vehiclePrototype;
 	m_vehiclePrototype = m_vehicleBuilder.Get();
 	m_viewMovement.ResetValue();
+	m_zoom.ResetValue();
 
 	m_mapBuilder.CreateDummy();
 	m_mapPrototype.SetEdges(m_mapBuilder.GetEdges());
@@ -162,6 +166,31 @@ void StateMapEditor::Capture()
 							m_textObservers[MOVEMENT_TEXT]->Notify();
 						}
 						break;
+					case INCREASE_ZOOM:
+						if (m_pressedKeyTimer.Update())
+						{
+							m_zoom.Increase();
+							CoreWindow::SetViewZoom(m_zoom);
+
+							if (m_allowedViewAreaShape.getSize().x < CoreWindow::GetViewSize().x ||
+								m_allowedViewAreaShape.getSize().y < CoreWindow::GetViewSize().y)
+							{
+								auto center = m_allowedViewAreaShape.getPosition();
+								center += m_allowedViewAreaShape.getSize() / 2.f;
+								CoreWindow::SetViewCenter(center);
+							}
+
+							m_textObservers[ZOOM_TEXT]->Notify();
+						}
+						break;
+					case DECREASE_ZOOM:
+						if (m_pressedKeyTimer.Update())
+						{
+							m_zoom.Decrease();
+							CoreWindow::SetViewZoom(m_zoom);
+							m_textObservers[ZOOM_TEXT]->Notify();
+						}
+						break;
 					case MOVE_OFFSET_LEFT:
 					case MOVE_OFFSET_RIGHT:
 					case MOVE_OFFSET_UP:
@@ -214,7 +243,7 @@ void StateMapEditor::Capture()
 							if (m_mode == VEHICLE_MODE && m_vehiclePositioned)
 							{
 								auto angle = m_vehiclePrototype->GetAngle();
-								angle += 150.0 * CoreWindow::GetElapsedTime();
+								angle += MapBuilder::GetVehicleAngleOffset();
 								if (angle > MapBuilder::GetMaxVehicleAngle())
 									angle = MapBuilder::GetMinVehicleAngle();
 								m_vehiclePrototype->SetAngle(angle);
@@ -229,7 +258,7 @@ void StateMapEditor::Capture()
 							if (m_mode == VEHICLE_MODE && m_vehiclePositioned)
 							{
 								auto angle = m_vehiclePrototype->GetAngle();
-								angle -= 150.0 * CoreWindow::GetElapsedTime();
+								angle -= MapBuilder::GetVehicleAngleOffset();
 								if (angle < MapBuilder::GetMinVehicleAngle())
 									angle = MapBuilder::GetMaxVehicleAngle();
 								m_vehiclePrototype->SetAngle(angle);
@@ -264,7 +293,10 @@ void StateMapEditor::Capture()
 		}
 		else if (CoreWindow::GetEvent().type == sf::Event::MouseButtonPressed)
 		{
-			sf::Vector2f correctPosition = CoreWindow::GetMousePosition() + CoreWindow::GetViewOffset();
+			sf::Vector2f correctPosition = CoreWindow::GetMousePosition();
+			correctPosition.x *= m_zoom;
+			correctPosition.y *= m_zoom;
+			correctPosition += CoreWindow::GetViewOffset();
 			if (DrawableMath::IsPointInsideRectangle(m_allowedMapAreaShape.getSize(), m_allowedMapAreaShape.getPosition(), correctPosition))
 			{
 				switch (m_mode)
@@ -273,12 +305,12 @@ void StateMapEditor::Capture()
 					{
 						switch (m_edgeSubmode)
 						{
-						case GLUED_INSERT_EDGE_SUBMODE:
-							InsertEdge(correctPosition);
-							break;
-						case REMOVE_EDGE_SUBMODE:
-							RemoveEdge(correctPosition);
-							break;
+							case GLUED_INSERT_EDGE_SUBMODE:
+								InsertEdge(correctPosition);
+								break;
+							case REMOVE_EDGE_SUBMODE:
+								RemoveEdge(correctPosition);
+								break;
 						}
 						break;
 					}
@@ -351,50 +383,87 @@ void StateMapEditor::Update()
 	}
 	else if (!filenameText->IsRenaming())
 	{
+		bool moveHorizontally = m_allowedViewAreaShape.getSize().x > CoreWindow::GetViewSize().x;
+		bool moveVertically = m_allowedViewAreaShape.getSize().y > CoreWindow::GetViewSize().y;
 		float elapsedTime = float(CoreWindow::GetElapsedTime());
 		auto& view = CoreWindow::GetView();
-		auto viewPosition = view.getCenter() - (CoreWindow::GetWindowSize() / 2.0f);
 		float moveOffset = static_cast<float>(m_viewMovement * elapsedTime);
-		if (m_pressedKeys[MOVE_OFFSET_LEFT])
+
+		if (moveHorizontally)
 		{
-			view.move(sf::Vector2f(-moveOffset, 0));
-			m_textObservers[VIEW_OFFSET_X_TEXT]->Notify();
+			if (m_pressedKeys[MOVE_OFFSET_LEFT])
+			{
+				view.move(sf::Vector2f(-moveOffset, 0));
+				m_textObservers[VIEW_OFFSET_TEXT]->Notify();
+			}
+			else if (m_pressedKeys[MOVE_OFFSET_RIGHT])
+			{
+				view.move(sf::Vector2f(moveOffset, 0));
+				m_textObservers[VIEW_OFFSET_TEXT]->Notify();
+			}
+
+			auto viewPosition = CoreWindow::GetViewOffset();
+			float left = m_allowedViewAreaShape.getPosition().x;
+			float right = m_allowedViewAreaShape.getPosition().x + m_allowedViewAreaShape.getSize().x;
+
+			if (viewPosition.x < left)
+			{
+				auto difference = left - viewPosition.x;
+				if (difference > 1.f)
+				{
+					view.move(sf::Vector2f(difference, 0));
+					m_textObservers[VIEW_OFFSET_TEXT]->Notify();
+				}
+			}
+			else if (viewPosition.x + CoreWindow::GetViewSize().x > right)
+			{
+				auto difference = (viewPosition.x + CoreWindow::GetViewSize().x - right);
+				if (difference > 1.f)
+				{
+					view.move(sf::Vector2f(-difference, 0));
+					m_textObservers[VIEW_OFFSET_TEXT]->Notify();
+				}
+			}
+			CoreWindow::SetView(view);
 		}
-		else if (m_pressedKeys[MOVE_OFFSET_RIGHT])
+
+		if (moveVertically)
 		{
-			view.move(sf::Vector2f(moveOffset, 0));
-			m_textObservers[VIEW_OFFSET_X_TEXT]->Notify();
+			if (m_pressedKeys[MOVE_OFFSET_UP])
+			{
+				view.move(sf::Vector2f(0, -moveOffset));
+				m_textObservers[VIEW_OFFSET_TEXT]->Notify();
+			}
+			else if (m_pressedKeys[MOVE_OFFSET_DOWN])
+			{
+				view.move(sf::Vector2f(0, moveOffset));
+				m_textObservers[VIEW_OFFSET_TEXT]->Notify();
+			}
+
+			auto viewPosition = CoreWindow::GetViewOffset();
+			float top = m_allowedViewAreaShape.getPosition().y;
+			float bot = m_allowedViewAreaShape.getPosition().y + m_allowedViewAreaShape.getSize().y;
+
+			if (viewPosition.y < top)
+			{
+				auto difference = top - viewPosition.y;
+				if (difference > 1.f)
+				{
+					view.move(sf::Vector2f(0, difference));
+					m_textObservers[VIEW_OFFSET_TEXT]->Notify();
+				}
+			}
+			else if (viewPosition.y + CoreWindow::GetViewSize().y > bot)
+			{
+				auto difference = viewPosition.y + CoreWindow::GetViewSize().y - bot;
+				if (difference > 1.f)
+				{
+					view.move(sf::Vector2f(0, -difference));
+					m_textObservers[VIEW_OFFSET_TEXT]->Notify();
+				}
+			}
+			CoreWindow::SetView(view);
 		}
-
-		if (m_pressedKeys[MOVE_OFFSET_UP])
-		{
-			view.move(sf::Vector2f(0, -moveOffset));
-			m_textObservers[VIEW_OFFSET_Y_TEXT]->Notify();
-		}
-		else if (m_pressedKeys[MOVE_OFFSET_DOWN])
-		{
-			view.move(sf::Vector2f(0, moveOffset));
-			m_textObservers[VIEW_OFFSET_Y_TEXT]->Notify();
-		}
-
-		view = CoreWindow::GetView();
-		viewPosition = view.getCenter() - (CoreWindow::GetWindowSize() / 2.0f);
-		float left = m_allowedViewAreaShape.getPosition().x;
-		float right = m_allowedViewAreaShape.getPosition().x + m_allowedViewAreaShape.getSize().x;
-		float top = m_allowedViewAreaShape.getPosition().y;
-		float bot = m_allowedViewAreaShape.getPosition().y + m_allowedViewAreaShape.getSize().y;
-
-		if (viewPosition.x < left)
-			view.move(sf::Vector2f(left - viewPosition.x, 0));
-		else if (viewPosition.x + CoreWindow::GetWindowSize().x > right)
-			view.move(sf::Vector2f(-(viewPosition.x + CoreWindow::GetWindowSize().x - right), 0));
-
-		if (viewPosition.y < top)
-			view.move(sf::Vector2f(0, top - viewPosition.y));
-		else if (viewPosition.y + CoreWindow::GetWindowSize().y > bot)
-			view.move(sf::Vector2f(0, -(viewPosition.y + CoreWindow::GetWindowSize().y - bot)));
-
-		CoreWindow::SetView(view);
 	}
 	else
 		m_upToDate = false;
@@ -408,8 +477,8 @@ bool StateMapEditor::Load()
 	// Create texts
 	m_texts[MODE_TEXT] = new TripleText({ "Mode:", "",  "| [F1] [F2]" });
 	m_texts[MOVEMENT_TEXT] = new TripleText({ "Movement:", "", "| [+] [-]" });
-	m_texts[VIEW_OFFSET_X_TEXT] = new TripleText({ "View offset x:", "", "| [A] [D]" });
-	m_texts[VIEW_OFFSET_Y_TEXT] = new TripleText({ "View offset y:", "", "| [W] [S]" });
+	m_texts[ZOOM_TEXT] = new TripleText({ "Zoom:", "", "| [/] [*]" });
+	m_texts[VIEW_OFFSET_TEXT] = new TripleText({ "View offset:", "", "| [A] [D] [W] [S]" });
 	m_texts[FILENAME_TEXT] = new FilenameText<true, true>("map.bin");
 	m_texts[EDGE_SUBMODE_TEXT] = new TripleText({ "Current mode:", "", "| [1] [2] [RMB] [Alt] [Esc]" });
 	m_texts[EDGE_COUNT_TEXT] = new DoubleText({ "Edge count:" });
@@ -419,8 +488,8 @@ bool StateMapEditor::Load()
 	// Create observers
 	m_textObservers[MODE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_modeStrings[m_mode]; });
 	m_textObservers[MOVEMENT_TEXT] = new FunctionEventObserver<size_t>([&] { return size_t(m_viewMovement); });
-	m_textObservers[VIEW_OFFSET_X_TEXT] = new FunctionEventObserver<int>([&] { return int(CoreWindow::GetViewOffset().x); });
-	m_textObservers[VIEW_OFFSET_Y_TEXT] = new FunctionEventObserver<int>([&] { return int(CoreWindow::GetViewOffset().y); });
+	m_textObservers[ZOOM_TEXT] = new FunctionEventObserver<float>([&] { return m_zoom; });
+	m_textObservers[VIEW_OFFSET_TEXT] = new FunctionEventObserver<std::string>([&] { return "(" + std::to_string(int(CoreWindow::GetViewOffset().x)) + ", " + std::to_string(int(CoreWindow::GetViewOffset().y)) + ")"; });
 	m_textObservers[FILENAME_TEXT] = nullptr;
 	m_textObservers[EDGE_SUBMODE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_edgeSubmodeStrings[m_edgeSubmode]; });
 	m_textObservers[EDGE_COUNT_TEXT] = new FunctionEventObserver<size_t>([&] { return m_mapPrototype.GetNumberOfEdges(); });
@@ -434,14 +503,15 @@ bool StateMapEditor::Load()
 	// Set text positions
 	m_texts[MODE_TEXT]->SetPosition({ FontContext::Component(0), {0}, {3}, {7} });
 	m_texts[MOVEMENT_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {7} });
-	m_texts[VIEW_OFFSET_X_TEXT]->SetPosition({ FontContext::Component(2), {0}, {3}, {7} });
-	m_texts[VIEW_OFFSET_Y_TEXT]->SetPosition({ FontContext::Component(3), {0}, {3}, {7} });
+	m_texts[ZOOM_TEXT]->SetPosition({ FontContext::Component(2), {0}, {3}, {7} });
+	m_texts[VIEW_OFFSET_TEXT]->SetPosition({ FontContext::Component(3), {0}, {3}, {7} });
 	m_texts[FILENAME_TEXT]->SetPosition({ FontContext::Component(4), {0}, {3}, {7}, {16} });
 	m_texts[EDGE_SUBMODE_TEXT]->SetPosition({ FontContext::Component(1, true), {0}, {3}, {7} });
 	m_texts[EDGE_COUNT_TEXT]->SetPosition({ FontContext::Component(2, true), {0}, {3} });
 	m_texts[VEHICLE_POSITIONED_TEXT]->SetPosition({ FontContext::Component(1, true), {0}, {4}, {7} });
 	m_texts[VEHICLE_ANGLE_TEXT]->SetPosition({ FontContext::Component(2, true), {0}, {4}, {7} });
 
+	auto tmp = CoreWindow::GetViewOffset();
 	CoreLogger::PrintSuccess("State \"Map Editor\" dependencies loaded correctly");
 	return true;
 }
@@ -466,7 +536,10 @@ void StateMapEditor::Draw()
 			{
 				EdgeShape edgeShape;
 				edgeShape[0].position = m_edgeBeggining;
-				edgeShape[1].position = CoreWindow::GetMousePosition() + CoreWindow::GetViewOffset();
+				edgeShape[1].position = CoreWindow::GetMousePosition();
+				edgeShape[1].position.x *= m_zoom;
+				edgeShape[1].position.y *= m_zoom;
+				edgeShape[1].position += CoreWindow::GetViewOffset();
 				edgeShape[0].color = sf::Color::White;
 				edgeShape[1].color = edgeShape[0].color;
 				CoreWindow::Draw(edgeShape.data(), edgeShape.size(), sf::Lines);
@@ -475,7 +548,10 @@ void StateMapEditor::Draw()
 			{
 				EdgeShape edgeShape;
 				edgeShape[0].position = m_edgeBeggining;
-				edgeShape[1].position = CoreWindow::GetMousePosition() + CoreWindow::GetViewOffset();
+				edgeShape[1].position = CoreWindow::GetMousePosition();
+				edgeShape[1].position.x *= m_zoom;
+				edgeShape[1].position.y *= m_zoom;
+				edgeShape[1].position += CoreWindow::GetViewOffset();
 				edgeShape[0].color = sf::Color::Red;
 				edgeShape[1].color = edgeShape[0].color;
 				CoreWindow::Draw(edgeShape.data(), edgeShape.size(), sf::Lines);
@@ -497,8 +573,8 @@ void StateMapEditor::Draw()
 
 	m_texts[MODE_TEXT]->Draw();
 	m_texts[MOVEMENT_TEXT]->Draw();
-	m_texts[VIEW_OFFSET_X_TEXT]->Draw();
-	m_texts[VIEW_OFFSET_Y_TEXT]->Draw();
+	m_texts[ZOOM_TEXT]->Draw();
+	m_texts[VIEW_OFFSET_TEXT]->Draw();
 	m_texts[FILENAME_TEXT]->Draw();
 }
 

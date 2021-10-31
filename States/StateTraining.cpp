@@ -63,6 +63,8 @@ StateTraining::StateTraining() :
 	m_controlKeys[sf::Keyboard::P] = CHANGE_SIMULATION_PARAMETER;
 	m_controlKeys[sf::Keyboard::Add] = INCREASE_PARAMETER;
 	m_controlKeys[sf::Keyboard::Subtract] = DECREASE_PARAMETER;
+	m_controlKeys[sf::Keyboard::Multiply] = INCREASE_ZOOM;
+	m_controlKeys[sf::Keyboard::Divide] = DECREASE_ZOOM;
 
 	for (auto & pressedKey : m_pressedKeys)
 		pressedKey = false;
@@ -444,6 +446,9 @@ void StateTraining::Capture()
 
 							break;
 						}
+						case INCREASE_ZOOM:
+						case DECREASE_ZOOM:
+							break;
 					}
 					
 					m_pressedKeys[iterator->second] = true;
@@ -500,6 +505,8 @@ void StateTraining::Capture()
 						}
 						case INCREASE_PARAMETER:
 						case DECREASE_PARAMETER:
+						case INCREASE_ZOOM:
+						case DECREASE_ZOOM:
 						default:
 							break;
 					}
@@ -542,17 +549,20 @@ void StateTraining::Capture()
 							break;
 						}
 						case INCREASE_PARAMETER:
+						case DECREASE_PARAMETER:
+							break;
+						case INCREASE_ZOOM:
 							if (m_pressedKeyTimer.Update())
 							{
-								m_zoom.Decrease();
+								m_zoom.Increase();
 								CoreWindow::SetViewZoom(m_zoom);
 								m_textObservers[ZOOM_TEXT]->Notify();
 							}
 							break;
-						case DECREASE_PARAMETER:
+						case DECREASE_ZOOM:
 							if (m_pressedKeyTimer.Update())
 							{
-								m_zoom.Increase();
+								m_zoom.Decrease();
 								CoreWindow::SetViewZoom(m_zoom);
 								m_textObservers[ZOOM_TEXT]->Notify();
 							}
@@ -901,7 +911,7 @@ bool StateTraining::Load()
 	m_texts[HIGHEST_FITNESS_OVERALL_TEXT] = new DoubleText({ "Highest fitness overall:" });
 	m_texts[RAISING_REQUIRED_FITNESS_IMPROVEMENT_TEXT] = new DoubleText({ "Raising required fitness improvement in:" });
 	m_texts[MEAN_REQUIRED_FITNESS_IMPROVEMENT] = new DoubleText({ "Mean required fitness improvement:" });
-	m_texts[ZOOM_TEXT] = new TripleText({ "Zoom:", "", "| [+] [-]" });
+	m_texts[ZOOM_TEXT] = new TripleText({ "Zoom:", "", "| [/] [*]" });
 	m_texts[BEST_TIME_TEXT] = new DoubleText({ "Best time:" });
 	m_texts[BEST_TIME_OVERALL_TEXT] = new DoubleText({ "Best time overall:" });
 
@@ -932,7 +942,7 @@ bool StateTraining::Load()
 
 	// Set text observers
 	for (size_t i = 0; i < TEXT_COUNT; ++i)
-		m_texts[i]->SetObserver(m_textObservers[i]);
+		((DoubleText*)m_texts[i])->SetObserver(m_textObservers[i]);
 
 	// Set texts positions
 	m_texts[MODE_TEXT]->SetPosition({ FontContext::Component(0), {0}, {3}, {8}, {17} });

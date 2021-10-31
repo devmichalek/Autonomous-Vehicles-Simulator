@@ -40,10 +40,11 @@ StateTesting::StateTesting() :
 
 	m_controlKeys[sf::Keyboard::M] = CHANGE_MODE;
 	m_controlKeys[sf::Keyboard::F] = CHANGE_FILENAME_TYPE;
-	m_controlKeys[sf::Keyboard::Tab] = SWITCH_VEHICLE;
+	m_controlKeys[sf::Keyboard::P] = CHANGE_PARAMETER;
 	m_controlKeys[sf::Keyboard::Add] = INCREASE_PARAMETER;
 	m_controlKeys[sf::Keyboard::Subtract] = DECREASE_PARAMETER;
-	m_controlKeys[sf::Keyboard::P] = CHANGE_PARAMETER;
+	m_controlKeys[sf::Keyboard::Multiply] = INCREASE_ZOOM;
+	m_controlKeys[sf::Keyboard::Divide] = DECREASE_ZOOM;
 
 	for (auto& pressedKey : m_pressedKeys)
 		pressedKey = false;
@@ -113,6 +114,7 @@ void StateTesting::Reload()
 	m_fitnessSystem = nullptr;
 	delete m_mapPrototype;
 	m_mapPrototype = nullptr;
+	m_userVehicle = nullptr;
 	m_simulatedVehicles.clear();
 	for (auto& vehiclePrototype : m_vehiclePrototypes)
 		delete vehiclePrototype;
@@ -224,6 +226,7 @@ void StateTesting::Capture()
 									m_simulatedVehicles[i] = m_simulatedWorld->AddVehicle(m_vehiclePrototypes[i]);
 
 								// Prepare user vehicle
+								m_userVehicle = nullptr;
 								if (m_enableUserVehicle)
 								{
 									m_userVehicle = m_simulatedWorld->AddVehicle(m_userVehiclePrototype);
@@ -319,6 +322,9 @@ void StateTesting::Capture()
 
 								break;
 							}
+							case INCREASE_ZOOM:
+							case DECREASE_ZOOM:
+								break;
 						}
 					}
 				}
@@ -359,17 +365,20 @@ void StateTesting::Capture()
 						case CHANGE_FILENAME_TYPE:
 							break;
 						case INCREASE_PARAMETER:
+						case DECREASE_PARAMETER:
+							break;
+						case INCREASE_ZOOM:
 							if (m_pressedKeyTimer.Update())
 							{
-								m_zoom.Decrease();
+								m_zoom.Increase();
 								CoreWindow::SetViewZoom(m_zoom);
 								m_textObservers[ZOOM_TEXT]->Notify();
 							}
 							break;
-						case DECREASE_PARAMETER:
+						case DECREASE_ZOOM:
 							if (m_pressedKeyTimer.Update())
 							{
-								m_zoom.Increase();
+								m_zoom.Decrease();
 								CoreWindow::SetViewZoom(m_zoom);
 								m_textObservers[ZOOM_TEXT]->Notify();
 							}
@@ -423,6 +432,8 @@ void StateTesting::Capture()
 						case CHANGE_FILENAME_TYPE:
 						case INCREASE_PARAMETER:
 						case DECREASE_PARAMETER:
+						case INCREASE_ZOOM:
+						case DECREASE_ZOOM:
 							break;
 						case PAUSED_CHANGE_MODE:
 						{
@@ -653,7 +664,7 @@ bool StateTesting::Load()
 	m_texts[ENABLE_CHECKPOINTS_TEXT] = new DoubleText({ "Enable checkpoints:" });
 	m_texts[ENABLE_USER_VEHICLE_TEXT] = new DoubleText({ "Enable user vehicle:" });
 	m_texts[USER_FITNESS_TEXT] = new DoubleText({ "User fitness:" });
-	m_texts[ZOOM_TEXT] = new TripleText({ "Zoom:", "", "| [+] [-]" });
+	m_texts[ZOOM_TEXT] = new TripleText({ "Zoom:", "", "| [/] [*]" });
 
 	// Create observers
 	m_textObservers[MODE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_modeStrings[m_mode]; });
@@ -668,7 +679,7 @@ bool StateTesting::Load()
 
 	// Set text observers
 	for (size_t i = 0; i < TEXT_COUNT; ++i)
-		m_texts[i]->SetObserver(m_textObservers[i]);
+		((DoubleText*)m_texts[i])->SetObserver(m_textObservers[i]);
 
 	// Set texts positions
 	m_texts[MODE_TEXT]->SetPosition({ FontContext::Component(0), {0}, {3}, {8}, {15} });

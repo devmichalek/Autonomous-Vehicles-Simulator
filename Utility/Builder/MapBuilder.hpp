@@ -189,7 +189,7 @@ public:
 	// Returns vehicle's angle offset
 	inline static double GetVehicleAngleOffset()
 	{
-		return 30.0;
+		return 10.0;
 	}
 	
 	// Checks if dummy can be created
