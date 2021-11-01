@@ -5,9 +5,9 @@
 #include <cmath>
 #include <Box2D\b2_math.h>
 
-using Triangle = std::array<sf::Vector2f, 3>;
-using TriangleVector = std::vector<Triangle>;
-using TriangleShape = std::array<sf::Vertex, 3>;
+using Rectangle = std::array<sf::Vector2f, 4>;
+using RectangleVector = std::vector<Rectangle>;
+using RectangleShape = std::array<sf::Vertex, 4>;
 using Edge = std::array<sf::Vector2f, 2>;
 using EdgeVector = std::vector<Edge>;
 using EdgeShape = std::array<sf::Vertex, 2>;
@@ -17,11 +17,6 @@ class DrawableMath
     inline static bool Ccw(sf::Vector2f a, sf::Vector2f b, sf::Vector2f c)
     {
         return (c.y - a.y) * (b.x - a.x) > (b.y - a.y) * (c.x - a.x);
-    }
-
-    inline static float TriangleSign(sf::Vector2f p1, sf::Vector2f p2, sf::Vector2f p3)
-    {
-        return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
     }
 
     inline static float SFML_BOX2D_SCALE = 40.0f;
@@ -85,6 +80,35 @@ public:
         return false;
     }
 
+    // Calculates distance between two points
+    inline static double Distance(const sf::Vector2f a, const sf::Vector2f b)
+    {
+        return std::sqrt(std::pow(a.x - b.x, 2) + std::pow(a.y - b.y, 2));
+    }
+
+    // Returns true if there is a interesection and false otherwise
+    // The intersection must be at least n % of edge away from any of edge b points
+    inline static bool Intersect(const Edge& a, const Edge& b, double factor)
+    {
+        const double min = 0.0;
+        const double max = 1.0;
+        if (factor < min || factor > max)
+            return Intersect(a, b[0], b[1]);
+
+        sf::Vector2f intersectionPoint;
+        if (GetIntersectionPoint(a, b, intersectionPoint))
+        {
+            auto distance = Distance(b);
+            auto length = Distance(b[0], intersectionPoint);
+            auto ratio = length / distance;
+            if (ratio > factor && ratio < max - factor)
+                return true;
+            return false;
+        }
+
+        return false;
+    }
+
     // Calculate angle between the line defined by two points and the horizontal axis
     inline static double DifferenceVectorAngle(sf::Vector2f a, sf::Vector2f b)
     {
@@ -93,15 +117,10 @@ public:
         return atan2(deltaY, deltaX) * 180.0 / M_PI;
     }
 
+    // Casts atan2 result to full degree agle
     inline static double CastAtan2ToFullAngle(double angle)
     {
         return angle < 0 ? (angle + 360) : angle;
-    }
-
-    // Calculates distance between two points
-    inline static double Distance(const sf::Vector2f a, const sf::Vector2f b)
-    {
-        return std::sqrt(std::pow(a.x - b.x, 2) + std::pow(a.y - b.y, 2));
     }
 
     // Calculates length of an edge

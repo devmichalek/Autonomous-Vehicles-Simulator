@@ -18,10 +18,14 @@ FitnessSystem::FitnessSystem(const size_t populationSize,
 		{
 			auto fitness = ((SimulatedCheckpoint*)contact->GetFixtureA()->GetUserData().pointer)->GetFitness();
 			auto simulatedVehicle = ((SimulatedVehicle*)contact->GetFixtureB()->GetUserData().pointer);
+
 			if (simulatedVehicle->IsActive())
-				simulatedVehicle->SetFitness(fitness);
-			if (size_t(fitness) >= size_t(m_maxFitness))
-				simulatedVehicle->SetInactive();
+			{
+				auto currentFitness = simulatedVehicle->GetFitness();
+				int difference = int(currentFitness) - int(fitness);
+				if (difference == 1 || difference == -1)
+					simulatedVehicle->SetFitness(fitness);
+			}
 		}
 	};
 

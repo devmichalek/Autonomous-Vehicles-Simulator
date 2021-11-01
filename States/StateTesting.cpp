@@ -588,7 +588,7 @@ void StateTesting::Update()
 			auto currentLeaderindex = m_fitnessSystem->MarkLeader(m_simulatedVehicles);
 			if (m_userVehicle)
 			{
-				m_userVehicle->Update(m_simulatedWorld->GetStaticWorld());
+				m_userVehicle->Update(m_simulatedWorld->GetEdgesWorld());
 
 				if (m_userVehicle->IsActive())
 				{
@@ -632,7 +632,7 @@ void StateTesting::Update()
 			// the last vehicle is user vehicle
 			for (size_t i = 0; i < m_numberOfVehicles; ++i)
 			{
-				m_simulatedVehicles[i]->Update(m_simulatedWorld->GetStaticWorld());
+				m_simulatedVehicles[i]->Update(m_simulatedWorld->GetEdgesWorld());
 				if (!m_simulatedVehicles[i]->IsActive())
 					continue;
 				const NeuronLayer& input = m_simulatedVehicles[i]->ProcessOutput();

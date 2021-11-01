@@ -10,10 +10,10 @@ class SimulatedCheckpoint final :
 {
 public:
 
-	SimulatedCheckpoint(size_t identity, Triangle position) :
+	SimulatedCheckpoint(size_t identity, Rectangle position) :
 		SimulatedAbstract(SimulatedAbstract::CategoryCheckpoint),
 		FitnessInterface(Fitness(identity + 1)),
-		DrawableCheckpoint(sf::Color(255 * (identity % 3), 255 * ((identity + 1) % 3), 255 * ((identity + 2) % 3), 48), position)
+		DrawableCheckpoint(sf::Color(255 * (identity % 3), 255 * ((identity + 1) % 3), 255 * ((identity + 2) % 3), 96), position)
 	{
 	}
 };

@@ -10,14 +10,14 @@ os.chdir(".")
 for file in glob.glob("*.csv"):
 	columns = [[], [], [], [], []]
 	with open(file,'r') as csvfile:
-	    plots = csv.reader(csvfile, delimiter = ';')
+		plots = csv.reader(csvfile, delimiter = ';')
 
-	    for row in plots:
-	    	if not row:
-	    		break
+		for row in plots:
+			if not row:
+				break
 			numberOfColumns = 5
-	    	for i in range(numberOfColumns):
-	    		columns[i].append(float(row[i]))
+			for i in range(numberOfColumns):
+				columns[i].append(float(row[i]))
 
 	figure = plt.figure()
 	ax = figure.add_subplot(1, 1, 1)

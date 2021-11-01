@@ -12,13 +12,13 @@ SimulatedWorld::SimulatedWorld()
 {
 	m_world = new b2World(b2Vec2(0.0f, 0.0f));
 	m_world->SetContactListener(&m_contactListener);
-	m_staticWorld = new b2World(b2Vec2(0.0f, 0.0f));
+	m_edgesWorld = new b2World(b2Vec2(0.0f, 0.0f));
 }
 
 SimulatedWorld::~SimulatedWorld()
 {
 	delete m_world;
-	delete m_staticWorld;
+	delete m_edgesWorld;
 
 	for (auto & item : m_simulatedObjects)
 	{
@@ -52,7 +52,8 @@ void SimulatedWorld::EnableDeathOnEdgeContact()
 
 void SimulatedWorld::AddMap(MapPrototype* prototype)
 {
-	AddEdgesChain(prototype->GetEdges(), prototype->IsClockwise());
+	AddEdgesChain(prototype->GetInnerEdgesChain());
+	AddEdgesChain(prototype->GetOuterEdgesChain());
 	AddCheckpoints(prototype->GetCheckpoints());
 }
 
@@ -101,23 +102,19 @@ SimulatedVehicle* SimulatedWorld::AddVehicle(VehiclePrototype* prototype)
 	body->GetMassData(&massData);
 	massData.center = b2Vec2(0.f, 0.f);
 	body->SetMassData(&massData);
-
 	return simulatedVehicle;
 }
 
-void SimulatedWorld::AddEdgesChain(const EdgeVector& edgesChain, const bool clockwise)
+void SimulatedWorld::AddEdgesChain(const EdgeVector& edgesChain)
 {
 	const size_t numberOfEdges = edgesChain.size();
-	const size_t offset = clockwise ? 1 : -1;
 	b2Vec2* vertices = new b2Vec2[numberOfEdges];
 	SimulatedEdge* simulatedEdge = new SimulatedEdge[numberOfEdges];
 	m_simulatedObjects.push_back(simulatedEdge);
-	size_t j = clockwise ? 0 : (numberOfEdges - 1);
-	size_t part = clockwise ? 0 : 1;
-	for (size_t i = 0; i < numberOfEdges; ++i, j += offset)
+	for (size_t i = 0; i < numberOfEdges; ++i)
 	{
-		vertices[i] = DrawableMath::ToBox2DPosition(edgesChain[j][part]);
-		simulatedEdge[i].SetPosition(edgesChain[j]);
+		vertices[i] = DrawableMath::ToBox2DPosition(edgesChain[i][0]);
+		simulatedEdge[i].SetPosition(edgesChain[i]);
 	}
 
 	b2ChainShape chainShape;
@@ -129,7 +126,7 @@ void SimulatedWorld::AddEdgesChain(const EdgeVector& edgesChain, const bool cloc
 	bodyDefinition.type = b2_staticBody;
 
 	b2Body* body = m_world->CreateBody(&bodyDefinition);
-	b2Body* staticBody = m_staticWorld->CreateBody(&bodyDefinition);
+	b2Body* staticBody = m_edgesWorld->CreateBody(&bodyDefinition);
 	b2FixtureDef fixtureDefinition;
 	fixtureDefinition.filter.categoryBits = SimulatedAbstract::CategoryEdge;
 	fixtureDefinition.shape = &chainShape;
@@ -138,18 +135,19 @@ void SimulatedWorld::AddEdgesChain(const EdgeVector& edgesChain, const bool cloc
 	staticBody->CreateFixture(&fixtureDefinition);
 }
 
-void SimulatedWorld::AddCheckpoints(const TriangleVector& checkpoints)
+void SimulatedWorld::AddCheckpoints(const RectangleVector& checkpoints)
 {
 	for (size_t i = 0; i < checkpoints.size(); ++i)
 	{
 		b2PolygonShape polygonShape;
-		b2Vec2 points[3];
+		b2Vec2 points[4];
 		points[0] = DrawableMath::ToBox2DPosition(checkpoints[i][0]);
 		points[1] = DrawableMath::ToBox2DPosition(checkpoints[i][1]);
 		points[2] = DrawableMath::ToBox2DPosition(checkpoints[i][2]);
+		points[3] = DrawableMath::ToBox2DPosition(checkpoints[i][3]);
 		SimulatedCheckpoint* simulatedCheckpoint = new SimulatedCheckpoint(i, checkpoints[i]);
 		m_simulatedObjects.push_back(simulatedCheckpoint);
-		polygonShape.Set(points, 3);
+		polygonShape.Set(points, 4);
 
 		b2BodyDef bodyDefinition;
 		bodyDefinition.position = b2Vec2(0.0f, 0.0f);

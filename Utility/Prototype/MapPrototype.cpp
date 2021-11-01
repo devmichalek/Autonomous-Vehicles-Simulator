@@ -80,6 +80,20 @@ void MapPrototype::DrawEdges()
 		m_edgeShape[1].position = edge[1];
 		CoreWindow::Draw(m_edgeShape.data(), m_edgeShape.size(), sf::Lines);
 	}
+
+	for (auto& edge : m_innerEdgesChain)
+	{
+		m_edgeShape[0].position = edge[0];
+		m_edgeShape[1].position = edge[1];
+		CoreWindow::Draw(m_edgeShape.data(), m_edgeShape.size(), sf::Lines);
+	}
+
+	for (auto& edge : m_outerEdgesChain)
+	{
+		m_edgeShape[0].position = edge[0];
+		m_edgeShape[1].position = edge[1];
+		CoreWindow::Draw(m_edgeShape.data(), m_edgeShape.size(), sf::Lines);
+	}
 }
 
 void MapPrototype::DrawCheckpoints()
@@ -89,7 +103,7 @@ void MapPrototype::DrawCheckpoints()
 		sf::Uint8 red = 255 * (i % 3);
 		sf::Uint8 green = 255 * ((i + 1) % 3);
 		sf::Uint8 blue = 255 * ((i + 2) % 3);
-		m_checkpointShape.setFillColor(sf::Color(red, green, blue, 48));
+		m_checkpointShape.setFillColor(sf::Color(red, green, blue, 96));
 		for (size_t j = 0; j < m_checkpointShape.getPointCount(); ++j)
 			m_checkpointShape.setPoint(j, m_checkpoints[i][j]);
 		CoreWindow::Draw(m_checkpointShape);

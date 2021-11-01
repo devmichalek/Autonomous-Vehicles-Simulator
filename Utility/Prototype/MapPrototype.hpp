@@ -5,32 +5,32 @@
 class MapPrototype final
 {
 	EdgeVector m_edges;
-	TriangleVector m_checkpoints;
-	const bool m_clockwise;
+	EdgeVector m_innerEdgesChain;
+	EdgeVector m_outerEdgesChain;
+	RectangleVector m_checkpoints;
 	EdgeShape m_edgeShape;
 	sf::ConvexShape m_checkpointShape;
 
 public:
 
-	MapPrototype(const EdgeVector& edges,
-				 const TriangleVector& checkpoints,
-				 const bool clockwise) :
-		m_edges(edges),
-		m_checkpoints(checkpoints),
-		m_clockwise(clockwise)
+	MapPrototype(const EdgeVector& innerEdgesChain,
+				 const EdgeVector& outerEdgesChain,
+				 const RectangleVector& checkpoints) :
+		m_innerEdgesChain(innerEdgesChain),
+		m_outerEdgesChain(outerEdgesChain),
+		m_checkpoints(checkpoints)
 	{
 		m_edgeShape[0].color = sf::Color::White;
 		m_edgeShape[1].color = m_edgeShape[0].color;
 		m_checkpointShape.setPointCount(checkpoints.back().size());
 	}
 
-	MapPrototype() :
-		m_clockwise(false)
+	MapPrototype()
 	{
 		m_edgeShape[0].color = sf::Color::White;
 		m_edgeShape[1].color = m_edgeShape[0].color;
-		Triangle triangle;
-		m_checkpointShape.setPointCount(triangle.size());
+		RectangleVector rectangle;
+		m_checkpointShape.setPointCount(rectangle.size());
 	}
 
 	// Adds edge to the container
@@ -60,6 +60,18 @@ public:
 		return m_edges;
 	}
 
+	// Returns inner edges chain
+	inline const EdgeVector& GetInnerEdgesChain() const
+	{
+		return m_innerEdgesChain;
+	}
+
+	// Returns outer edges chain
+	inline const EdgeVector& GetOuterEdgesChain() const
+	{
+		return m_outerEdgesChain;
+	}
+
 	// Returns number of edges
 	inline size_t GetNumberOfEdges() const
 	{
@@ -67,7 +79,7 @@ public:
 	}
 
 	// Returns checkpoints
-	inline const TriangleVector& GetCheckpoints() const
+	inline const RectangleVector& GetCheckpoints() const
 	{
 		return m_checkpoints;
 	}
@@ -82,12 +94,6 @@ public:
 	inline bool IsEmpty()
 	{
 		return m_edges.empty() && m_checkpoints.empty();
-	}
-
-	// Returns true if order of edges is clockwise-like
-	inline bool IsClockwise()
-	{
-		return m_clockwise;
 	}
 
 	// Finds closest point based on intersection

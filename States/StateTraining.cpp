@@ -732,7 +732,7 @@ void StateTraining::Update()
 			bool activity = false;
 			for (size_t i = 0; i < m_population; ++i)
 			{
-				m_simulatedVehicles[i]->Update(m_simulatedWorld->GetStaticWorld());
+				m_simulatedVehicles[i]->Update(m_simulatedWorld->GetEdgesWorld());
 				if (!m_simulatedVehicles[i]->IsActive())
 					continue;
 				activity = true;

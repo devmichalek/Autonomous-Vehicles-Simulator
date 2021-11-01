@@ -7,16 +7,16 @@ class DrawableCheckpoint :
 	public DrawableInterface
 {
 	static inline bool m_visibility = false;
-	TriangleShape m_triangleShape;
+	RectangleShape m_rectangleShape;
 
 protected:
 
-	DrawableCheckpoint(sf::Color color, Triangle position)
+	DrawableCheckpoint(sf::Color color, Rectangle position)
 	{
-		for (size_t i = 0; i < m_triangleShape.size(); ++i)
+		for (size_t i = 0; i < m_rectangleShape.size(); ++i)
 		{
-			m_triangleShape[i].color = color;
-			m_triangleShape[i].position = position[i];
+			m_rectangleShape[i].color = color;
+			m_rectangleShape[i].position = position[i];
 		}
 	}
 
@@ -26,7 +26,7 @@ public:
 	void Draw()
 	{
 		if (DrawableCheckpoint::m_visibility)
-			CoreWindow::Draw(m_triangleShape.data(), m_triangleShape.size(), sf::Triangles);
+			CoreWindow::Draw(m_rectangleShape.data(), m_rectangleShape.size(), sf::Quads);
 	}
 
 	// Sets visibility of checkpoints

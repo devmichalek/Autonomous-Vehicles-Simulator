@@ -5,7 +5,7 @@
 std::pair<sf::Vector2f, sf::Vector2f> MapBuilder::m_maxAllowedMapArea;
 std::pair<sf::Vector2f, sf::Vector2f> MapBuilder::m_maxAllowedViewArea;
 
-bool MapBuilder::EdgesChainGenerator::IsClockwiseOrder(const EdgeVector& edges, const size_t count)
+bool MapBuilder::EdgesChainGenerator::IsClockwiseOrder(const EdgeVector& edges)
 {
 	float sum = 0.f;
 	for (const auto& edge : edges)
@@ -18,254 +18,115 @@ bool MapBuilder::EdgesChainGenerator::IsClockwiseOrder(const EdgeVector& edges, 
 	return sum < 0.f;
 }
 
-EdgeVector MapBuilder::EdgesChainGenerator::Generate(const EdgeVector& edges, const size_t pivot, bool& clockwise)
+EdgeVector MapBuilder::EdgesChainGenerator::Generate(const EdgeVector& edges, bool innerCollision)
 {
 	// Determine order
-	clockwise = IsClockwiseOrder(edges, pivot);
+	bool clockwise = IsClockwiseOrder(edges);
+	clockwise = innerCollision ? !clockwise : clockwise;
+	if (clockwise)
+		return edges;
 
-	const Edge firstInnerEdge = edges[0];
-	const Edge firstOuterEdge = edges[pivot];
-
-	EdgeVector edgesChain(edges.size());
-
-	// Add blocking edge
-	edgesChain.front() = { firstOuterEdge[1], firstInnerEdge[1] };
-
-	// Create chain order
-	for (size_t i = 1; i < pivot; ++i)
-		edgesChain[i] = edges[i];
-
-	// Add finish line
-	edgesChain[pivot] = { firstInnerEdge[0], firstOuterEdge[0] };
-
-	// Create chain order
-	for (size_t i = pivot + 1, j = edges.size() - 1; i < edges.size(); ++i, --j)
+	size_t numberOfEdges = edges.size();
+	EdgeVector result(numberOfEdges);
+	for (size_t i = 0; i < numberOfEdges; ++i)
 	{
-		edgesChain[i][1] = edges[j][0];
-		edgesChain[i][0] = edges[j][1];
+		result[i][0] = edges[numberOfEdges - 1 - i][1];
+		result[i][1] = edges[numberOfEdges - 1 - i][0];
 	}
 
-	return edgesChain;
-}
-
-std::vector<std::pair<size_t, size_t>> MapBuilder::TriangleCheckpointsGenerator::GetEndPoints(const EdgeVector& edges, const size_t pivot, const size_t index)
-{
-	auto edgesCount = edges.size();
-	using EndPoint = std::tuple<size_t, size_t, double>; // Consists of index of an edge and distance to its first point
-	std::vector<EndPoint> endPoints;
-	for (size_t j = pivot + 1; j < edgesCount; ++j)
-	{
-		bool intersection = false;
-		Edge edge = { edges[index][0], edges[j][0] };
-		for (size_t k = 0; k < edgesCount; ++k)
-		{
-			// Skip
-			if (index == k || j == k)
-				continue;
-
-			// Check if there is no intersection with any edge
-			if (DrawableMath::IntersectNonCollinear(edge, edges[k]))
-			{
-				intersection = true;
-				break;
-			}
-		}
-
-		// There was no intersection
-		if (!intersection)
-		{
-			// Get proper precedence
-			size_t precedence = endPoints.empty() ? 0 : (std::get<1>(endPoints.back()) + 1);
-
-			// Calculate distance
-			auto distance = DrawableMath::Distance(edge);
-			endPoints.push_back(std::make_tuple(j, precedence, distance));
-		}
-	}
-
-	// Sort from the smallest distance to the greatest
-	auto Compare = [&](const EndPoint& a, const EndPoint& b)
-	{
-		return std::get<2>(a) > std::get<2>(b);
-	};
-	std::sort(endPoints.begin(), endPoints.end(), Compare);
-
-	std::vector<std::pair<size_t, size_t>> result(endPoints.size());
-	for (size_t i = 0; i < result.size(); ++i)
-	{
-		result[i].first = std::get<0>(endPoints[i]);
-		result[i].second = std::get<1>(endPoints[i]);
-	}
 	return result;
 }
 
-std::vector<EdgeVector> MapBuilder::TriangleCheckpointsGenerator::GetLineCheckpoints(const EdgeVector& edges, const size_t pivot, EndPointsVector& endPointsVector)
+EdgeVector MapBuilder::RectangleCheckpointsGenerator::GenerateInternal(const EdgeVector& innerEdgesChain, const EdgeVector& outerEdgesChain)
 {
-	using EdgePrecedence = std::pair<Edge, size_t>;
-	using EdgePrecedences = std::vector<EdgePrecedence>;
-	using EdgePrecedencesVector = std::vector<EdgePrecedences>;
-	EdgePrecedencesVector edgePrecedencesVector(pivot, EdgePrecedences());
-
-	bool process = true;
-	while (process)
+	auto length = innerEdgesChain.size();
+	EdgeVector result(length);
+	for (size_t i = 0; i < length; ++i)
 	{
-		process = false;
-		for (size_t i = 0; i < pivot; ++i)
+		result[i][0] = innerEdgesChain[i][0];
+		result[i][1] = outerEdgesChain[i][0];
+	}
+
+	// Validate if there are no intersections with inner edges chain
+
+	auto Validate = [](const EdgeVector& checkpoints, const EdgeVector& edgesChain) {
+		const size_t length = checkpoints.size();
+
+		for (size_t i = 0; i < length; ++i)
 		{
-			if (endPointsVector[i].empty())
-				continue;
-			process = true;
-
-			auto endPointIndex = endPointsVector[i].back().first;
-			auto endPointPrecedence = endPointsVector[i].back().second;
-			Edge edge = { edges[i][0], edges[endPointIndex][0] };
-
-			bool intersection = false;
-			for (size_t k = 0; k < edgePrecedencesVector.size(); ++k)
+			for (size_t j = 0; j < length; ++j)
 			{
-				if (k == i)
+				if (i == j)
 					continue;
 
-				for (size_t c = 0; c < edgePrecedencesVector[k].size(); ++c)
+				if (i == 0)
 				{
-					if (DrawableMath::IntersectNonCollinear(edge, edgePrecedencesVector[k][c].first))
-					{
-						intersection = true;
-						break;
-					}
+					if (j == length - 1)
+						continue;
 				}
+				else if (i - 1 == j)
+					continue;
 
-				if (intersection)
-					break;
+				if (DrawableMath::Intersect(checkpoints[i], edgesChain[j]))
+					return false;
 			}
-
-			// Remove last end point
-			endPointsVector[i].pop_back();
-
-			// Add EdgePrecedence if there was no intersection
-			if (!intersection)
-				edgePrecedencesVector[i].push_back(std::make_pair(edge, endPointPrecedence));
 		}
-	}
 
-	auto Compare = [&](const EdgePrecedence& a, const EdgePrecedence& b)
-	{
-		return a.second < b.second;
+		return true;
 	};
 
-	for (auto& edgePrecedences : edgePrecedencesVector)
-		std::sort(edgePrecedences.begin(), edgePrecedences.end(), Compare);
-
-	// Add more edge precedences to have optimal number of checkpoints per edge
-	double maxDistanceBetweenEndPoints = CoreWindow::GetWindowSize().x / 16;
-	auto checkpointCount = edgePrecedencesVector.size();
-	for (size_t i = 1; i < checkpointCount; ++i)
-	{
-		auto& edgePrecedences = edgePrecedencesVector[i];
-		if (edgePrecedences.empty())
-			return {};
-
-		size_t lastIndex = edgePrecedences.size() - 1;
-		for (size_t j = 0; j < lastIndex; ++j)
-		{
-			auto p2 = edgePrecedences[j].first[1];
-			auto p3 = edgePrecedences[j + 1].first[1];
-			double distance = DrawableMath::Distance({ p2, p3 });
-			double times = distance / maxDistanceBetweenEndPoints;
-			size_t repeat = static_cast<size_t>(times);
-			if (repeat-- > 1)
-			{
-				auto p1 = edgePrecedences[j].first[0];
-				auto angle = DrawableMath::DifferenceVectorAngle(p2, p3);
-				const double offset = -distance / double(repeat + 1);
-				EdgePrecedences newEdgePrecedences(repeat);
-				for (size_t k = 0; k < repeat; ++k)
-				{
-					auto p4 = DrawableMath::GetEndPoint(p2, angle, (offset * (k + 1)));
-					newEdgePrecedences[k] = { { p1, p4 }, edgePrecedences[j].second + 1 + k };
-				}
-
-				edgePrecedences.insert(edgePrecedences.begin() + j + 1, newEdgePrecedences.begin(), newEdgePrecedences.end());
-				j += repeat;
-				lastIndex += repeat;
-				for (size_t k = j + 1; k <= lastIndex; ++k)
-					edgePrecedences[k].second += repeat;
-			}
-		}
-
-		size_t nextIndex = (i + 1 >= checkpointCount) ? 0 : (i + 1);
-		auto p2 = edgePrecedences[lastIndex].first[0];
-		auto p3 = edgePrecedencesVector[nextIndex][0].first[0];
-		double distance = DrawableMath::Distance({ p2, p3 });
-		double times = distance / maxDistanceBetweenEndPoints;
-		size_t repeat = static_cast<size_t>(times);
-		if (repeat-- > 1)
-		{
-			auto p1 = edgePrecedences[lastIndex].first[1];
-			auto angle = DrawableMath::DifferenceVectorAngle(p2, p3);
-			const double offset = -distance / double(repeat + 1);
-			for (size_t k = 0; k < repeat; ++k)
-			{
-				auto p4 = DrawableMath::GetEndPoint(p2, angle, (offset * (k + 1)));
-				EdgePrecedences newEdgePrecedences = { { { p4, p1 }, 0 } };
-				edgePrecedencesVector.insert(edgePrecedencesVector.begin() + ++i, newEdgePrecedences);
-				++checkpointCount;
-			}
-		}
-	}
-
-	// Convert edge precedences vector to edge vector
-	std::vector<EdgeVector> result(checkpointCount);
-	for (size_t i = 0; i < checkpointCount; ++i)
-	{
-		auto& edgePrecedences = edgePrecedencesVector[i];
-		auto count = edgePrecedences.size();
-		result[i].resize(count);
-		for (size_t j = 0; j < count; ++j)
-			result[i][j] = edgePrecedences[j].first;
-	}
-
-	return result;
-}
-
-TriangleVector MapBuilder::TriangleCheckpointsGenerator::GetTriangleCheckpoints(const std::vector<EdgeVector>& edgeVectors)
-{
-	TriangleVector result;
-	auto checkpointCount = edgeVectors.size();
-	for (size_t i = 1; i < checkpointCount; ++i)
-	{
-		auto& edgeVector = edgeVectors[i];
-		size_t lastIndex = edgeVector.size() - 1;
-		for (size_t j = 0; j < lastIndex; ++j)
-			result.push_back({ edgeVector[j][0], edgeVector[j][1], edgeVector[j + 1][1] });
-
-		size_t nextIndex = (i + 1 >= checkpointCount) ? 0 : (i + 1);
-		result.push_back({ edgeVector[lastIndex][0], edgeVector[lastIndex][1], edgeVectors[nextIndex][0][0] });
-	}
-
-	result.shrink_to_fit();
-
-	return result;
-}
-
-TriangleVector MapBuilder::TriangleCheckpointsGenerator::Generate(const EdgeVector& edges, const size_t pivot)
-{
-	// Gather available end points for each point from inner edge sequence
-	EndPointsVector endPointsVector(pivot);
-	for (size_t i = 0; i < pivot; ++i)
-	{
-		endPointsVector[i] = GetEndPoints(edges, pivot, i);
-		if (endPointsVector[i].empty())
-			return {};
-	}
-
-	// Generate edge precendences vector
-	auto edgeVectors = GetLineCheckpoints(edges, pivot, endPointsVector);
-	if (edgeVectors.empty())
+	if (!Validate(result, innerEdgesChain))
 		return {};
 
-	// Generate triangle checkpoints
-	return GetTriangleCheckpoints(edgeVectors);
+	if (!Validate(result, outerEdgesChain))
+		return {};
+
+	return result;
+}
+
+RectangleVector MapBuilder::RectangleCheckpointsGenerator::Generate(const EdgeVector& innerEdgesChain, const EdgeVector& outerEdgesChain)
+{
+	const auto lineCheckpoints = GenerateInternal(innerEdgesChain, outerEdgesChain);
+	if (lineCheckpoints.empty())
+		return {};
+
+	auto AddRectangleCheckpoints = [](RectangleVector& result, const Edge& beginEdge, const Edge& endEdge) {
+		const double minWidth = double(CoreWindow::GetWindowSize().x / 16.f);
+		const auto innerDistance = DrawableMath::Distance(beginEdge[0], endEdge[0]);
+		const auto outerDistance = DrawableMath::Distance(beginEdge[1], endEdge[1]);
+		const size_t innerCount = size_t(innerDistance / minWidth);
+		const size_t outerCount = size_t(outerDistance / minWidth);
+		const size_t count = (innerCount > outerCount) ? innerCount : outerCount;
+		const float innerOffset = float(innerDistance) / float(count);
+		const float outerOffset = float(outerDistance) / float(count);
+
+		double innerAngle = DrawableMath::DifferenceVectorAngle(beginEdge[0], endEdge[0]);
+		double outerAngle = DrawableMath::DifferenceVectorAngle(beginEdge[1], endEdge[1]);
+
+		Edge previousEdge = beginEdge;
+		for (size_t i = 1; i < count; ++i)
+		{
+			auto p1 = previousEdge[0];
+			auto p2 = previousEdge[1];
+			auto p3 = DrawableMath::GetEndPoint(beginEdge[1], outerAngle, -outerOffset * i);
+			auto p4 = DrawableMath::GetEndPoint(beginEdge[0], innerAngle, -innerOffset * i);
+			
+			result.push_back({ p1, p2, p3, p4 });
+			
+			previousEdge[0] = p4;
+			previousEdge[1] = p3;
+		}
+
+		result.push_back({ previousEdge[0], previousEdge[1], endEdge[1], endEdge[0] });
+	};
+
+	// Generate rectangle checkpoints
+	RectangleVector result;
+	const auto numberOfLineCheckpoints = lineCheckpoints.size();
+	for (size_t i = 0; i < numberOfLineCheckpoints - 1; ++i)
+		AddRectangleCheckpoints(result, lineCheckpoints[i], lineCheckpoints[i + 1]);
+	AddRectangleCheckpoints(result, lineCheckpoints[numberOfLineCheckpoints - 1], lineCheckpoints[0]);
+	return result;
 }
 
 bool MapBuilder::ValidateMapAreaVehiclePosition()
@@ -366,6 +227,12 @@ bool MapBuilder::ValidateEdgesPivot(size_t pivot, size_t count)
 		return false;
 	}
 
+	if (count != pivot)
+	{
+		m_lastOperationStatus = ERROR_DIFFERENT_NUMBER_OF_INNER_AND_OUTER_EDGES;
+		return false;
+	}
+
 	return true;
 }
 
@@ -431,9 +298,11 @@ bool MapBuilder::ValidateEdgeSequenceIntersection()
 	return true;
 }
 
-bool MapBuilder::ValidateTriangleCheckpoints()
+bool MapBuilder::ValidateCheckpoints()
 {
-	auto checkpoints = TriangleCheckpointsGenerator::Generate(m_edges, m_edgesPivot);
+	auto innerEdges = EdgeVector(m_edges.begin(), m_edges.begin() + m_edgesPivot);
+	auto outerEdges = EdgeVector(m_edges.begin() + m_edgesPivot, m_edges.end());
+	auto checkpoints = RectangleCheckpointsGenerator::Generate(innerEdges, outerEdges);
 	if (checkpoints.empty())
 	{
 		m_lastOperationStatus = ERROR_CANNOT_GENERATE_ALL_CHECKPOINTS;
@@ -472,7 +341,7 @@ bool MapBuilder::ValidateInternal()
 	if (!ValidateEdgeSequenceIntersection())
 		return false;
 
-	if (!ValidateTriangleCheckpoints())
+	if (!ValidateCheckpoints())
 		return false;
 
 	return true;
@@ -536,8 +405,8 @@ bool MapBuilder::LoadInternal(std::ifstream& input)
 	if (!ValidateEdgeSequenceIntersection())
 		return false;
 
-	// Validate triangle checkpoints
-	if (!ValidateTriangleCheckpoints())
+	// Validate checkpoints
+	if (!ValidateCheckpoints())
 		return false;
 
 	// Validate if vehicle center is inside road area
@@ -586,7 +455,7 @@ void MapBuilder::CreateDummyInternal()
 
 	auto outerPoint1 = sf::Vector2f(xOffset, yOffset);
 	auto outerPoint2 = sf::Vector2f(xOffset * 4, outerPoint1.y);
-	auto outerPoint3 = sf::Vector2f(outerPoint2.x, yOffset * 4);
+	auto outerPoint3 = sf::Vector2f(outerPoint2.x, yOffset * 4 + 10);
 	auto outerPoint4 = sf::Vector2f(outerPoint1.x, outerPoint3.y);
 
 	m_edges.push_back({ innerPoint1, innerPoint2 });
@@ -621,6 +490,7 @@ MapBuilder::MapBuilder() :
 	m_operationsMap[ERROR_EDGE_SEQUENCE_INTERSECTION] = "Error: Found intersection between edge sequences!";
 	m_operationsMap[ERROR_TOO_LITTLE_INNER_EDGES] = "Error: Too little inner edges specified!";
 	m_operationsMap[ERROR_TOO_MANY_INNER_EDGES] = "Error: Too many inner edges specified!";
+	m_operationsMap[ERROR_DIFFERENT_NUMBER_OF_INNER_AND_OUTER_EDGES] = "Error: Number of inner edges does not match number of outer edges!";
 	m_operationsMap[ERROR_TOO_LITTLE_OUTER_EDGES] = "Error: Too little outer edges specified!";
 	m_operationsMap[ERROR_TOO_MANY_OUTER_EDGES] = "Error: Too many outer edges specified!";
 	m_operationsMap[ERROR_CANNOT_GENERATE_ALL_CHECKPOINTS] = "Error: Cannot generate all checkpoints! Check if edges are reasonable positioned.";
@@ -643,10 +513,12 @@ MapPrototype* MapBuilder::Get()
 	if (!Validate())
 		return nullptr;
 
-	bool clockwise = false;
-	auto edgesChain = EdgesChainGenerator::Generate(m_edges, m_edgesPivot, clockwise);
-	auto checkpoints = TriangleCheckpointsGenerator::Generate(m_edges, m_edgesPivot);
-	return new MapPrototype(edgesChain, checkpoints, clockwise);
+	auto innerEdges = EdgeVector(m_edges.begin(), m_edges.begin() + m_edgesPivot);
+	auto outerEdges = EdgeVector(m_edges.begin() + m_edgesPivot, m_edges.end());
+	auto innerEdgesChain = EdgesChainGenerator::Generate(innerEdges, false);
+	auto outerEdgesChain = EdgesChainGenerator::Generate(outerEdges, true);
+	auto checkpoints = RectangleCheckpointsGenerator::Generate(innerEdges, outerEdges);
+	return new MapPrototype(innerEdgesChain, outerEdgesChain, checkpoints);
 }
 
 bool MapBuilder::Initialize()

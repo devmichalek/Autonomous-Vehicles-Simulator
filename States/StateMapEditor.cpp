@@ -221,7 +221,10 @@ void StateMapEditor::Capture()
 						m_pressedKeys[iterator->second] = true;
 						if (m_mode == EDGE_MODE && !m_mapPrototype.IsEmpty() && m_edgeSubmode == GLUED_INSERT_EDGE_SUBMODE)
 						{
-							sf::Vector2f correctPosition = CoreWindow::GetMousePosition() + CoreWindow::GetViewOffset();
+							sf::Vector2f correctPosition = CoreWindow::GetMousePosition();
+							correctPosition.x *= m_zoom;
+							correctPosition.y *= m_zoom;
+							correctPosition += CoreWindow::GetViewOffset();
 							m_edgeBeggining = correctPosition;
 							m_insertEdge = true;
 

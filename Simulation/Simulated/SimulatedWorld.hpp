@@ -1,13 +1,10 @@
 #pragma once
 #include "DrawableMath.hpp"
 #include "CoreWindow.hpp"
-#include <functional>
-#include <Box2D\Box2D.h>
+#include "SimulatedVehicle.hpp"
 
 class MapPrototype;
 class VehiclePrototype;
-class SimulatedVehicle;
-class SimulatedAbstract;
 
 // This class is responsible for connection between simulator physics and drawing
 // Here we connect Box2D functionality and SFML functionality
@@ -45,10 +42,10 @@ public:
 		m_world->QueryAABB(&m_drawQueryCallback, aabb);
 	}
 
-	// Returns static world representation
-	inline b2World* GetStaticWorld()
+	// Returns edges world representation
+	inline b2World* GetEdgesWorld()
 	{
-		return m_staticWorld;
+		return m_edgesWorld;
 	}
 
 	// Adds contact listener
@@ -69,10 +66,10 @@ public:
 private:
 
 	// Adds edges chain to the world
-	void AddEdgesChain(const EdgeVector& edgesChain, const bool clockwise);
+	void AddEdgesChain(const EdgeVector& edgesChain);
 
 	// Adds checkpoints to the world
-	void AddCheckpoints(const TriangleVector& checkpoints);
+	void AddCheckpoints(const RectangleVector& checkpoints);
 
 	// Callback called to draw all polygons
 	class DrawQueryCallback :
@@ -110,6 +107,6 @@ private:
 	ContactListener m_contactListener;
 
 	b2World* m_world; // World representation
-	b2World* m_staticWorld; // Static world representation used as dynamic tree for edges
+	b2World* m_edgesWorld; // Static world representation used as dynamic tree for edges
 	std::vector<SimulatedAbstract*> m_simulatedObjects;
 };

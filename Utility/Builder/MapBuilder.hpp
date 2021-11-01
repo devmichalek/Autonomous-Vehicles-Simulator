@@ -17,6 +17,7 @@ class MapBuilder final :
 		ERROR_EDGE_SEQUENCE_INTERSECTION,
 		ERROR_TOO_LITTLE_INNER_EDGES,
 		ERROR_TOO_MANY_INNER_EDGES,
+		ERROR_DIFFERENT_NUMBER_OF_INNER_AND_OUTER_EDGES,
 		ERROR_TOO_LITTLE_OUTER_EDGES,
 		ERROR_TOO_MANY_OUTER_EDGES,
 		ERROR_CANNOT_GENERATE_ALL_CHECKPOINTS
@@ -33,34 +34,23 @@ class MapBuilder final :
 	class EdgesChainGenerator
 	{
 		// Returns true if order of edges is clockwise and false if it is counter-clockwise
-		static bool IsClockwiseOrder(const EdgeVector& edges, const size_t count);
+		static bool IsClockwiseOrder(const EdgeVector& edges);
 
 	public:
-		static EdgeVector Generate(const EdgeVector& edges, const size_t pivot, bool& clockwise);
+
+		// Return edges chain
+		static EdgeVector Generate(const EdgeVector& edges, bool innerCollision);
 	};
 
-	class TriangleCheckpointsGenerator
+	class RectangleCheckpointsGenerator
 	{
-		// Internal types 
-		using EndPoint = std::pair<size_t, size_t>;
-		using EndPoints = std::vector<EndPoint>;
-		using EndPointsVector = std::vector<EndPoints>;
-
-		// Returns available end points from specific point
-		// Point is taken from inner edges (first half of edges vector) and it's pointer via index
-		// Pivot determines how many inner edges are inside edges vector
-		static EndPoints GetEndPoints(const EdgeVector& edges, const size_t pivot, const size_t index);
-
-		// Returns edges vectors representing line checkpoints for each point create from inner edges
-		static std::vector<EdgeVector> GetLineCheckpoints(const EdgeVector& edges, const size_t pivot, EndPointsVector& endPointsVector);
-
-		// Transforms edges and edge precedences vector into triangle checkpoints
-		static TriangleVector GetTriangleCheckpoints(const std::vector<EdgeVector>& edges);
+		// Generates line checkpoints
+		static EdgeVector GenerateInternal(const EdgeVector& innerEdgesChain, const EdgeVector& outerEdgesChain);
 
 	public:
 
-		// Generates triangle checkpoints for given vector of edges (inner edges + outer edges)
-		static TriangleVector Generate(const EdgeVector& edges, const size_t pivot);
+		// Generates rectangle checkpoints for given vector of edges chains
+		static RectangleVector Generate(const EdgeVector& innerEdgesChain, const EdgeVector& outerEdgesChain);
 	};
 
 	// Validates if vehicle position is inside map area
@@ -84,8 +74,8 @@ class MapBuilder final :
 	// Checks if there is edge sequence intersection
 	bool ValidateEdgeSequenceIntersection();
 
-	// Validate triangle checkpoints by creating dummies
-	bool ValidateTriangleCheckpoints();
+	// Validate checkpoints by creating dummies
+	bool ValidateCheckpoints();
 
 	// Validate internal fields
 	bool ValidateInternal();
