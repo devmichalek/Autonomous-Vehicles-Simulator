@@ -350,7 +350,6 @@ void StateMapEditor::Update()
 	{
 		bool success = m_mapBuilder.Load(filenameText->GetFilename());
 		auto status = m_mapBuilder.GetLastOperationStatus();
-		filenameText->ShowStatusText();
 		if (success)
 		{
 			filenameText->SetSuccessStatusText(status.second);
@@ -376,7 +375,6 @@ void StateMapEditor::Update()
 			m_mapBuilder.AddEdges(m_mapPrototype.GetEdges());
 			bool success = m_mapBuilder.Save(filenameText->GetFilename());
 			auto status = m_mapBuilder.GetLastOperationStatus();
-			filenameText->ShowStatusText();
 			if (success)
 				filenameText->SetSuccessStatusText(status.second);
 			else

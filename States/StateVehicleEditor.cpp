@@ -333,7 +333,6 @@ void StateVehicleEditor::Update()
 
 			bool success = m_vehicleBuilder.Save(filenameText->GetFilename());
 			auto status = m_vehicleBuilder.GetLastOperationStatus();
-			filenameText->ShowStatusText();
 			if (success)
 				filenameText->SetSuccessStatusText(status.second);
 			else
@@ -345,7 +344,6 @@ void StateVehicleEditor::Update()
 	{
 		bool success = m_vehicleBuilder.Load(filenameText->GetFilename());
 		auto status = m_vehicleBuilder.GetLastOperationStatus();
-		filenameText->ShowStatusText();
 		if (success)
 		{
 			filenameText->SetSuccessStatusText(status.second);

@@ -32,8 +32,6 @@ StateArtificialNeuralNetworkEditor::StateArtificialNeuralNetworkEditor() :
 	m_biasVector = m_artificialNeuralNetworkBuilder.GetBiasVector();
 	CalculatePositions();
 
-	m_neuronShape.setFillColor(sf::Color::White);
-	m_neuronShape.setOutlineColor(sf::Color::White);
 	m_neuronShape.setRadius(CoreWindow::GetWindowSize().x * 0.008f);
 	m_weightShape[0].color = sf::Color(255, 255, 255, 128);
 	m_weightShape[1].color = m_weightShape[0].color;
@@ -178,7 +176,6 @@ void StateArtificialNeuralNetworkEditor::Update()
 			m_artificialNeuralNetworkBuilder.SetBiasVector(m_biasVector);
 			bool success = m_artificialNeuralNetworkBuilder.Save(filenameText->GetFilename());
 			auto status = m_artificialNeuralNetworkBuilder.GetLastOperationStatus();
-			filenameText->ShowStatusText();
 			if (success)
 				filenameText->SetSuccessStatusText(status.second);
 			else
@@ -190,7 +187,6 @@ void StateArtificialNeuralNetworkEditor::Update()
 	{
 		bool success = m_artificialNeuralNetworkBuilder.Load(filenameText->GetFilename());
 		auto status = m_artificialNeuralNetworkBuilder.GetLastOperationStatus();
-		filenameText->ShowStatusText();
 		if (success)
 		{
 			filenameText->SetSuccessStatusText(status.second);
@@ -300,7 +296,7 @@ void StateArtificialNeuralNetworkEditor::Draw()
 
 	for (size_t layerNr = 0; layerNr < m_layersPositions.size(); ++layerNr)
 	{
-		m_neuronShape.setFillColor(m_currentLayer == layerNr ? sf::Color(0xFD, 0xDA, 0x0D, 0xFF) : sf::Color(0xE5, 0xE5, 0xE5, 0xFF));
+		m_neuronShape.setFillColor(m_currentLayer == layerNr ? sf::Color(0xFF, 0xAA, 0x1D, 0xFF) : sf::Color(0xC0, 0xC0, 0xC0, 0xFF));
 		for (const auto& position : m_layersPositions[layerNr])
 		{
 			m_neuronShape.setPosition(position);

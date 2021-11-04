@@ -211,7 +211,6 @@ void StateTraining::Capture()
 							StatusText* modeText = static_cast<StatusText*>(m_texts[MODE_TEXT]);
 							if (!m_artificialNeuralNetworkPrototype)
 							{
-								modeText->ShowStatusText();
 								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_ARTIFICIAL_NEURAL_NETWORK_SPECIFIED]);
 								m_mode = STOPPED_MODE;
 								break;
@@ -219,7 +218,6 @@ void StateTraining::Capture()
 
 							if (!m_vehiclePrototype)
 							{
-								modeText->ShowStatusText();
 								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_VEHICLE_SPECIFIED]);
 								m_mode = STOPPED_MODE;
 								break;
@@ -227,7 +225,6 @@ void StateTraining::Capture()
 
 							if (!m_mapPrototype)
 							{
-								modeText->ShowStatusText();
 								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_MAP_SPECIFIED]);
 								m_mode = STOPPED_MODE;
 								break;
@@ -235,7 +232,6 @@ void StateTraining::Capture()
 
 							if (m_artificialNeuralNetworkPrototype->GetNumberOfInputNeurons() != m_vehiclePrototype->GetNumberOfSensors())
 							{
-								modeText->ShowStatusText();
 								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH]);
 								m_mode = STOPPED_MODE;
 								break;
@@ -243,7 +239,6 @@ void StateTraining::Capture()
 
 							if (m_artificialNeuralNetworkPrototype->GetNumberOfOutputNeurons() != VehicleBuilder::GetDefaultNumberOfInputs())
 							{
-								modeText->ShowStatusText();
 								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH]);
 								m_mode = STOPPED_MODE;
 								break;
@@ -622,7 +617,6 @@ void StateTraining::Update()
 						auto status = m_mapBuilder.GetLastOperationStatus();
 
 						// Set filename text
-						filenameText->ShowStatusText();
 						if (!success)
 						{
 							filenameText->SetErrorStatusText(status.second);
@@ -658,7 +652,6 @@ void StateTraining::Update()
 						auto status = m_artificialNeuralNetworkBuilder.GetLastOperationStatus();
 
 						// Set filename text
-						filenameText->ShowStatusText();
 						if (!success)
 						{
 							filenameText->SetErrorStatusText(status.second);
@@ -677,7 +670,6 @@ void StateTraining::Update()
 						auto status = m_vehicleBuilder.GetLastOperationStatus();
 
 						// Set filename text
-						filenameText->ShowStatusText();
 						if (!success)
 						{
 							filenameText->SetErrorStatusText(status.second);
@@ -718,7 +710,6 @@ void StateTraining::Update()
 					case ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE:
 					case VEHICLE_FILENAME_TYPE:
 					case MAP_FILENAME_TYPE:
-						filenameText->ShowStatusText();
 						filenameText->SetErrorStatusText(m_internalErrorsStrings[ERROR_SAVE_MODE_IS_ALLOWED_ONLY_IN_PAUSED_MODE]);
 						break;
 					default:
@@ -828,7 +819,6 @@ void StateTraining::Update()
 				{
 					case ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE_PAUSED:
 					case STATISTICS_FILENAME_TYPE_PAUSED:
-						filenameText->ShowStatusText();
 						filenameText->SetErrorStatusText(m_internalErrorsStrings[ERROR_ONLY_SAVE_MODE_IS_ALLOWED_IN_THIS_STATE]);
 						break;
 					default:
@@ -851,7 +841,6 @@ void StateTraining::Update()
 						auto status = m_artificialNeuralNetworkBuilder.GetLastOperationStatus();
 
 						// Set filename text
-						filenameText->ShowStatusText();
 						if (!success)
 							filenameText->SetErrorStatusText(status.second);
 						else
@@ -866,7 +855,6 @@ void StateTraining::Update()
 						auto status = m_statisticsBuilder.GetLastOperationStatus();
 
 						// Set filename text
-						filenameText->ShowStatusText();
 						if (!success)
 							filenameText->SetErrorStatusText(status.second);
 						else

@@ -23,9 +23,6 @@ public:
 	// Sets success status text, text color is green
 	void SetSuccessStatusText(std::string text);
 
-	// Calls reset on alpha timer
-	void ShowStatusText();
-
 	// Sets consistent text, variable text information text and status text positions
 	// First component is used as y position for all texts
 	// Second component is used as x position for consistent text

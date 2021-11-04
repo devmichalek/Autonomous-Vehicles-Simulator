@@ -133,6 +133,7 @@ size_t FitnessSystem::MarkLeader(const SimulatedVehicles& simulatedVehicles)
 			}
 		}
 
+		simulatedVehicles[leaderIndex]->SetAsLeader();
 		break;
 	}
 	
@@ -150,7 +151,6 @@ size_t FitnessSystem::MarkLeader(const SimulatedVehicles& simulatedVehicles)
 		}
 	}
 
-	simulatedVehicles[leaderIndex]->SetAsLeader();
 	return leaderIndex;
 }
 
@@ -188,6 +188,9 @@ void FitnessSystem::UpdateTimers(SimulatedVehicles& simulatedVehicles)
 {
 	for (size_t i = 0; i < simulatedVehicles.size(); ++i)
 	{
+		if (size_t(simulatedVehicles[i]->GetFitness()) == m_maxFitness)
+			continue;
+
 		if (simulatedVehicles[i]->IsActive())
 			m_timers[i].Update();
 	}

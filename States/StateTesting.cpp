@@ -163,7 +163,6 @@ void StateTesting::Capture()
 								StatusText* modeText = static_cast<StatusText*>(m_texts[MODE_TEXT]);
 								if (!m_mapPrototype)
 								{
-									modeText->ShowStatusText();
 									modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_MAP_SPECIFIED]);
 									break;
 								}
@@ -173,7 +172,6 @@ void StateTesting::Capture()
 								{
 									if (!m_vehiclePrototypes[i])
 									{
-										modeText->ShowStatusText();
 										modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_VEHICLE_SPECIFIED]);
 										error = true;
 										break;
@@ -184,7 +182,6 @@ void StateTesting::Capture()
 
 									if (!m_artificialNeuralNetworks[i])
 									{
-										modeText->ShowStatusText();
 										modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_ARTIFICIAL_NEURAL_NETWORK_SPECIFIED]);
 										error = true;
 										break;
@@ -497,7 +494,6 @@ void StateTesting::Update()
 					{
 						bool success = m_mapBuilder.Load(filenameText->GetFilename());
 						auto status = m_mapBuilder.GetLastOperationStatus();
-						filenameText->ShowStatusText();
 						if (!success)
 						{
 							filenameText->SetErrorStatusText(status.second);
@@ -523,7 +519,6 @@ void StateTesting::Update()
 					{
 						if (m_numberOfVehicles == 0)
 						{
-							filenameText->ShowStatusText();
 							filenameText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_VEHICLES]);
 							break;
 						}
@@ -532,7 +527,6 @@ void StateTesting::Update()
 						auto status = m_artificialNeuralNetworkBuilder.GetLastOperationStatus();
 
 						// Set filename text
-						filenameText->ShowStatusText();
 						if (!success)
 						{
 							filenameText->SetErrorStatusText(status.second);
@@ -551,7 +545,6 @@ void StateTesting::Update()
 					{
 						if (m_numberOfVehicles == 0)
 						{
-							filenameText->ShowStatusText();
 							filenameText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_VEHICLES]);
 							break;
 						}
@@ -560,7 +553,6 @@ void StateTesting::Update()
 						auto status = m_vehicleBuilder.GetLastOperationStatus();
 
 						// Set filename text
-						filenameText->ShowStatusText();
 						if (!success)
 						{
 							filenameText->SetErrorStatusText(status.second);
