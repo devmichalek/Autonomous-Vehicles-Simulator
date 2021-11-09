@@ -177,9 +177,6 @@ void StateTesting::Capture()
 										break;
 									}
 
-									m_vehiclePrototypes[i]->SetAngle(m_userVehiclePrototype->GetAngle());
-									m_vehiclePrototypes[i]->SetCenter(m_userVehiclePrototype->GetCenter());
-
 									if (!m_artificialNeuralNetworks[i])
 									{
 										modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_ARTIFICIAL_NEURAL_NETWORK_SPECIFIED]);
@@ -345,13 +342,6 @@ void StateTesting::Capture()
 							m_mode = STOPPED_MODE;
 							m_textObservers[MODE_TEXT]->Notify();
 
-							// Reset vehicles
-							for (auto& vehiclePrototype : m_vehiclePrototypes)
-							{
-								vehiclePrototype->SetAngle(m_userVehiclePrototype->GetAngle());
-								vehiclePrototype->SetCenter(m_userVehiclePrototype->GetCenter());
-							}
-
 							// Reset view so that the center is vehicle starting position
 							m_zoom.ResetValue();
 							m_textObservers[ZOOM_TEXT]->Notify();
@@ -411,13 +401,6 @@ void StateTesting::Capture()
 								break;
 							m_mode = STOPPED_MODE;
 							m_textObservers[MODE_TEXT]->Notify();
-
-							// Reset vehicles
-							for (auto &vehiclePrototype : m_vehiclePrototypes)
-							{
-								vehiclePrototype->SetAngle(m_userVehiclePrototype->GetAngle());
-								vehiclePrototype->SetCenter(m_userVehiclePrototype->GetCenter());
-							}
 
 							// Reset view so that the center is vehicle starting position
 							m_zoom.ResetValue();
@@ -506,10 +489,18 @@ void StateTesting::Update()
 						m_mapPrototype = m_mapBuilder.Get();
 						DrawableCheckpoint::SetVisibility(m_enableCheckpoints);
 
-						// Prepare dummy vehicle
+						// Set dummy vehicle
 						m_userVehiclePrototype->SetCenter(m_mapBuilder.GetVehicleCenter());
 						m_userVehiclePrototype->SetAngle(m_mapBuilder.GetVehicleAngle());
 						m_userVehiclePrototype->Update();
+
+						// Set bot vehicles
+						for (auto& vehiclePrototype : m_vehiclePrototypes)
+						{
+							vehiclePrototype->SetCenter(m_mapBuilder.GetVehicleCenter());
+							vehiclePrototype->SetAngle(m_mapBuilder.GetVehicleAngle());
+							vehiclePrototype->Update();
+						}
 
 						// Reset view so that the center is vehicle starting position
 						CoreWindow::SetViewCenter(m_userVehiclePrototype->GetCenter());
@@ -565,6 +556,7 @@ void StateTesting::Update()
 						m_vehiclePrototypes[m_currentVehicle] = m_vehicleBuilder.Get();
 						m_vehiclePrototypes[m_currentVehicle]->SetCenter(m_mapBuilder.GetVehicleCenter());
 						m_vehiclePrototypes[m_currentVehicle]->SetAngle(m_mapBuilder.GetVehicleAngle());
+						m_vehiclePrototypes[m_currentVehicle]->Update();
 						m_textObservers[CURRENT_VEHICLE_TEXT]->Notify();
 						break;
 					}
