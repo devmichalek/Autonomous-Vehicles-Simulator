@@ -29,6 +29,12 @@ public:
 
 	void Draw() override;
 
+	// Inserts sensor based on given position
+	void InsertSensor(const sf::Vector2f& point);
+
+	// Remove sensor based on given position
+	void RemoveSensor(const sf::Vector2f& point);
+
 private:
 
 	// Modes

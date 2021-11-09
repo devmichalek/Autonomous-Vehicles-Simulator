@@ -60,8 +60,8 @@ public:
 	// Adds new  body descriptive point relative to the center
 	void AddBodyPoint(sf::Vector2f point);
 
-	// Removes last point describing body
-	void RemoveLastBodyPoint();
+	// Removes last point describing body, returns true if any point was removed
+	bool RemoveLastBodyPoint();
 
 	// Returns body point
 	sf::Vector2f GetBodyPoint(size_t index) const;

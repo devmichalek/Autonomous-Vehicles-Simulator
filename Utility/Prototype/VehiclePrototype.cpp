@@ -44,15 +44,25 @@ void VehiclePrototype::AddBodyPoint(sf::Vector2f point)
 	m_bodyShape.setFillColor(color);
 }
 
-void VehiclePrototype::RemoveLastBodyPoint()
+bool VehiclePrototype::RemoveLastBodyPoint()
 {
-	if (GetNumberOfBodyPoints() == 3)
+	if (GetNumberOfBodyPoints() == VehicleBuilder::GetMinNumberOfBodyPoints())
+	{
 		Clear();
-	else if (GetNumberOfBodyPoints() != 0)
+		return true;
+	}
+
+	if (GetNumberOfBodyPoints() > VehicleBuilder::GetMinNumberOfBodyPoints())
 	{
 		m_bodyPoints.pop_back();
 		m_bodyShape.setPointCount(m_bodyPoints.size());
+		auto mass = VehicleBuilder::CalculateMass(m_bodyPoints);
+		auto color = VehicleBuilder::CalculateDefaultColor(mass);
+		m_bodyShape.setFillColor(color);
+		return true;
 	}
+
+	return false;
 }
 
 sf::Vector2f VehiclePrototype::GetBodyPoint(size_t index) const

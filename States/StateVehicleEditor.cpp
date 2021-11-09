@@ -142,11 +142,20 @@ void StateVehicleEditor::Capture()
 						}
 						break;
 					case REMOVE_LAST_VEHICLE_BODY_POINT:
-						m_vehiclePrototype->RemoveLastBodyPoint();
-						m_textObservers[TOTAL_NUMBER_OF_BODY_POINTS_TEXT]->Notify();
-						m_textObservers[TOTAL_NUMBER_OF_SENSORS_TEXT]->Notify();
-						m_textObservers[VEHICLE_BODY_MASS]->Notify();
-						m_upToDate = false;
+						if (m_vehiclePrototype->RemoveLastBodyPoint())
+						{
+							auto sensorPoints = m_vehiclePrototype->GetSensorPoints();
+							for (const auto& point : sensorPoints)
+							{
+								if (!DrawableMath::IsPointInsidePolygon(m_vehiclePrototype->GetBodyPoints(), point))
+									RemoveSensor(point);
+							}
+
+							m_textObservers[TOTAL_NUMBER_OF_BODY_POINTS_TEXT]->Notify();
+							m_textObservers[TOTAL_NUMBER_OF_SENSORS_TEXT]->Notify();
+							m_textObservers[VEHICLE_BODY_MASS]->Notify();
+							m_upToDate = false;
+						}
 						break;
 					case CHANGE_SENSOR:
 						if (m_mode != MODE_VEHICLE_SENSORS)
@@ -248,61 +257,11 @@ void StateVehicleEditor::Capture()
 						switch (m_vehicleSensorsSubmode)
 						{
 							case VEHICLE_SENSORS_INSERT:
-								if (m_vehiclePrototype->GetNumberOfSensors() >= VehicleBuilder::GetMaxNumberOfSensors())
-									break;
-								m_vehiclePrototype->AddSensor(relativePosition,
-															  VehicleBuilder::GetMinSensorAngle(),
-															  VehicleBuilder::GetDefaultSensorMotionRange());
-								m_currentSensorIndex = m_vehiclePrototype->GetNumberOfSensors() - 1;
-								m_currentSensorAngle = m_vehiclePrototype->GetSensorBeamAngle(m_currentSensorIndex);
-								m_currentSensorMotionRange = m_vehiclePrototype->GetSensorMotionRange(m_currentSensorIndex);
-								m_textObservers[TOTAL_NUMBER_OF_SENSORS_TEXT]->Notify();
-								m_textObservers[CURRENT_SENSOR_TEXT]->Notify();
-								m_textObservers[CURRENT_SENSOR_ANGLE_TEXT]->Notify();
-								m_textObservers[CURRENT_SENSOR_MOTION_RANGE_TEXT]->Notify();
-								m_upToDate = false;
+								InsertSensor(relativePosition);
 								break;
 							case VEHICLE_SENSORS_REMOVE:
-							{
-								size_t index = (size_t)-1;
-								if (m_vehiclePrototype->GetSensorIndex(index, relativePosition))
-								{
-									if (m_vehiclePrototype->GetNumberOfSensors() == 1)
-									{
-										// If it was last sensor index and it is first index also
-										m_currentSensorAngle = VehicleBuilder::GetMinSensorAngle();
-										m_currentSensorMotionRange = VehicleBuilder::GetDefaultSensorMotionRange();
-										m_textObservers[CURRENT_SENSOR_ANGLE_TEXT]->Notify();
-										m_textObservers[CURRENT_SENSOR_MOTION_RANGE_TEXT]->Notify();
-									}
-									else
-									{
-										// There are at least two sensors
-										size_t currentLastIndex = m_vehiclePrototype->GetNumberOfSensors() - 1;
-										if (m_currentSensorIndex == index && m_currentSensorIndex == currentLastIndex)
-										{
-											// If it was last sensor index but not first index then we have decrement it
-											--m_currentSensorIndex;
-											m_currentSensorAngle = m_vehiclePrototype->GetSensorBeamAngle(m_currentSensorIndex);
-											m_currentSensorMotionRange = m_vehiclePrototype->GetSensorMotionRange(m_currentSensorIndex);
-											m_textObservers[CURRENT_SENSOR_TEXT]->Notify();
-											m_textObservers[CURRENT_SENSOR_ANGLE_TEXT]->Notify();
-											m_textObservers[CURRENT_SENSOR_MOTION_RANGE_TEXT]->Notify();
-										}
-										else if (m_currentSensorIndex > index)
-										{
-											// If current pointed index is greater then to be deleted one
-											--m_currentSensorIndex;
-											m_textObservers[CURRENT_SENSOR_TEXT]->Notify();
-										}
-									}
-
-									m_vehiclePrototype->RemoveSensor(index);
-									m_textObservers[TOTAL_NUMBER_OF_SENSORS_TEXT]->Notify();
-									m_upToDate = false;
-								}
+								RemoveSensor(relativePosition);
 								break;
-							}
 						}
 
 						break;
@@ -452,5 +411,65 @@ void StateVehicleEditor::Draw()
 		m_texts[CURRENT_SENSOR_TEXT]->Draw();
 		m_texts[CURRENT_SENSOR_ANGLE_TEXT]->Draw();
 		m_texts[CURRENT_SENSOR_MOTION_RANGE_TEXT]->Draw();
+	}
+}
+
+void StateVehicleEditor::InsertSensor(const sf::Vector2f& point)
+{
+	if (m_vehiclePrototype->GetNumberOfSensors() < VehicleBuilder::GetMaxNumberOfSensors())
+	{
+		if (DrawableMath::IsPointInsidePolygon(m_vehiclePrototype->GetBodyPoints(), point))
+		{
+			m_vehiclePrototype->AddSensor(point, VehicleBuilder::GetMinSensorAngle(), VehicleBuilder::GetDefaultSensorMotionRange());
+			m_currentSensorIndex = m_vehiclePrototype->GetNumberOfSensors() - 1;
+			m_currentSensorAngle = m_vehiclePrototype->GetSensorBeamAngle(m_currentSensorIndex);
+			m_currentSensorMotionRange = m_vehiclePrototype->GetSensorMotionRange(m_currentSensorIndex);
+			m_textObservers[TOTAL_NUMBER_OF_SENSORS_TEXT]->Notify();
+			m_textObservers[CURRENT_SENSOR_TEXT]->Notify();
+			m_textObservers[CURRENT_SENSOR_ANGLE_TEXT]->Notify();
+			m_textObservers[CURRENT_SENSOR_MOTION_RANGE_TEXT]->Notify();
+			m_upToDate = false;
+		}
+	}
+}
+
+void StateVehicleEditor::RemoveSensor(const sf::Vector2f& point)
+{
+	size_t index = (size_t)-1;
+	if (m_vehiclePrototype->GetSensorIndex(index, point))
+	{
+		if (m_vehiclePrototype->GetNumberOfSensors() == 1)
+		{
+			// If it was last sensor index and it is first index also
+			m_currentSensorAngle = VehicleBuilder::GetMinSensorAngle();
+			m_currentSensorMotionRange = VehicleBuilder::GetDefaultSensorMotionRange();
+			m_textObservers[CURRENT_SENSOR_ANGLE_TEXT]->Notify();
+			m_textObservers[CURRENT_SENSOR_MOTION_RANGE_TEXT]->Notify();
+		}
+		else
+		{
+			// There are at least two sensors
+			size_t currentLastIndex = m_vehiclePrototype->GetNumberOfSensors() - 1;
+			if (m_currentSensorIndex == index && m_currentSensorIndex == currentLastIndex)
+			{
+				// If it was last sensor index but not first index then we have decrement it
+				--m_currentSensorIndex;
+				m_currentSensorAngle = m_vehiclePrototype->GetSensorBeamAngle(m_currentSensorIndex);
+				m_currentSensorMotionRange = m_vehiclePrototype->GetSensorMotionRange(m_currentSensorIndex);
+				m_textObservers[CURRENT_SENSOR_TEXT]->Notify();
+				m_textObservers[CURRENT_SENSOR_ANGLE_TEXT]->Notify();
+				m_textObservers[CURRENT_SENSOR_MOTION_RANGE_TEXT]->Notify();
+			}
+			else if (m_currentSensorIndex > index)
+			{
+				// If current pointed index is greater then to be deleted one
+				--m_currentSensorIndex;
+				m_textObservers[CURRENT_SENSOR_TEXT]->Notify();
+			}
+		}
+
+		m_vehiclePrototype->RemoveSensor(index);
+		m_textObservers[TOTAL_NUMBER_OF_SENSORS_TEXT]->Notify();
+		m_upToDate = false;
 	}
 }
