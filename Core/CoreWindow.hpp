@@ -77,11 +77,14 @@ public:
 	{
 		m_renderTextureBackground.display();
 		m_renderTextureForeground.display();
+
 		m_renderWindow.clear(m_renderWindowColors[m_currentRenderColor]);
+
 		m_backgroundSprite.setTexture(m_renderTextureBackground.getTexture());
 		m_foregroundSprite.setTexture(m_renderTextureForeground.getTexture());
 		m_renderWindow.draw(m_backgroundSprite, &m_invertColorShader);
 		m_renderWindow.draw(m_foregroundSprite, &m_invertColorShader);
+
 		m_renderWindow.display();
 	}
 
@@ -104,22 +107,22 @@ public:
 		m_renderTextureBackground.setView(view);
 	}
 
-	// Draw drawable on the background
+	// Draw drawable on the background texture
 	inline static void Draw(const sf::Drawable& drawable)
 	{
-		return m_renderTextureBackground.draw(drawable);
+		m_renderTextureBackground.draw(drawable);
 	}
 
-	// Draw vertices on the background
+	// Draw vertices on the background texture
 	inline static void Draw(const sf::Vertex* vertices, size_t vertexCount, sf::PrimitiveType type)
 	{
-		return m_renderTextureBackground.draw(vertices, vertexCount, type);
+		m_renderTextureBackground.draw(vertices, vertexCount, type);
 	}
 
-	// Draw drawable on the foreground
+	// Draw drawable on the foreground texture
 	inline static void DrawForeground(const sf::Drawable& drawable)
 	{
-		return m_renderTextureForeground.draw(drawable);
+		m_renderTextureForeground.draw(drawable);
 	}
 
 	// Returns window size
@@ -186,7 +189,8 @@ public:
 	// Restarts clock
 	inline static void RestartClock()
 	{
-		m_elapsedTime = static_cast<double>(m_clock.restart().asMicroseconds()) / 1000000;
+		const __int64 lagThreshold = 200000; // 0.2s
+		m_elapsedTime = static_cast<double>(m_clock.restart().asMicroseconds() % lagThreshold) / 1000000;
 	}
 
 	// Resets to default settings
