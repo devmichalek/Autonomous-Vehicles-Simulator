@@ -43,8 +43,11 @@ private:
 	// Called when vehicle is beign deleted
 	void OnRemoveVehicle();
 
-	// Returns current vehicle name
-	std::string GetCurrentVehicleName() const;
+	// Returns current bot vehicle name
+	std::string GetBotVehicleName() const;
+
+	// Returns user vehicle name
+	std::string GetUserVehicleName() const;
 
 	// Modes
 	enum
@@ -72,7 +75,7 @@ private:
 	enum
 	{
 		SWITCH_VEHICLE,
-		NUMBER_OF_VEHICLES,
+		NUMBER_OF_BOT_VEHICLES,
 		ENABLE_USER_VEHICLE,
 		ENABLE_CHECKPOINTS,
 		PARAMETERS_COUNT
@@ -101,10 +104,13 @@ private:
 	{
 		ERROR_NO_ARTIFICIAL_NEURAL_NETWORK_SPECIFIED,
 		ERROR_NO_MAP_SPECIFIED,
+		ERROR_USER_VEHICLE_NOT_SPECIFIED,
 		ERROR_NO_VEHICLE_SPECIFIED,
 		ERROR_ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH,
 		ERROR_ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH,
-		ERROR_NO_VEHICLES,
+		ERROR_USER_VEHICLE_NOT_ENABLED,
+		ERROR_CANNOT_LOAD_ANN_FOR_USER_VEHICLE,
+		ERROR_NO_BOT_VEHICLES,
 		INTERNAL_ERRORS_COUNT
 	};
 	std::array<std::string, INTERNAL_ERRORS_COUNT> m_internalErrorsStrings;
@@ -125,10 +131,14 @@ private:
 	FitnessSystem* m_fitnessSystem;
 	MapPrototype* m_mapPrototype;
 	SimulatedVehicle* m_userVehicle;
+	VehiclePrototype* m_dummyVehiclePrototype;
 	VehiclePrototype* m_userVehiclePrototype;
+	std::string m_userVehicleFilename;
 	SimulatedVehicles m_simulatedVehicles; // Bot vehicles, pointers are cleared by world
 	VehiclePrototypes m_vehiclePrototypes; // Bot vehicle prototypes
 	ArtificialNeuralNetworks m_artificialNeuralNetworks; // Bot anns
+	std::vector<std::string> m_botVehicleFilenames;
+	std::vector<std::string> m_botArtificialNeuralNetworkFilenames;
 
 	// Builders
 	MapBuilder m_mapBuilder;
@@ -142,8 +152,9 @@ private:
 		FILENAME_TYPE_TEXT,
 		FILENAME_TEXT,
 		PARAMETER_TYPE_TEXT,
-		CURRENT_VEHICLE_TEXT,
-		NUMBER_OF_VEHICLES_TEXT,
+		USER_VEHICLE_TEXT,
+		BOT_VEHICLE_TEXT,
+		NUMBER_OF_BOT_VEHICLES_TEXT,
 		ENABLE_CHECKPOINTS_TEXT,
 		ENABLE_USER_VEHICLE_TEXT,
 		USER_FITNESS_TEXT,

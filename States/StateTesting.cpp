@@ -33,7 +33,7 @@ StateTesting::StateTesting() :
 	m_filenameType = MAP_FILENAME_TYPE;
 
 	m_parameterTypesStrings[SWITCH_VEHICLE] = "Switch vehicle";
-	m_parameterTypesStrings[NUMBER_OF_VEHICLES] = "Number of vehicles";
+	m_parameterTypesStrings[NUMBER_OF_BOT_VEHICLES] = "Number of bot vehicles";
 	m_parameterTypesStrings[ENABLE_USER_VEHICLE] = "Enable user vehicle";
 	m_parameterTypesStrings[ENABLE_CHECKPOINTS] = "Enable checkpoints";
 	m_parameterType = SWITCH_VEHICLE;
@@ -51,10 +51,13 @@ StateTesting::StateTesting() :
 
 	m_internalErrorsStrings[ERROR_NO_ARTIFICIAL_NEURAL_NETWORK_SPECIFIED] = "Error: One of artificial neural network is not specified!";
 	m_internalErrorsStrings[ERROR_NO_MAP_SPECIFIED] = "Error: No map is specified!";
+	m_internalErrorsStrings[ERROR_USER_VEHICLE_NOT_SPECIFIED] = "Error: User vehicle is not specified!";
 	m_internalErrorsStrings[ERROR_NO_VEHICLE_SPECIFIED] = "Error: One of vehicles is not fully specified!";
-	m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH] = "Error: One of artificial neural network number of input neurons mismatches number of vehicle sensors!";
-	m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH] = "Error: One of artificial neural network number of output neurons mismatches number of vehicle (3) inputs!";
-	m_internalErrorsStrings[ERROR_NO_VEHICLES] = "Error: There are no vehicles! Please add first vehicle to continue.";
+	m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH] = "Error: One of artificial neural network's number of input neurons mismatches number of vehicle sensors!";
+	m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH] = "Error: One of artificial neural network's number of output neurons mismatches number of vehicle (3) inputs!";
+	m_internalErrorsStrings[ERROR_USER_VEHICLE_NOT_ENABLED] = "Error: User vehicle is not enabled!";
+	m_internalErrorsStrings[ERROR_CANNOT_LOAD_ANN_FOR_USER_VEHICLE] = "Error: Cannot load artificial neural network model for user vehicle!";
+	m_internalErrorsStrings[ERROR_NO_BOT_VEHICLES] = "Error: There are no bot vehicles! Please add first bot vehicle to continue.";
 
 	m_pressedKeyTimer.MakeTimeout();
 	m_simulatedWorld = nullptr;
@@ -64,7 +67,8 @@ StateTesting::StateTesting() :
 	// Initialize user vehicle with dummy vehicle
 	m_vehicleBuilder.CreateDummy();
 	m_userVehicle = nullptr;
-	m_userVehiclePrototype = m_vehicleBuilder.Get();
+	m_dummyVehiclePrototype = m_vehicleBuilder.Get();
+	m_userVehiclePrototype = nullptr;
 	m_vehicleBuilder.Clear();
 
 	m_texts.resize(TEXT_COUNT, nullptr);
@@ -76,6 +80,7 @@ StateTesting::~StateTesting()
 	delete m_simulatedWorld;
 	delete m_fitnessSystem;
 	delete m_mapPrototype;
+	delete m_dummyVehiclePrototype;
 	delete m_userVehiclePrototype;
 	for (auto& vehiclePrototype : m_vehiclePrototypes)
 		delete vehiclePrototype;
@@ -115,6 +120,8 @@ void StateTesting::Reload()
 	delete m_mapPrototype;
 	m_mapPrototype = nullptr;
 	m_userVehicle = nullptr;
+	delete m_userVehiclePrototype;
+	m_userVehiclePrototype = nullptr;
 	m_simulatedVehicles.clear();
 	for (auto& vehiclePrototype : m_vehiclePrototypes)
 		delete vehiclePrototype;
@@ -122,6 +129,8 @@ void StateTesting::Reload()
 	for (auto& artificialNeuralNetwork : m_artificialNeuralNetworks)
 		delete artificialNeuralNetwork;
 	m_artificialNeuralNetworks.clear();
+	m_botVehicleFilenames.clear();
+	m_botArtificialNeuralNetworkFilenames.clear();
 
 	// Clear builders
 	m_mapBuilder.Clear();
@@ -167,6 +176,15 @@ void StateTesting::Capture()
 									break;
 								}
 
+								if (m_enableUserVehicle)
+								{
+									if (!m_userVehiclePrototype)
+									{
+										modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_USER_VEHICLE_NOT_SPECIFIED]);
+										break;
+									}
+								}
+
 								bool error = false;
 								for (size_t i = 0; i < m_numberOfVehicles; ++i)
 								{
@@ -176,6 +194,10 @@ void StateTesting::Capture()
 										error = true;
 										break;
 									}
+
+									m_vehiclePrototypes[i]->SetCenter(m_dummyVehiclePrototype->GetCenter());
+									m_vehiclePrototypes[i]->SetAngle(m_dummyVehiclePrototype->GetAngle());
+									m_vehiclePrototypes[i]->Update();
 
 									if (!m_artificialNeuralNetworks[i])
 									{
@@ -187,12 +209,14 @@ void StateTesting::Capture()
 									if (m_artificialNeuralNetworks[i]->GetNumberOfInputNeurons() != m_vehiclePrototypes[i]->GetNumberOfSensors())
 									{
 										modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH]);
+										error = true;
 										break;
 									}
 
 									if (m_artificialNeuralNetworks[i]->GetNumberOfOutputNeurons() != VehicleBuilder::GetDefaultNumberOfInputs())
 									{
 										modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH]);
+										error = true;
 										break;
 									}
 								}
@@ -257,10 +281,10 @@ void StateTesting::Capture()
 											++m_currentVehicle;
 											if (m_currentVehicle >= m_numberOfVehicles)
 												m_currentVehicle = 0;
-											m_textObservers[CURRENT_VEHICLE_TEXT]->Notify();
+											m_textObservers[BOT_VEHICLE_TEXT]->Notify();
 										}
 										break;
-									case NUMBER_OF_VEHICLES:
+									case NUMBER_OF_BOT_VEHICLES:
 										OnAddVehicle();
 										break;
 									case ENABLE_USER_VEHICLE:
@@ -268,6 +292,7 @@ void StateTesting::Capture()
 										{
 											m_enableUserVehicle.Increase();
 											m_textObservers[ENABLE_USER_VEHICLE_TEXT]->Notify();
+											m_textObservers[USER_VEHICLE_TEXT]->Notify();
 										}
 										break;
 									case ENABLE_CHECKPOINTS:
@@ -292,17 +317,21 @@ void StateTesting::Capture()
 												m_currentVehicle = m_numberOfVehicles - 1;
 											else
 												--m_currentVehicle;
-											m_textObservers[CURRENT_VEHICLE_TEXT]->Notify();
+											m_textObservers[BOT_VEHICLE_TEXT]->Notify();
 										}
 										break;
-									case NUMBER_OF_VEHICLES:
+									case NUMBER_OF_BOT_VEHICLES:
 										OnRemoveVehicle();
 										break;
 									case ENABLE_USER_VEHICLE:
 										if (m_enableUserVehicle)
 										{
+											delete m_userVehiclePrototype;
+											m_userVehiclePrototype = nullptr;
+											m_userVehicleFilename.clear();
 											m_enableUserVehicle.Decrease();
 											m_textObservers[ENABLE_USER_VEHICLE_TEXT]->Notify();
+											m_textObservers[USER_VEHICLE_TEXT]->Notify();
 										}
 										break;
 									case ENABLE_CHECKPOINTS:
@@ -346,7 +375,7 @@ void StateTesting::Capture()
 							m_zoom.ResetValue();
 							m_textObservers[ZOOM_TEXT]->Notify();
 							CoreWindow::Reset();
-							CoreWindow::SetViewCenter(m_userVehiclePrototype->GetCenter());
+							CoreWindow::SetViewCenter(m_dummyVehiclePrototype->GetCenter());
 							break;
 						}
 						case CHANGE_FILENAME_TYPE:
@@ -406,7 +435,7 @@ void StateTesting::Capture()
 							m_zoom.ResetValue();
 							m_textObservers[ZOOM_TEXT]->Notify();
 							CoreWindow::Reset();
-							CoreWindow::SetViewCenter(m_userVehiclePrototype->GetCenter());
+							CoreWindow::SetViewCenter(m_dummyVehiclePrototype->GetCenter());
 							break;
 						}
 						case CHANGE_FILENAME_TYPE:
@@ -490,74 +519,119 @@ void StateTesting::Update()
 						DrawableCheckpoint::SetVisibility(m_enableCheckpoints);
 
 						// Set dummy vehicle
-						m_userVehiclePrototype->SetCenter(m_mapBuilder.GetVehicleCenter());
-						m_userVehiclePrototype->SetAngle(m_mapBuilder.GetVehicleAngle());
-						m_userVehiclePrototype->Update();
+						m_dummyVehiclePrototype->SetCenter(m_mapBuilder.GetVehicleCenter());
+						m_dummyVehiclePrototype->SetAngle(m_mapBuilder.GetVehicleAngle());
+						m_dummyVehiclePrototype->Update();
+
+						// Set user vehicle
+						if (m_userVehiclePrototype)
+						{
+							m_userVehiclePrototype->SetCenter(m_mapBuilder.GetVehicleCenter());
+							m_userVehiclePrototype->SetAngle(m_mapBuilder.GetVehicleAngle());
+							m_userVehiclePrototype->Update();
+						}
 
 						// Set bot vehicles
 						for (auto& vehiclePrototype : m_vehiclePrototypes)
 						{
+							if (!vehiclePrototype)
+								continue;
 							vehiclePrototype->SetCenter(m_mapBuilder.GetVehicleCenter());
 							vehiclePrototype->SetAngle(m_mapBuilder.GetVehicleAngle());
 							vehiclePrototype->Update();
 						}
 
 						// Reset view so that the center is vehicle starting position
-						CoreWindow::SetViewCenter(m_userVehiclePrototype->GetCenter());
+						CoreWindow::SetViewCenter(m_dummyVehiclePrototype->GetCenter());
 						break;
 					}
 					case ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE:
 					{
-						if (m_numberOfVehicles == 0)
+						if (m_parameterType == ENABLE_USER_VEHICLE)
 						{
-							filenameText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_VEHICLES]);
+							filenameText->SetErrorStatusText(m_internalErrorsStrings[ERROR_CANNOT_LOAD_ANN_FOR_USER_VEHICLE]);
 							break;
 						}
-
-						bool success = m_artificialNeuralNetworkBuilder.Load(filenameText->GetFilename());
-						auto status = m_artificialNeuralNetworkBuilder.GetLastOperationStatus();
-
-						// Set filename text
-						if (!success)
+						else
 						{
-							filenameText->SetErrorStatusText(status.second);
-							break;
-						}
-						filenameText->SetSuccessStatusText(status.second);
+							if (m_numberOfVehicles == 0)
+							{
+								filenameText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_BOT_VEHICLES]);
+								break;
+							}
 
-						// Update specified artificial neural network
-						delete m_artificialNeuralNetworks[m_currentVehicle];
-						m_artificialNeuralNetworks[m_currentVehicle] = m_artificialNeuralNetworkBuilder.Get();
-						m_artificialNeuralNetworks[m_currentVehicle]->SetFromRawData(m_artificialNeuralNetworkBuilder.GetRawNeuronData());
-						m_textObservers[CURRENT_VEHICLE_TEXT]->Notify();
+							bool success = m_artificialNeuralNetworkBuilder.Load(filenameText->GetFilename());
+							auto status = m_artificialNeuralNetworkBuilder.GetLastOperationStatus();
+							if (!success)
+							{
+								filenameText->SetErrorStatusText(status.second);
+								break;
+							}
+							filenameText->SetSuccessStatusText(status.second);
+
+							// Update specified artificial neural network
+							delete m_artificialNeuralNetworks[m_currentVehicle];
+							m_artificialNeuralNetworks[m_currentVehicle] = m_artificialNeuralNetworkBuilder.Get();
+							m_artificialNeuralNetworks[m_currentVehicle]->SetFromRawData(m_artificialNeuralNetworkBuilder.GetRawNeuronData());
+							m_botArtificialNeuralNetworkFilenames[m_currentVehicle] = filenameText->GetFilename();
+							m_textObservers[BOT_VEHICLE_TEXT]->Notify();
+						}
 						break;
 					}
 					case VEHICLE_FILENAME_TYPE:
 					{
-						if (m_numberOfVehicles == 0)
+						if (m_parameterType == ENABLE_USER_VEHICLE)
 						{
-							filenameText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_VEHICLES]);
-							break;
+							if (!m_enableUserVehicle)
+							{
+								filenameText->SetErrorStatusText(m_internalErrorsStrings[ERROR_USER_VEHICLE_NOT_ENABLED]);
+								break;
+							}
+
+							bool success = m_vehicleBuilder.Load(filenameText->GetFilename());
+							auto status = m_vehicleBuilder.GetLastOperationStatus();
+							if (!success)
+							{
+								filenameText->SetErrorStatusText(status.second);
+								break;
+							}
+							filenameText->SetSuccessStatusText(status.second);
+
+							// Set user vehicle
+							delete m_userVehiclePrototype;
+							m_userVehiclePrototype = m_vehicleBuilder.Get();
+							m_userVehiclePrototype->SetCenter(m_mapBuilder.GetVehicleCenter());
+							m_userVehiclePrototype->SetAngle(m_mapBuilder.GetVehicleAngle());
+							m_userVehiclePrototype->Update();
+							m_userVehicleFilename = filenameText->GetFilename();
+							m_textObservers[USER_VEHICLE_TEXT]->Notify();
 						}
-
-						bool success = m_vehicleBuilder.Load(filenameText->GetFilename());
-						auto status = m_vehicleBuilder.GetLastOperationStatus();
-
-						// Set filename text
-						if (!success)
+						else
 						{
-							filenameText->SetErrorStatusText(status.second);
-							break;
-						}
-						filenameText->SetSuccessStatusText(status.second);
+							if (m_numberOfVehicles == 0)
+							{
+								filenameText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_BOT_VEHICLES]);
+								break;
+							}
 
-						// Update specified vehicle
-						delete m_vehiclePrototypes[m_currentVehicle];
-						m_vehiclePrototypes[m_currentVehicle] = m_vehicleBuilder.Get();
-						m_vehiclePrototypes[m_currentVehicle]->SetCenter(m_mapBuilder.GetVehicleCenter());
-						m_vehiclePrototypes[m_currentVehicle]->SetAngle(m_mapBuilder.GetVehicleAngle());
-						m_vehiclePrototypes[m_currentVehicle]->Update();
-						m_textObservers[CURRENT_VEHICLE_TEXT]->Notify();
+							bool success = m_vehicleBuilder.Load(filenameText->GetFilename());
+							auto status = m_vehicleBuilder.GetLastOperationStatus();
+							if (!success)
+							{
+								filenameText->SetErrorStatusText(status.second);
+								break;
+							}
+							filenameText->SetSuccessStatusText(status.second);
+
+							// Update specified bot vehicle
+							delete m_vehiclePrototypes[m_currentVehicle];
+							m_vehiclePrototypes[m_currentVehicle] = m_vehicleBuilder.Get();
+							m_vehiclePrototypes[m_currentVehicle]->SetCenter(m_mapBuilder.GetVehicleCenter());
+							m_vehiclePrototypes[m_currentVehicle]->SetAngle(m_mapBuilder.GetVehicleAngle());
+							m_vehiclePrototypes[m_currentVehicle]->Update();
+							m_botVehicleFilenames[m_currentVehicle] = filenameText->GetFilename();
+							m_textObservers[BOT_VEHICLE_TEXT]->Notify();
+						}
 						break;
 					}
 					default:
@@ -600,7 +674,7 @@ void StateTesting::Update()
 			}
 			else if (m_viewTimer.Update())
 			{
-				sf::Vector2f m_viewCenter = m_userVehiclePrototype->GetCenter();
+				sf::Vector2f m_viewCenter = m_dummyVehiclePrototype->GetCenter();
 				if (m_numberOfVehicles)
 					m_viewCenter = m_simulatedVehicles[currentLeaderindex]->GetCenter();
 
@@ -643,10 +717,11 @@ bool StateTesting::Load()
 	m_texts[FILENAME_TYPE_TEXT] = new TripleText({ "Filename type:", "", "| [F]" });
 	m_texts[FILENAME_TEXT] = new FilenameText<true, false>("map.bin");
 	m_texts[PARAMETER_TYPE_TEXT] = new TripleText({ "Parameter type:", "", "| [P] [+] [-]" });
-	m_texts[CURRENT_VEHICLE_TEXT] = new DoubleText({ "Current vehicle:" });
-	m_texts[NUMBER_OF_VEHICLES_TEXT] = new DoubleText({ "Number of vehicles:" });
-	m_texts[ENABLE_CHECKPOINTS_TEXT] = new DoubleText({ "Enable checkpoints:" });
-	m_texts[ENABLE_USER_VEHICLE_TEXT] = new DoubleText({ "Enable user vehicle:" });
+	m_texts[USER_VEHICLE_TEXT] = new DoubleText({ "User vehicle:" });
+	m_texts[BOT_VEHICLE_TEXT] = new DoubleText({ "Bot vehicle:" });
+	m_texts[NUMBER_OF_BOT_VEHICLES_TEXT] = new DoubleText({ m_parameterTypesStrings[NUMBER_OF_BOT_VEHICLES] + ":" });
+	m_texts[ENABLE_CHECKPOINTS_TEXT] = new DoubleText({ m_parameterTypesStrings[ENABLE_CHECKPOINTS] + ":" });
+	m_texts[ENABLE_USER_VEHICLE_TEXT] = new DoubleText({ m_parameterTypesStrings[ENABLE_USER_VEHICLE] + ":" });
 	m_texts[USER_FITNESS_TEXT] = new DoubleText({ "User fitness:" });
 	m_texts[ZOOM_TEXT] = new TripleText({ "Zoom:", "", "| [/] [*]" });
 
@@ -654,8 +729,9 @@ bool StateTesting::Load()
 	m_textObservers[MODE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_modeStrings[m_mode]; });
 	m_textObservers[FILENAME_TYPE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_filenameTypeStrings[m_filenameType]; });
 	m_textObservers[PARAMETER_TYPE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_parameterTypesStrings[m_parameterType]; });
-	m_textObservers[CURRENT_VEHICLE_TEXT] = new FunctionEventObserver<std::string>([&] { return GetCurrentVehicleName(); });
-	m_textObservers[NUMBER_OF_VEHICLES_TEXT] = new TypeEventObserver<size_t>(m_numberOfVehicles);
+	m_textObservers[USER_VEHICLE_TEXT] = new FunctionEventObserver<std::string>([&] { return GetUserVehicleName(); });
+	m_textObservers[BOT_VEHICLE_TEXT] = new FunctionEventObserver<std::string>([&] { return GetBotVehicleName(); });
+	m_textObservers[NUMBER_OF_BOT_VEHICLES_TEXT] = new TypeEventObserver<size_t>(m_numberOfVehicles);
 	m_textObservers[ENABLE_CHECKPOINTS_TEXT] = new FunctionEventObserver<bool>([&] { return m_enableCheckpoints; });
 	m_textObservers[ENABLE_USER_VEHICLE_TEXT] = new FunctionEventObserver<bool>([&] { return m_enableUserVehicle; });
 	m_textObservers[USER_FITNESS_TEXT] = new FunctionTimerObserver<std::string>([&]{ return !m_userVehicle ? "Unknown" : std::to_string(size_t(m_fitnessSystem->ToFitnessRatio(m_userVehicle->GetFitness()))) + "%"; }, 0.5);
@@ -669,9 +745,10 @@ bool StateTesting::Load()
 	m_texts[MODE_TEXT]->SetPosition({ FontContext::Component(0), {0}, {3}, {8}, {15} });
 	m_texts[FILENAME_TYPE_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {8} });
 	m_texts[FILENAME_TEXT]->SetPosition({ FontContext::Component(2), {0}, {3}, {8}, {15} });
-	m_texts[PARAMETER_TYPE_TEXT]->SetPosition({ FontContext::Component(5, true), {0}, {5}, {9} });
-	m_texts[CURRENT_VEHICLE_TEXT]->SetPosition({ FontContext::Component(4, true), {0}, {5} });
-	m_texts[NUMBER_OF_VEHICLES_TEXT]->SetPosition({ FontContext::Component(3, true), {0}, {5} });
+	m_texts[PARAMETER_TYPE_TEXT]->SetPosition({ FontContext::Component(4, true), {0}, {5}, {10} });
+	m_texts[USER_VEHICLE_TEXT]->SetPosition({ FontContext::Component(2, true), {14}, {17} });
+	m_texts[BOT_VEHICLE_TEXT]->SetPosition({ FontContext::Component(1, true), {14}, {17} });
+	m_texts[NUMBER_OF_BOT_VEHICLES_TEXT]->SetPosition({ FontContext::Component(3, true), {0}, {5} });
 	m_texts[ENABLE_CHECKPOINTS_TEXT]->SetPosition({ FontContext::Component(2, true), {0}, {5} });
 	m_texts[ENABLE_USER_VEHICLE_TEXT]->SetPosition({ FontContext::Component(1, true), {0}, {5} });
 	m_texts[USER_FITNESS_TEXT]->SetPosition({ FontContext::Component(1, true), {7}, {10} });
@@ -694,8 +771,11 @@ void StateTesting::Draw()
 
 				if (m_enableUserVehicle)
 				{
-					m_userVehiclePrototype->DrawBody();
-					m_userVehiclePrototype->DrawBeams();
+					if (m_userVehiclePrototype)
+					{
+						m_userVehiclePrototype->DrawBody();
+						m_userVehiclePrototype->DrawBeams();
+					}
 				}
 
 				for (const auto& vehiclePrototype : m_vehiclePrototypes)
@@ -710,8 +790,9 @@ void StateTesting::Draw()
 			m_texts[FILENAME_TYPE_TEXT]->Draw();
 			m_texts[FILENAME_TEXT]->Draw();
 			m_texts[PARAMETER_TYPE_TEXT]->Draw();
-			m_texts[CURRENT_VEHICLE_TEXT]->Draw();
-			m_texts[NUMBER_OF_VEHICLES_TEXT]->Draw();
+			m_texts[USER_VEHICLE_TEXT]->Draw();
+			m_texts[BOT_VEHICLE_TEXT]->Draw();
+			m_texts[NUMBER_OF_BOT_VEHICLES_TEXT]->Draw();
 			break;
 		case RUNNING_MODE:
 			m_simulatedWorld->Draw();
@@ -741,24 +822,34 @@ void StateTesting::OnAddVehicle()
 		{
 			VehiclePrototypes vehiclePrototypesTemp(m_numberOfVehicles + 1, nullptr);
 			ArtificialNeuralNetworks artificialNeuralNetworksTemp(m_numberOfVehicles + 1, nullptr);
+			std::vector<std::string> botVehicleFilenames(m_numberOfVehicles + 1, "");
+			std::vector<std::string> botArtificialNeuralNetworkFilenames(m_numberOfVehicles + 1, "");
 
 			for (size_t i = 0; i <= m_currentVehicle; ++i)
 			{
 				vehiclePrototypesTemp[i] = m_vehiclePrototypes[i];
 				artificialNeuralNetworksTemp[i] = m_artificialNeuralNetworks[i];
+				botVehicleFilenames[i] = m_botVehicleFilenames[i];
+				botArtificialNeuralNetworkFilenames[i] = m_botArtificialNeuralNetworkFilenames[i];
 			}
 
 			vehiclePrototypesTemp[m_currentVehicle + 1] = nullptr;
 			artificialNeuralNetworksTemp[m_currentVehicle + 1] = nullptr;
+			botVehicleFilenames[m_currentVehicle + 1] = "";
+			botArtificialNeuralNetworkFilenames[m_currentVehicle + 1] = "";
 
 			for (size_t i = m_currentVehicle + 1; i < m_numberOfVehicles; ++i)
 			{
 				vehiclePrototypesTemp[i + 1] = m_vehiclePrototypes[i];
 				artificialNeuralNetworksTemp[i + 1] = m_artificialNeuralNetworks[i];
+				botVehicleFilenames[i + 1] = m_botVehicleFilenames[i];
+				botArtificialNeuralNetworkFilenames[i + 1] = m_botArtificialNeuralNetworkFilenames[i];
 			}
 
 			m_vehiclePrototypes = vehiclePrototypesTemp;
 			m_artificialNeuralNetworks = artificialNeuralNetworksTemp;
+			m_botVehicleFilenames = botVehicleFilenames;
+			m_botArtificialNeuralNetworkFilenames = botArtificialNeuralNetworkFilenames;
 			++m_numberOfVehicles;
 		}
 		else
@@ -766,10 +857,12 @@ void StateTesting::OnAddVehicle()
 			++m_numberOfVehicles;
 			m_vehiclePrototypes.resize(m_numberOfVehicles, nullptr);
 			m_artificialNeuralNetworks.resize(m_numberOfVehicles, nullptr);
+			m_botVehicleFilenames.resize(m_numberOfVehicles, "");
+			m_botArtificialNeuralNetworkFilenames.resize(m_numberOfVehicles, "");
 		}
 
-		m_textObservers[CURRENT_VEHICLE_TEXT]->Notify();
-		m_textObservers[NUMBER_OF_VEHICLES_TEXT]->Notify();
+		m_textObservers[BOT_VEHICLE_TEXT]->Notify();
+		m_textObservers[NUMBER_OF_BOT_VEHICLES_TEXT]->Notify();
 	}
 }
 
@@ -784,27 +877,40 @@ void StateTesting::OnRemoveVehicle()
 		{
 			m_vehiclePrototypes[i - 1] = m_vehiclePrototypes[i];
 			m_artificialNeuralNetworks[i - 1] = m_artificialNeuralNetworks[i];
+			m_botVehicleFilenames[i - 1] = m_botVehicleFilenames[i];
+			m_botArtificialNeuralNetworkFilenames[i - 1] = m_botArtificialNeuralNetworkFilenames[i];
 		}
 
 		m_vehiclePrototypes.pop_back();
 		m_artificialNeuralNetworks.pop_back();
+		m_botVehicleFilenames.pop_back();
+		m_botArtificialNeuralNetworkFilenames.pop_back();
 
 		if (m_currentVehicle)
 			--m_currentVehicle;
 
 		--m_numberOfVehicles;
-		m_textObservers[CURRENT_VEHICLE_TEXT]->Notify();
-		m_textObservers[NUMBER_OF_VEHICLES_TEXT]->Notify();
+		m_textObservers[BOT_VEHICLE_TEXT]->Notify();
+		m_textObservers[NUMBER_OF_BOT_VEHICLES_TEXT]->Notify();
 	}
 }
 
-std::string StateTesting::GetCurrentVehicleName() const
+std::string StateTesting::GetBotVehicleName() const
 {
 	if (m_numberOfVehicles == 0)
 		return "None";
 
-	std::string data = " - Body [ ] Artificial Neural Network [ ]";
-	data[9] = m_vehiclePrototypes[m_currentVehicle] ? 'X' : ' ';
-	data[39] = m_artificialNeuralNetworks[m_currentVehicle] ? 'X' : ' ';
-	return std::string("Vehicle ") + std::to_string(m_currentVehicle) + data;
+	std::string data = " | Body \"";
+	data += m_botVehicleFilenames[m_currentVehicle];
+	data += "\" | Artificial Neural Network \"";
+	data += m_botArtificialNeuralNetworkFilenames[m_currentVehicle];
+	data += "\"";
+	return std::string("Bot Vehicle nr. ") + std::to_string(m_currentVehicle) + data;
+}
+
+std::string StateTesting::GetUserVehicleName() const
+{
+	if (!m_enableUserVehicle)
+		return "None";
+	return std::string("Body \"") + m_userVehicleFilename + "\"";
 }
