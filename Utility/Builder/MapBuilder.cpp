@@ -323,9 +323,6 @@ bool MapBuilder::ValidateInternal()
 	if (!ValidateMapAreaVehiclePosition())
 		return false;
 
-	if (!ValidateRoadAreaVehiclePosition())
-		return false;
-
 	if (!ValidateVehicleAngle())
 		return false;
 
@@ -342,6 +339,9 @@ bool MapBuilder::ValidateInternal()
 		return false;
 
 	if (!ValidateCheckpoints())
+		return false;
+
+	if (!ValidateRoadAreaVehiclePosition())
 		return false;
 
 	return true;
