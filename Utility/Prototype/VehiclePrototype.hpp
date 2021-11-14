@@ -57,8 +57,8 @@ public:
 		return m_angle;
 	}
 
-	// Adds new  body descriptive point relative to the center
-	void AddBodyPoint(sf::Vector2f point);
+	// Adds new  body descriptive point relative to the center, returns true in case of success
+	bool AddBodyPoint(sf::Vector2f point);
 
 	// Removes last point describing body, returns true if any point was removed
 	bool RemoveLastBodyPoint();
@@ -135,7 +135,10 @@ public:
 	// Draws vehicle body
 	void DrawBody();
 
-	// Draws vehicle sensor beams
+	// Draws vehicle sensors
+	void DrawSensors();
+
+	// Draws vehicle sensors beams
 	void DrawBeams();
 
 	// Draws marked sensor shape

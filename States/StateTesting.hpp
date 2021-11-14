@@ -94,9 +94,13 @@ private:
 		DECREASE_PARAMETER,
 		INCREASE_ZOOM,
 		DECREASE_ZOOM,
+		USER_VEHICLE_TURN_LEFT,
+		USER_VEHICLE_TURN_RIGHT,
+		USER_VEHICLE_DRIVE_FORWARD,
+		USER_VEHICLE_DRIVE_BACKWARD,
 		CONTROLS_COUNT
 	};
-	std::map<sf::Keyboard::Key, size_t> m_controlKeys;
+	std::map<const sf::Keyboard::Key, size_t> m_controlKeys;
 	std::array<bool, CONTROLS_COUNT> m_pressedKeys;
 
 	// Internal erros
@@ -139,6 +143,7 @@ private:
 	ArtificialNeuralNetworks m_artificialNeuralNetworks; // Bot anns
 	std::vector<std::string> m_botVehicleFilenames;
 	std::vector<std::string> m_botArtificialNeuralNetworkFilenames;
+	double m_defaultUserVehicleTorque;
 
 	// Builders
 	MapBuilder m_mapBuilder;

@@ -70,6 +70,7 @@ bool StateManager::Load()
 	m_framesPerSecondText->SetPosition({ FontContext::Component(0), {2, true}, {1, true} });
 	m_displayModeText->SetPosition({ FontContext::Component(1, true), {7, true}, {4, true}, {1, true} });
 
+	CoreLogger::PrintSuccess("StateManager initialized correctly");
 	return true;
 }
 

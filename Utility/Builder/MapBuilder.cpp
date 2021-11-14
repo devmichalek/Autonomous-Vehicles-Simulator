@@ -126,6 +126,10 @@ RectangleVector MapBuilder::RectangleCheckpointsGenerator::Generate(const EdgeVe
 	for (size_t i = 0; i < numberOfLineCheckpoints - 1; ++i)
 		AddRectangleCheckpoints(result, lineCheckpoints[i], lineCheckpoints[i + 1]);
 	AddRectangleCheckpoints(result, lineCheckpoints[numberOfLineCheckpoints - 1], lineCheckpoints[0]);
+
+	// Check chepoints against edges
+
+
 	return result;
 }
 
@@ -545,9 +549,10 @@ bool MapBuilder::Initialize()
 
 	if (!builder.Validate())
 	{
-		CoreLogger::PrintError("Cannot create Map dummy!");
+		CoreLogger::PrintError("Cannot create MapPrototype dummy!");
 		return false;
 	}
 
+	CoreLogger::PrintSuccess("MapBuilder initialized correctly");
 	return true;
 }

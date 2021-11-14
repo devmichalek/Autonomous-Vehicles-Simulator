@@ -45,6 +45,10 @@ StateTesting::StateTesting() :
 	m_controlKeys[sf::Keyboard::Subtract] = DECREASE_PARAMETER;
 	m_controlKeys[sf::Keyboard::Multiply] = INCREASE_ZOOM;
 	m_controlKeys[sf::Keyboard::Divide] = DECREASE_ZOOM;
+	m_controlKeys[sf::Keyboard::Left] = USER_VEHICLE_TURN_LEFT;
+	m_controlKeys[sf::Keyboard::Right] = USER_VEHICLE_TURN_RIGHT;
+	m_controlKeys[sf::Keyboard::Up] = USER_VEHICLE_DRIVE_FORWARD;
+	m_controlKeys[sf::Keyboard::Down] = USER_VEHICLE_DRIVE_BACKWARD;
 
 	for (auto& pressedKey : m_pressedKeys)
 		pressedKey = false;
@@ -70,6 +74,7 @@ StateTesting::StateTesting() :
 	m_dummyVehiclePrototype = m_vehicleBuilder.Get();
 	m_userVehiclePrototype = nullptr;
 	m_vehicleBuilder.Clear();
+	m_defaultUserVehicleTorque = VehicleBuilder::GetDefaultTorque();
 
 	m_texts.resize(TEXT_COUNT, nullptr);
 	m_textObservers.resize(TEXT_COUNT, nullptr);
@@ -131,6 +136,7 @@ void StateTesting::Reload()
 	m_artificialNeuralNetworks.clear();
 	m_botVehicleFilenames.clear();
 	m_botArtificialNeuralNetworkFilenames.clear();
+	m_defaultUserVehicleTorque = VehicleBuilder::GetDefaultTorque();
 
 	// Clear builders
 	m_mapBuilder.Clear();
@@ -328,6 +334,7 @@ void StateTesting::Capture()
 										{
 											delete m_userVehiclePrototype;
 											m_userVehiclePrototype = nullptr;
+											m_defaultUserVehicleTorque = VehicleBuilder::GetDefaultTorque();
 											m_userVehicleFilename.clear();
 											m_enableUserVehicle.Decrease();
 											m_textObservers[ENABLE_USER_VEHICLE_TEXT]->Notify();
@@ -347,6 +354,10 @@ void StateTesting::Capture()
 							}
 							case INCREASE_ZOOM:
 							case DECREASE_ZOOM:
+							case USER_VEHICLE_TURN_LEFT:
+							case USER_VEHICLE_TURN_RIGHT:
+							case USER_VEHICLE_DRIVE_FORWARD:
+							case USER_VEHICLE_DRIVE_BACKWARD:
 								break;
 						}
 					}
@@ -399,6 +410,11 @@ void StateTesting::Capture()
 								m_textObservers[ZOOM_TEXT]->Notify();
 							}
 							break;
+						case USER_VEHICLE_TURN_LEFT:
+						case USER_VEHICLE_TURN_RIGHT:
+						case USER_VEHICLE_DRIVE_FORWARD:
+						case USER_VEHICLE_DRIVE_BACKWARD:
+							break;
 						case PAUSED_CHANGE_MODE:
 						{
 							if (m_pressedKeys[iterator->second])
@@ -443,6 +459,10 @@ void StateTesting::Capture()
 						case DECREASE_PARAMETER:
 						case INCREASE_ZOOM:
 						case DECREASE_ZOOM:
+						case USER_VEHICLE_TURN_LEFT:
+						case USER_VEHICLE_TURN_RIGHT:
+						case USER_VEHICLE_DRIVE_FORWARD:
+						case USER_VEHICLE_DRIVE_BACKWARD:
 							break;
 						case PAUSED_CHANGE_MODE:
 						{
@@ -465,7 +485,6 @@ void StateTesting::Capture()
 	}
 	else
 		filenameText->Capture();
-
 
 	if (CoreWindow::GetEvent().type == sf::Event::KeyReleased)
 	{
@@ -603,6 +622,8 @@ void StateTesting::Update()
 							m_userVehiclePrototype->SetCenter(m_mapBuilder.GetVehicleCenter());
 							m_userVehiclePrototype->SetAngle(m_mapBuilder.GetVehicleAngle());
 							m_userVehiclePrototype->Update();
+							const auto inertiaRatio = VehicleBuilder::CalculateInertia(m_userVehiclePrototype->GetBodyPoints()) / VehicleBuilder::GetMaxInertia();
+							m_defaultUserVehicleTorque = VehicleBuilder::GetDefaultTorque() * inertiaRatio;
 							m_userVehicleFilename = filenameText->GetFilename();
 							m_textObservers[USER_VEHICLE_TEXT]->Notify();
 						}
@@ -650,21 +671,21 @@ void StateTesting::Update()
 
 				if (m_userVehicle->IsActive())
 				{
-					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+					if (m_pressedKeys[USER_VEHICLE_TURN_LEFT])
 					{
-						m_userVehicle->Turn(0.0);
+						m_userVehicle->Turn(VehicleBuilder::GetDefaultTorque() - m_defaultUserVehicleTorque);
 					}
-					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+					else if (m_pressedKeys[USER_VEHICLE_TURN_RIGHT])
 					{
-						m_userVehicle->Turn(1.0);
+						m_userVehicle->Turn(VehicleBuilder::GetDefaultTorque() + m_defaultUserVehicleTorque);
 					}
 
-					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+					if (m_pressedKeys[USER_VEHICLE_DRIVE_FORWARD])
 					{
 						m_userVehicle->DriveForward(1.0);
 					}
 
-					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+					if (m_pressedKeys[USER_VEHICLE_DRIVE_BACKWARD])
 					{
 						m_userVehicle->DriveBackward(1.0);
 					}
@@ -754,7 +775,7 @@ bool StateTesting::Load()
 	m_texts[USER_FITNESS_TEXT]->SetPosition({ FontContext::Component(1, true), {7}, {10} });
 	m_texts[ZOOM_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {8} });
 
-	CoreLogger::PrintSuccess("State \"Testing\" dependencies loaded correctly");
+	CoreLogger::PrintSuccess("StateTesting dependencies loaded correctly");
 	return true;
 }
 
@@ -775,15 +796,18 @@ void StateTesting::Draw()
 					{
 						m_userVehiclePrototype->DrawBody();
 						m_userVehiclePrototype->DrawBeams();
+						m_userVehiclePrototype->DrawSensors();
 					}
 				}
 
-				for (const auto& vehiclePrototype : m_vehiclePrototypes)
+				for (size_t i = 0; i < m_numberOfVehicles; ++i)
 				{
-					if (!vehiclePrototype)
+					if (!m_vehiclePrototypes[i])
 						continue;
-					vehiclePrototype->DrawBody();
-					vehiclePrototype->DrawBeams();
+					m_vehiclePrototypes[i]->DrawBody();
+					if (m_artificialNeuralNetworks[i])
+						m_vehiclePrototypes[i]->DrawBeams();
+					m_vehiclePrototypes[i]->DrawSensors();
 				}
 			}
 

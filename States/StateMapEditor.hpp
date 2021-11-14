@@ -80,7 +80,7 @@ private:
 		REMOVE_VEHICLE,
 		CONTROL_KEYS_COUNT
 	};
-	std::map<sf::Keyboard::Key, size_t> m_controlKeys;
+	std::map<const sf::Keyboard::Key, size_t> m_controlKeys;
 	std::array<bool, CONTROL_KEYS_COUNT> m_pressedKeys;
 	ContinuousTimer m_pressedKeyTimer;
 

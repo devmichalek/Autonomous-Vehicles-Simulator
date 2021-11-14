@@ -2,6 +2,7 @@
 #include "AbstractBuilder.hpp"
 #include "VehiclePrototype.hpp"
 #include "ArtificialNeuralNetworkBuilder.hpp"
+#include "Box2D/b2_shape.h"
 
 class VehicleBuilder final :
 	public AbstractBuilder
@@ -19,7 +20,8 @@ class VehicleBuilder final :
 		ERROR_SENSOR_ANGLE_IS_TOO_LARGE,
 		ERROR_SENSOR_MOTION_RANGE_IS_TOO_LITTLE,
 		ERROR_SENSOR_MOTION_RANGE_IS_TOO_LARGE,
-		ERROR_SENSOR_IS_OUTSIDE_OF_VEHICLE_BODY
+		ERROR_SENSOR_IS_OUTSIDE_OF_VEHICLE_BODY,
+		ERROR_VEHICLE_BODY_IS_NOT_CONVEX_POLYGON
 	};
 
 	VehiclePrototype m_prototype;
@@ -28,6 +30,7 @@ class VehicleBuilder final :
 	static double m_defaultBeamLength;
 	static sf::Vector2f m_defaultSensorSize;
 	static float m_maxMass;
+	static float m_maxInertia;
 
 	// Validates number of vehicle body points
 	bool ValidateNumberOfBodyPoints(size_t count);
@@ -50,6 +53,9 @@ class VehicleBuilder final :
 	// Validates sensor's position over vehicle body
 	bool ValidateSensorPositionsOverBody();
 
+	// Validates if vehicle body is convex polygon
+	bool ValidateBodyAsConvexPolygon();
+
 	// Validate internal fields
 	bool ValidateInternal();
 
@@ -64,6 +70,9 @@ class VehicleBuilder final :
 
 	// Creates vehicle prototype dummy
 	void CreateDummyInternal();
+
+	// Returns mass data of an body consisting of points
+	static bool GetMassData(const std::vector<sf::Vector2f>& bodyPoints, b2MassData& massData);
 	
 public:
 
@@ -143,6 +152,12 @@ public:
 		return 32.0;
 	}
 
+	// Returns default "no torque" value
+	inline static double GetDefaultTorque()
+	{
+		return 0.5;
+	}
+
 	// Returns minimum required number of sensors
 	inline static size_t GetMinNumberOfSensors()
 	{
@@ -185,6 +200,12 @@ public:
 		return m_maxMass;
 	}
 
+	// Returns maximum vehicle inertia
+	inline static float GetMaxInertia()
+	{
+		return m_maxInertia;
+	}
+
 	// Returns default color that will be used to color vehicle body based on provided mass
 	inline static sf::Color CalculateDefaultColor(const float mass)
 	{
@@ -196,6 +217,9 @@ public:
 
 	// Slowly calculates vehicle mass based on provided vehicle body points
 	static float CalculateMass(const std::vector<sf::Vector2f>& bodyPoints);
+
+	// Slowly calculates vehicle inertia based on provided vehicle body points
+	static float CalculateInertia(const std::vector<sf::Vector2f>& bodyPoints);
 
 	// Returns vehicle prototype
 	VehiclePrototype* Get();

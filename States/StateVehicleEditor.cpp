@@ -5,7 +5,8 @@
 #include "CoreLogger.hpp"
 #include <functional>
 
-StateVehicleEditor::StateVehicleEditor()
+StateVehicleEditor::StateVehicleEditor() : 
+	m_axesPrecision(8.f)
 {
 	m_modeStrings[MODE_VEHICLE_BODY] = "Vehicle body";
 	m_modeStrings[MODE_VEHICLE_SENSORS] = "Vehicle sensors";
@@ -31,13 +32,15 @@ StateVehicleEditor::StateVehicleEditor()
 	for (auto& i : m_pressedKeys)
 		i = false;
 
-	auto maxVehicleSize = VehicleBuilder::GetMaxBodyBound();
-	auto windowSize = CoreWindow::GetWindowSize();
+	const auto maxVehicleSize = VehicleBuilder::GetMaxBodyBound();
+	const auto windowSize = CoreWindow::GetWindowSize();
+	const float allowedAreaX = (windowSize.x / 2.0f - maxVehicleSize.x / 2.0f);
+	const float allowedAreaY = (windowSize.y / 2.0f - maxVehicleSize.y / 2.0f);
 	m_allowedAreaShape.setFillColor(sf::Color(255, 255, 255, 0));
 	m_allowedAreaShape.setOutlineColor(sf::Color(0, 0, 255, 96));
 	m_allowedAreaShape.setOutlineThickness(2);
 	m_allowedAreaShape.setSize(maxVehicleSize);
-	m_allowedAreaShape.setPosition((windowSize.x / 2.0f - maxVehicleSize.x / 2.0f), (windowSize.y / 2.0f - maxVehicleSize.y / 2.0f));
+	m_allowedAreaShape.setPosition(allowedAreaX, allowedAreaY);
 	
 	m_vehicleBuilder.CreateDummy();
 	m_vehiclePrototype = m_vehicleBuilder.Get();
@@ -47,13 +50,42 @@ StateVehicleEditor::StateVehicleEditor()
 	m_currentSensorAngle = m_vehiclePrototype->GetSensorBeamAngle(m_currentSensorIndex);
 	m_upToDate = false;
 
-	// Set axes
+	// Initialize grid
+	const size_t numberOfGridAxes = size_t(m_axesPrecision);
+	const size_t totalNumberOfGridAxes = numberOfGridAxes * 2;
+	const auto axisColor = sf::Color(0, 0, 255, 96);
+	m_verticalOffset = maxVehicleSize.y / m_axesPrecision;
+	m_horizontalOffset = maxVehicleSize.x / m_axesPrecision;
+	m_axes.resize(totalNumberOfGridAxes + 4);
+	for (size_t i = 0; i < numberOfGridAxes; ++i)
+	{
+		auto& a = m_axes[i];
+		a[0].color = a[1].color = axisColor;
+		a[0].position = sf::Vector2f(allowedAreaX + m_horizontalOffset * i + (m_horizontalOffset / 2.f), allowedAreaY);
+		a[1].position = sf::Vector2f(a[0].position.x, allowedAreaY + maxVehicleSize.y);
+
+		auto& b = m_axes[i + numberOfGridAxes];
+		b[0].color = b[1].color = axisColor;
+		b[0].position = sf::Vector2f(allowedAreaX, allowedAreaY + m_verticalOffset * i + (m_verticalOffset / 2.f));
+		b[1].position = sf::Vector2f(allowedAreaX + maxVehicleSize.x, b[0].position.y);
+	}
+
+	// Add axes
 	auto windowCenter = CoreWindow::GetWindowCenter();
-	m_yAxis[0].color = m_yAxis[1].color = m_xAxis[0].color = m_xAxis[1].color = sf::Color(0, 0, 255, 96);
-	m_xAxis[0].position = sf::Vector2f(windowCenter.x, 0);
-	m_xAxis[1].position = sf::Vector2f(windowCenter.x, windowSize.y);
-	m_yAxis[0].position = sf::Vector2f(0, windowCenter.y);
-	m_yAxis[1].position = sf::Vector2f(windowSize.x, windowCenter.y);
+	const auto offset = totalNumberOfGridAxes;
+	m_axes[offset][0].color = m_axes[offset][1].color = axisColor;
+	m_axes[offset + 1][0].color = m_axes[offset + 1][1].color = axisColor;
+	m_axes[offset + 2][0].color = m_axes[offset + 2][1].color = axisColor;
+	m_axes[offset + 3][0].color = m_axes[offset + 3][1].color = axisColor;
+	m_axes[offset][0].position.x = m_axes[offset][1].position.x = m_axes[offset + 1][0].position.x = m_axes[offset + 1][1].position.x = windowCenter.x;
+	m_axes[offset + 2][0].position.y = m_axes[offset + 2][1].position.y = m_axes[offset + 3][0].position.y = m_axes[offset + 3][1].position.y = windowCenter.y;
+	m_axes[offset][0].position.y = m_axes[offset + 2][0].position.x = 0;
+	m_axes[offset + 1][1].position.y = windowSize.y;
+	m_axes[offset + 3][1].position.x = windowSize.x;
+	m_axes[offset][1].position.y = allowedAreaY;
+	m_axes[offset + 1][0].position.y = allowedAreaY + maxVehicleSize.y;
+	m_axes[offset + 2][1].position.x = allowedAreaX;
+	m_axes[offset + 3][0].position.x = allowedAreaX + maxVehicleSize.x;
 
 	m_texts.resize(TEXT_COUNT, nullptr);
 	m_textObservers.resize(TEXT_COUNT, nullptr);
@@ -151,6 +183,7 @@ void StateVehicleEditor::Capture()
 									RemoveSensor(point);
 							}
 
+							CalculateSupportiveShapes();
 							m_textObservers[TOTAL_NUMBER_OF_BODY_POINTS_TEXT]->Notify();
 							m_textObservers[TOTAL_NUMBER_OF_SENSORS_TEXT]->Notify();
 							m_textObservers[VEHICLE_BODY_MASS]->Notify();
@@ -239,21 +272,27 @@ void StateVehicleEditor::Capture()
 			auto relativePosition = CoreWindow::GetMousePosition();
 			if (DrawableMath::IsPointInsideRectangle(m_allowedAreaShape.getSize(), m_allowedAreaShape.getPosition(), relativePosition))
 			{
-				relativePosition -= CoreWindow::GetWindowCenter();
 				switch (m_mode)
 				{
 					case MODE_VEHICLE_BODY:
 					{
 						if (m_vehiclePrototype->GetNumberOfBodyPoints() >= VehicleBuilder::GetMaxNumberOfBodyPoints())
 							break;
-						m_vehiclePrototype->AddBodyPoint(relativePosition);
-						m_textObservers[TOTAL_NUMBER_OF_BODY_POINTS_TEXT]->Notify();
-						m_textObservers[VEHICLE_BODY_MASS]->Notify();
-						m_upToDate = false;
+						CalculateGridPoint(relativePosition);
+						relativePosition -= CoreWindow::GetWindowCenter();
+						if (m_vehiclePrototype->AddBodyPoint(relativePosition))
+						{
+							CalculateSupportiveShapes();
+							m_textObservers[TOTAL_NUMBER_OF_BODY_POINTS_TEXT]->Notify();
+							m_textObservers[VEHICLE_BODY_MASS]->Notify();
+							m_upToDate = false;
+						}
+						
 						break;
 					}
 					case MODE_VEHICLE_SENSORS:
 					{
+						relativePosition -= CoreWindow::GetWindowCenter();
 						switch (m_vehicleSensorsSubmode)
 						{
 							case VEHICLE_SENSORS_INSERT:
@@ -267,6 +306,18 @@ void StateVehicleEditor::Capture()
 						break;
 					}
 				}
+			}
+		}
+		else if (CoreWindow::GetEvent().type == sf::Event::MouseMoved)
+		{
+			switch (m_mode)
+			{
+				case MODE_VEHICLE_BODY:
+					CalculateSupportiveShapes();
+					break;
+				case MODE_VEHICLE_SENSORS:
+				default:
+					break;
 			}
 		}
 	}
@@ -379,19 +430,26 @@ bool StateVehicleEditor::Load()
 	m_texts[CURRENT_SENSOR_ANGLE_TEXT]->SetPosition({ FontContext::Component(2, true), {0}, {6}, {8} });
 	m_texts[CURRENT_SENSOR_MOTION_RANGE_TEXT]->SetPosition({ FontContext::Component(1, true), {0}, {6}, {8} });
 
-	CoreLogger::PrintSuccess("State \"Vehicle Editor\" dependencies loaded correctly");
+	CoreLogger::PrintSuccess("StateVehicleEditor dependencies loaded correctly");
 	return true;
 }
 
 void StateVehicleEditor::Draw()
 {
-	m_vehiclePrototype->DrawBeams();
 	m_vehiclePrototype->DrawBody();
+	m_vehiclePrototype->DrawBeams();
+	m_vehiclePrototype->DrawSensors();
 	if (m_mode == MODE_VEHICLE_SENSORS)
 		m_vehiclePrototype->DrawMarkedSensor(m_currentSensorIndex);
+	else
+	{
+		CoreWindow::Draw(m_lineShape.data(), m_lineShape.size(), sf::Lines);
+		CoreWindow::Draw(m_triangleShape.data(), m_triangleShape.size(), sf::Triangles);
+	}
 
-	CoreWindow::Draw(m_xAxis.data(), m_xAxis.size(), sf::Lines);
-	CoreWindow::Draw(m_yAxis.data(), m_xAxis.size(), sf::Lines);
+	for (auto & axis : m_axes)
+		CoreWindow::Draw(axis.data(), axis.size(), sf::Lines);
+
 	CoreWindow::Draw(m_allowedAreaShape);
 
 	m_texts[BACK_TEXT]->Draw();
@@ -471,5 +529,59 @@ void StateVehicleEditor::RemoveSensor(const sf::Vector2f& point)
 		m_vehiclePrototype->RemoveSensor(index);
 		m_textObservers[TOTAL_NUMBER_OF_SENSORS_TEXT]->Notify();
 		m_upToDate = false;
+	}
+}
+
+void StateVehicleEditor::CalculateGridPoint(sf::Vector2f& point)
+{
+	const auto halfHorizontalOffset = (m_horizontalOffset / 2.f);
+	const auto halfVerticalOffset = (m_verticalOffset / 2.f);
+	const auto allowedAreaSize = m_allowedAreaShape.getSize();
+	const auto allowedAreaPosition = m_allowedAreaShape.getPosition();
+	const size_t x = size_t((point.x - (allowedAreaPosition.x - halfHorizontalOffset)) / m_horizontalOffset);
+	const size_t y = size_t((point.y - (allowedAreaPosition.y - halfVerticalOffset)) / m_verticalOffset);
+	point.x = float(x) * m_horizontalOffset + allowedAreaPosition.x;
+	point.y = float(y) * m_verticalOffset + allowedAreaPosition.y;
+}
+
+void StateVehicleEditor::CalculateSupportiveShapes()
+{
+	// Reset positions
+	m_lineShape[0].position = m_lineShape[1].position = sf::Vector2f(0.f, 0.f);
+	m_triangleShape[0].position = m_triangleShape[1].position = m_triangleShape[2].position = sf::Vector2f(0.f, 0.f);
+
+	size_t numberOfBodyPoints = m_vehiclePrototype->GetNumberOfBodyPoints();
+	auto relativePosition = CoreWindow::GetMousePosition();
+	if (DrawableMath::IsPointInsideRectangle(m_allowedAreaShape.getSize(), m_allowedAreaShape.getPosition(), relativePosition))
+	{
+		CalculateGridPoint(relativePosition);
+		const auto firstBodyPoint = m_vehiclePrototype->GetBodyPoint(0) + CoreWindow::GetWindowCenter();
+		if (numberOfBodyPoints == 1)
+		{
+			m_lineShape[0].position = firstBodyPoint;
+			m_lineShape[1].position = relativePosition;
+		}
+		else if (numberOfBodyPoints == 2)
+		{
+			const float epsilon = 1.f;
+			const auto lastBodyPoint = m_vehiclePrototype->GetBodyPoint(numberOfBodyPoints - 1) + CoreWindow::GetWindowCenter();
+			const auto distance = DrawableMath::Distance(firstBodyPoint, lastBodyPoint);
+			const auto approximate = DrawableMath::Distance(firstBodyPoint, relativePosition) + DrawableMath::Distance(lastBodyPoint, relativePosition);
+			if (std::fabs(distance - approximate) < epsilon)
+			{
+				m_lineShape[0].position = firstBodyPoint;
+				m_lineShape[1].position = lastBodyPoint;
+			}
+
+			m_triangleShape[0].position = firstBodyPoint;
+			m_triangleShape[1].position = m_vehiclePrototype->GetBodyPoint(numberOfBodyPoints - 1) + CoreWindow::GetWindowCenter();
+			m_triangleShape[2].position = relativePosition;
+		}
+		else if (numberOfBodyPoints > 1)
+		{
+			m_triangleShape[0].position = firstBodyPoint;
+			m_triangleShape[1].position = m_vehiclePrototype->GetBodyPoint(numberOfBodyPoints - 1) + CoreWindow::GetWindowCenter();
+			m_triangleShape[2].position = relativePosition;
+		}
 	}
 }

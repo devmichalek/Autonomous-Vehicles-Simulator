@@ -13,6 +13,7 @@ void ActivationFunctionContext::Initialize()
 		m_activationFunctionTable[RELU_ACTIVATION_FUNCTION] = [](Neuron input) { return input < 0 ? 0 : input; };
 		m_activationFunctionTable[LEAKY_RELU_ACTIVATION_FUNCTION] = [](Neuron input) { return input >= 0 ? input : input * 0.1; };
 		m_activationFunctionTable[TANH_ACTIVATION_FUNCTION] = [](Neuron input) { return tanh(input); };
+		CoreLogger::PrintSuccess("ActivationFunctionContext initialized correctly");
 	}
 	else
 		CoreLogger::PrintError("Activation function context initialization was performed more than once!");

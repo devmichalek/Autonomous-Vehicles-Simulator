@@ -411,9 +411,10 @@ bool ArtificialNeuralNetworkBuilder::Initialize()
 
 	if (!builder.Validate())
 	{
-		CoreLogger::PrintError("Cannot create Artificial Neural Network dummy!");
+		CoreLogger::PrintError("Cannot create ArtificialNeuralNetwork dummy!");
 		return false;
 	}
 
+	CoreLogger::PrintSuccess("ArtificialNeuralNetworkBuilder initialized correctly");
 	return true;
 }

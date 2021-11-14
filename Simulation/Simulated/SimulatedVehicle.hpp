@@ -243,7 +243,7 @@ private:
 	inline static const double m_maxForwardSpeed = 14.0;
 	inline static const double m_maxBackwardSpeed = -8.0;
 	inline static const double m_maxDriveForce = 50000.0;
-	inline static const double m_maxTorqueForce = 40000.0;
+	inline static const double m_maxTorqueForce = 600000.0;
 	inline static const float m_maxLateralImpulse = 2.5f;
 	bool m_active;
 

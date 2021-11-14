@@ -7,6 +7,7 @@ sf::Vector2f VehicleBuilder::m_minBodyBound;
 double VehicleBuilder::m_defaultBeamLength;
 sf::Vector2f VehicleBuilder::m_defaultSensorSize;
 float VehicleBuilder::m_maxMass;
+float VehicleBuilder::m_maxInertia;
 
 bool VehicleBuilder::ValidateNumberOfBodyPoints(size_t count)
 {
@@ -147,12 +148,26 @@ bool VehicleBuilder::ValidateSensorPositionsOverBody()
 	return true;
 }
 
+bool VehicleBuilder::ValidateBodyAsConvexPolygon()
+{
+	if (!DrawableMath::IsPolygonConvex(m_prototype.GetBodyPoints()))
+	{
+		m_lastOperationStatus = ERROR_VEHICLE_BODY_IS_NOT_CONVEX_POLYGON;
+		return false;
+	}
+
+	return true;
+}
+
 bool VehicleBuilder::ValidateInternal()
 {
 	if (!ValidateNumberOfBodyPoints(m_prototype.GetNumberOfBodyPoints()))
 		return false;
 
 	if (!ValidateBodyArea())
+		return false;
+
+	if (!ValidateBodyAsConvexPolygon())
 		return false;
 
 	if (!ValidateRelativePositions(m_prototype.GetBodyPoints()))
@@ -212,6 +227,9 @@ bool VehicleBuilder::LoadInternal(std::ifstream& input)
 		return false;
 
 	if (!ValidateRelativePositions(m_prototype.GetBodyPoints()))
+		return false;
+
+	if (!ValidateBodyAsConvexPolygon())
 		return false;
 
 	// Read number of vehicle sensors
@@ -331,32 +349,10 @@ void VehicleBuilder::CreateDummyInternal()
 	m_prototype.AddSensor(sf::Vector2f(0, dummySize.y / 2 - 1), 90.0, GetDefaultSensorMotionRange());
 }
 
-VehicleBuilder::VehicleBuilder() :
-	AbstractBuilder()
-{
-	m_operationsMap[ERROR_TOO_LITTLE_VEHICLE_BODY_POINTS] = "Error: Too little vehicle body points!";
-	m_operationsMap[ERROR_TOO_MANY_VEHICLE_BODY_POINTS] = "Error: Too many vehicle body points!";
-	m_operationsMap[ERROR_VEHICLE_BODY_AREA_IS_TOO_SMALL] = "Error: Vehicle body area is too small!";
-	m_operationsMap[ERROR_VEHICLE_BODY_BOUNDARIES_ARE_TOO_VAST] = "Error: Vehicle body boundaries are too vast!";
-	m_operationsMap[ERROR_TOO_LITTLE_SENSORS] = "Error: Too little sensors specified!";
-	m_operationsMap[ERROR_TOO_MANY_SENSORS] = "Error: Too many sensors specified!";
-	m_operationsMap[ERROR_SENSOR_ANGLE_IS_NOT_DIVISIBLE] = "Error: Sensor's angle must be divisible by 15.0!";
-	m_operationsMap[ERROR_SENSOR_ANGLE_IS_TOO_LITTLE] = "Error: Sensor's angle is too little!";
-	m_operationsMap[ERROR_SENSOR_ANGLE_IS_TOO_LARGE] = "Error: Sensor's angle is too large!";
-	m_operationsMap[ERROR_SENSOR_MOTION_RANGE_IS_TOO_LITTLE] = "Error: Sensor's motion range is too little!";
-	m_operationsMap[ERROR_SENSOR_MOTION_RANGE_IS_TOO_LARGE] = "Error: Sensor's motion range is too large!";
-	m_operationsMap[ERROR_SENSOR_IS_OUTSIDE_OF_VEHICLE_BODY] = "Error: One of sensors is outside of vehicle body!";
-	Clear();
-}
-
-VehicleBuilder::~VehicleBuilder()
-{
-}
-
-float VehicleBuilder::CalculateMass(const std::vector<sf::Vector2f>& bodyPoints)
+bool VehicleBuilder::GetMassData(const std::vector<sf::Vector2f>& bodyPoints, b2MassData& massData)
 {
 	if (bodyPoints.size() < GetMinNumberOfBodyPoints())
-		return 0.f;
+		return false;
 
 	// Create shape
 	b2World world(b2Vec2(0.f, 0.f));
@@ -364,6 +360,7 @@ float VehicleBuilder::CalculateMass(const std::vector<sf::Vector2f>& bodyPoints)
 	b2Vec2* vertices = new b2Vec2[numberOfPoints];
 	for (size_t i = 0; i < numberOfPoints; ++i)
 		vertices[i] = DrawableMath::ToBox2DPosition(bodyPoints[i]);
+
 	b2PolygonShape polygonShape;
 	polygonShape.Set(vertices, int32(numberOfPoints));
 	delete[] vertices;
@@ -380,9 +377,49 @@ float VehicleBuilder::CalculateMass(const std::vector<sf::Vector2f>& bodyPoints)
 	// Create body
 	b2Body* body = world.CreateBody(&bodyDefinition);
 	b2Fixture* fixture = body->CreateFixture(&fixtureDefinition);
-	b2MassData massData;
 	fixture->GetMassData(&massData);
+	return true;
+}
+
+VehicleBuilder::VehicleBuilder() :
+	AbstractBuilder()
+{
+	m_operationsMap[ERROR_TOO_LITTLE_VEHICLE_BODY_POINTS] = "Error: Too little vehicle body points!";
+	m_operationsMap[ERROR_TOO_MANY_VEHICLE_BODY_POINTS] = "Error: Too many vehicle body points!";
+	m_operationsMap[ERROR_VEHICLE_BODY_AREA_IS_TOO_SMALL] = "Error: Vehicle body area is too small!";
+	m_operationsMap[ERROR_VEHICLE_BODY_BOUNDARIES_ARE_TOO_VAST] = "Error: Vehicle body boundaries are too vast!";
+	m_operationsMap[ERROR_TOO_LITTLE_SENSORS] = "Error: Too little sensors specified!";
+	m_operationsMap[ERROR_TOO_MANY_SENSORS] = "Error: Too many sensors specified!";
+	m_operationsMap[ERROR_SENSOR_ANGLE_IS_NOT_DIVISIBLE] = "Error: Sensor's angle must be divisible by 15.0!";
+	m_operationsMap[ERROR_SENSOR_ANGLE_IS_TOO_LITTLE] = "Error: Sensor's angle is too little!";
+	m_operationsMap[ERROR_SENSOR_ANGLE_IS_TOO_LARGE] = "Error: Sensor's angle is too large!";
+	m_operationsMap[ERROR_SENSOR_MOTION_RANGE_IS_TOO_LITTLE] = "Error: Sensor's motion range is too little!";
+	m_operationsMap[ERROR_SENSOR_MOTION_RANGE_IS_TOO_LARGE] = "Error: Sensor's motion range is too large!";
+	m_operationsMap[ERROR_SENSOR_IS_OUTSIDE_OF_VEHICLE_BODY] = "Error: One of sensors is outside of vehicle body!";
+	m_operationsMap[ERROR_VEHICLE_BODY_IS_NOT_CONVEX_POLYGON] = "Error: Vehicle body is not convex polygon!";
+	Clear();
+}
+
+VehicleBuilder::~VehicleBuilder()
+{
+}
+
+float VehicleBuilder::CalculateMass(const std::vector<sf::Vector2f>& bodyPoints)
+{
+	b2MassData massData;
+	if (!GetMassData(bodyPoints, massData))
+		return 0.f;
+
 	return massData.mass;
+}
+
+float VehicleBuilder::CalculateInertia(const std::vector<sf::Vector2f>& bodyPoints)
+{
+	b2MassData massData;
+	if (!GetMassData(bodyPoints, massData))
+		return 0.f;
+
+	return massData.I;
 }
 
 VehiclePrototype* VehicleBuilder::Get()
@@ -407,7 +444,7 @@ bool VehicleBuilder::Initialize()
 
 	if (!builder.Validate())
 	{
-		CoreLogger::PrintError("Cannot create Vehicle Prototype dummy!");
+		CoreLogger::PrintError("Cannot create VehiclePrototype dummy!");
 		return false;
 	}
 
@@ -419,6 +456,8 @@ bool VehicleBuilder::Initialize()
 	bodyPoints.push_back(sf::Vector2f(size.x / 2, size.y / 2));
 	bodyPoints.push_back(sf::Vector2f(-size.x / 2, size.y / 2));
 	m_maxMass = CalculateMass(bodyPoints);
+	m_maxInertia = CalculateInertia(bodyPoints);
 
+	CoreLogger::PrintSuccess("VehicleBuilder initialized correctly");
 	return true;
 }

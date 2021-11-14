@@ -11,12 +11,28 @@ using RectangleShape = std::array<sf::Vertex, 4>;
 using Edge = std::array<sf::Vector2f, 2>;
 using EdgeVector = std::vector<Edge>;
 using EdgeShape = std::array<sf::Vertex, 2>;
+using TriangleShape = std::array<sf::Vertex, 3>;
 
 class DrawableMath
 {
-    inline static bool Ccw(sf::Vector2f a, sf::Vector2f b, sf::Vector2f c)
+    // Returns true if three points are making a clockwise order
+    inline static bool Clockwise(sf::Vector2f a, sf::Vector2f b, sf::Vector2f c)
     {
-        return (c.y - a.y) * (b.x - a.x) > (b.y - a.y) * (c.x - a.x);
+        float x1 = (b.x - a.x);
+        float y1 = (b.y - a.y);
+        float x2 = (c.x - a.x);
+        float y2 = (c.y - a.y);
+        return y2 * x1 > y1 * x2;
+    }
+
+    // Calculates cross product
+    inline static int CrossProduct(sf::Vector2f a, sf::Vector2f b, sf::Vector2f c)
+    {
+        float x1 = (b.x - a.x);
+        float y1 = (b.y - a.y);
+        float x2 = (c.x - a.x);
+        float y2 = (c.y - a.y);
+        return int(x1 * y2 - y1 * x2);
     }
 
     inline static float SFML_BOX2D_SCALE = 40.0f;
@@ -26,7 +42,7 @@ public:
     // Returns true if there is intersection between edge and edge described in two points
     inline static bool Intersect(const Edge& s, const sf::Vector2f& x, const sf::Vector2f& y)
     {
-        return Ccw(s[0], x, y) != Ccw(s[1], x, y) && Ccw(s[0], s[1], x) != Ccw(s[0], s[1], y);
+        return Clockwise(s[0], x, y) != Clockwise(s[1], x, y) && Clockwise(s[0], s[1], x) != Clockwise(s[0], s[1], y);
     }
 
     // Returns true if there is intersection between two edges
@@ -222,5 +238,26 @@ public:
     inline static double ToDegrees(double radians)
     {
         return radians * 57.295779513082320876;
+    }
+
+    // Returns true if given polygon described in points is convex
+    inline static bool IsPolygonConvex(const std::vector<sf::Vector2f>& points)
+    {
+        const size_t numberOfPoints = points.size();
+        int direction = 0;
+        int previousDirection = 0;
+
+        for (size_t i = 0; i < numberOfPoints; i++)
+        {
+            direction = CrossProduct(points[i], points[(i + 1) % numberOfPoints], points[(i + 2) % numberOfPoints]);
+            if (direction != 0)
+            {
+                if (direction * previousDirection < 0)
+                    return false;
+                previousDirection = direction;
+            }
+        }
+
+        return true;
     }
 };

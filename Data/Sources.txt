@@ -82,3 +82,6 @@ https://stackoverflow.com/questions/1700211/to-dynamically-increment-from-blue-t
 
 Box2D move bodies at same rate regardless of FPS
 https://stackoverflow.com/questions/41493043/box2d-move-bodies-at-same-rate-regardless-of-fps
+
+How to check if given polygon described in points is convex
+https://www.geeksforgeeks.org/check-if-given-polygon-is-a-convex-polygon-or-not/

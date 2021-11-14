@@ -33,15 +33,34 @@ void VehiclePrototype::Clear()
 	m_bodyShape.setPointCount(0);
 }
 
-void VehiclePrototype::AddBodyPoint(sf::Vector2f point)
+bool VehiclePrototype::AddBodyPoint(sf::Vector2f point)
 {
+	const float epsilon = 1.f;
+	for (const auto& bodyPoint : m_bodyPoints)
+	{
+		if (std::fabs(bodyPoint.x - point.x) < epsilon)
+		{
+			if (std::fabs(bodyPoint.y - point.y) < epsilon)
+			{
+				return false;
+			}
+		}
+	}
+
 	m_bodyPoints.push_back(point);
+	if (!DrawableMath::IsPolygonConvex(m_bodyPoints))
+	{
+		m_bodyPoints.pop_back();
+		return false;
+	}
+
 	m_bodyPoints.shrink_to_fit();
 	m_bodyShape.setPointCount(m_bodyPoints.size());
 	m_bodyShape.setPoint(m_bodyPoints.size() - 1, point);
 	auto mass = VehicleBuilder::CalculateMass(m_bodyPoints);
 	auto color = VehicleBuilder::CalculateDefaultColor(mass);
 	m_bodyShape.setFillColor(color);
+	return true;
 }
 
 bool VehiclePrototype::RemoveLastBodyPoint()
@@ -217,6 +236,10 @@ void VehiclePrototype::Update()
 void VehiclePrototype::DrawBody()
 {
 	CoreWindow::Draw(m_bodyShape);
+}
+
+void VehiclePrototype::DrawSensors()
+{
 	for (const auto& beam : m_beamVector)
 	{
 		m_sensorShape.setPosition(beam[0] - VehicleBuilder::GetDefaultSensorSize());

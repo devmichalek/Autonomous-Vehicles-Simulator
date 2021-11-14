@@ -40,10 +40,6 @@ CoreWindow::CoreWindow()
 	else
 		CoreLogger::PrintWarning("Cannot load window icon \"" + filename + "\"");
 
-	// Set window as open
-	m_open = true;
-	CoreLogger::PrintSuccess("Window initialized correctly");
-
 	const std::string fragmentShader = \
 		"uniform bool invert;" \
 		"uniform sampler2D texture;" \
@@ -72,4 +68,8 @@ CoreWindow::CoreWindow()
 	m_currentRenderColor = 0;
 	m_renderWindowColors[0] = sf::Color(0x19, 0x19, 0x19, 0xFF);
 	m_renderWindowColors[1] = sf::Color(0xE5, 0xE5, 0xE5, 0xFF);
+
+	// Set window as open
+	m_open = true;
+	CoreLogger::PrintSuccess("CoreWindow initialized correctly");
 }

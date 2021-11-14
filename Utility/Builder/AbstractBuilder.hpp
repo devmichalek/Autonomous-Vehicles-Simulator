@@ -34,7 +34,7 @@ protected:
 		LAST_ENUM_OPERATION_INDEX
 	};
 
-	std::map<size_t, std::string> m_operationsMap;
+	std::map<const size_t, std::string> m_operationsMap;
 	size_t m_lastOperationStatus;
 	bool m_validated;
 

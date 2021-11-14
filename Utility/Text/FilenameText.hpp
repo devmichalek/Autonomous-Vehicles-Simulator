@@ -60,10 +60,10 @@ private:
 	};
 	std::array<bool, ACTION_COUNT> m_activeActions;
 
-	std::map<sf::Keyboard::Key, bool> m_pressedControlKeys;
+	std::map<const sf::Keyboard::Key, bool> m_pressedControlKeys;
 	ContinuousTimer m_pressedBackspaceKeyTimer;
 
-	std::map<sf::Keyboard::Key, bool> m_pressedFilenameKeys;
+	std::map<const sf::Keyboard::Key, bool> m_pressedFilenameKeys;
 	std::string m_filename;
 	const std::string m_filenameDummy;
 	const size_t m_maxFilenameLength;

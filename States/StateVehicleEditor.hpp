@@ -35,6 +35,12 @@ public:
 	// Remove sensor based on given position
 	void RemoveSensor(const sf::Vector2f& point);
 
+	// Calculate new point based on given point according to the grid
+	void CalculateGridPoint(sf::Vector2f& point);
+
+	// Calculates supportive shapes positions
+	void CalculateSupportiveShapes();
+
 private:
 
 	// Modes
@@ -72,7 +78,7 @@ private:
 		INCREASE_SENSOR_MOTION_RANGE,
 		CONTROL_KEYS_COUNT
 	};
-	std::map<sf::Keyboard::Key, size_t> m_controlKeys;
+	std::map<const sf::Keyboard::Key, size_t> m_controlKeys;
 	std::array<bool, CONTROL_KEYS_COUNT> m_pressedKeys;
 
 	// Subjects of change
@@ -83,8 +89,14 @@ private:
 	VehicleBuilder m_vehicleBuilder;
 	VehiclePrototype* m_vehiclePrototype;
 	bool m_upToDate;
-	EdgeShape m_xAxis;
-	EdgeShape m_yAxis;
+
+	// Supportive editor fields
+	const float m_axesPrecision;
+	float m_verticalOffset;
+	float m_horizontalOffset;
+	std::vector<EdgeShape> m_axes;
+	EdgeShape m_lineShape;
+	TriangleShape m_triangleShape;
 
 	// Texts and text observers
 	enum

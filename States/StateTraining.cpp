@@ -958,7 +958,7 @@ bool StateTraining::Load()
 	m_texts[BEST_TIME_TEXT]->SetPosition({ FontContext::Component(2, true), {27}, {31} });
 	m_texts[BEST_TIME_OVERALL_TEXT]->SetPosition({ FontContext::Component(1, true), {27}, {31} });
 
-	CoreLogger::PrintSuccess("State \"Training\" dependencies loaded correctly");
+	CoreLogger::PrintSuccess("StateTraining dependencies loaded correctly");
 	return true;
 }
 
@@ -972,6 +972,7 @@ void StateTraining::Draw()
 				m_vehiclePrototype->DrawBody();
 				if (m_artificialNeuralNetworkPrototype)
 					m_vehiclePrototype->DrawBeams();
+				m_vehiclePrototype->DrawSensors();
 			}
 
 			if (m_mapPrototype)

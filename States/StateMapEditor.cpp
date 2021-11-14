@@ -513,7 +513,7 @@ bool StateMapEditor::Load()
 	m_texts[VEHICLE_ANGLE_TEXT]->SetPosition({ FontContext::Component(2, true), {0}, {4}, {7} });
 
 	auto tmp = CoreWindow::GetViewOffset();
-	CoreLogger::PrintSuccess("State \"Map Editor\" dependencies loaded correctly");
+	CoreLogger::PrintSuccess("StateMapEditor dependencies loaded correctly");
 	return true;
 }
 
@@ -523,6 +523,7 @@ void StateMapEditor::Draw()
 	{
 		m_vehiclePrototype->DrawBody();
 		m_vehiclePrototype->DrawBeams();
+		m_vehiclePrototype->DrawSensors();
 	}
 
 	m_mapPrototype.DrawEdges();

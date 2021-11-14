@@ -8,14 +8,14 @@
 StateArtificialNeuralNetworkEditor::StateArtificialNeuralNetworkEditor() :
 	m_biasOffset(0.2)
 {
-	m_controlKeys[sf::Keyboard::Tab] = SWITCH_LAYER;
-	m_controlKeys[sf::Keyboard::Enter] = ADD_LAYER;
-	m_controlKeys[sf::Keyboard::Backspace] = REMOVE_LAYER;
-	m_controlKeys[sf::Keyboard::Add] = ADD_NEURON;
-	m_controlKeys[sf::Keyboard::Subtract] = REMOVE_NEURON;
-	m_controlKeys[sf::Keyboard::Multiply] = SWITCH_ACTIVATION_FUNCTION;
-	m_controlKeys[sf::Keyboard::Z] = INCREASE_BIAS;
-	m_controlKeys[sf::Keyboard::X] = DECREASE_BIAS;
+	m_controlKeys.insert(std::pair(sf::Keyboard::Tab, SWITCH_LAYER));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Enter, ADD_LAYER));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Backspace, REMOVE_LAYER));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Add, ADD_NEURON));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Subtract, REMOVE_NEURON));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Multiply, SWITCH_ACTIVATION_FUNCTION));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Z, INCREASE_BIAS));
+	m_controlKeys.insert(std::pair(sf::Keyboard::X, DECREASE_BIAS));
 
 	for (auto& i : m_pressedKeys)
 		i = false;
@@ -279,7 +279,7 @@ bool StateArtificialNeuralNetworkEditor::Load()
 	m_texts[TOTAL_NUMBER_OF_WEIGHTS_TEXT]->SetPosition({ FontContext::Component(2, true), {0}, {8} });
 	m_texts[TOTAL_NUMBER_OF_ACTIVATION_FUNCTIONS_TEXT]->SetPosition({ FontContext::Component(1, true), {0}, {8} });
 
-	CoreLogger::PrintSuccess("State \"Artificial Neural Network Editor\" dependencies loaded correctly");
+	CoreLogger::PrintSuccess("StateArtificialNeuralNetworkEditor dependencies loaded correctly");
 	return true;
 }
 
