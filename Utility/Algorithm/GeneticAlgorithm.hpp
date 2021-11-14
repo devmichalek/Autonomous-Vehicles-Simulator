@@ -243,7 +243,8 @@ public:
 	}
 };
 
-class GeneticAlgorithmCharacter : public GeneticAlgorithm<char>
+class GeneticAlgorithmCharacter final :
+	public GeneticAlgorithm<char>
 {
 	const std::string m_alphabet;
 	std::uniform_int_distribution<std::mt19937::result_type> m_alphabetDistribution;
@@ -296,7 +297,8 @@ public:
 	}
 };
 
-class GeneticAlgorithmFloat : public GeneticAlgorithm<float>
+class GeneticAlgorithmFloat final :
+	public GeneticAlgorithm<float>
 {
 	unsigned m_precision;
 	std::pair<float, float> m_range;
@@ -356,7 +358,8 @@ public:
 	}
 };
 
-class GeneticAlgorithmNeuron : public GeneticAlgorithm<Neuron>
+class GeneticAlgorithmNeuron final :
+	public GeneticAlgorithm<Neuron>
 {
 	size_t m_precision;
 	std::pair<Neuron, Neuron> m_range;

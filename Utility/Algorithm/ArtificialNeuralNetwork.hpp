@@ -4,7 +4,7 @@
 #include "Neural.hpp"
 #include "ActivationFunctionContext.hpp"
 
-class ArtificialNeuralNetwork
+class ArtificialNeuralNetwork final
 {
 	NeuronLayers m_neuronLayers;
 	WeightLayers m_weightLayers;
@@ -36,7 +36,7 @@ class ArtificialNeuralNetwork
 				neuron = 0;
 
 				// Calculate neuron value
-				// neuron = activation(w1*a1 + w2*a2 + ... + wn*an + bias)
+				// w1*a1 + w2*a2 + ... + wn*an
 				const size_t numberOfWeights = weights.size();
 				for (size_t weightNr = 0; weightNr < numberOfWeights; ++weightNr)
 					neuron += (weights[weightNr] * m_neuronLayers[layerNr - 1][weightNr]);
@@ -116,24 +116,24 @@ public:
 		return m_neuronLayers.back();
 	}
 
-	size_t GetNumberOfNeurons() const
+	inline size_t GetNumberOfNeurons() const
 	{
 		return m_numberOfNeurons;
 	}
 
-	size_t GetNumberOfWeights() const
+	inline size_t GetNumberOfWeights() const
 	{
 		return m_numberOfWeights;
 	}
 
-	size_t GetNumberOfInputNeurons() const
+	inline size_t GetNumberOfInputNeurons() const
 	{
 		if (m_neuronLayers.empty())
 			return 0;
 		return m_neuronLayers.front().size();
 	}
 
-	size_t GetNumberOfOutputNeurons() const
+	inline size_t GetNumberOfOutputNeurons() const
 	{
 		if (m_neuronLayers.empty())
 			return 0;

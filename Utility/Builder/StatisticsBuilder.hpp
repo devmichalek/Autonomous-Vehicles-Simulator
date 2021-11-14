@@ -2,7 +2,7 @@
 #include "GeneticAlgorithm.hpp"
 #include "FitnessSystem.hpp"
 
-class StatisticsBuilder
+class StatisticsBuilder final
 {
 public:
 

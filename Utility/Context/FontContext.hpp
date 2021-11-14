@@ -1,7 +1,7 @@
 #pragma once
 #include <SFML/Graphics/Text.hpp>
 
-class FontContext
+class FontContext final
 {
 public:
 

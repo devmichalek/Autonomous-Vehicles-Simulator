@@ -7,7 +7,7 @@ using ActivationFunctions = std::vector<ActivationFunction>;
 using ActivationFunctionIndex = size_t;
 using ActivationFunctionIndexes = std::vector<ActivationFunctionIndex>;
 
-class ActivationFunctionContext
+class ActivationFunctionContext final
 {
 	enum
 	{

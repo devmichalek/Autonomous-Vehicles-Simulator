@@ -39,15 +39,6 @@ public:
 		m_edges.push_back(edge);
 	}
 
-	// Inserts edge to the specific place in container
-	inline void InsertEdge(Edge edge, size_t index)
-	{
-		if (index < m_edges.size())
-			m_edges.insert(m_edges.begin() + index, edge);
-		else
-			AddEdge(edge);
-	}
-
 	// Sets edges
 	inline void SetEdges(const EdgeVector& edges)
 	{

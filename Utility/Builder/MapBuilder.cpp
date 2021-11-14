@@ -48,7 +48,6 @@ EdgeVector MapBuilder::RectangleCheckpointsGenerator::GenerateInternal(const Edg
 	}
 
 	// Validate if there are no intersections with inner edges chain
-
 	auto Validate = [](const EdgeVector& checkpoints, const EdgeVector& edgesChain) {
 		const size_t length = checkpoints.size();
 
@@ -120,16 +119,51 @@ RectangleVector MapBuilder::RectangleCheckpointsGenerator::Generate(const EdgeVe
 		result.push_back({ previousEdge[0], previousEdge[1], endEdge[1], endEdge[0] });
 	};
 
+	auto CheckCollision = [](const RectangleVector& checkpoints, const size_t index, const EdgeVector& innerEdgesChain, const EdgeVector& outerEdgesChain) {
+		const size_t lastCheckpointIndex = checkpoints.size() - 1;
+		const size_t numberOfEdgesPerChain = innerEdgesChain.size();
+		for (size_t i = 1 ; i < lastCheckpointIndex; ++i)
+		{
+			const Edge edge = { checkpoints[i][0], checkpoints[i][1] };
+			for (size_t j = 0; j < index; ++j)
+			{
+				if (DrawableMath::Intersect(edge, innerEdgesChain[j]))
+					return false;
+
+				if (DrawableMath::Intersect(edge, innerEdgesChain[j]))
+					return false;
+			}
+
+			for (size_t j = index + 1; j < numberOfEdgesPerChain; ++j)
+			{
+				if (DrawableMath::Intersect(edge, innerEdgesChain[j]))
+					return false;
+
+				if (DrawableMath::Intersect(edge, innerEdgesChain[j]))
+					return false;
+			}
+		}
+
+		return true;
+	};
+
 	// Generate rectangle checkpoints
-	RectangleVector result;
 	const auto numberOfLineCheckpoints = lineCheckpoints.size();
-	for (size_t i = 0; i < numberOfLineCheckpoints - 1; ++i)
-		AddRectangleCheckpoints(result, lineCheckpoints[i], lineCheckpoints[i + 1]);
-	AddRectangleCheckpoints(result, lineCheckpoints[numberOfLineCheckpoints - 1], lineCheckpoints[0]);
+	const auto lastLineCheckpointIndex = numberOfLineCheckpoints - 1;
+	std::vector<RectangleVector> subresults(numberOfLineCheckpoints);
+	for (size_t i = 0; i < lastLineCheckpointIndex; ++i)
+		AddRectangleCheckpoints(subresults[i], lineCheckpoints[i], lineCheckpoints[i + 1]);
+	AddRectangleCheckpoints(subresults[lastLineCheckpointIndex], lineCheckpoints[lastLineCheckpointIndex], lineCheckpoints[0]);
 
-	// Check chepoints against edges
-
-
+	// Check chepoints against edges and create result at the same time
+	RectangleVector result;
+	for (size_t i = 0; i < subresults.size(); ++i)
+	{
+		if (!CheckCollision(subresults[i], i, innerEdgesChain, outerEdgesChain))
+			return {};
+		result.insert(result.end(), subresults[i].begin(), subresults[i].end());
+	}
+		
 	return result;
 }
 
