@@ -71,5 +71,5 @@ private:
 		LAST_ENUM_OPERATION_INDEX
 	};
 	size_t m_lastOperationStatus;
-	std::map<const size_t, std::string> m_operationsMap;
+	std::map<const size_t, const std::string> m_operationsMap;
 };

@@ -15,19 +15,20 @@ StateVehicleEditor::StateVehicleEditor() :
 	m_vehicleSensorsSubmodeStrings[VEHICLE_SENSORS_REMOVE] = "Removing";
 	m_vehicleSensorsSubmode = VEHICLE_SENSORS_INSERT;
 
-	m_controlKeys[sf::Keyboard::F1] = CHANGE_TO_VEHICLE_BODY_MODE;
-	m_controlKeys[sf::Keyboard::F2] = CHANGE_TO_VEHICLE_SENSORS_MODE;
-	m_controlKeys[sf::Keyboard::Num1] = CHANGE_TO_INSERT_STATE;
-	m_controlKeys[sf::Keyboard::Numpad1] = CHANGE_TO_INSERT_STATE;
-	m_controlKeys[sf::Keyboard::Num2] = CHANGE_TO_REMOVE_STATE;
-	m_controlKeys[sf::Keyboard::BackSpace] = REMOVE_LAST_VEHICLE_BODY_POINT;
-	m_controlKeys[sf::Keyboard::Numpad2] = CHANGE_TO_REMOVE_STATE;
-	m_controlKeys[sf::Keyboard::RAlt] = CHANGE_SENSOR;
-	m_controlKeys[sf::Keyboard::LAlt] = CHANGE_SENSOR;
-	m_controlKeys[sf::Keyboard::Z] = DEACREASE_SENSOR_ANGLE;
-	m_controlKeys[sf::Keyboard::X] = INCREASE_SENSOR_ANGLE;
-	m_controlKeys[sf::Keyboard::C] = DECREASE_SENSOR_MOTION_RANGE;
-	m_controlKeys[sf::Keyboard::V] = INCREASE_SENSOR_MOTION_RANGE;
+	// Initialize control keys
+	m_controlKeys.insert(std::pair(sf::Keyboard::F1, CHANGE_TO_VEHICLE_BODY_MODE));
+	m_controlKeys.insert(std::pair(sf::Keyboard::F2, CHANGE_TO_VEHICLE_SENSORS_MODE));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Num1, CHANGE_TO_INSERT_STATE));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Numpad1, CHANGE_TO_INSERT_STATE));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Num2, CHANGE_TO_REMOVE_STATE));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Numpad2, CHANGE_TO_REMOVE_STATE));
+	m_controlKeys.insert(std::pair(sf::Keyboard::BackSpace, REMOVE_LAST_VEHICLE_BODY_POINT));
+	m_controlKeys.insert(std::pair(sf::Keyboard::RAlt, CHANGE_SENSOR));
+	m_controlKeys.insert(std::pair(sf::Keyboard::LAlt, CHANGE_SENSOR));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Z, DEACREASE_SENSOR_ANGLE));
+	m_controlKeys.insert(std::pair(sf::Keyboard::X, INCREASE_SENSOR_ANGLE));
+	m_controlKeys.insert(std::pair(sf::Keyboard::C, DECREASE_SENSOR_MOTION_RANGE));
+	m_controlKeys.insert(std::pair(sf::Keyboard::V, INCREASE_SENSOR_MOTION_RANGE));
 
 	for (auto& i : m_pressedKeys)
 		i = false;

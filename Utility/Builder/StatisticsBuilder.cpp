@@ -2,10 +2,9 @@
 
 StatisticsBuilder::StatisticsBuilder()
 {
-	m_lastOperationStatus = ERROR_UNKNOWN;
-	m_operationsMap[SUCCESS_SAVE_COMPLETED] = "Success: correctly saved file!";
-	m_operationsMap[ERROR_EMPTY_FILENAME_CANNOT_OPEN_FILE_FOR_WRITING] = "Error: filename is empty, cannot open file for writing!";
-	m_operationsMap[ERROR_CANNOT_OPEN_FILE_FOR_WRITING] = "Error: cannot open file for writing!";
+	m_operationsMap.insert(std::pair(SUCCESS_SAVE_COMPLETED, "Success: correctly saved file!"));
+	m_operationsMap.insert(std::pair(ERROR_EMPTY_FILENAME_CANNOT_OPEN_FILE_FOR_WRITING, "Error: filename is empty, cannot open file for writing!"));
+	m_operationsMap.insert(std::pair(ERROR_CANNOT_OPEN_FILE_FOR_WRITING, "Error: cannot open file for writing!"));
 	m_lastOperationStatus = ERROR_UNKNOWN;
 }
 

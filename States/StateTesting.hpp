@@ -100,7 +100,7 @@ private:
 		USER_VEHICLE_DRIVE_BACKWARD,
 		CONTROLS_COUNT
 	};
-	std::map<const sf::Keyboard::Key, size_t> m_controlKeys;
+	std::map<const size_t, const size_t> m_controlKeys;
 	std::array<bool, CONTROLS_COUNT> m_pressedKeys;
 
 	// Internal erros

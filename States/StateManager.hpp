@@ -80,6 +80,6 @@ private:
 		CHANGE_DISPLAY_MODE,
 		CONTROLS_COUNT
 	};
-	std::map<const sf::Keyboard::Key, size_t> m_controlKeys;
+	std::map<const size_t, const size_t> m_controlKeys;
 	std::array<bool, CONTROLS_COUNT> m_pressedKeys;
 };

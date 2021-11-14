@@ -19,23 +19,23 @@ StateMapEditor::StateMapEditor() :
 	m_edgeSubmodeStrings[REMOVE_EDGE_SUBMODE] = "Remove mode";
 	m_edgeSubmode = GLUED_INSERT_EDGE_SUBMODE;
 
-	m_controlKeys[sf::Keyboard::F1] = CHANGE_TO_EDGE_MODE;
-	m_controlKeys[sf::Keyboard::F2] = CHANGE_TO_VEHICLE_MODE;
-	m_controlKeys[sf::Keyboard::Add] = INCREASE_MOVEMENT;
-	m_controlKeys[sf::Keyboard::Subtract] = DECREASE_MOVEMENT;
-	m_controlKeys[sf::Keyboard::Multiply] = INCREASE_ZOOM;
-	m_controlKeys[sf::Keyboard::Divide] = DECREASE_ZOOM;
-	m_controlKeys[sf::Keyboard::A] = MOVE_OFFSET_LEFT;
-	m_controlKeys[sf::Keyboard::D] = MOVE_OFFSET_RIGHT;
-	m_controlKeys[sf::Keyboard::W] = MOVE_OFFSET_UP;
-	m_controlKeys[sf::Keyboard::S] = MOVE_OFFSET_DOWN;
-	m_controlKeys[sf::Keyboard::Num1] = CHANGE_TO_EDGE_MODE_INSERT_STATE;
-	m_controlKeys[sf::Keyboard::Num2] = CHANGE_TO_EDGE_MODE_REMOVE_STATE;
-	m_controlKeys[sf::Keyboard::LAlt] = FIND_NEAREST_EDGE_POINT;
-	m_controlKeys[sf::Keyboard::Escape] = CANCEL_EDGE;
-	m_controlKeys[sf::Keyboard::X] = INCREASE_VEHICLE_ANGLE;
-	m_controlKeys[sf::Keyboard::Z] = DECREASE_VEHICLE_ANGLE;
-	m_controlKeys[sf::Keyboard::BackSpace] = REMOVE_VEHICLE;
+	m_controlKeys.insert(std::pair(sf::Keyboard::F1, CHANGE_TO_EDGE_MODE));
+	m_controlKeys.insert(std::pair(sf::Keyboard::F2, CHANGE_TO_VEHICLE_MODE));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Add, INCREASE_MOVEMENT));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Subtract, DECREASE_MOVEMENT));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Multiply, INCREASE_ZOOM));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Divide, DECREASE_ZOOM));
+	m_controlKeys.insert(std::pair(sf::Keyboard::A, MOVE_OFFSET_LEFT));
+	m_controlKeys.insert(std::pair(sf::Keyboard::D, MOVE_OFFSET_RIGHT));
+	m_controlKeys.insert(std::pair(sf::Keyboard::W, MOVE_OFFSET_UP));
+	m_controlKeys.insert(std::pair(sf::Keyboard::S, MOVE_OFFSET_DOWN));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Num1, CHANGE_TO_EDGE_MODE_INSERT_STATE));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Num2, CHANGE_TO_EDGE_MODE_REMOVE_STATE));
+	m_controlKeys.insert(std::pair(sf::Keyboard::LAlt, FIND_NEAREST_EDGE_POINT));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Escape, CANCEL_EDGE));
+	m_controlKeys.insert(std::pair(sf::Keyboard::X, INCREASE_VEHICLE_ANGLE));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Z, DECREASE_VEHICLE_ANGLE));
+	m_controlKeys.insert(std::pair(sf::Keyboard::BackSpace, REMOVE_VEHICLE));
 
 	for (auto& i : m_pressedKeys)
 		i = false;

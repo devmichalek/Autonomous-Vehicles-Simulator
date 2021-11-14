@@ -78,7 +78,7 @@ private:
 		INCREASE_SENSOR_MOTION_RANGE,
 		CONTROL_KEYS_COUNT
 	};
-	std::map<const sf::Keyboard::Key, size_t> m_controlKeys;
+	std::map<const size_t, const size_t> m_controlKeys;
 	std::array<bool, CONTROL_KEYS_COUNT> m_pressedKeys;
 
 	// Subjects of change

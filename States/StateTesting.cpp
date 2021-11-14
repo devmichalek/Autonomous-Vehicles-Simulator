@@ -38,17 +38,17 @@ StateTesting::StateTesting() :
 	m_parameterTypesStrings[ENABLE_CHECKPOINTS] = "Enable checkpoints";
 	m_parameterType = SWITCH_VEHICLE;
 
-	m_controlKeys[sf::Keyboard::M] = CHANGE_MODE;
-	m_controlKeys[sf::Keyboard::F] = CHANGE_FILENAME_TYPE;
-	m_controlKeys[sf::Keyboard::P] = CHANGE_PARAMETER;
-	m_controlKeys[sf::Keyboard::Add] = INCREASE_PARAMETER;
-	m_controlKeys[sf::Keyboard::Subtract] = DECREASE_PARAMETER;
-	m_controlKeys[sf::Keyboard::Multiply] = INCREASE_ZOOM;
-	m_controlKeys[sf::Keyboard::Divide] = DECREASE_ZOOM;
-	m_controlKeys[sf::Keyboard::Left] = USER_VEHICLE_TURN_LEFT;
-	m_controlKeys[sf::Keyboard::Right] = USER_VEHICLE_TURN_RIGHT;
-	m_controlKeys[sf::Keyboard::Up] = USER_VEHICLE_DRIVE_FORWARD;
-	m_controlKeys[sf::Keyboard::Down] = USER_VEHICLE_DRIVE_BACKWARD;
+	m_controlKeys.insert(std::pair(sf::Keyboard::M, CHANGE_MODE));
+	m_controlKeys.insert(std::pair(sf::Keyboard::F, CHANGE_FILENAME_TYPE));
+	m_controlKeys.insert(std::pair(sf::Keyboard::P, CHANGE_PARAMETER));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Add, INCREASE_PARAMETER));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Subtract, DECREASE_PARAMETER));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Multiply, INCREASE_ZOOM));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Divide, DECREASE_ZOOM));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Left, USER_VEHICLE_TURN_LEFT));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Right, USER_VEHICLE_TURN_RIGHT));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Up, USER_VEHICLE_DRIVE_FORWARD));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Down, USER_VEHICLE_DRIVE_BACKWARD));
 
 	for (auto& pressedKey : m_pressedKeys)
 		pressedKey = false;

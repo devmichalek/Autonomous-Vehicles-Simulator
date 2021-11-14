@@ -484,20 +484,20 @@ MapBuilder::MapBuilder() :
 	m_vehiclePositioned(false),
 	m_vehicleAngle(0.0)
 {
-	m_operationsMap[ERROR_VEHICLE_IS_NOT_POSITIONED] = "Error: Vehicle is not positioned!";
-	m_operationsMap[ERROR_VEHICLE_OUTSIDE_MAP_AREA] = "Error: Vehicle is outside map area!";
-	m_operationsMap[ERROR_VEHICLE_OUTSIDE_ROAD_AREA] = "Error: Vehicle is outside road area!";
-	m_operationsMap[ERROR_VEHICLE_ANGLE_IS_TOO_LITTLE] = "Error: Vehicle's angle is too little!";
-	m_operationsMap[ERROR_VEHICLE_ANGLE_IS_TOO_LARGE] = "Error: Vehicle's angle is too large!";
-	m_operationsMap[ERROR_EDGES_ARE_NOT_SPECIFIED] = "Error: Edges are not specified!";
-	m_operationsMap[ERROR_INCORRECT_EDGE_SEQUENCE_COUNT] = "Error: There should be only two edge sequences!";
-	m_operationsMap[ERROR_EDGE_SEQUENCE_INTERSECTION] = "Error: Found intersection between edge sequences!";
-	m_operationsMap[ERROR_TOO_LITTLE_INNER_EDGES] = "Error: Too little inner edges specified!";
-	m_operationsMap[ERROR_TOO_MANY_INNER_EDGES] = "Error: Too many inner edges specified!";
-	m_operationsMap[ERROR_DIFFERENT_NUMBER_OF_INNER_AND_OUTER_EDGES] = "Error: Number of inner edges does not match number of outer edges!";
-	m_operationsMap[ERROR_TOO_LITTLE_OUTER_EDGES] = "Error: Too little outer edges specified!";
-	m_operationsMap[ERROR_TOO_MANY_OUTER_EDGES] = "Error: Too many outer edges specified!";
-	m_operationsMap[ERROR_CANNOT_GENERATE_ALL_CHECKPOINTS] = "Error: Cannot generate all checkpoints! Check if edges are reasonable positioned.";
+	m_operationsMap.insert(std::pair(ERROR_VEHICLE_IS_NOT_POSITIONED, "Error: Vehicle is not positioned!"));
+	m_operationsMap.insert(std::pair(ERROR_VEHICLE_OUTSIDE_MAP_AREA, "Error: Vehicle is outside map area!"));
+	m_operationsMap.insert(std::pair(ERROR_VEHICLE_OUTSIDE_ROAD_AREA, "Error: Vehicle is outside road area!"));
+	m_operationsMap.insert(std::pair(ERROR_VEHICLE_ANGLE_IS_TOO_LITTLE, "Error: Vehicle's angle is too little!"));
+	m_operationsMap.insert(std::pair(ERROR_VEHICLE_ANGLE_IS_TOO_LARGE, "Error: Vehicle's angle is too large!"));
+	m_operationsMap.insert(std::pair(ERROR_EDGES_ARE_NOT_SPECIFIED, "Error: Edges are not specified!"));
+	m_operationsMap.insert(std::pair(ERROR_INCORRECT_EDGE_SEQUENCE_COUNT, "Error: There should be only two edge sequences!"));
+	m_operationsMap.insert(std::pair(ERROR_EDGE_SEQUENCE_INTERSECTION, "Error: Found intersection between edge sequences!"));
+	m_operationsMap.insert(std::pair(ERROR_TOO_LITTLE_INNER_EDGES, "Error: Too little inner edges specified!"));
+	m_operationsMap.insert(std::pair(ERROR_TOO_MANY_INNER_EDGES, "Error: Too many inner edges specified!"));
+	m_operationsMap.insert(std::pair(ERROR_DIFFERENT_NUMBER_OF_INNER_AND_OUTER_EDGES, "Error: Number of inner edges does not match number of outer edges!"));
+	m_operationsMap.insert(std::pair(ERROR_TOO_LITTLE_OUTER_EDGES, "Error: Too little outer edges specified!"));
+	m_operationsMap.insert(std::pair(ERROR_TOO_MANY_OUTER_EDGES, "Error: Too many outer edges specified!"));
+	m_operationsMap.insert(std::pair(ERROR_CANNOT_GENERATE_ALL_CHECKPOINTS, "Error: Cannot generate all checkpoints! Check if edges are reasonable positioned."));
 	Clear();
 }
 

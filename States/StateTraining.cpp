@@ -58,13 +58,13 @@ StateTraining::StateTraining() :
 	m_parameterType = POPULATION_SIZE;
 
 	// Initialize control keys
-	m_controlKeys[sf::Keyboard::M] = CHANGE_MODE;
-	m_controlKeys[sf::Keyboard::F] = CHANGE_FILENAME_TYPE;
-	m_controlKeys[sf::Keyboard::P] = CHANGE_SIMULATION_PARAMETER;
-	m_controlKeys[sf::Keyboard::Add] = INCREASE_PARAMETER;
-	m_controlKeys[sf::Keyboard::Subtract] = DECREASE_PARAMETER;
-	m_controlKeys[sf::Keyboard::Multiply] = INCREASE_ZOOM;
-	m_controlKeys[sf::Keyboard::Divide] = DECREASE_ZOOM;
+	m_controlKeys.insert(std::pair(sf::Keyboard::M, CHANGE_MODE));
+	m_controlKeys.insert(std::pair(sf::Keyboard::F, CHANGE_FILENAME_TYPE));
+	m_controlKeys.insert(std::pair(sf::Keyboard::P, CHANGE_SIMULATION_PARAMETER));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Add, INCREASE_PARAMETER));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Subtract, DECREASE_PARAMETER));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Multiply, INCREASE_ZOOM));
+	m_controlKeys.insert(std::pair(sf::Keyboard::Divide, DECREASE_ZOOM));
 
 	for (auto & pressedKey : m_pressedKeys)
 		pressedKey = false;

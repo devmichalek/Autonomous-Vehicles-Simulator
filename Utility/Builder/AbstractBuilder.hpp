@@ -34,7 +34,7 @@ protected:
 		LAST_ENUM_OPERATION_INDEX
 	};
 
-	std::map<const size_t, std::string> m_operationsMap;
+	std::map<const size_t, const std::string> m_operationsMap;
 	size_t m_lastOperationStatus;
 	bool m_validated;
 
@@ -57,14 +57,14 @@ protected:
 
 	AbstractBuilder()
 	{
-		m_operationsMap[ERROR_UNKNOWN] = "Error: last status is unknown!";
-		m_operationsMap[SUCCESS_LOAD_COMPLETED] = "Success: correctly opened file!";
-		m_operationsMap[SUCCESS_SAVE_COMPLETED] = "Success: correctly saved file!";
-		m_operationsMap[SUCCESS_VALIDATION_PASSED] = "Success: validation process has passed with no errors!";
-		m_operationsMap[ERROR_EMPTY_FILENAME_CANNOT_OPEN_FILE_FOR_READING] = "Error: filename is empty, cannot open file for reading!";
-		m_operationsMap[ERROR_CANNOT_OPEN_FILE_FOR_READING] = "Error: cannot open file for reading!";
-		m_operationsMap[ERROR_EMPTY_FILENAME_CANNOT_OPEN_FILE_FOR_WRITING] = "Error: filename is empty, cannot open file for writing!";
-		m_operationsMap[ERROR_CANNOT_OPEN_FILE_FOR_WRITING] = "Error: cannot open file for writing!";
+		m_operationsMap.insert(std::pair(ERROR_UNKNOWN, "Error: last status is unknown!"));
+		m_operationsMap.insert(std::pair(SUCCESS_LOAD_COMPLETED, "Success: correctly opened file!"));
+		m_operationsMap.insert(std::pair(SUCCESS_SAVE_COMPLETED, "Success: correctly saved file!"));
+		m_operationsMap.insert(std::pair(SUCCESS_VALIDATION_PASSED, "Success: validation process has passed with no errors!"));
+		m_operationsMap.insert(std::pair(ERROR_EMPTY_FILENAME_CANNOT_OPEN_FILE_FOR_READING, "Error: filename is empty, cannot open file for reading!"));
+		m_operationsMap.insert(std::pair(ERROR_CANNOT_OPEN_FILE_FOR_READING, "Error: cannot open file for reading!"));
+		m_operationsMap.insert(std::pair(ERROR_EMPTY_FILENAME_CANNOT_OPEN_FILE_FOR_WRITING, "Error: filename is empty, cannot open file for writing!"));
+		m_operationsMap.insert(std::pair(ERROR_CANNOT_OPEN_FILE_FOR_WRITING, "Error: cannot open file for writing!"));
 		m_lastOperationStatus = ERROR_UNKNOWN;
 		m_validated = false;
 	}

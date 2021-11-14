@@ -305,17 +305,17 @@ ArtificialNeuralNetworkBuilder::ArtificialNeuralNetworkBuilder() :
 	m_numberOfNeurons(0),
 	m_numberOfWeights(0)
 {
-	m_operationsMap[ERROR_TOO_LITTLE_NEURON_LAYERS] = "Error: There are too little neuron layers!";
-	m_operationsMap[ERROR_TOO_MANY_NEURON_LAYERS] = "Error: There are too many neuron layers!";
-	m_operationsMap[ERROR_TOO_LITTLE_NEURONS_IN_LAYER] = "Error: There are too little neurons in a layer!";
-	m_operationsMap[ERROR_TOO_MANY_NEURONS_IN_LAYER] = "Error: There are too many neurons in a layer!";
-	m_operationsMap[ERROR_INCORRECT_NUMBER_OF_ACTIVATION_FUNCTIONS] = "Error: Incorrect number of activation functions!";
-	m_operationsMap[ERROR_INCORRECT_LENGTH_OF_BIAS_VECTOR] = "Error: Incorrect length of bias vector!";
-	m_operationsMap[ERROR_BIAS_IS_LESS_THAN_MINIMUM_ALLOWED] = "Error: Bias value is less than minimum allowed!";
-	m_operationsMap[ERROR_BIAS_IS_GREATER_THAN_MAXIMUM_ALLOWED] = "Error: Bias value is greater than maximum allowed!";
-	m_operationsMap[ERROR_UNKNOWN_ACTIVATION_FUNCTION_INDEX] = "Error: Unknown activation function index!";
-	m_operationsMap[ERROR_NUMBER_OF_WEIGHTS_MISMATCH] = "Error: Number of weights mismatch!";
-	m_operationsMap[ERROR_RAW_DATA_VECTOR_LENGTH_IS_INCORRECT] = "Error: Raw data vector length is incorrect!";
+	m_operationsMap.insert(std::pair(ERROR_TOO_LITTLE_NEURON_LAYERS, "Error: There are too little neuron layers!"));
+	m_operationsMap.insert(std::pair(ERROR_TOO_MANY_NEURON_LAYERS, "Error: There are too many neuron layers!"));
+	m_operationsMap.insert(std::pair(ERROR_TOO_LITTLE_NEURONS_IN_LAYER, "Error: There are too little neurons in a layer!"));
+	m_operationsMap.insert(std::pair(ERROR_TOO_MANY_NEURONS_IN_LAYER, "Error: There are too many neurons in a layer!"));
+	m_operationsMap.insert(std::pair(ERROR_INCORRECT_NUMBER_OF_ACTIVATION_FUNCTIONS, "Error: Incorrect number of activation functions!"));
+	m_operationsMap.insert(std::pair(ERROR_INCORRECT_LENGTH_OF_BIAS_VECTOR, "Error: Incorrect length of bias vector!"));
+	m_operationsMap.insert(std::pair(ERROR_BIAS_IS_LESS_THAN_MINIMUM_ALLOWED, "Error: Bias value is less than minimum allowed!"));
+	m_operationsMap.insert(std::pair(ERROR_BIAS_IS_GREATER_THAN_MAXIMUM_ALLOWED, "Error: Bias value is greater than maximum allowed!"));
+	m_operationsMap.insert(std::pair(ERROR_UNKNOWN_ACTIVATION_FUNCTION_INDEX, "Error: Unknown activation function index!"));
+	m_operationsMap.insert(std::pair(ERROR_NUMBER_OF_WEIGHTS_MISMATCH, "Error: Number of weights mismatch!"));
+	m_operationsMap.insert(std::pair(ERROR_RAW_DATA_VECTOR_LENGTH_IS_INCORRECT, "Error: Raw data vector length is incorrect!"));
 	Clear();
 }
 

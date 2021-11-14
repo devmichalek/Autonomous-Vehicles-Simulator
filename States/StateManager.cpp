@@ -26,8 +26,8 @@ StateManager::StateManager()
 	m_statesStrings[VEHICLE_EDITOR_STATE] = "Vehicle Editor";
 	m_statesStrings[TRAINING_STATE] = "Training";
 	m_statesStrings[TESTING_STATE] = "Testing";
-	m_controlKeys[sf::Keyboard::Tilde] = CHANGE_STATE;
-	m_controlKeys[sf::Keyboard::BackSlash] = CHANGE_DISPLAY_MODE;
+	m_controlKeys.insert(std::pair(sf::Keyboard::Tilde, CHANGE_STATE));
+	m_controlKeys.insert(std::pair(sf::Keyboard::BackSlash, CHANGE_DISPLAY_MODE));
 	m_pressedKeys[CHANGE_STATE] = false;
 	m_pressedKeys[CHANGE_DISPLAY_MODE] = false;
 }

@@ -384,19 +384,19 @@ bool VehicleBuilder::GetMassData(const std::vector<sf::Vector2f>& bodyPoints, b2
 VehicleBuilder::VehicleBuilder() :
 	AbstractBuilder()
 {
-	m_operationsMap[ERROR_TOO_LITTLE_VEHICLE_BODY_POINTS] = "Error: Too little vehicle body points!";
-	m_operationsMap[ERROR_TOO_MANY_VEHICLE_BODY_POINTS] = "Error: Too many vehicle body points!";
-	m_operationsMap[ERROR_VEHICLE_BODY_AREA_IS_TOO_SMALL] = "Error: Vehicle body area is too small!";
-	m_operationsMap[ERROR_VEHICLE_BODY_BOUNDARIES_ARE_TOO_VAST] = "Error: Vehicle body boundaries are too vast!";
-	m_operationsMap[ERROR_TOO_LITTLE_SENSORS] = "Error: Too little sensors specified!";
-	m_operationsMap[ERROR_TOO_MANY_SENSORS] = "Error: Too many sensors specified!";
-	m_operationsMap[ERROR_SENSOR_ANGLE_IS_NOT_DIVISIBLE] = "Error: Sensor's angle must be divisible by 15.0!";
-	m_operationsMap[ERROR_SENSOR_ANGLE_IS_TOO_LITTLE] = "Error: Sensor's angle is too little!";
-	m_operationsMap[ERROR_SENSOR_ANGLE_IS_TOO_LARGE] = "Error: Sensor's angle is too large!";
-	m_operationsMap[ERROR_SENSOR_MOTION_RANGE_IS_TOO_LITTLE] = "Error: Sensor's motion range is too little!";
-	m_operationsMap[ERROR_SENSOR_MOTION_RANGE_IS_TOO_LARGE] = "Error: Sensor's motion range is too large!";
-	m_operationsMap[ERROR_SENSOR_IS_OUTSIDE_OF_VEHICLE_BODY] = "Error: One of sensors is outside of vehicle body!";
-	m_operationsMap[ERROR_VEHICLE_BODY_IS_NOT_CONVEX_POLYGON] = "Error: Vehicle body is not convex polygon!";
+	m_operationsMap.insert(std::pair(ERROR_TOO_LITTLE_VEHICLE_BODY_POINTS, "Error: Too little vehicle body points!"));
+	m_operationsMap.insert(std::pair(ERROR_TOO_MANY_VEHICLE_BODY_POINTS, "Error: Too many vehicle body points!"));
+	m_operationsMap.insert(std::pair(ERROR_VEHICLE_BODY_AREA_IS_TOO_SMALL, "Error: Vehicle body area is too small!"));
+	m_operationsMap.insert(std::pair(ERROR_VEHICLE_BODY_BOUNDARIES_ARE_TOO_VAST, "Error: Vehicle body boundaries are too vast!"));
+	m_operationsMap.insert(std::pair(ERROR_TOO_LITTLE_SENSORS, "Error: Too little sensors specified!"));
+	m_operationsMap.insert(std::pair(ERROR_TOO_MANY_SENSORS, "Error: Too many sensors specified!"));
+	m_operationsMap.insert(std::pair(ERROR_SENSOR_ANGLE_IS_NOT_DIVISIBLE, "Error: Sensor's angle must be divisible by 15.0!"));
+	m_operationsMap.insert(std::pair(ERROR_SENSOR_ANGLE_IS_TOO_LITTLE, "Error: Sensor's angle is too little!"));
+	m_operationsMap.insert(std::pair(ERROR_SENSOR_ANGLE_IS_TOO_LARGE, "Error: Sensor's angle is too large!"));
+	m_operationsMap.insert(std::pair(ERROR_SENSOR_MOTION_RANGE_IS_TOO_LITTLE, "Error: Sensor's motion range is too little!"));
+	m_operationsMap.insert(std::pair(ERROR_SENSOR_MOTION_RANGE_IS_TOO_LARGE, "Error: Sensor's motion range is too large!"));
+	m_operationsMap.insert(std::pair(ERROR_SENSOR_IS_OUTSIDE_OF_VEHICLE_BODY, "Error: One of sensors is outside of vehicle body!"));
+	m_operationsMap.insert(std::pair(ERROR_VEHICLE_BODY_IS_NOT_CONVEX_POLYGON, "Error: Vehicle body is not convex polygon!"));
 	Clear();
 }
 
