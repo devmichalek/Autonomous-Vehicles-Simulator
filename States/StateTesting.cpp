@@ -58,6 +58,8 @@ StateTesting::StateTesting() :
 	m_internalErrorsStrings[ERROR_NO_MAP_SPECIFIED] = "Error: No map is specified!";
 	m_internalErrorsStrings[ERROR_USER_VEHICLE_NOT_SPECIFIED] = "Error: User vehicle is not specified!";
 	m_internalErrorsStrings[ERROR_NO_VEHICLE_SPECIFIED] = "Error: One of vehicles is not fully specified!";
+	m_internalErrorsStrings[ERROR_USER_VEHICLE_IS_IN_A_COLLISION_WITH_EDGES_CHAIN] = "Error: User vehicle is in a collision with edges chain!";
+	m_internalErrorsStrings[ERROR_BOT_VEHICLE_IS_IN_A_COLLISION_WITH_EDGES_CHAIN] = "Error: Bot vehicle is in a collision with edges chain!";
 	m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH] = "Error: One of artificial neural network's number of input neurons mismatches number of vehicle sensors!";
 	m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH] = "Error: One of artificial neural network's number of output neurons mismatches number of vehicle (3) inputs!";
 	m_internalErrorsStrings[ERROR_USER_VEHICLE_NOT_ENABLED] = "Error: User vehicle is not enabled!";
@@ -191,6 +193,12 @@ void StateTesting::Capture()
 										modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_USER_VEHICLE_NOT_SPECIFIED]);
 										break;
 									}
+
+									if (m_mapPrototype->IsCollision(m_userVehiclePrototype))
+									{
+										modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_USER_VEHICLE_IS_IN_A_COLLISION_WITH_EDGES_CHAIN]);
+										break;
+									}
 								}
 
 								bool error = false;
@@ -206,6 +214,13 @@ void StateTesting::Capture()
 									m_vehiclePrototypes[i]->SetCenter(m_dummyVehiclePrototype->GetCenter());
 									m_vehiclePrototypes[i]->SetAngle(m_dummyVehiclePrototype->GetAngle());
 									m_vehiclePrototypes[i]->Update();
+
+									if (m_mapPrototype->IsCollision(m_vehiclePrototypes[i]))
+									{
+										modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_BOT_VEHICLE_IS_IN_A_COLLISION_WITH_EDGES_CHAIN]);
+										error = true;
+										break;
+									}
 
 									if (!m_artificialNeuralNetworks[i])
 									{

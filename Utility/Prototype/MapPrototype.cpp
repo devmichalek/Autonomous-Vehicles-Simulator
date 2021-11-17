@@ -93,6 +93,7 @@ bool MapPrototype::AddOuterEdge(Edge edge)
 	{
 		if (m_outerEdgesGaps[i])
 		{
+			++m_numberOfOuterEdges;
 			m_outerEdgesGaps[i] = false;
 			m_outerEdgesChain[i] = edge;
 			m_outerEdgesChainCompleted = MathContext::IsEdgesChain(m_outerEdgesChain);
@@ -117,11 +118,13 @@ void MapPrototype::SetEdgesChains(const EdgeVector& innerEdgesChain, const EdgeV
 		{
 			std::fill(m_outerEdgesGaps.begin(), m_outerEdgesGaps.end(), false);
 			m_outerEdgesGaps.resize(m_innerEdgesChain.size(), false);
+			m_numberOfOuterEdges = m_outerEdgesChain.size();
 		}
 		else
 		{
 			m_innerEdgesChain.clear();
 			m_outerEdgesChain.clear();
+			m_numberOfOuterEdges = 0;
 		}
 	}
 	else
@@ -273,6 +276,7 @@ bool MapPrototype::RemoveEdgesOnIntersection(const Edge& edge)
 			}
 
 			// If any inner edge was removed outer edges does not make sense
+			m_numberOfOuterEdges = 0;
 			std::fill(m_outerEdgesGaps.begin(), m_outerEdgesGaps.end(), true);
 			m_outerEdgesGaps.resize(size, true);
 			m_outerEdgesChain.resize(size);
@@ -290,13 +294,17 @@ bool MapPrototype::RemoveEdgesOnIntersection(const Edge& edge)
 		if (MathContext::Intersect(m_outerEdgesChain[i], edge))
 		{
 			// Mark gap
+			--m_numberOfOuterEdges;
 			m_outerEdgesGaps[i] = true;
 
 			// Continue removing outer edges
 			for (++i; i < size; ++i)
 			{
 				if (MathContext::Intersect(m_outerEdgesChain[i], edge))
+				{
+					--m_numberOfOuterEdges;
 					m_outerEdgesGaps[i] = true;
+				}
 			}
 
 			m_outerEdgesChainCompleted = false;
@@ -342,4 +350,33 @@ void MapPrototype::DrawCheckpoints()
 			m_checkpointShape.setPoint(j, m_checkpoints[i][j]);
 		CoreWindow::Draw(m_checkpointShape);
 	}
+}
+
+bool MapPrototype::IsCollision(const VehiclePrototype* vehiclePrototype)
+{
+	if (!m_innerEdgesChainCompleted || !m_outerEdgesChainCompleted)
+		return false;
+
+	if (!vehiclePrototype)
+		return false;
+
+	std::vector<sf::Vector2f> realPoints = vehiclePrototype->GetBodyPoints();
+	for (auto& realPoint : realPoints)
+		realPoint += vehiclePrototype->GetCenter();
+
+	const size_t numberOfPoints = realPoints.size();
+	for (size_t i = 0; i < m_numberOfOuterEdges; ++i)
+	{
+		for (size_t j = 0; j < numberOfPoints; ++j)
+		{
+			const size_t nextIndex = (j + 1) % numberOfPoints;
+			if (MathContext::Intersect(m_innerEdgesChain[i], realPoints[j], realPoints[nextIndex]))
+				return true;
+
+			if (MathContext::Intersect(m_outerEdgesChain[i], realPoints[j], realPoints[nextIndex]))
+				return true;
+		}
+	}
+
+	return false;
 }

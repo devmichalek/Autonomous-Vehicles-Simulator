@@ -1,7 +1,6 @@
 #pragma once
-#include "MathContext.hpp"
 #include "ColorContext.hpp"
-#include <SFML/Graphics/ConvexShape.hpp>
+#include "VehiclePrototype.hpp"
 
 class MapPrototype final
 {
@@ -10,6 +9,7 @@ class MapPrototype final
 	RectangleVector m_checkpoints;
 	bool m_innerEdgesChainCompleted;
 	bool m_outerEdgesChainCompleted;
+	size_t m_numberOfOuterEdges;
 	std::vector<bool> m_outerEdgesGaps;
 	EdgeShape m_edgeShape;
 	EdgeShape m_markedEdgeShape;
@@ -39,9 +39,10 @@ public:
 		m_checkpointShape.setPointCount(checkpoints.back().size());
 	}
 
-	MapPrototype() : 
+	MapPrototype() :
 		m_innerEdgesChainCompleted(false),
 		m_outerEdgesChainCompleted(false),
+		m_numberOfOuterEdges(0),
 		m_center(0.f, 0.f),
 		m_size(0.f, 0.f)
 	{
@@ -93,7 +94,7 @@ public:
 	// Returns number of outer edges
 	inline size_t GetNumberOfOuterEdges() const
 	{
-		return m_outerEdgesChain.size();
+		return m_numberOfOuterEdges;
 	}
 
 	// Returns checkpoints
@@ -137,4 +138,7 @@ public:
 
 	// Draws checkpoints in unoptimized manner
 	void DrawCheckpoints();
+
+	// Check edges collision vs vehicle prototype
+	bool IsCollision(const VehiclePrototype* vehiclePrototype);
 };

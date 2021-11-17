@@ -74,6 +74,7 @@ StateTraining::StateTraining() :
 	m_internalErrorsStrings[ERROR_NO_ARTIFICIAL_NEURAL_NETWORK_SPECIFIED] = "Error: No artificial neural network is specified!";
 	m_internalErrorsStrings[ERROR_NO_MAP_SPECIFIED] = "Error: No map is specified!";
 	m_internalErrorsStrings[ERROR_NO_VEHICLE_SPECIFIED] = "Error: No vehicle is specified!";
+	m_internalErrorsStrings[ERROR_VEHICLE_IS_IN_A_COLLISION_WITH_EDGES_CHAIN] = "Error: Vehicle is in a collision with edges chain!";
 	m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH] = "Error: Artificial neural network number of input neurons mismatches number of vehicle sensors!";
 	m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH] = "Error: Artificial neural network number of output neurons mismatches number of vehicle (3) inputs!";
 	m_internalErrorsStrings[ERROR_SAVE_MODE_IS_ALLOWED_ONLY_IN_PAUSED_MODE] = "Error: Save mode is allowed only in paused mode!";
@@ -209,40 +210,41 @@ void StateTraining::Capture()
 						{
 							if (m_pressedKeys[iterator->second])
 								break;
-							m_mode = RUNNING_MODE;
+
 							StatusText* modeText = static_cast<StatusText*>(m_texts[MODE_TEXT]);
 							if (!m_artificialNeuralNetworkPrototype)
 							{
 								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_ARTIFICIAL_NEURAL_NETWORK_SPECIFIED]);
-								m_mode = STOPPED_MODE;
-								break;
-							}
-
-							if (!m_vehiclePrototype)
-							{
-								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_VEHICLE_SPECIFIED]);
-								m_mode = STOPPED_MODE;
 								break;
 							}
 
 							if (!m_mapPrototype)
 							{
 								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_MAP_SPECIFIED]);
-								m_mode = STOPPED_MODE;
+								break;
+							}
+
+							if (!m_vehiclePrototype)
+							{
+								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_VEHICLE_SPECIFIED]);
+								break;
+							}
+
+							if (m_mapPrototype->IsCollision(m_vehiclePrototype))
+							{
+								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_VEHICLE_IS_IN_A_COLLISION_WITH_EDGES_CHAIN]);
 								break;
 							}
 
 							if (m_artificialNeuralNetworkPrototype->GetNumberOfInputNeurons() != m_vehiclePrototype->GetNumberOfSensors())
 							{
 								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH]);
-								m_mode = STOPPED_MODE;
 								break;
 							}
 
 							if (m_artificialNeuralNetworkPrototype->GetNumberOfOutputNeurons() != VehicleBuilder::GetDefaultNumberOfInputs())
 							{
 								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH]);
-								m_mode = STOPPED_MODE;
 								break;
 							}
 
@@ -330,6 +332,7 @@ void StateTraining::Capture()
 							// Reset require fitness improvement rise timer
 							m_requiredFitnessImprovementRiseTimer.Reset();
 							m_textObservers[RAISING_REQUIRED_FITNESS_IMPROVEMENT_TEXT]->Notify();
+							m_mode = RUNNING_MODE;
 							m_textObservers[MODE_TEXT]->Notify();
 
 							// Prepare statistics builder
