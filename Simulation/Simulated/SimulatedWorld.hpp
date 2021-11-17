@@ -1,5 +1,5 @@
 #pragma once
-#include "DrawableMath.hpp"
+#include "MathContext.hpp"
 #include "CoreWindow.hpp"
 #include "SimulatedVehicle.hpp"
 
@@ -37,8 +37,8 @@ public:
 	inline void Draw()
 	{
 		b2AABB aabb;
-		aabb.lowerBound = DrawableMath::ToBox2DPosition(CoreWindow::GetViewOffset());
-		aabb.upperBound = DrawableMath::ToBox2DPosition(CoreWindow::GetViewOffset() + CoreWindow::GetViewSize());
+		aabb.lowerBound = MathContext::ToBox2DPosition(CoreWindow::GetViewOffset());
+		aabb.upperBound = MathContext::ToBox2DPosition(CoreWindow::GetViewOffset() + CoreWindow::GetViewSize());
 		m_world->QueryAABB(&m_drawQueryCallback, aabb);
 	}
 

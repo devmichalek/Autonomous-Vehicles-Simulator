@@ -1,6 +1,6 @@
 #pragma once
 #include "StateInterface.hpp"
-#include "DrawableMath.hpp"
+#include "MathContext.hpp"
 #include "ArtificialNeuralNetworkBuilder.hpp"
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Window/Keyboard.hpp>
@@ -47,9 +47,6 @@ private:
 
 	// Removes neuron from the current active neruon layer
 	void RemoveNeuron();
-
-	// Returns weight strength representation in color
-	sf::Color GetWeightStrength(double max, double value) const;
 
 	// Control keys
 	enum

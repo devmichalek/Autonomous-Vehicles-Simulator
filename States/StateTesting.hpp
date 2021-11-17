@@ -126,6 +126,7 @@ private:
 	Property<bool> m_enableUserVehicle;
 	Property<bool> m_enableCheckpoints;
 	Property<float> m_zoom;
+	float m_zoomThreshold;
 	ContinuousTimer m_viewTimer;
 	const double m_viewMovementOffset;
 	ContinuousTimer m_pressedKeyTimer;

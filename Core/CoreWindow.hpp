@@ -1,4 +1,5 @@
 #pragma once
+#include "ColorContext.hpp"
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Graphics/RenderTexture.hpp>
 #include <SFML/Graphics/Sprite.hpp>
@@ -68,8 +69,8 @@ public:
 	// Clears window drawing area with background color
 	inline static void Clear()
 	{
-		m_renderTextureBackground.clear(sf::Color(0xFF, 0xFF, 0xFF, 0));
-		m_renderTextureForeground.clear(sf::Color(0xFF, 0xFF, 0xFF, 0));
+		m_renderTextureBackground.clear(ColorContext::ClearBackground);
+		m_renderTextureForeground.clear(ColorContext::ClearBackground);
 	}
 
 	// Displays on window what has been rendered so far

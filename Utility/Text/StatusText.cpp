@@ -22,7 +22,7 @@ void StatusText::SetErrorStatusText(std::string text)
 	m_alphaTimer.Reset();
 	TripleText::Reset();
 	m_texts[STATUS_TEXT].setString(text);
-	m_texts[STATUS_TEXT].setFillColor(sf::Color(0xEE, 0x4B, 0x2B, 0xFF));
+	m_texts[STATUS_TEXT].setFillColor(ColorContext::ErrorText);
 }
 
 void StatusText::SetSuccessStatusText(std::string text)
@@ -30,7 +30,7 @@ void StatusText::SetSuccessStatusText(std::string text)
 	m_alphaTimer.Reset();
 	TripleText::Reset();
 	m_texts[STATUS_TEXT].setString(text);
-	m_texts[STATUS_TEXT].setFillColor(sf::Color(0x22, 0x8B, 0x22, 0xFF));
+	m_texts[STATUS_TEXT].setFillColor(ColorContext::SuccessText);
 }
 
 void StatusText::SetPosition(std::vector<FontContext::Component> components)
@@ -50,9 +50,7 @@ void StatusText::SetPosition(std::vector<FontContext::Component> components)
 void StatusText::UpdateInternal()
 {
 	m_alphaTimer.Update();
-	sf::Color color = m_texts[STATUS_TEXT].getFillColor();
-	color.a = static_cast<sf::Uint8>(255.0 - m_alphaTimer.GetValue());
-	m_texts[STATUS_TEXT].setFillColor(color);
-
+	auto alpha = ColorContext::MaxChannelValue - sf::Uint8(m_alphaTimer.GetValue());
+	m_texts[STATUS_TEXT].setFillColor(ColorContext::Create(m_texts[STATUS_TEXT].getFillColor(), alpha));
 	TripleText::UpdateInternal();
 }

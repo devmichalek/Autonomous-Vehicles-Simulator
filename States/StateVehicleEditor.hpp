@@ -1,6 +1,6 @@
 #pragma once
 #include "StateInterface.hpp"
-#include "DrawableMath.hpp"
+#include "MathContext.hpp"
 #include "VehicleBuilder.hpp"
 
 class AbstractText;
@@ -90,7 +90,7 @@ private:
 	VehiclePrototype* m_vehiclePrototype;
 	bool m_upToDate;
 
-	// Supportive editor fields
+	// Supportive editor fields and shapes
 	const float m_axesPrecision;
 	float m_verticalOffset;
 	float m_horizontalOffset;

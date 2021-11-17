@@ -133,6 +133,7 @@ private:
 	Property<float> m_zoom;
 
 	// Offsets, timers
+	float m_zoomThreshold;
 	const double m_viewMovementOffset;
 	ContinuousTimer m_viewTimer;
 	ContinuousTimer m_pressedKeyTimer;

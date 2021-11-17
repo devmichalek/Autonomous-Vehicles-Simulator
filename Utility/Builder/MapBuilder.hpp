@@ -13,18 +13,16 @@ class MapBuilder final :
 		ERROR_VEHICLE_ANGLE_IS_TOO_LITTLE,
 		ERROR_VEHICLE_ANGLE_IS_TOO_LARGE,
 		ERROR_EDGES_ARE_NOT_SPECIFIED,
-		ERROR_INCORRECT_EDGE_SEQUENCE_COUNT,
-		ERROR_EDGE_SEQUENCE_INTERSECTION,
-		ERROR_TOO_LITTLE_INNER_EDGES,
-		ERROR_TOO_MANY_INNER_EDGES,
-		ERROR_DIFFERENT_NUMBER_OF_INNER_AND_OUTER_EDGES,
-		ERROR_TOO_LITTLE_OUTER_EDGES,
-		ERROR_TOO_MANY_OUTER_EDGES,
+		ERROR_TWO_EDGES_INTERSECTION,
+		ERROR_INNER_EDGES_DO_NOT_CREATE_CHAIN,
+		ERROR_OUTER_EDGES_DO_NOT_CREATE_CHAIN,
+		ERROR_TOO_LITTLE_EDGES_PER_CHAIN,
+		ERROR_TOO_MANY_EDGES_PER_CHAIN,
 		ERROR_CANNOT_GENERATE_ALL_CHECKPOINTS
 	};
 
-	size_t m_edgesPivot;
-	EdgeVector m_edges;
+	EdgeVector m_innerEdgesChain;
+	EdgeVector m_outerEdgesChain;
 	bool m_vehiclePositioned;
 	sf::Vector2f m_vehicleCenter;
 	double m_vehicleAngle;
@@ -62,17 +60,14 @@ class MapBuilder final :
 	// Validates if vehicle's angle is correct
 	bool ValidateVehicleAngle();
 
-	// Validates total number of edges
-	bool ValidateTotalNumberOfEdges(size_t count);
+	// Validates number of edges per chain
+	bool ValidateNumberOfEdgesPerChain(size_t count);
 
-	// Validates edges pivot
-	bool ValidateEdgesPivot(size_t pivot, size_t count);
+	// Validates if there is no intersection between inner and outer edges
+	bool ValidateEdgesChainsIntersection();
 
-	// Validates number of edge sequences
-	bool ValidateNumberOfEdgeSequences();
-
-	// Checks if there is edge sequence intersection
-	bool ValidateEdgeSequenceIntersection();
+	// Validates if inner and outer edges create chains
+	bool ValidatesEdgesChains();
 
 	// Validate checkpoints by creating dummies
 	bool ValidateCheckpoints();
@@ -101,16 +96,23 @@ public:
 	// Sets intermediate representation of vehicle
 	void AddVehicle(double angle, sf::Vector2f center);
 
-	// Adds edges to the intermediate representation of edges container
-	inline void AddEdges(const EdgeVector& edges)
+	// Adds edges chains to the intermediate representation of them
+	inline void AddEdgesChains(const EdgeVector& innerEdgesChain, const EdgeVector& outerEdgesChain)
 	{
-		m_edges.insert(m_edges.end(), edges.begin(), edges.end());
+		m_innerEdgesChain.insert(m_innerEdgesChain.end(), innerEdgesChain.begin(), innerEdgesChain.end());
+		m_outerEdgesChain.insert(m_outerEdgesChain.end(), outerEdgesChain.begin(), outerEdgesChain.end());
 	}
 
-	// Returns intermediate representation of edges
-	inline const EdgeVector& GetEdges() const
+	// Returns intermediate representation of inner edges chain
+	inline const EdgeVector& GetInnerEdgesChain() const
 	{
-		return m_edges;
+		return m_innerEdgesChain;
+	}
+
+	// Returns intermediate representation of outer edges chain
+	inline const EdgeVector& GetOuterEdgesChain() const
+	{
+		return m_outerEdgesChain;
 	}
 
 	// Returns vehicle start center position
@@ -128,28 +130,16 @@ public:
 	// Returns map prototype
 	MapPrototype* Get();
 
-	// Returns minimum required number of inner edges
-	inline static size_t GetMinNumberOfInnerEdges()
+	// Returns minimum required number of edges per chain
+	inline static size_t GetMinNumberOfEdgesPerChain()
 	{
 		return 4;
 	}
 
-	// Returns maximum required number of inner edges
-	inline static size_t GetMaxNumberOfInnerEdges()
+	// Returns maximum required number of edges per chain
+	inline static size_t GetMaxNumberOfEdgesPerChain()
 	{
 		return 512;
-	}
-
-	// Returns minimum required number of outer edges
-	inline static size_t GetMinNumberOfOuterEdges()
-	{
-		return GetMinNumberOfInnerEdges();
-	}
-
-	// Returns maximum required number of outer edges
-	inline static size_t GetMaxNumberOfOuterEdges()
-	{
-		return GetMaxNumberOfInnerEdges();
 	}
 
 	// Returns maximum allowed map area (position + size)

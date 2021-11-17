@@ -55,6 +55,16 @@ public:
 		}
 	}
 
+	inline const Type& Min() const
+	{
+		return m_minimumValue;
+	}
+
+	inline const Type& Max() const
+	{
+		return m_maximumValue;
+	}
+
 private:
 
 	const Type m_minimumValue;

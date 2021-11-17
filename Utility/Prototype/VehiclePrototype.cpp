@@ -4,18 +4,15 @@
 #include "VehicleBuilder.hpp"
 #include "ArtificialNeuralNetworkBuilder.hpp"
 
-const sf::Color VehiclePrototype::m_defaultSensorShapeColor = sf::Color(0xAA, 0x4A, 0x44, 0xFF);
-const sf::Color VehiclePrototype::m_markedSensorShapeColor = sf::Color(0x7F, 0xFF, 0x00, 0xFF);
-
 VehiclePrototype::VehiclePrototype() :
 	m_center(CoreWindow::GetWindowSize() / 2.f),
 	m_angle(0.0)
 {
 	m_bodyShape.setPointCount(0);
-	m_beamShape[0].color = sf::Color(255, 255, 255, 144);
-	m_beamShape[1].color = sf::Color(255, 255, 255, 32);
+	m_beamShape[0].color = ColorContext::BeamBeggining;
+	m_beamShape[1].color = ColorContext::BeamEnd;
 	m_sensorShape.setRadius(VehicleBuilder::GetDefaultSensorSize().x);
-	m_sensorShape.setFillColor(m_defaultSensorShapeColor);
+	m_sensorShape.setFillColor(ColorContext::VehicleSensorDefault);
 	Update();
 }
 
@@ -48,7 +45,7 @@ bool VehiclePrototype::AddBodyPoint(sf::Vector2f point)
 	}
 
 	m_bodyPoints.push_back(point);
-	if (!DrawableMath::IsPolygonConvex(m_bodyPoints))
+	if (!MathContext::IsPolygonConvex(m_bodyPoints))
 	{
 		m_bodyPoints.pop_back();
 		return false;
@@ -143,7 +140,7 @@ bool VehiclePrototype::GetSensorIndex(size_t& index, sf::Vector2f point) const
 {
 	for (size_t i = 0; i < m_sensorPoints.size(); ++i)
 	{
-		if (DrawableMath::IsPointInsideCircle(m_sensorPoints[i], VehicleBuilder::GetDefaultSensorSize().x, point))
+		if (MathContext::IsPointInsideCircle(m_sensorPoints[i], VehicleBuilder::GetDefaultSensorSize().x, point))
 		{
 			index = i;
 			return true;
@@ -262,8 +259,8 @@ void VehiclePrototype::DrawMarkedSensor(size_t index)
 	if (index < m_sensorPoints.size())
 	{
 		m_sensorShape.setPosition(m_beamVector[index][0] - VehicleBuilder::GetDefaultSensorSize());
-		m_sensorShape.setFillColor(m_markedSensorShapeColor);
+		m_sensorShape.setFillColor(ColorContext::VehicleSensorMarked);
 		CoreWindow::Draw(m_sensorShape);
-		m_sensorShape.setFillColor(m_defaultSensorShapeColor);
+		m_sensorShape.setFillColor(ColorContext::VehicleSensorDefault);
 	}
 }

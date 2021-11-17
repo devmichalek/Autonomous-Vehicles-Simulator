@@ -72,7 +72,7 @@ SimulatedVehicle* SimulatedWorld::AddVehicle(VehiclePrototype* prototype)
 	b2Vec2* vertices = new b2Vec2[numberOfPoints];
 	for (size_t i = 0; i < numberOfPoints; ++i)
 	{
-		vertices[i] = DrawableMath::ToBox2DPosition(description[i]);
+		vertices[i] = MathContext::ToBox2DPosition(description[i]);
 	}
 	b2PolygonShape polygonShape;
 	polygonShape.Set(vertices, int32(numberOfPoints));
@@ -88,8 +88,8 @@ SimulatedVehicle* SimulatedWorld::AddVehicle(VehiclePrototype* prototype)
 
 	// Create body definition
 	b2BodyDef bodyDefinition;
-	bodyDefinition.angle = (float)DrawableMath::ToRadians(prototype->GetAngle());
-	bodyDefinition.position = DrawableMath::ToBox2DPosition(prototype->GetCenter());
+	bodyDefinition.angle = (float)MathContext::ToRadians(prototype->GetAngle());
+	bodyDefinition.position = MathContext::ToBox2DPosition(prototype->GetCenter());
 	bodyDefinition.type = b2_dynamicBody;
 
 	// Create body
@@ -113,7 +113,7 @@ void SimulatedWorld::AddEdgesChain(const EdgeVector& edgesChain)
 	m_simulatedObjects.push_back(simulatedEdge);
 	for (size_t i = 0; i < numberOfEdges; ++i)
 	{
-		vertices[i] = DrawableMath::ToBox2DPosition(edgesChain[i][0]);
+		vertices[i] = MathContext::ToBox2DPosition(edgesChain[i][0]);
 		simulatedEdge[i].SetPosition(edgesChain[i]);
 	}
 
@@ -141,10 +141,10 @@ void SimulatedWorld::AddCheckpoints(const RectangleVector& checkpoints)
 	{
 		b2PolygonShape polygonShape;
 		b2Vec2 points[4];
-		points[0] = DrawableMath::ToBox2DPosition(checkpoints[i][0]);
-		points[1] = DrawableMath::ToBox2DPosition(checkpoints[i][1]);
-		points[2] = DrawableMath::ToBox2DPosition(checkpoints[i][2]);
-		points[3] = DrawableMath::ToBox2DPosition(checkpoints[i][3]);
+		points[0] = MathContext::ToBox2DPosition(checkpoints[i][0]);
+		points[1] = MathContext::ToBox2DPosition(checkpoints[i][1]);
+		points[2] = MathContext::ToBox2DPosition(checkpoints[i][2]);
+		points[3] = MathContext::ToBox2DPosition(checkpoints[i][3]);
 		SimulatedCheckpoint* simulatedCheckpoint = new SimulatedCheckpoint(i, checkpoints[i]);
 		m_simulatedObjects.push_back(simulatedCheckpoint);
 		polygonShape.Set(points, 4);

@@ -13,7 +13,7 @@ using EdgeVector = std::vector<Edge>;
 using EdgeShape = std::array<sf::Vertex, 2>;
 using TriangleShape = std::array<sf::Vertex, 3>;
 
-class DrawableMath
+class MathContext
 {
     // Returns true if three points are making a clockwise order
     inline static bool Clockwise(sf::Vector2f a, sf::Vector2f b, sf::Vector2f c)
@@ -259,5 +259,32 @@ public:
         }
 
         return true;
+    }
+
+    // Checks if given container of edges creates a chain
+    inline static bool IsEdgesChain(const EdgeVector& edges)
+    {
+        if (edges.empty())
+            return false;
+
+        Edge edge = edges.front();
+        std::vector<size_t> result;
+        for (size_t i = 1; i < edges.size(); ++i)
+        {
+            if (edges[i - 1][1] != edges[i][0])
+                return false;
+
+            // If the end of the previous edge is the beggining of the current edge
+            // It means that there is no gap
+            if (edge[0] == edges[i][1])
+            {
+                if (i + 1 >= edges.size())
+                    return true; // Cycle completed
+
+                return false;
+            }
+        }
+
+        return false;
     }
 };

@@ -1,5 +1,5 @@
 #pragma once
-#include "DrawableMath.hpp"
+#include "MathContext.hpp"
 #include "PeriodicTimer.hpp"
 #include <SFML/Graphics/ConvexShape.hpp>
 #include <SFML/Graphics/CircleShape.hpp>
@@ -21,8 +21,6 @@ class VehiclePrototype final
 	sf::ConvexShape m_bodyShape;
 	EdgeShape m_beamShape;
 	sf::CircleShape m_sensorShape;
-	static const sf::Color m_defaultSensorShapeColor;
-	static const sf::Color m_markedSensorShapeColor;
 
 public:
 

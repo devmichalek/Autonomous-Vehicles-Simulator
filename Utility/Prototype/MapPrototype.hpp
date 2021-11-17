@@ -1,54 +1,75 @@
 #pragma once
-#include "DrawableMath.hpp"
+#include "MathContext.hpp"
+#include "ColorContext.hpp"
 #include <SFML/Graphics/ConvexShape.hpp>
 
 class MapPrototype final
 {
-	EdgeVector m_edges;
 	EdgeVector m_innerEdgesChain;
 	EdgeVector m_outerEdgesChain;
 	RectangleVector m_checkpoints;
+	bool m_innerEdgesChainCompleted;
+	bool m_outerEdgesChainCompleted;
+	std::vector<bool> m_outerEdgesGaps;
 	EdgeShape m_edgeShape;
+	EdgeShape m_markedEdgeShape;
 	sf::ConvexShape m_checkpointShape;
+	sf::Vector2f m_center;
+	sf::Vector2f m_size;
+
+	// Searches for possible end point
+	bool FindEndPoint(sf::Vector2f point, const EdgeVector& edges, size_t& index) const;
+
+	// Return true if there is intersection and updates point value
+	bool GetIntersectionPoint(const Edge& a, const Edge& b, sf::Vector2f& point) const;
 
 public:
 
+	// Map protype constructor with correct data
 	MapPrototype(const EdgeVector& innerEdgesChain,
 				 const EdgeVector& outerEdgesChain,
 				 const RectangleVector& checkpoints) :
-		m_innerEdgesChain(innerEdgesChain),
-		m_outerEdgesChain(outerEdgesChain),
-		m_checkpoints(checkpoints)
+		m_checkpoints(checkpoints),
+		m_center(0.f, 0.f),
+		m_size(0.f, 0.f)
 	{
-		m_edgeShape[0].color = sf::Color::White;
-		m_edgeShape[1].color = m_edgeShape[0].color;
+		SetEdgesChains(innerEdgesChain, outerEdgesChain);
+		m_edgeShape[0].color = m_edgeShape[1].color = ColorContext::EdgeDefault;
+		m_markedEdgeShape[0].color = m_markedEdgeShape[1].color = ColorContext::EdgeMarked;
 		m_checkpointShape.setPointCount(checkpoints.back().size());
 	}
 
-	MapPrototype()
+	MapPrototype() : 
+		m_innerEdgesChainCompleted(false),
+		m_outerEdgesChainCompleted(false),
+		m_center(0.f, 0.f),
+		m_size(0.f, 0.f)
 	{
-		m_edgeShape[0].color = sf::Color::White;
-		m_edgeShape[1].color = m_edgeShape[0].color;
+		m_edgeShape[0].color = m_edgeShape[1].color = ColorContext::EdgeDefault;
+		m_markedEdgeShape[0].color = m_markedEdgeShape[1].color = ColorContext::EdgeMarked;
 		RectangleVector rectangle;
 		m_checkpointShape.setPointCount(rectangle.size());
 	}
 
-	// Adds edge to the container
-	inline void AddEdge(Edge edge)
+	// Adds inner edge to the inner edges chain container, returns true in case of success
+	bool AddInnerEdge(Edge edge);
+
+	// Adds outer edge to the outer edges chain container, returns true in case of success
+	bool AddOuterEdge(Edge edge);
+
+	// Sets edges chains
+	void SetEdgesChains(const EdgeVector& innerEdgesChain, const EdgeVector& outerEdgesChain);
+
+	// Returns true if inner edges chain is completed
+	inline bool IsInnerEdgesChainCompleted() const
 	{
-		m_edges.push_back(edge);
+		return m_innerEdgesChainCompleted;
 	}
 
-	// Sets edges
-	inline void SetEdges(const EdgeVector& edges)
+	// Returns true if outer edges chain is completed
+	inline bool IsOuterEdgesChainCompleted() const
 	{
-		m_edges = edges;
-	}
-
-	// Returns edges
-	inline const EdgeVector& GetEdges() const
-	{
-		return m_edges;
+		return m_outerEdgesChainCompleted;
 	}
 
 	// Returns inner edges chain
@@ -63,10 +84,16 @@ public:
 		return m_outerEdgesChain;
 	}
 
-	// Returns number of edges
-	inline size_t GetNumberOfEdges() const
+	// Returns number of inner edges
+	inline size_t GetNumberOfInnerEdges() const
 	{
-		return m_edges.size();
+		return m_innerEdgesChain.size();
+	}
+
+	// Returns number of outer edges
+	inline size_t GetNumberOfOuterEdges() const
+	{
+		return m_outerEdgesChain.size();
 	}
 
 	// Returns checkpoints
@@ -81,20 +108,29 @@ public:
 		return m_checkpoints.size();
 	}
 
-	// Returns true if there are no edges and no checkpoints
-	inline bool IsEmpty()
+	// Calculates map center and map size
+	void CalculateProperties();
+
+	// Returns map center
+	const sf::Vector2f& GetCenter() const
 	{
-		return m_edges.empty() && m_checkpoints.empty();
+		return m_center;
 	}
 
-	// Finds closest point based on intersection
-	bool FindClosestPointOnIntersection(Edge edge, sf::Vector2f& point);
+	// Returns map size
+	const sf::Vector2f& GetSize() const
+	{
+		return m_size;
+	}
+
+	// Return true if there is closest intersection point and updates value
+	bool FindClosestPointOnIntersection(Edge edge, sf::Vector2f& point) const;
 
 	// Finds closest point based on distance
-	bool FindClosestPointOnDistance(const sf::Vector2f& base, sf::Vector2f& point);
+	bool FindClosestPointOnDistance(const sf::Vector2f& base, sf::Vector2f& point) const;
 
 	// Returns true if any edge was removed from container
-	bool RemoveEdgesOnInterscetion(const Edge& edge);
+	bool RemoveEdgesOnIntersection(const Edge& edge);
 
 	// Draws edges in unoptimized manner
 	void DrawEdges();

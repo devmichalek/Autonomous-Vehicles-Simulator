@@ -1,6 +1,6 @@
 #pragma once
 #include "DrawableInterface.hpp"
-#include "DrawableMath.hpp"
+#include "MathContext.hpp"
 #include "CoreWindow.hpp"
 
 class DrawableEdge :
@@ -12,7 +12,7 @@ protected:
 
 	DrawableEdge()
 	{
-		m_edgeShape[0].color = sf::Color::White;
+		m_edgeShape[0].color = ColorContext::EdgeDefault;
 		m_edgeShape[1].color = m_edgeShape[0].color;
 	}
 

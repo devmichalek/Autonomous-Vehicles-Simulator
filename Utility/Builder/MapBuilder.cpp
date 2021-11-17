@@ -66,7 +66,7 @@ EdgeVector MapBuilder::RectangleCheckpointsGenerator::GenerateInternal(const Edg
 				else if (i - 1 == j)
 					continue;
 
-				if (DrawableMath::Intersect(checkpoints[i], edgesChain[j]))
+				if (MathContext::Intersect(checkpoints[i], edgesChain[j]))
 					return false;
 			}
 		}
@@ -91,24 +91,24 @@ RectangleVector MapBuilder::RectangleCheckpointsGenerator::Generate(const EdgeVe
 
 	auto AddRectangleCheckpoints = [](RectangleVector& result, const Edge& beginEdge, const Edge& endEdge) {
 		const double minWidth = double(CoreWindow::GetWindowSize().x / 16.f);
-		const auto innerDistance = DrawableMath::Distance(beginEdge[0], endEdge[0]);
-		const auto outerDistance = DrawableMath::Distance(beginEdge[1], endEdge[1]);
+		const auto innerDistance = MathContext::Distance(beginEdge[0], endEdge[0]);
+		const auto outerDistance = MathContext::Distance(beginEdge[1], endEdge[1]);
 		const size_t innerCount = size_t(innerDistance / minWidth);
 		const size_t outerCount = size_t(outerDistance / minWidth);
 		const size_t count = (innerCount > outerCount) ? innerCount : outerCount;
 		const float innerOffset = float(innerDistance) / float(count);
 		const float outerOffset = float(outerDistance) / float(count);
 
-		double innerAngle = DrawableMath::DifferenceVectorAngle(beginEdge[0], endEdge[0]);
-		double outerAngle = DrawableMath::DifferenceVectorAngle(beginEdge[1], endEdge[1]);
+		double innerAngle = MathContext::DifferenceVectorAngle(beginEdge[0], endEdge[0]);
+		double outerAngle = MathContext::DifferenceVectorAngle(beginEdge[1], endEdge[1]);
 
 		Edge previousEdge = beginEdge;
 		for (size_t i = 1; i < count; ++i)
 		{
 			auto p1 = previousEdge[0];
 			auto p2 = previousEdge[1];
-			auto p3 = DrawableMath::GetEndPoint(beginEdge[1], outerAngle, -outerOffset * i);
-			auto p4 = DrawableMath::GetEndPoint(beginEdge[0], innerAngle, -innerOffset * i);
+			auto p3 = MathContext::GetEndPoint(beginEdge[1], outerAngle, -outerOffset * i);
+			auto p4 = MathContext::GetEndPoint(beginEdge[0], innerAngle, -innerOffset * i);
 			
 			result.push_back({ p1, p2, p3, p4 });
 			
@@ -127,19 +127,19 @@ RectangleVector MapBuilder::RectangleCheckpointsGenerator::Generate(const EdgeVe
 			const Edge edge = { checkpoints[i][0], checkpoints[i][1] };
 			for (size_t j = 0; j < index; ++j)
 			{
-				if (DrawableMath::Intersect(edge, innerEdgesChain[j]))
+				if (MathContext::Intersect(edge, innerEdgesChain[j]))
 					return false;
 
-				if (DrawableMath::Intersect(edge, innerEdgesChain[j]))
+				if (MathContext::Intersect(edge, innerEdgesChain[j]))
 					return false;
 			}
 
 			for (size_t j = index + 1; j < numberOfEdgesPerChain; ++j)
 			{
-				if (DrawableMath::Intersect(edge, innerEdgesChain[j]))
+				if (MathContext::Intersect(edge, innerEdgesChain[j]))
 					return false;
 
-				if (DrawableMath::Intersect(edge, innerEdgesChain[j]))
+				if (MathContext::Intersect(edge, innerEdgesChain[j]))
 					return false;
 			}
 		}
@@ -170,7 +170,7 @@ RectangleVector MapBuilder::RectangleCheckpointsGenerator::Generate(const EdgeVe
 bool MapBuilder::ValidateMapAreaVehiclePosition()
 {
 	auto allowedMapArea = GetMaxAllowedMapArea();
-	if (!DrawableMath::IsPointInsideRectangle(allowedMapArea.second, allowedMapArea.first, m_vehicleCenter))
+	if (!MathContext::IsPointInsideRectangle(allowedMapArea.second, allowedMapArea.first, m_vehicleCenter))
 	{
 		m_lastOperationStatus = ERROR_VEHICLE_OUTSIDE_MAP_AREA;
 		return false;
@@ -181,23 +181,23 @@ bool MapBuilder::ValidateMapAreaVehiclePosition()
 
 bool MapBuilder::ValidateRoadAreaVehiclePosition()
 {
-	std::vector<sf::Vector2f> innerPoints(m_edgesPivot);
-	for (size_t i = 0; i < innerPoints.size(); ++i)
-		innerPoints[i] = m_edges[i][0];
+	std::vector<sf::Vector2f> innerPoints(m_innerEdgesChain.size());
+	for (size_t i = 0; i < m_innerEdgesChain.size(); ++i)
+		innerPoints[i] = m_innerEdgesChain[i][0];
 
 	// If vehicle center is inside inner polygon return error
-	if (DrawableMath::IsPointInsidePolygon(innerPoints, m_vehicleCenter))
+	if (MathContext::IsPointInsidePolygon(innerPoints, m_vehicleCenter))
 	{
 		m_lastOperationStatus = ERROR_VEHICLE_OUTSIDE_ROAD_AREA;
 		return false;
 	}
 
-	std::vector<sf::Vector2f> outerPoints(m_edges.size() - m_edgesPivot);
+	std::vector<sf::Vector2f> outerPoints(m_outerEdgesChain.size());
 	for (size_t i = 0; i < outerPoints.size(); ++i)
-		outerPoints[i] = m_edges[i + m_edgesPivot][0];
+		outerPoints[i] = m_outerEdgesChain[i][0];
 
 	// If vehicle is not inside outer polygon return error
-	if (!DrawableMath::IsPointInsidePolygon(outerPoints, m_vehicleCenter))
+	if (!MathContext::IsPointInsidePolygon(outerPoints, m_vehicleCenter))
 	{
 		m_lastOperationStatus = ERROR_VEHICLE_OUTSIDE_ROAD_AREA;
 		return false;
@@ -223,111 +223,32 @@ bool MapBuilder::ValidateVehicleAngle()
 	return true;
 }
 
-bool MapBuilder::ValidateTotalNumberOfEdges(size_t count)
+bool MapBuilder::ValidateNumberOfEdgesPerChain(size_t count)
 {
-	if (count == 0)
+	if (count < GetMinNumberOfEdgesPerChain())
 	{
-		m_lastOperationStatus = ERROR_EDGES_ARE_NOT_SPECIFIED;
+		m_lastOperationStatus = ERROR_TOO_LITTLE_EDGES_PER_CHAIN;
+		return false;
+	}
+
+	if (count > GetMaxNumberOfEdgesPerChain())
+	{
+		m_lastOperationStatus = ERROR_TOO_MANY_EDGES_PER_CHAIN;
 		return false;
 	}
 
 	return true;
 }
 
-bool MapBuilder::ValidateEdgesPivot(size_t pivot, size_t count)
+bool MapBuilder::ValidateEdgesChainsIntersection()
 {
-	if (pivot < GetMinNumberOfInnerEdges())
+	for (const auto & innerEdge : m_innerEdgesChain)
 	{
-		m_lastOperationStatus = ERROR_TOO_LITTLE_INNER_EDGES;
-		return false;
-	}
-
-	if (pivot > GetMaxNumberOfInnerEdges())
-	{
-		m_lastOperationStatus = ERROR_TOO_MANY_INNER_EDGES;
-		return false;
-	}
-
-	if (count < pivot)
-		count = 0;
-	else
-		count -= pivot;
-
-	if (count < GetMinNumberOfOuterEdges())
-	{
-		m_lastOperationStatus = ERROR_TOO_LITTLE_OUTER_EDGES;
-		return false;
-	}
-
-	if (count > GetMaxNumberOfOuterEdges())
-	{
-		m_lastOperationStatus = ERROR_TOO_MANY_OUTER_EDGES;
-		return false;
-	}
-
-	if (count != pivot)
-	{
-		m_lastOperationStatus = ERROR_DIFFERENT_NUMBER_OF_INNER_AND_OUTER_EDGES;
-		return false;
-	}
-
-	return true;
-}
-
-bool MapBuilder::ValidateNumberOfEdgeSequences()
-{
-	Edge edge = m_edges.front();
-	std::vector<size_t> result;
-	for (size_t i = 1; i < m_edges.size(); ++i)
-	{
-		if (m_edges[i - 1][1] == m_edges[i][0])
+		for (const auto& outerEdge : m_outerEdgesChain)
 		{
-			// If the end of the previous edge is the beggining of the current edge
-			// It means that there is no gap
-			if (edge[0] == m_edges[i][1])
+			if (MathContext::Intersect(innerEdge, outerEdge))
 			{
-				result.push_back(i + 1);
-				if (i + 1 >= m_edges.size())
-					break;
-				edge = m_edges[i + 1];
-				++i;
-
-				if (i + 1 >= m_edges.size())
-				{
-					// n edge sequences were found and we are left with one edge alone which is incorrect
-					m_lastOperationStatus = ERROR_INCORRECT_EDGE_SEQUENCE_COUNT;
-					return false;
-				}
-			}
-		}
-		else
-		{
-			m_lastOperationStatus = ERROR_INCORRECT_EDGE_SEQUENCE_COUNT;
-			return false;
-		}
-	}
-
-	if (result.size() != 2)
-	{
-		m_lastOperationStatus = ERROR_INCORRECT_EDGE_SEQUENCE_COUNT;
-		return false;
-	}
-
-	// Set number of inner edges, pivot from where outer edges start
-	m_edgesPivot = result.front();
-
-	return true;
-}
-
-bool MapBuilder::ValidateEdgeSequenceIntersection()
-{
-	for (size_t i = 0; i < m_edgesPivot; ++i)
-	{
-		for (size_t j = m_edgesPivot; j < m_edges.size(); ++j)
-		{
-			if (DrawableMath::Intersect(m_edges[i], m_edges[j]))
-			{
-				m_lastOperationStatus = ERROR_EDGE_SEQUENCE_INTERSECTION;
+				m_lastOperationStatus = ERROR_TWO_EDGES_INTERSECTION;
 				return false;
 			}
 		}
@@ -336,12 +257,26 @@ bool MapBuilder::ValidateEdgeSequenceIntersection()
 	return true;
 }
 
+bool MapBuilder::ValidatesEdgesChains()
+{
+	if (!MathContext::IsEdgesChain(m_innerEdgesChain))
+	{
+		m_lastOperationStatus = ERROR_INNER_EDGES_DO_NOT_CREATE_CHAIN;
+		return false;
+	}
+
+	if (!MathContext::IsEdgesChain(m_outerEdgesChain))
+	{
+		m_lastOperationStatus = ERROR_OUTER_EDGES_DO_NOT_CREATE_CHAIN;
+		return false;
+	}
+
+	return true;
+}
+
 bool MapBuilder::ValidateCheckpoints()
 {
-	auto innerEdges = EdgeVector(m_edges.begin(), m_edges.begin() + m_edgesPivot);
-	auto outerEdges = EdgeVector(m_edges.begin() + m_edgesPivot, m_edges.end());
-	auto checkpoints = RectangleCheckpointsGenerator::Generate(innerEdges, outerEdges);
-	if (checkpoints.empty())
+	if (RectangleCheckpointsGenerator::Generate(m_innerEdgesChain, m_outerEdgesChain).empty())
 	{
 		m_lastOperationStatus = ERROR_CANNOT_GENERATE_ALL_CHECKPOINTS;
 		return false;
@@ -364,16 +299,16 @@ bool MapBuilder::ValidateInternal()
 	if (!ValidateVehicleAngle())
 		return false;
 
-	if (!ValidateTotalNumberOfEdges(m_edges.size()))
+	if (!ValidateNumberOfEdgesPerChain(m_innerEdgesChain.size()))
 		return false;
 
-	if (!ValidateNumberOfEdgeSequences())
+	if (!ValidateNumberOfEdgesPerChain(m_outerEdgesChain.size()))
 		return false;
 
-	if (!ValidateEdgesPivot(m_edgesPivot, m_edges.size()))
+	if (!ValidateEdgesChainsIntersection())
 		return false;
 
-	if (!ValidateEdgeSequenceIntersection())
+	if (!ValidatesEdgesChains())
 		return false;
 
 	if (!ValidateCheckpoints())
@@ -387,8 +322,8 @@ bool MapBuilder::ValidateInternal()
 
 void MapBuilder::ClearInternal()
 {
-	m_edgesPivot = 0;
-	m_edges.clear();
+	m_innerEdgesChain.clear();
+	m_outerEdgesChain.clear();
 	m_vehiclePositioned = false;
 }
 
@@ -409,38 +344,43 @@ bool MapBuilder::LoadInternal(std::ifstream& input)
 	if (!ValidateVehicleAngle())
 		return false;
 
-	// Read number of edges
-	size_t numberOfEdges = 0;
-	input.read((char*)&numberOfEdges, sizeof(numberOfEdges));
+	// Read number of edges per chain
+	size_t numberOfEdgesPerChain = 0;
+	input.read((char*)&numberOfEdgesPerChain, sizeof(numberOfEdgesPerChain));
 
-	if (!ValidateTotalNumberOfEdges(numberOfEdges))
+	if (!ValidateNumberOfEdgesPerChain(numberOfEdgesPerChain))
 		return false;
 
-	// Read edges pivot
-	input.read((char*)&m_edgesPivot, sizeof(m_edgesPivot));
+	// Read inner edges points
+	m_innerEdgesChain.resize(numberOfEdgesPerChain);
+	for (auto& i : m_innerEdgesChain)
+	{
+		input.read((char*)&i[0].x, sizeof(i[0].x));
+		input.read((char*)&i[0].y, sizeof(i[0].y));
+	}
 
-	if (!ValidateEdgesPivot(m_edgesPivot, numberOfEdges))
-		return false;
-
-	// Read edges points
-	m_edges.resize(numberOfEdges);
-	for (auto& i : m_edges)
+	// Read outer edges points
+	m_outerEdgesChain.resize(numberOfEdgesPerChain);
+	for (auto& i : m_outerEdgesChain)
 	{
 		input.read((char*)&i[0].x, sizeof(i[0].x));
 		input.read((char*)&i[0].y, sizeof(i[0].y));
 	}
 
 	// Pin edges
-	for (size_t i = 0; i < m_edgesPivot - 1; i++)
-		m_edges[i][1] = m_edges[i + 1][0];
-	m_edges[m_edgesPivot - 1][1] = m_edges[0][0];
+	for (size_t i = 0; i < numberOfEdgesPerChain - 1; i++)
+	{
+		m_innerEdgesChain[i][1] = m_innerEdgesChain[i + 1][0];
+		m_outerEdgesChain[i][1] = m_outerEdgesChain[i + 1][0];
+	}
+	m_innerEdgesChain[numberOfEdgesPerChain - 1][1] = m_innerEdgesChain[0][0];
+	m_outerEdgesChain[numberOfEdgesPerChain - 1][1] = m_outerEdgesChain[0][0];
 
-	for (size_t i = m_edgesPivot; i < numberOfEdges - 1; i++)
-		m_edges[i][1] = m_edges[i + 1][0];
-	m_edges[numberOfEdges - 1][1] = m_edges[m_edgesPivot][0];
+	// Validate edges chains intersection
+	if (!ValidateEdgesChainsIntersection())
+		return false;
 
-	// Validate edge sequence intersection
-	if (!ValidateEdgeSequenceIntersection())
+	if (!ValidatesEdgesChains())
 		return false;
 
 	// Validate checkpoints
@@ -463,15 +403,19 @@ bool MapBuilder::SaveInternal(std::ofstream& output)
 	// Save vehicle angle
 	output.write((const char*)&m_vehicleAngle, sizeof(m_vehicleAngle));
 	
-	// Save number of edges
-	size_t numberOfEdges = m_edges.size();
-	output.write((const char*)&numberOfEdges, sizeof(numberOfEdges));
+	// Save number of edges per chain
+	size_t numberOfEdgesPerChain = m_innerEdgesChain.size();
+	output.write((const char*)&numberOfEdgesPerChain, sizeof(numberOfEdgesPerChain));
 
-	// Save edges pivot
-	output.write((const char*)&m_edgesPivot, sizeof(m_edgesPivot));
+	// Save inner edges beggining position
+	for (auto& i : m_innerEdgesChain)
+	{
+		output.write((const char*)&i[0].x, sizeof(i[0].x));
+		output.write((const char*)&i[0].y, sizeof(i[0].y));
+	}
 
-	// Save edges beggining position
-	for (auto& i : m_edges)
+	// Save outer edges beggining position
+	for (auto& i : m_outerEdgesChain)
 	{
 		output.write((const char*)&i[0].x, sizeof(i[0].x));
 		output.write((const char*)&i[0].y, sizeof(i[0].y));
@@ -496,17 +440,16 @@ void MapBuilder::CreateDummyInternal()
 	auto outerPoint3 = sf::Vector2f(outerPoint2.x, yOffset * 4 + 10);
 	auto outerPoint4 = sf::Vector2f(outerPoint1.x, outerPoint3.y);
 
-	m_edges.push_back({ innerPoint1, innerPoint2 });
-	m_edges.push_back({ innerPoint2, innerPoint3 });
-	m_edges.push_back({ innerPoint3, innerPoint4 });
-	m_edges.push_back({ innerPoint4, innerPoint1 });
+	m_innerEdgesChain.push_back({ innerPoint1, innerPoint2 });
+	m_innerEdgesChain.push_back({ innerPoint2, innerPoint3 });
+	m_innerEdgesChain.push_back({ innerPoint3, innerPoint4 });
+	m_innerEdgesChain.push_back({ innerPoint4, innerPoint1 });
 
-	m_edges.push_back({ outerPoint1, outerPoint2 });
-	m_edges.push_back({ outerPoint2, outerPoint3 });
-	m_edges.push_back({ outerPoint3, outerPoint4 });
-	m_edges.push_back({ outerPoint4, outerPoint1 });
+	m_outerEdgesChain.push_back({ outerPoint1, outerPoint2 });
+	m_outerEdgesChain.push_back({ outerPoint2, outerPoint3 });
+	m_outerEdgesChain.push_back({ outerPoint3, outerPoint4 });
+	m_outerEdgesChain.push_back({ outerPoint4, outerPoint1 });
 
-	m_edgesPivot = 4;
 	m_vehiclePositioned = true;
 	m_vehicleCenter = sf::Vector2f(innerPoint2.x + xOffset * 0.5f, innerPoint2.y + yOffset * 0.5f);
 	m_vehicleAngle = 90.0;
@@ -514,7 +457,6 @@ void MapBuilder::CreateDummyInternal()
 
 MapBuilder::MapBuilder() :
 	AbstractBuilder(),
-	m_edgesPivot(0),
 	m_vehiclePositioned(false),
 	m_vehicleAngle(0.0)
 {
@@ -524,13 +466,11 @@ MapBuilder::MapBuilder() :
 	m_operationsMap.insert(std::pair(ERROR_VEHICLE_ANGLE_IS_TOO_LITTLE, "Error: Vehicle's angle is too little!"));
 	m_operationsMap.insert(std::pair(ERROR_VEHICLE_ANGLE_IS_TOO_LARGE, "Error: Vehicle's angle is too large!"));
 	m_operationsMap.insert(std::pair(ERROR_EDGES_ARE_NOT_SPECIFIED, "Error: Edges are not specified!"));
-	m_operationsMap.insert(std::pair(ERROR_INCORRECT_EDGE_SEQUENCE_COUNT, "Error: There should be only two edge sequences!"));
-	m_operationsMap.insert(std::pair(ERROR_EDGE_SEQUENCE_INTERSECTION, "Error: Found intersection between edge sequences!"));
-	m_operationsMap.insert(std::pair(ERROR_TOO_LITTLE_INNER_EDGES, "Error: Too little inner edges specified!"));
-	m_operationsMap.insert(std::pair(ERROR_TOO_MANY_INNER_EDGES, "Error: Too many inner edges specified!"));
-	m_operationsMap.insert(std::pair(ERROR_DIFFERENT_NUMBER_OF_INNER_AND_OUTER_EDGES, "Error: Number of inner edges does not match number of outer edges!"));
-	m_operationsMap.insert(std::pair(ERROR_TOO_LITTLE_OUTER_EDGES, "Error: Too little outer edges specified!"));
-	m_operationsMap.insert(std::pair(ERROR_TOO_MANY_OUTER_EDGES, "Error: Too many outer edges specified!"));
+	m_operationsMap.insert(std::pair(ERROR_TWO_EDGES_INTERSECTION, "Error: Found intersection between two edges!"));
+	m_operationsMap.insert(std::pair(ERROR_INNER_EDGES_DO_NOT_CREATE_CHAIN, "Error: Inner edges do not create edges chain!"));
+	m_operationsMap.insert(std::pair(ERROR_OUTER_EDGES_DO_NOT_CREATE_CHAIN, "Error: Outer edges do not create edges chain!"));
+	m_operationsMap.insert(std::pair(ERROR_TOO_LITTLE_EDGES_PER_CHAIN, "Error: There are too little edges per chain!"));
+	m_operationsMap.insert(std::pair(ERROR_TOO_MANY_EDGES_PER_CHAIN, "Error: There are too many edges per chain!"));
 	m_operationsMap.insert(std::pair(ERROR_CANNOT_GENERATE_ALL_CHECKPOINTS, "Error: Cannot generate all checkpoints! Check if edges are reasonable positioned."));
 	Clear();
 }
@@ -551,11 +491,9 @@ MapPrototype* MapBuilder::Get()
 	if (!Validate())
 		return nullptr;
 
-	auto innerEdges = EdgeVector(m_edges.begin(), m_edges.begin() + m_edgesPivot);
-	auto outerEdges = EdgeVector(m_edges.begin() + m_edgesPivot, m_edges.end());
-	auto innerEdgesChain = EdgesChainGenerator::Generate(innerEdges, false);
-	auto outerEdgesChain = EdgesChainGenerator::Generate(outerEdges, true);
-	auto checkpoints = RectangleCheckpointsGenerator::Generate(innerEdges, outerEdges);
+	auto innerEdgesChain = EdgesChainGenerator::Generate(m_innerEdgesChain, false);
+	auto outerEdgesChain = EdgesChainGenerator::Generate(m_outerEdgesChain, true);
+	auto checkpoints = RectangleCheckpointsGenerator::Generate(m_innerEdgesChain, m_outerEdgesChain);
 	return new MapPrototype(innerEdgesChain, outerEdgesChain, checkpoints);
 }
 

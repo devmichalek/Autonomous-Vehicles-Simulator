@@ -31,14 +31,14 @@ public:
 	{
 		// Converts beam deegres angle to radians angles
 		for (auto& beamAngle : m_beamAngles)
-			beamAngle = DrawableMath::ToRadians(beamAngle);
+			beamAngle = MathContext::ToRadians(beamAngle);
 
 		// Converts motion ranges deegres values to radians values
 		for (auto& motionRange : m_motionRanges)
 		{
-			motionRange.SetBoundaryValue(DrawableMath::ToRadians(motionRange.GetBoundaryValue()));
-			motionRange.SetMultiplier(DrawableMath::ToRadians(motionRange.GetMultiplier()));
-			motionRange.SetValue(DrawableMath::ToRadians(motionRange.GetValue()));
+			motionRange.SetBoundaryValue(MathContext::ToRadians(motionRange.GetBoundaryValue()));
+			motionRange.SetMultiplier(MathContext::ToRadians(motionRange.GetMultiplier()));
+			motionRange.SetValue(MathContext::ToRadians(motionRange.GetValue()));
 		}
 	}
 
@@ -53,12 +53,12 @@ public:
 		for (size_t i = 0; i < m_numberOfBodyPoints; ++i)
 		{
 			auto bodyPoint = m_body->GetWorldPoint(m_bodyPoints[i]);
-			m_bodyShape.setPoint(i, DrawableMath::ToSFMLPosition(bodyPoint));
+			m_bodyShape.setPoint(i, MathContext::ToSFMLPosition(bodyPoint));
 		}
 
 		// Update sensor data
 		const float radians = m_body->GetAngle();
-		const sf::Vector2f center = DrawableMath::ToSFMLPosition(m_body->GetWorldCenter());
+		const sf::Vector2f center = MathContext::ToSFMLPosition(m_body->GetWorldCenter());
 		float cosinus = float(cos(radians));
 		float sinus = float(sin(radians));
 		for (size_t i = 0; i < m_sensorPoints.size(); ++i)
@@ -81,8 +81,8 @@ public:
 			m_beams[i][1].position.y = static_cast<float>(m_beams[i][0].position.y + VehicleBuilder::GetDefaultBeamLength() * sinBeam);
 
 			// Raycast
-			const b2Vec2 startPoint = DrawableMath::ToBox2DPosition(m_beams[i][0].position);
-			const b2Vec2 endPoint = DrawableMath::ToBox2DPosition(m_beams[i][1].position);
+			const b2Vec2 startPoint = MathContext::ToBox2DPosition(m_beams[i][0].position);
+			const b2Vec2 endPoint = MathContext::ToBox2DPosition(m_beams[i][1].position);
 			world->RayCast(&m_beamRaycastCallbacks[i], startPoint, endPoint);
 		}
 
@@ -158,7 +158,7 @@ public:
 
 		// Calculate beam positions
 		const float radians = m_body->GetAngle();
-		const sf::Vector2f center = DrawableMath::ToSFMLPosition(m_body->GetWorldCenter());
+		const sf::Vector2f center = MathContext::ToSFMLPosition(m_body->GetWorldCenter());
 		float cosinus = float(cos(radians));
 		float sinus = float(sin(radians));
 		for (size_t i = 0; i < m_sensorPoints.size(); ++i)
@@ -189,13 +189,13 @@ public:
 	{
 		m_active = false;
 		for (auto& beam : m_beams)
-			beam[0].color = beam[1].color = sf::Color(255, 255, 255, 0);
+			beam[0].color = beam[1].color = ColorContext::BeamDisabled;
 	}
 
 	// Returns vehicle center
 	inline sf::Vector2f GetCenter()
 	{
-		return DrawableMath::ToSFMLPosition(m_body->GetWorldCenter());
+		return MathContext::ToSFMLPosition(m_body->GetWorldCenter());
 	}
 
 	// Output data
@@ -267,7 +267,7 @@ private:
 			//switch (fixture->GetFilterData().categoryBits)
 			//{
 			//	case SimulatedAbstract::CategoryEdge:
-					m_beam[1].position = DrawableMath::ToSFMLPosition(point);
+					m_beam[1].position = MathContext::ToSFMLPosition(point);
 					m_sensor = Neuron(fraction);
 					return fraction;
 			//	case SimulatedAbstract::CategoryCheckpoint:

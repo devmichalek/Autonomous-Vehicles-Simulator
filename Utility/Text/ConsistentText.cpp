@@ -5,7 +5,7 @@
 ConsistentText::ConsistentText(std::vector<std::string> strings) :
 	AbstractText(strings, 1)
 {
-	m_texts.front().setFillColor(m_inactiveColor);
+	m_texts.front().setFillColor(ColorContext::InactiveText);
 }
 
 void ConsistentText::SetCharacterSize(unsigned int multiplier)

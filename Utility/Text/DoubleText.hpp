@@ -26,9 +26,6 @@ public:
 	// Sets observer for variable text string
 	void SetObserver(ObserverInterface* observer);
 
-	// Returns the result of two blended colors based on alpha factor
-	sf::Color BlendColors(sf::Color a, sf::Color b, float alpha);
-
 protected:
 
 	// If observer is ready text string is set

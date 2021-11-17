@@ -210,9 +210,9 @@ public:
 	inline static sf::Color CalculateDefaultColor(const float mass)
 	{
 		const float ratio = mass / m_maxMass;
-		const sf::Uint8 ceiling = sf::Uint8(0xFF * 0.9f);
-		const sf::Uint8 channel = 0xFF - sf::Uint8(ceiling * ratio);
-		return sf::Color(channel, channel, channel, 0xFF);
+		constexpr sf::Uint8 ceiling = sf::Uint8(ColorContext::MaxChannelValue * 0.9f);
+		const sf::Uint8 channel = ColorContext::MaxChannelValue - sf::Uint8(ceiling * ratio);
+		return ColorContext::Create(channel, channel, channel, ColorContext::MaxChannelValue);
 	}
 
 	// Slowly calculates vehicle mass based on provided vehicle body points

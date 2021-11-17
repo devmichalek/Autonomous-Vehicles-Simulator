@@ -66,8 +66,8 @@ CoreWindow::CoreWindow()
 	m_invertColorShader.setUniform("invert", false);
 
 	m_currentRenderColor = 0;
-	m_renderWindowColors[0] = sf::Color(0x19, 0x19, 0x19, 0xFF);
-	m_renderWindowColors[1] = sf::Color(0xE5, 0xE5, 0xE5, 0xFF);
+	m_renderWindowColors[0] = ColorContext::DarkBackground;
+	m_renderWindowColors[1] = ColorContext::LightBackground;
 
 	// Set window as open
 	m_open = true;

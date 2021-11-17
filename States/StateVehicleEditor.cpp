@@ -37,8 +37,8 @@ StateVehicleEditor::StateVehicleEditor() :
 	const auto windowSize = CoreWindow::GetWindowSize();
 	const float allowedAreaX = (windowSize.x / 2.0f - maxVehicleSize.x / 2.0f);
 	const float allowedAreaY = (windowSize.y / 2.0f - maxVehicleSize.y / 2.0f);
-	m_allowedAreaShape.setFillColor(sf::Color(255, 255, 255, 0));
-	m_allowedAreaShape.setOutlineColor(sf::Color(0, 0, 255, 96));
+	m_allowedAreaShape.setFillColor(ColorContext::ClearBackground);
+	m_allowedAreaShape.setOutlineColor(ColorContext::Grid);
 	m_allowedAreaShape.setOutlineThickness(2);
 	m_allowedAreaShape.setSize(maxVehicleSize);
 	m_allowedAreaShape.setPosition(allowedAreaX, allowedAreaY);
@@ -54,19 +54,18 @@ StateVehicleEditor::StateVehicleEditor() :
 	// Initialize grid
 	const size_t numberOfGridAxes = size_t(m_axesPrecision);
 	const size_t totalNumberOfGridAxes = numberOfGridAxes * 2;
-	const auto axisColor = sf::Color(0, 0, 255, 96);
 	m_verticalOffset = maxVehicleSize.y / m_axesPrecision;
 	m_horizontalOffset = maxVehicleSize.x / m_axesPrecision;
 	m_axes.resize(totalNumberOfGridAxes + 4);
 	for (size_t i = 0; i < numberOfGridAxes; ++i)
 	{
 		auto& a = m_axes[i];
-		a[0].color = a[1].color = axisColor;
+		a[0].color = a[1].color = ColorContext::Grid;
 		a[0].position = sf::Vector2f(allowedAreaX + m_horizontalOffset * i + (m_horizontalOffset / 2.f), allowedAreaY);
 		a[1].position = sf::Vector2f(a[0].position.x, allowedAreaY + maxVehicleSize.y);
 
 		auto& b = m_axes[i + numberOfGridAxes];
-		b[0].color = b[1].color = axisColor;
+		b[0].color = b[1].color = ColorContext::Grid;
 		b[0].position = sf::Vector2f(allowedAreaX, allowedAreaY + m_verticalOffset * i + (m_verticalOffset / 2.f));
 		b[1].position = sf::Vector2f(allowedAreaX + maxVehicleSize.x, b[0].position.y);
 	}
@@ -74,10 +73,10 @@ StateVehicleEditor::StateVehicleEditor() :
 	// Add axes
 	auto windowCenter = CoreWindow::GetWindowCenter();
 	const auto offset = totalNumberOfGridAxes;
-	m_axes[offset][0].color = m_axes[offset][1].color = axisColor;
-	m_axes[offset + 1][0].color = m_axes[offset + 1][1].color = axisColor;
-	m_axes[offset + 2][0].color = m_axes[offset + 2][1].color = axisColor;
-	m_axes[offset + 3][0].color = m_axes[offset + 3][1].color = axisColor;
+	m_axes[offset][0].color = m_axes[offset][1].color = ColorContext::Grid;
+	m_axes[offset + 1][0].color = m_axes[offset + 1][1].color = ColorContext::Grid;
+	m_axes[offset + 2][0].color = m_axes[offset + 2][1].color = ColorContext::Grid;
+	m_axes[offset + 3][0].color = m_axes[offset + 3][1].color = ColorContext::Grid;
 	m_axes[offset][0].position.x = m_axes[offset][1].position.x = m_axes[offset + 1][0].position.x = m_axes[offset + 1][1].position.x = windowCenter.x;
 	m_axes[offset + 2][0].position.y = m_axes[offset + 2][1].position.y = m_axes[offset + 3][0].position.y = m_axes[offset + 3][1].position.y = windowCenter.y;
 	m_axes[offset][0].position.y = m_axes[offset + 2][0].position.x = 0;
@@ -119,6 +118,7 @@ void StateVehicleEditor::Reload()
 	m_currentSensorAngle = m_vehiclePrototype->GetSensorBeamAngle(m_currentSensorIndex);
 	m_currentSensorMotionRange = m_vehiclePrototype->GetSensorMotionRange(m_currentSensorIndex);
 	m_upToDate = false;
+	CalculateSupportiveShapes();
 
 	// Reset texts and text observers
 	for (size_t i = 0; i < TEXT_COUNT; ++i)
@@ -180,7 +180,7 @@ void StateVehicleEditor::Capture()
 							auto sensorPoints = m_vehiclePrototype->GetSensorPoints();
 							for (const auto& point : sensorPoints)
 							{
-								if (!DrawableMath::IsPointInsidePolygon(m_vehiclePrototype->GetBodyPoints(), point))
+								if (!MathContext::IsPointInsidePolygon(m_vehiclePrototype->GetBodyPoints(), point))
 									RemoveSensor(point);
 							}
 
@@ -271,7 +271,7 @@ void StateVehicleEditor::Capture()
 		else if (CoreWindow::GetEvent().type == sf::Event::MouseButtonPressed)
 		{
 			auto relativePosition = CoreWindow::GetMousePosition();
-			if (DrawableMath::IsPointInsideRectangle(m_allowedAreaShape.getSize(), m_allowedAreaShape.getPosition(), relativePosition))
+			if (MathContext::IsPointInsideRectangle(m_allowedAreaShape.getSize(), m_allowedAreaShape.getPosition(), relativePosition))
 			{
 				switch (m_mode)
 				{
@@ -477,7 +477,7 @@ void StateVehicleEditor::InsertSensor(const sf::Vector2f& point)
 {
 	if (m_vehiclePrototype->GetNumberOfSensors() < VehicleBuilder::GetMaxNumberOfSensors())
 	{
-		if (DrawableMath::IsPointInsidePolygon(m_vehiclePrototype->GetBodyPoints(), point))
+		if (MathContext::IsPointInsidePolygon(m_vehiclePrototype->GetBodyPoints(), point))
 		{
 			m_vehiclePrototype->AddSensor(point, VehicleBuilder::GetMinSensorAngle(), VehicleBuilder::GetDefaultSensorMotionRange());
 			m_currentSensorIndex = m_vehiclePrototype->GetNumberOfSensors() - 1;
@@ -553,7 +553,7 @@ void StateVehicleEditor::CalculateSupportiveShapes()
 
 	size_t numberOfBodyPoints = m_vehiclePrototype->GetNumberOfBodyPoints();
 	auto relativePosition = CoreWindow::GetMousePosition();
-	if (DrawableMath::IsPointInsideRectangle(m_allowedAreaShape.getSize(), m_allowedAreaShape.getPosition(), relativePosition))
+	if (MathContext::IsPointInsideRectangle(m_allowedAreaShape.getSize(), m_allowedAreaShape.getPosition(), relativePosition))
 	{
 		CalculateGridPoint(relativePosition);
 		const auto firstBodyPoint = m_vehiclePrototype->GetBodyPoint(0) + CoreWindow::GetWindowCenter();
@@ -566,8 +566,8 @@ void StateVehicleEditor::CalculateSupportiveShapes()
 		{
 			const float epsilon = 1.f;
 			const auto lastBodyPoint = m_vehiclePrototype->GetBodyPoint(numberOfBodyPoints - 1) + CoreWindow::GetWindowCenter();
-			const auto distance = DrawableMath::Distance(firstBodyPoint, lastBodyPoint);
-			const auto approximate = DrawableMath::Distance(firstBodyPoint, relativePosition) + DrawableMath::Distance(lastBodyPoint, relativePosition);
+			const auto distance = MathContext::Distance(firstBodyPoint, lastBodyPoint);
+			const auto approximate = MathContext::Distance(firstBodyPoint, relativePosition) + MathContext::Distance(lastBodyPoint, relativePosition);
 			if (std::fabs(distance - approximate) < epsilon)
 			{
 				m_lineShape[0].position = firstBodyPoint;

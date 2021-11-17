@@ -50,8 +50,8 @@ StateMapEditor::StateMapEditor() :
 
 	auto allowedMapArea = m_mapBuilder.GetMaxAllowedMapArea();
 	auto allowedViewArea = m_mapBuilder.GetMaxAllowedViewArea();
-	m_allowedMapAreaShape.setFillColor(sf::Color(255, 255, 255, 0));
-	m_allowedMapAreaShape.setOutlineColor(sf::Color(255, 255, 255, 64));
+	m_allowedMapAreaShape.setFillColor(ColorContext::ClearBackground);
+	m_allowedMapAreaShape.setOutlineColor(ColorContext::Create(ColorContext::ClearBackground, ColorContext::MaxChannelValue / 4));
 	m_allowedMapAreaShape.setOutlineThickness(5);
 	m_allowedMapAreaShape.setPosition(allowedMapArea.first);
 	m_allowedMapAreaShape.setSize(allowedMapArea.second);
@@ -62,7 +62,7 @@ StateMapEditor::StateMapEditor() :
 	m_vehiclePrototype = m_vehicleBuilder.Get();
 
 	m_mapBuilder.CreateDummy();
-	m_mapPrototype.SetEdges(m_mapBuilder.GetEdges());
+	m_mapPrototype.SetEdgesChains(m_mapBuilder.GetInnerEdgesChain(), m_mapBuilder.GetOuterEdgesChain());
 	m_vehiclePositioned = true;
 	m_vehiclePrototype->SetCenter(m_mapBuilder.GetVehicleCenter());
 	m_vehiclePrototype->SetAngle(m_mapBuilder.GetVehicleAngle());
@@ -99,7 +99,7 @@ void StateMapEditor::Reload()
 	m_zoom.ResetValue();
 
 	m_mapBuilder.CreateDummy();
-	m_mapPrototype.SetEdges(m_mapBuilder.GetEdges());
+	m_mapPrototype.SetEdgesChains(m_mapBuilder.GetInnerEdgesChain(), m_mapBuilder.GetOuterEdgesChain());
 	m_vehiclePositioned = true;
 	m_vehiclePrototype->SetCenter(m_mapBuilder.GetVehicleCenter());
 	m_vehiclePrototype->SetAngle(m_mapBuilder.GetVehicleAngle());
@@ -171,6 +171,7 @@ void StateMapEditor::Capture()
 						{
 							m_zoom.Increase();
 							CoreWindow::SetViewZoom(m_zoom);
+							m_textObservers[ZOOM_TEXT]->Notify();
 
 							if (m_allowedViewAreaShape.getSize().x < CoreWindow::GetViewSize().x ||
 								m_allowedViewAreaShape.getSize().y < CoreWindow::GetViewSize().y)
@@ -179,8 +180,6 @@ void StateMapEditor::Capture()
 								center += m_allowedViewAreaShape.getSize() / 2.f;
 								CoreWindow::SetViewCenter(center);
 							}
-
-							m_textObservers[ZOOM_TEXT]->Notify();
 						}
 						break;
 					case DECREASE_ZOOM:
@@ -219,17 +218,16 @@ void StateMapEditor::Capture()
 						break;
 					case FIND_NEAREST_EDGE_POINT:
 						m_pressedKeys[iterator->second] = true;
-						if (m_mode == EDGE_MODE && !m_mapPrototype.IsEmpty() && m_edgeSubmode == GLUED_INSERT_EDGE_SUBMODE)
+						if (m_mode == EDGE_MODE && m_edgeSubmode == GLUED_INSERT_EDGE_SUBMODE)
 						{
 							sf::Vector2f correctPosition = CoreWindow::GetMousePosition();
 							correctPosition.x *= m_zoom;
 							correctPosition.y *= m_zoom;
 							correctPosition += CoreWindow::GetViewOffset();
 							m_edgeBeggining = correctPosition;
-							m_insertEdge = true;
 
-							// Find closest point to mouse position
-							m_mapPrototype.FindClosestPointOnDistance(correctPosition, m_edgeBeggining);
+							if (m_mapPrototype.FindClosestPointOnDistance(correctPosition, m_edgeBeggining))
+								m_insertEdge = true;
 						}
 						break;
 					case CANCEL_EDGE:
@@ -300,7 +298,7 @@ void StateMapEditor::Capture()
 			correctPosition.x *= m_zoom;
 			correctPosition.y *= m_zoom;
 			correctPosition += CoreWindow::GetViewOffset();
-			if (DrawableMath::IsPointInsideRectangle(m_allowedMapAreaShape.getSize(), m_allowedMapAreaShape.getPosition(), correctPosition))
+			if (MathContext::IsPointInsideRectangle(m_allowedMapAreaShape.getSize(), m_allowedMapAreaShape.getPosition(), correctPosition))
 			{
 				switch (m_mode)
 				{
@@ -353,13 +351,16 @@ void StateMapEditor::Update()
 		if (success)
 		{
 			filenameText->SetSuccessStatusText(status.second);
-			m_mapPrototype.SetEdges(m_mapBuilder.GetEdges());
-			m_textObservers[EDGE_COUNT_TEXT]->Notify();
+			m_mapPrototype.SetEdgesChains(m_mapBuilder.GetInnerEdgesChain(), m_mapBuilder.GetOuterEdgesChain());
 			m_vehiclePositioned = true;
 			m_vehiclePrototype->SetCenter(m_mapBuilder.GetVehicleCenter());
 			m_vehiclePrototype->SetAngle(m_mapBuilder.GetVehicleAngle());
 			m_vehiclePrototype->Update();
 			m_textObservers[VEHICLE_ANGLE_TEXT]->Notify();
+			m_textObservers[NUMBER_OF_INNER_EDGES_TEXT]->Notify();
+			m_textObservers[NUMBER_OF_OUTER_EDGES_TEXT]->Notify();
+			m_textObservers[INNER_EDGES_CHAIN_COMPLETED_TEXT]->Notify();
+			m_textObservers[OUTER_EDGES_CHAIN_COMPLETED_TEXT]->Notify();
 			m_upToDate = true;
 		}
 		else
@@ -372,7 +373,7 @@ void StateMapEditor::Update()
 			m_mapBuilder.Clear();
 			if (m_vehiclePositioned)
 				m_mapBuilder.AddVehicle(m_vehiclePrototype->GetAngle(), m_vehiclePrototype->GetCenter());
-			m_mapBuilder.AddEdges(m_mapPrototype.GetEdges());
+			m_mapBuilder.AddEdgesChains(m_mapPrototype.GetInnerEdgesChain(), m_mapPrototype.GetOuterEdgesChain());
 			bool success = m_mapBuilder.Save(filenameText->GetFilename());
 			auto status = m_mapBuilder.GetLastOperationStatus();
 			if (success)
@@ -482,7 +483,10 @@ bool StateMapEditor::Load()
 	m_texts[VIEW_OFFSET_TEXT] = new TripleText({ "View offset:", "", "| [A] [D] [W] [S]" });
 	m_texts[FILENAME_TEXT] = new FilenameText<true, true>("map.bin");
 	m_texts[EDGE_SUBMODE_TEXT] = new TripleText({ "Current mode:", "", "| [1] [2] [RMB] [Alt] [Esc]" });
-	m_texts[EDGE_COUNT_TEXT] = new DoubleText({ "Edge count:" });
+	m_texts[NUMBER_OF_INNER_EDGES_TEXT] = new DoubleText({ "Number of inner edges:" });
+	m_texts[NUMBER_OF_OUTER_EDGES_TEXT] = new DoubleText({ "Number of outer edges:" });
+	m_texts[INNER_EDGES_CHAIN_COMPLETED_TEXT] = new DoubleText({ "Inner edges chain completed:" });
+	m_texts[OUTER_EDGES_CHAIN_COMPLETED_TEXT] = new DoubleText({ "Outer edges chain completed:" });
 	m_texts[VEHICLE_POSITIONED_TEXT] = new TripleText({ "Vehicle positioned:", "", "| [RMB] [Backspace]" });
 	m_texts[VEHICLE_ANGLE_TEXT] = new TripleText({ "Vehicle angle:", "", "| [Z] [X]" });
 
@@ -493,7 +497,10 @@ bool StateMapEditor::Load()
 	m_textObservers[VIEW_OFFSET_TEXT] = new FunctionEventObserver<std::string>([&] { return "(" + std::to_string(int(CoreWindow::GetViewOffset().x)) + ", " + std::to_string(int(CoreWindow::GetViewOffset().y)) + ")"; });
 	m_textObservers[FILENAME_TEXT] = nullptr;
 	m_textObservers[EDGE_SUBMODE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_edgeSubmodeStrings[m_edgeSubmode]; });
-	m_textObservers[EDGE_COUNT_TEXT] = new FunctionEventObserver<size_t>([&] { return m_mapPrototype.GetNumberOfEdges(); });
+	m_textObservers[NUMBER_OF_INNER_EDGES_TEXT] = new FunctionEventObserver<size_t>([&] { return m_mapPrototype.GetNumberOfInnerEdges(); });
+	m_textObservers[NUMBER_OF_OUTER_EDGES_TEXT] = new FunctionEventObserver<size_t>([&] { return m_mapPrototype.GetNumberOfOuterEdges(); });
+	m_textObservers[INNER_EDGES_CHAIN_COMPLETED_TEXT] = new FunctionEventObserver<bool>([&] { return m_mapPrototype.IsInnerEdgesChainCompleted(); });
+	m_textObservers[OUTER_EDGES_CHAIN_COMPLETED_TEXT] = new FunctionEventObserver<bool>([&] { return m_mapPrototype.IsOuterEdgesChainCompleted(); });
 	m_textObservers[VEHICLE_POSITIONED_TEXT] = new TypeEventObserver<bool>(m_vehiclePositioned);
 	m_textObservers[VEHICLE_ANGLE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_vehiclePositioned ? std::to_string(m_vehiclePrototype->GetAngle()) : "Unknown"; });
 
@@ -507,8 +514,11 @@ bool StateMapEditor::Load()
 	m_texts[ZOOM_TEXT]->SetPosition({ FontContext::Component(2), {0}, {3}, {7} });
 	m_texts[VIEW_OFFSET_TEXT]->SetPosition({ FontContext::Component(3), {0}, {3}, {7} });
 	m_texts[FILENAME_TEXT]->SetPosition({ FontContext::Component(4), {0}, {3}, {7}, {16} });
-	m_texts[EDGE_SUBMODE_TEXT]->SetPosition({ FontContext::Component(1, true), {0}, {3}, {7} });
-	m_texts[EDGE_COUNT_TEXT]->SetPosition({ FontContext::Component(2, true), {0}, {3} });
+	m_texts[EDGE_SUBMODE_TEXT]->SetPosition({ FontContext::Component(5, true), {0}, {6}, {10} });
+	m_texts[NUMBER_OF_INNER_EDGES_TEXT]->SetPosition({ FontContext::Component(4, true), {0}, {6} });
+	m_texts[NUMBER_OF_OUTER_EDGES_TEXT]->SetPosition({ FontContext::Component(3, true), {0}, {6} });
+	m_texts[INNER_EDGES_CHAIN_COMPLETED_TEXT]->SetPosition({ FontContext::Component(2, true), {0}, {6} });
+	m_texts[OUTER_EDGES_CHAIN_COMPLETED_TEXT]->SetPosition({ FontContext::Component(1, true), {0}, {6} });
 	m_texts[VEHICLE_POSITIONED_TEXT]->SetPosition({ FontContext::Component(1, true), {0}, {4}, {7} });
 	m_texts[VEHICLE_ANGLE_TEXT]->SetPosition({ FontContext::Component(2, true), {0}, {4}, {7} });
 
@@ -542,7 +552,7 @@ void StateMapEditor::Draw()
 				edgeShape[1].position.x *= m_zoom;
 				edgeShape[1].position.y *= m_zoom;
 				edgeShape[1].position += CoreWindow::GetViewOffset();
-				edgeShape[0].color = sf::Color::White;
+				edgeShape[0].color = ColorContext::EdgeDefault;
 				edgeShape[1].color = edgeShape[0].color;
 				CoreWindow::Draw(edgeShape.data(), edgeShape.size(), sf::Lines);
 			}
@@ -554,13 +564,16 @@ void StateMapEditor::Draw()
 				edgeShape[1].position.x *= m_zoom;
 				edgeShape[1].position.y *= m_zoom;
 				edgeShape[1].position += CoreWindow::GetViewOffset();
-				edgeShape[0].color = sf::Color::Red;
+				edgeShape[0].color = ColorContext::EdgeRemove;
 				edgeShape[1].color = edgeShape[0].color;
 				CoreWindow::Draw(edgeShape.data(), edgeShape.size(), sf::Lines);
 			}
 
 			m_texts[EDGE_SUBMODE_TEXT]->Draw();
-			m_texts[EDGE_COUNT_TEXT]->Draw();
+			m_texts[NUMBER_OF_INNER_EDGES_TEXT]->Draw();
+			m_texts[NUMBER_OF_OUTER_EDGES_TEXT]->Draw();
+			m_texts[INNER_EDGES_CHAIN_COMPLETED_TEXT]->Draw();
+			m_texts[OUTER_EDGES_CHAIN_COMPLETED_TEXT]->Draw();
 			break;
 		}
 		case VEHICLE_MODE:
@@ -584,12 +597,26 @@ void StateMapEditor::InsertEdge(sf::Vector2f edgeEndPoint)
 {
 	if (m_insertEdge)
 	{
-		if (!m_mapPrototype.IsEmpty())
+		if (!m_mapPrototype.IsInnerEdgesChainCompleted())
+		{
 			m_insertEdge = !m_mapPrototype.FindClosestPointOnIntersection({ m_edgeBeggining, edgeEndPoint }, edgeEndPoint);
-
-		m_mapPrototype.AddEdge({ m_edgeBeggining, edgeEndPoint });
-		m_textObservers[EDGE_COUNT_TEXT]->Notify();
-		m_upToDate = false;
+			if (m_mapPrototype.AddInnerEdge({ m_edgeBeggining, edgeEndPoint }))
+			{
+				m_textObservers[NUMBER_OF_INNER_EDGES_TEXT]->Notify();
+				m_textObservers[INNER_EDGES_CHAIN_COMPLETED_TEXT]->Notify();
+				m_upToDate = false;
+			}
+		}
+		else if (!m_mapPrototype.IsOuterEdgesChainCompleted())
+		{
+			m_insertEdge = !m_mapPrototype.FindClosestPointOnIntersection({ m_edgeBeggining, edgeEndPoint }, edgeEndPoint);
+			if (m_mapPrototype.AddOuterEdge({ m_edgeBeggining, edgeEndPoint }))
+			{
+				m_textObservers[NUMBER_OF_OUTER_EDGES_TEXT]->Notify();
+				m_textObservers[OUTER_EDGES_CHAIN_COMPLETED_TEXT]->Notify();
+				m_upToDate = false;
+			}
+		}
 	}
 	else
 		m_insertEdge = true;
@@ -601,10 +628,17 @@ void StateMapEditor::RemoveEdge(sf::Vector2f edgeEndPoint)
 {
 	if (m_removeEdge)
 	{
-		if (m_mapPrototype.RemoveEdgesOnInterscetion({ m_edgeBeggining, edgeEndPoint }))
+		if (m_mapPrototype.RemoveEdgesOnIntersection({ m_edgeBeggining, edgeEndPoint }))
 		{
+			if (!m_mapPrototype.IsInnerEdgesChainCompleted())
+			{
+				m_textObservers[NUMBER_OF_INNER_EDGES_TEXT]->Notify();
+				m_textObservers[INNER_EDGES_CHAIN_COMPLETED_TEXT]->Notify();
+			}
+
+			m_textObservers[NUMBER_OF_OUTER_EDGES_TEXT]->Notify();
+			m_textObservers[OUTER_EDGES_CHAIN_COMPLETED_TEXT]->Notify();
 			m_upToDate = false;
-			m_textObservers[EDGE_COUNT_TEXT]->Notify();
 		}
 	}
 	else

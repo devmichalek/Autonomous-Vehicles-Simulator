@@ -18,6 +18,7 @@ StateTesting::StateTesting() :
 	m_enableUserVehicle(false, true, true, false),
 	m_enableCheckpoints(false, true, true, false),
 	m_zoom(1.f, 4.f, 0.3f, 1.f),
+	m_zoomThreshold(m_zoom.Max()),
 	m_viewTimer(1.0, 0.1),
 	m_viewMovementOffset(3.0),
 	m_pressedKeyTimer(0.0, 1.0, 5000)
@@ -114,6 +115,7 @@ void StateTesting::Reload()
 	m_enableUserVehicle.ResetValue();
 	m_enableCheckpoints.ResetValue();
 	m_zoom.ResetValue();
+	m_zoomThreshold = m_zoom.Max();
 	m_viewTimer.Reset();
 	m_pressedKeyTimer.MakeTimeout();
 
@@ -234,6 +236,22 @@ void StateTesting::Capture()
 								size_t totalNumberOfSimulatedVehicles = m_numberOfVehicles;
 								if (m_enableUserVehicle)
 									++totalNumberOfSimulatedVehicles;
+
+								// Calculate zoom threshold
+								const auto& mapSize = m_mapPrototype->GetSize();
+								const auto& windowSize = CoreWindow::GetWindowSize();
+								if (mapSize.x < windowSize.x && mapSize.y < windowSize.y)
+								{
+									m_zoomThreshold = m_zoom.Min();
+									CoreWindow::SetViewCenter(m_mapPrototype->GetCenter());
+								}
+								else
+								{
+									const float horizontalRatio = mapSize.x / windowSize.x;
+									const float verticalRatio = mapSize.y / windowSize.y;
+									const float highestRatio = horizontalRatio > verticalRatio ? horizontalRatio : verticalRatio;
+									m_zoomThreshold = highestRatio < m_zoom.Max() ? highestRatio : m_zoom.Max();
+								}
 
 								// Init simulated world
 								delete m_simulatedWorld;
@@ -400,6 +418,12 @@ void StateTesting::Capture()
 								m_zoom.Increase();
 								CoreWindow::SetViewZoom(m_zoom);
 								m_textObservers[ZOOM_TEXT]->Notify();
+
+								if (m_zoom >= m_zoomThreshold)
+								{
+									// Set view center as map center
+									CoreWindow::SetViewCenter(m_mapPrototype->GetCenter());
+								}
 							}
 							break;
 						case DECREASE_ZOOM:
@@ -535,6 +559,7 @@ void StateTesting::Update()
 						// Prepare map prototype
 						delete m_mapPrototype;
 						m_mapPrototype = m_mapBuilder.Get();
+						m_mapPrototype->CalculateProperties();
 						DrawableCheckpoint::SetVisibility(m_enableCheckpoints);
 
 						// Set dummy vehicle
@@ -619,8 +644,8 @@ void StateTesting::Update()
 							// Set user vehicle
 							delete m_userVehiclePrototype;
 							m_userVehiclePrototype = m_vehicleBuilder.Get();
-							m_userVehiclePrototype->SetCenter(m_mapBuilder.GetVehicleCenter());
-							m_userVehiclePrototype->SetAngle(m_mapBuilder.GetVehicleAngle());
+							m_userVehiclePrototype->SetCenter(m_dummyVehiclePrototype->GetCenter());
+							m_userVehiclePrototype->SetAngle(m_dummyVehiclePrototype->GetAngle());
 							m_userVehiclePrototype->Update();
 							const auto inertiaRatio = VehicleBuilder::CalculateInertia(m_userVehiclePrototype->GetBodyPoints()) / VehicleBuilder::GetMaxInertia();
 							m_defaultUserVehicleTorque = VehicleBuilder::GetDefaultTorque() * inertiaRatio;
@@ -647,8 +672,8 @@ void StateTesting::Update()
 							// Update specified bot vehicle
 							delete m_vehiclePrototypes[m_currentVehicle];
 							m_vehiclePrototypes[m_currentVehicle] = m_vehicleBuilder.Get();
-							m_vehiclePrototypes[m_currentVehicle]->SetCenter(m_mapBuilder.GetVehicleCenter());
-							m_vehiclePrototypes[m_currentVehicle]->SetAngle(m_mapBuilder.GetVehicleAngle());
+							m_vehiclePrototypes[m_currentVehicle]->SetCenter(m_dummyVehiclePrototype->GetCenter());
+							m_vehiclePrototypes[m_currentVehicle]->SetAngle(m_dummyVehiclePrototype->GetAngle());
 							m_vehiclePrototypes[m_currentVehicle]->Update();
 							m_botVehicleFilenames[m_currentVehicle] = filenameText->GetFilename();
 							m_textObservers[BOT_VEHICLE_TEXT]->Notify();
@@ -691,9 +716,10 @@ void StateTesting::Update()
 					}
 				}
 
-				CoreWindow::SetViewCenter(m_userVehicle->GetCenter());
+				if (m_zoom < m_zoomThreshold)
+					CoreWindow::SetViewCenter(m_userVehicle->GetCenter());
 			}
-			else if (m_viewTimer.Update())
+			else if (m_zoom < m_zoomThreshold && m_viewTimer.Update())
 			{
 				sf::Vector2f m_viewCenter = m_dummyVehiclePrototype->GetCenter();
 				if (m_numberOfVehicles)
@@ -701,9 +727,9 @@ void StateTesting::Update()
 
 				// Update view
 				auto viewCenter = CoreWindow::GetViewCenter();
-				auto distance = DrawableMath::Distance(viewCenter, m_viewCenter);
-				auto angle = DrawableMath::DifferenceVectorAngle(viewCenter, m_viewCenter);
-				viewCenter = DrawableMath::GetEndPoint(viewCenter, angle, float(-distance * m_viewMovementOffset * CoreWindow::GetElapsedTime()));
+				auto distance = MathContext::Distance(viewCenter, m_viewCenter);
+				auto angle = MathContext::DifferenceVectorAngle(viewCenter, m_viewCenter);
+				viewCenter = MathContext::GetEndPoint(viewCenter, angle, float(-distance * m_viewMovementOffset * CoreWindow::GetElapsedTime()));
 				CoreWindow::SetViewCenter(viewCenter);
 			}
 

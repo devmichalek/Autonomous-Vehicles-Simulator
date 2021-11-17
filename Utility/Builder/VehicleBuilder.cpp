@@ -30,7 +30,7 @@ bool VehicleBuilder::ValidateBodyArea()
 {
 	auto minBound = GetMinBodyBound();
 	auto minimumArea = minBound.x * minBound.y;
-	auto totalArea = DrawableMath::CalculateArea(m_prototype.GetBodyPoints());
+	auto totalArea = MathContext::CalculateArea(m_prototype.GetBodyPoints());
 
 	if (totalArea < minimumArea)
 	{
@@ -138,7 +138,7 @@ bool VehicleBuilder::ValidateSensorPositionsOverBody()
 {
 	for (const auto& position : m_prototype.GetSensorPoints())
 	{
-		if (!DrawableMath::IsPointInsidePolygon(m_prototype.GetBodyPoints(), position))
+		if (!MathContext::IsPointInsidePolygon(m_prototype.GetBodyPoints(), position))
 		{
 			m_lastOperationStatus = ERROR_SENSOR_IS_OUTSIDE_OF_VEHICLE_BODY;
 			return false;
@@ -150,7 +150,7 @@ bool VehicleBuilder::ValidateSensorPositionsOverBody()
 
 bool VehicleBuilder::ValidateBodyAsConvexPolygon()
 {
-	if (!DrawableMath::IsPolygonConvex(m_prototype.GetBodyPoints()))
+	if (!MathContext::IsPolygonConvex(m_prototype.GetBodyPoints()))
 	{
 		m_lastOperationStatus = ERROR_VEHICLE_BODY_IS_NOT_CONVEX_POLYGON;
 		return false;
@@ -359,7 +359,7 @@ bool VehicleBuilder::GetMassData(const std::vector<sf::Vector2f>& bodyPoints, b2
 	const size_t numberOfPoints = bodyPoints.size();
 	b2Vec2* vertices = new b2Vec2[numberOfPoints];
 	for (size_t i = 0; i < numberOfPoints; ++i)
-		vertices[i] = DrawableMath::ToBox2DPosition(bodyPoints[i]);
+		vertices[i] = MathContext::ToBox2DPosition(bodyPoints[i]);
 
 	b2PolygonShape polygonShape;
 	polygonShape.Set(vertices, int32(numberOfPoints));

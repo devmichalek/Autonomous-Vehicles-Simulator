@@ -50,15 +50,6 @@ void DoubleText::SetObserver(ObserverInterface* observer)
 	}
 }
 
-sf::Color DoubleText::BlendColors(sf::Color a, sf::Color b, float alpha)
-{
-	sf::Color result;
-	result.r = sf::Uint8((1.f - alpha) * float(a.r) + alpha * float(b.r));
-	result.g = sf::Uint8((1.f - alpha) * float(a.g) + alpha * float(b.g));
-	result.b = sf::Uint8((1.f - alpha) * float(a.b) + alpha * float(b.b));
-	return result;
-}
-
 void DoubleText::UpdateInternal()
 {
 	if (m_observer)
@@ -70,16 +61,16 @@ void DoubleText::UpdateInternal()
 		}
 
 		m_blendTimer->Update();
-		m_texts[VARIABLE_TEXT].setFillColor(BlendColors(m_activeColor, m_inactiveColor, float(m_blendTimer->GetValue())));
+		m_texts[VARIABLE_TEXT].setFillColor(ColorContext::BlendColors(ColorContext::ActiveText, ColorContext::InactiveText, float(m_blendTimer->GetValue())));
 	}
 }
 
 void DoubleText::SetVariableTextInactiveColor()
 {
-	m_texts[VARIABLE_TEXT].setFillColor(m_inactiveColor);
+	m_texts[VARIABLE_TEXT].setFillColor(ColorContext::InactiveText);
 }
 
 void DoubleText::SetVariableTextActiveColor()
 {
-	m_texts[VARIABLE_TEXT].setFillColor(m_activeColor);
+	m_texts[VARIABLE_TEXT].setFillColor(ColorContext::ActiveText);
 }

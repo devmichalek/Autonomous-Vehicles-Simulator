@@ -22,6 +22,7 @@ StateTraining::StateTraining() :
 	m_requiredFitnessImprovement(0.01, 0.2, 0.01, 0.05),
 	m_requiredFitnessImprovementRise(1.0, 15.0, 0.5, 3.0),
 	m_zoom(1.f, 4.f, 0.3f, 1.f),
+	m_zoomThreshold(m_zoom.Max()),
 	m_viewMovementOffset(3.0),
 	m_viewTimer(1.0, 0.2),
 	m_pressedKeyTimer(0.0, 1.0, 5000),
@@ -137,6 +138,7 @@ void StateTraining::Reload()
 	m_requiredFitnessImprovement.ResetValue();
 	m_requiredFitnessImprovementRise.ResetValue();
 	m_zoom.ResetValue();
+	m_zoomThreshold = m_zoom.Max();
 
 	// Reset timers
 	m_viewTimer.Reset();
@@ -250,6 +252,22 @@ void StateTraining::Capture()
 							m_artificialNeuralNetworks.resize(m_population);
 							for (auto& artificialNeuralNetwork : m_artificialNeuralNetworks)
 								artificialNeuralNetwork = ArtificialNeuralNetworkBuilder::Copy(m_artificialNeuralNetworkPrototype);
+
+							// Calculate zoom threshold
+							const auto& mapSize = m_mapPrototype->GetSize();
+							const auto& windowSize = CoreWindow::GetWindowSize();
+							if (mapSize.x < windowSize.x && mapSize.y < windowSize.y)
+							{
+								m_zoomThreshold = m_zoom.Min();
+								CoreWindow::SetViewCenter(m_mapPrototype->GetCenter());
+							}
+							else
+							{
+								const float horizontalRatio = mapSize.x / windowSize.x;
+								const float verticalRatio = mapSize.y / windowSize.y;
+								const float highestRatio = horizontalRatio > verticalRatio ? horizontalRatio : verticalRatio;
+								m_zoomThreshold = highestRatio < m_zoom.Max() ? highestRatio : m_zoom.Max();
+							}
 
 							// Create simulated world
 							delete m_simulatedWorld;
@@ -552,6 +570,12 @@ void StateTraining::Capture()
 								m_zoom.Increase();
 								CoreWindow::SetViewZoom(m_zoom);
 								m_textObservers[ZOOM_TEXT]->Notify();
+
+								if (m_zoom >= m_zoomThreshold)
+								{
+									// Set view center as map center
+									CoreWindow::SetViewCenter(m_mapPrototype->GetCenter());
+								}
 							}
 							break;
 						case DECREASE_ZOOM:
@@ -629,6 +653,7 @@ void StateTraining::Update()
 						// Prepare map prototype
 						delete m_mapPrototype;
 						m_mapPrototype = m_mapBuilder.Get();
+						m_mapPrototype->CalculateProperties();
 
 						if (!m_vehiclePrototype)
 						{
@@ -803,11 +828,14 @@ void StateTraining::Update()
 			}
 
 			// Update view
-			auto viewCenter = CoreWindow::GetViewCenter();
-			auto distance = DrawableMath::Distance(viewCenter, m_viewCenter);
-			auto angle = DrawableMath::DifferenceVectorAngle(viewCenter, m_viewCenter);
-			viewCenter = DrawableMath::GetEndPoint(viewCenter, angle, float(-distance * m_viewMovementOffset * CoreWindow::GetElapsedTime()));
-			CoreWindow::SetViewCenter(viewCenter);
+			if (m_zoom < m_zoomThreshold)
+			{
+				auto viewCenter = CoreWindow::GetViewCenter();
+				auto distance = MathContext::Distance(viewCenter, m_viewCenter);
+				auto angle = MathContext::DifferenceVectorAngle(viewCenter, m_viewCenter);
+				viewCenter = MathContext::GetEndPoint(viewCenter, angle, float(-distance * m_viewMovementOffset * CoreWindow::GetElapsedTime()));
+				CoreWindow::SetViewCenter(viewCenter);
+			}
 			break;
 		}
 		case PAUSED_MODE:

@@ -33,7 +33,7 @@ StateArtificialNeuralNetworkEditor::StateArtificialNeuralNetworkEditor() :
 	CalculatePositions();
 
 	m_neuronShape.setRadius(CoreWindow::GetWindowSize().x * 0.008f);
-	m_weightShape[0].color = sf::Color(255, 255, 255, 128);
+	m_weightShape[0].color = ColorContext::WeightDefault;
 	m_weightShape[1].color = m_weightShape[0].color;
 
 	m_texts.resize(TEXT_COUNT, nullptr);
@@ -208,7 +208,10 @@ void StateArtificialNeuralNetworkEditor::Update()
 
 			// Calculate strengths
 			for (size_t i = 0; i < m_weightStrengths.size(); ++i)
-				m_weightStrengths[i] = GetWeightStrength(max, weights[i]);
+			{
+				auto alpha = sf::Uint8(ColorContext::MaxChannelValue / 2 * (weights[i] / max));
+				m_weightStrengths[i] = ColorContext::Create(ColorContext::MaxChannelValue, alpha);
+			}
 
 			// Notify observers
 			m_textObservers[CURRENT_LAYER_TEXT]->Notify();
@@ -296,7 +299,7 @@ void StateArtificialNeuralNetworkEditor::Draw()
 
 	for (size_t layerNr = 0; layerNr < m_layersPositions.size(); ++layerNr)
 	{
-		m_neuronShape.setFillColor(m_currentLayer == layerNr ? sf::Color(0xFF, 0xAA, 0x1D, 0xFF) : sf::Color(0xC0, 0xC0, 0xC0, 0xFF));
+		m_neuronShape.setFillColor(m_currentLayer == layerNr ? ColorContext::NeuronActive : ColorContext::NeuronDefault);
 		for (const auto& position : m_layersPositions[layerNr])
 		{
 			m_neuronShape.setPosition(position);
@@ -358,7 +361,8 @@ void StateArtificialNeuralNetworkEditor::CalculatePositions()
 				edge[0] = m_layersPositions[layerNr - 1][j];
 				edge[1] = m_layersPositions[layerNr][i];
 				m_weightPositions.push_back(edge);
-				m_weightStrengths.push_back(GetWeightStrength(1.0, 1.0));
+				auto alpha = sf::Uint8(ColorContext::MaxChannelValue / 2);
+				m_weightStrengths.push_back(ColorContext::Create(ColorContext::MaxChannelValue, alpha));
 			}
 		}
 	}
@@ -473,9 +477,4 @@ void StateArtificialNeuralNetworkEditor::RemoveNeuron()
 
 		m_upToDate = false;
 	}
-}
-
-sf::Color StateArtificialNeuralNetworkEditor::GetWeightStrength(double max, double value) const
-{
-	return sf::Color(255, 255, 255, 32 + sf::Uint8(128.0 * (value / max)));
 }

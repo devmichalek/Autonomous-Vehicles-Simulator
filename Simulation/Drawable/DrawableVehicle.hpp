@@ -1,6 +1,6 @@
 #pragma once
 #include "DrawableInterface.hpp"
-#include "DrawableMath.hpp"
+#include "MathContext.hpp"
 #include "VehicleBuilder.hpp"
 
 class DrawableVehicle :
@@ -19,11 +19,11 @@ protected:
 		m_beams.resize(numberOfSensors);
 		for (auto& beam : m_beams)
 		{
-			beam[0].color = sf::Color(255, 255, 255, 144);
-			beam[1].color = sf::Color(255, 255, 255, 32);
+			beam[0].color = ColorContext::BeamBeggining;
+			beam[1].color = ColorContext::BeamEnd;
 		}
 		m_sensorShape.setRadius(VehicleBuilder::GetDefaultSensorSize().x);
-		m_sensorShape.setFillColor(sf::Color(0xAA, 0x4A, 0x44, 0xFF));
+		m_sensorShape.setFillColor(ColorContext::VehicleSensorDefault);
 	}
 
 	~DrawableVehicle()
@@ -48,7 +48,7 @@ public:
 	// Set this vehicle with leader color
 	inline void SetAsLeader()
 	{
-		m_bodyShape.setFillColor(sf::Color(0x60, 0x83, 0x41, 0xFF));
+		m_bodyShape.setFillColor(ColorContext::LeaderVehicle);
 	}
 
 	// Draws vehicle

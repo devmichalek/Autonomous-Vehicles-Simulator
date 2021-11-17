@@ -10,8 +10,7 @@ protected:
 	const size_t m_size;
 	std::vector<sf::Text> m_texts;
 	std::vector<sf::Vector2f> m_textPositions;
-	inline static const sf::Color m_activeColor = sf::Color(0xFF, 0xAA, 0x1D, 0xFF);
-	inline static const sf::Color m_inactiveColor = sf::Color(0xC0, 0xC0, 0xC0, 0xFF);
+	
 
 	// Validates number of components
 	void ValidateNumberOfComponents(std::vector<FontContext::Component>& components, const size_t requiredSize)
@@ -32,7 +31,7 @@ protected:
 		for (auto& text : m_texts)
 		{
 			text.setFont(FontContext::GetFont());
-			text.setFillColor(sf::Color::White);
+			text.setFillColor(ColorContext::PassiveText);
 			text.setCharacterSize(FontContext::GetCharacterSize());
 		}
 
