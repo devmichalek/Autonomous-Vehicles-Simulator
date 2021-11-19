@@ -11,17 +11,10 @@ StateVehicleEditor::StateVehicleEditor() :
 	m_modeStrings[MODE_VEHICLE_BODY] = "Vehicle body";
 	m_modeStrings[MODE_VEHICLE_SENSORS] = "Vehicle sensors";
 	m_mode = MODE_VEHICLE_BODY;
-	m_vehicleSensorsSubmodeStrings[VEHICLE_SENSORS_INSERT] = "Inserting";
-	m_vehicleSensorsSubmodeStrings[VEHICLE_SENSORS_REMOVE] = "Removing";
-	m_vehicleSensorsSubmode = VEHICLE_SENSORS_INSERT;
 
 	// Initialize control keys
 	m_controlKeys.insert(std::pair(sf::Keyboard::F1, CHANGE_TO_VEHICLE_BODY_MODE));
 	m_controlKeys.insert(std::pair(sf::Keyboard::F2, CHANGE_TO_VEHICLE_SENSORS_MODE));
-	m_controlKeys.insert(std::pair(sf::Keyboard::Num1, CHANGE_TO_INSERT_STATE));
-	m_controlKeys.insert(std::pair(sf::Keyboard::Numpad1, CHANGE_TO_INSERT_STATE));
-	m_controlKeys.insert(std::pair(sf::Keyboard::Num2, CHANGE_TO_REMOVE_STATE));
-	m_controlKeys.insert(std::pair(sf::Keyboard::Numpad2, CHANGE_TO_REMOVE_STATE));
 	m_controlKeys.insert(std::pair(sf::Keyboard::BackSpace, REMOVE_LAST_VEHICLE_BODY_POINT));
 	m_controlKeys.insert(std::pair(sf::Keyboard::RAlt, CHANGE_SENSOR));
 	m_controlKeys.insert(std::pair(sf::Keyboard::LAlt, CHANGE_SENSOR));
@@ -103,7 +96,6 @@ StateVehicleEditor::~StateVehicleEditor()
 void StateVehicleEditor::Reload()
 {
 	m_mode = MODE_VEHICLE_BODY;
-	m_vehicleSensorsSubmode = VEHICLE_SENSORS_INSERT;
 
 	// Reset pressed keys
 	for (size_t i = 0; i < CONTROL_KEYS_COUNT; ++i)
@@ -149,30 +141,14 @@ void StateVehicleEditor::Capture()
 					case CHANGE_TO_VEHICLE_BODY_MODE:
 					case CHANGE_TO_VEHICLE_SENSORS_MODE:
 						m_mode = iterator->second == CHANGE_TO_VEHICLE_BODY_MODE ? MODE_VEHICLE_BODY : MODE_VEHICLE_SENSORS;
-						m_vehicleSensorsSubmode = VEHICLE_SENSORS_INSERT;
 						m_currentSensorIndex = 0;
 						m_currentSensorAngle = m_vehiclePrototype->GetSensorBeamAngle(m_currentSensorIndex);
 						m_currentSensorMotionRange = m_vehiclePrototype->GetSensorMotionRange(m_currentSensorIndex);
 						// Notify observers
 						m_textObservers[MODE_TEXT]->Notify();
-						m_textObservers[VEHICLE_SENSORS_SUBMODE_TEXT]->Notify();
 						m_textObservers[CURRENT_SENSOR_TEXT]->Notify();
 						m_textObservers[CURRENT_SENSOR_ANGLE_TEXT]->Notify();
 						m_textObservers[CURRENT_SENSOR_MOTION_RANGE_TEXT]->Notify();
-						break;
-					case CHANGE_TO_INSERT_STATE:
-						if (m_mode == MODE_VEHICLE_SENSORS)
-						{
-							m_vehicleSensorsSubmode = VEHICLE_SENSORS_INSERT;
-							m_textObservers[VEHICLE_SENSORS_SUBMODE_TEXT]->Notify();
-						}
-						break;
-					case CHANGE_TO_REMOVE_STATE:
-						if (m_mode == MODE_VEHICLE_SENSORS)
-						{
-							m_vehicleSensorsSubmode = VEHICLE_SENSORS_REMOVE;
-							m_textObservers[VEHICLE_SENSORS_SUBMODE_TEXT]->Notify();
-						}
 						break;
 					case REMOVE_LAST_VEHICLE_BODY_POINT:
 						if (m_vehiclePrototype->RemoveLastBodyPoint())
@@ -294,14 +270,13 @@ void StateVehicleEditor::Capture()
 					case MODE_VEHICLE_SENSORS:
 					{
 						relativePosition -= CoreWindow::GetWindowCenter();
-						switch (m_vehicleSensorsSubmode)
+						if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
 						{
-							case VEHICLE_SENSORS_INSERT:
-								InsertSensor(relativePosition);
-								break;
-							case VEHICLE_SENSORS_REMOVE:
-								RemoveSensor(relativePosition);
-								break;
+							InsertSensor(relativePosition);
+						}
+						else if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
+						{
+							RemoveSensor(relativePosition);
 						}
 
 						break;
@@ -387,11 +362,10 @@ bool StateVehicleEditor::Load()
 	m_texts[BACK_TEXT] = new ConsistentText({ "Back" });
 	m_texts[FRONT_TEXT] = new ConsistentText({ "Front" });
 	m_texts[MODE_TEXT] = new TripleText({ "Mode:", "", "| [F1] [F2]" });
-	m_texts[TOTAL_NUMBER_OF_BODY_POINTS_TEXT] = new TripleText({ "Total number of body points:", "", "| [RMB] [Backspace]" });
-	m_texts[TOTAL_NUMBER_OF_SENSORS_TEXT] = new TripleText({ "Total number of sensors:", "", "| [RMB]" });
+	m_texts[TOTAL_NUMBER_OF_BODY_POINTS_TEXT] = new TripleText({ "Total number of body points:", "", "| [LMB] [Backspace]" });
+	m_texts[TOTAL_NUMBER_OF_SENSORS_TEXT] = new TripleText({ "Total number of sensors:", "", "| [LMB] [RMB]" });
 	m_texts[FILENAME_TEXT] = new FilenameText<true, true>("vehicle.bin");
 	m_texts[VEHICLE_BODY_MASS] = new DoubleText({ "Vehicle body mass:", "" });
-	m_texts[VEHICLE_SENSORS_SUBMODE_TEXT] = new TripleText({ "Submode:", "", "| [1] [2]" });
 	m_texts[CURRENT_SENSOR_TEXT] = new TripleText({ "Current sensor:", "", "| [Alt]" });
 	m_texts[CURRENT_SENSOR_ANGLE_TEXT] = new TripleText({ "Current sensor angle:", "", "| [Z] [X]" });
 	m_texts[CURRENT_SENSOR_MOTION_RANGE_TEXT] = new TripleText({ "Current sensor motion range:", "", "| [C] [V]" });
@@ -401,7 +375,6 @@ bool StateVehicleEditor::Load()
 	m_textObservers[TOTAL_NUMBER_OF_BODY_POINTS_TEXT] = new FunctionEventObserver<size_t>([&] { return m_vehiclePrototype->GetNumberOfBodyPoints(); });
 	m_textObservers[TOTAL_NUMBER_OF_SENSORS_TEXT] = new FunctionEventObserver<size_t>([&] { return m_vehiclePrototype->GetNumberOfSensors(); });
 	m_textObservers[VEHICLE_BODY_MASS] = new FunctionEventObserver<std::string>([&] { return m_vehiclePrototype->GetNumberOfBodyPoints() < VehicleBuilder::GetMinNumberOfBodyPoints() ? "Unknown" : std::to_string(VehicleBuilder::CalculateMass(m_vehiclePrototype->GetBodyPoints())) + " kg"; });
-	m_textObservers[VEHICLE_SENSORS_SUBMODE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_vehicleSensorsSubmodeStrings[m_vehicleSensorsSubmode]; });
 	m_textObservers[CURRENT_SENSOR_TEXT] = new FunctionEventObserver<std::string>([&] { return m_vehiclePrototype->GetNumberOfSensors() > 0 ? "Sensor " + std::to_string(m_currentSensorIndex) : "None"; });
 	m_textObservers[CURRENT_SENSOR_ANGLE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_vehiclePrototype->GetNumberOfSensors() > 0 ? std::to_string(size_t(m_currentSensorAngle)) : "Unknown"; });
 	m_textObservers[CURRENT_SENSOR_MOTION_RANGE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_vehiclePrototype->GetNumberOfSensors() > 0 ? std::to_string(m_currentSensorMotionRange) : "Unknown"; });
@@ -426,7 +399,6 @@ bool StateVehicleEditor::Load()
 	m_texts[TOTAL_NUMBER_OF_SENSORS_TEXT]->SetPosition({ FontContext::Component(2), {0}, {6}, {10} });
 	m_texts[FILENAME_TEXT]->SetPosition({ FontContext::Component(3), {0}, {6}, {10}, {19} });
 	m_texts[VEHICLE_BODY_MASS]->SetPosition({ FontContext::Component(1, true), {0}, {4} });
-	m_texts[VEHICLE_SENSORS_SUBMODE_TEXT]->SetPosition({ FontContext::Component(4, true), {0}, {6}, {8} });
 	m_texts[CURRENT_SENSOR_TEXT]->SetPosition({ FontContext::Component(3, true), {0}, {6}, {8} });
 	m_texts[CURRENT_SENSOR_ANGLE_TEXT]->SetPosition({ FontContext::Component(2, true), {0}, {6}, {8} });
 	m_texts[CURRENT_SENSOR_MOTION_RANGE_TEXT]->SetPosition({ FontContext::Component(1, true), {0}, {6}, {8} });
@@ -466,7 +438,6 @@ void StateVehicleEditor::Draw()
 	}
 	else
 	{
-		m_texts[VEHICLE_SENSORS_SUBMODE_TEXT]->Draw();
 		m_texts[CURRENT_SENSOR_TEXT]->Draw();
 		m_texts[CURRENT_SENSOR_ANGLE_TEXT]->Draw();
 		m_texts[CURRENT_SENSOR_MOTION_RANGE_TEXT]->Draw();

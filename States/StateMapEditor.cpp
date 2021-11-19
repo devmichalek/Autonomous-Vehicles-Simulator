@@ -15,10 +15,6 @@ StateMapEditor::StateMapEditor() :
 	m_modeStrings[VEHICLE_MODE] = "Vehicle mode";
 	m_mode = EDGE_MODE;
 
-	m_edgeSubmodeStrings[GLUED_INSERT_EDGE_SUBMODE] = "Glued insert mode";
-	m_edgeSubmodeStrings[REMOVE_EDGE_SUBMODE] = "Remove mode";
-	m_edgeSubmode = GLUED_INSERT_EDGE_SUBMODE;
-
 	m_controlKeys.insert(std::pair(sf::Keyboard::F1, CHANGE_TO_EDGE_MODE));
 	m_controlKeys.insert(std::pair(sf::Keyboard::F2, CHANGE_TO_VEHICLE_MODE));
 	m_controlKeys.insert(std::pair(sf::Keyboard::Add, INCREASE_MOVEMENT));
@@ -29,13 +25,10 @@ StateMapEditor::StateMapEditor() :
 	m_controlKeys.insert(std::pair(sf::Keyboard::D, MOVE_OFFSET_RIGHT));
 	m_controlKeys.insert(std::pair(sf::Keyboard::W, MOVE_OFFSET_UP));
 	m_controlKeys.insert(std::pair(sf::Keyboard::S, MOVE_OFFSET_DOWN));
-	m_controlKeys.insert(std::pair(sf::Keyboard::Num1, CHANGE_TO_EDGE_MODE_INSERT_STATE));
-	m_controlKeys.insert(std::pair(sf::Keyboard::Num2, CHANGE_TO_EDGE_MODE_REMOVE_STATE));
 	m_controlKeys.insert(std::pair(sf::Keyboard::LAlt, FIND_NEAREST_EDGE_POINT));
 	m_controlKeys.insert(std::pair(sf::Keyboard::Escape, CANCEL_EDGE));
 	m_controlKeys.insert(std::pair(sf::Keyboard::X, INCREASE_VEHICLE_ANGLE));
 	m_controlKeys.insert(std::pair(sf::Keyboard::Z, DECREASE_VEHICLE_ANGLE));
-	m_controlKeys.insert(std::pair(sf::Keyboard::BackSpace, REMOVE_VEHICLE));
 
 	for (auto& i : m_pressedKeys)
 		i = false;
@@ -85,7 +78,6 @@ void StateMapEditor::Reload()
 {
 	// Reset internal states
 	m_mode = EDGE_MODE;
-	m_edgeSubmode = GLUED_INSERT_EDGE_SUBMODE;
 	for (auto& i : m_pressedKeys)
 		i = false;
 	m_pressedKeyTimer.MakeTimeout();
@@ -134,8 +126,6 @@ void StateMapEditor::Capture()
 						m_pressedKeys[iterator->second] = true;
 						if (m_mode == VEHICLE_MODE)
 						{
-							m_edgeSubmode = GLUED_INSERT_EDGE_SUBMODE;
-							m_textObservers[EDGE_SUBMODE_TEXT]->Notify();
 							m_insertEdge = false;
 							m_removeEdge = false;
 							m_mode = EDGE_MODE;
@@ -196,35 +186,16 @@ void StateMapEditor::Capture()
 					case MOVE_OFFSET_DOWN:
 						m_pressedKeys[iterator->second] = true;
 						break;
-					case CHANGE_TO_EDGE_MODE_INSERT_STATE:
-						m_pressedKeys[iterator->second] = true;
-						if (m_mode == EDGE_MODE && m_edgeSubmode != GLUED_INSERT_EDGE_SUBMODE)
-						{
-							m_edgeSubmode = GLUED_INSERT_EDGE_SUBMODE;
-							m_insertEdge = false;
-							m_removeEdge = false;
-							m_textObservers[EDGE_SUBMODE_TEXT]->Notify();
-						}
-						break;
-					case CHANGE_TO_EDGE_MODE_REMOVE_STATE:
-						m_pressedKeys[iterator->second] = true;
-						if (m_mode == EDGE_MODE && m_edgeSubmode != REMOVE_EDGE_SUBMODE)
-						{
-							m_edgeSubmode = REMOVE_EDGE_SUBMODE;
-							m_insertEdge = false;
-							m_removeEdge = false;
-							m_textObservers[EDGE_SUBMODE_TEXT]->Notify();
-						}
-						break;
 					case FIND_NEAREST_EDGE_POINT:
 						m_pressedKeys[iterator->second] = true;
-						if (m_mode == EDGE_MODE && m_edgeSubmode == GLUED_INSERT_EDGE_SUBMODE)
+						if (m_mode == EDGE_MODE)
 						{
 							sf::Vector2f correctPosition = CoreWindow::GetMousePosition();
 							correctPosition.x *= m_zoom;
 							correctPosition.y *= m_zoom;
 							correctPosition += CoreWindow::GetViewOffset();
 							m_edgeBeggining = correctPosition;
+							m_removeEdge = false;
 
 							if (m_mapPrototype.FindClosestPointOnDistance(correctPosition, m_edgeBeggining))
 								m_insertEdge = true;
@@ -236,6 +207,14 @@ void StateMapEditor::Capture()
 						{
 							m_insertEdge = false;
 							m_removeEdge = false;
+						}
+						else if (m_mode == VEHICLE_MODE && m_vehiclePositioned)
+						{
+							m_vehiclePositioned = false;
+							m_vehiclePrototype->SetAngle(0.0);
+							m_vehiclePrototype->Update();
+							m_textObservers[VEHICLE_POSITIONED_TEXT]->Notify();
+							m_textObservers[VEHICLE_ANGLE_TEXT]->Notify();
 						}
 						break;
 					case INCREASE_VEHICLE_ANGLE:
@@ -268,17 +247,6 @@ void StateMapEditor::Capture()
 							}
 						}
 						break;
-					case REMOVE_VEHICLE:
-						m_pressedKeys[iterator->second] = true;
-						if (m_mode == VEHICLE_MODE && m_vehiclePositioned)
-						{
-							m_vehiclePositioned = false;
-							m_vehiclePrototype->SetAngle(0.0);
-							m_vehiclePrototype->Update();
-							m_textObservers[VEHICLE_POSITIONED_TEXT]->Notify();
-							m_textObservers[VEHICLE_ANGLE_TEXT]->Notify();
-						}
-						break;
 				}
 			}
 		}
@@ -304,14 +272,15 @@ void StateMapEditor::Capture()
 				{
 					case EDGE_MODE:
 					{
-						switch (m_edgeSubmode)
+						if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
 						{
-							case GLUED_INSERT_EDGE_SUBMODE:
-								InsertEdge(correctPosition);
-								break;
-							case REMOVE_EDGE_SUBMODE:
-								RemoveEdge(correctPosition);
-								break;
+							m_removeEdge = false;
+							InsertEdge(correctPosition);
+						}
+						else if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
+						{
+							m_insertEdge = false;
+							RemoveEdge(correctPosition);
 						}
 						break;
 					}
@@ -482,12 +451,12 @@ bool StateMapEditor::Load()
 	m_texts[ZOOM_TEXT] = new TripleText({ "Zoom:", "", "| [/] [*]" });
 	m_texts[VIEW_OFFSET_TEXT] = new TripleText({ "View offset:", "", "| [A] [D] [W] [S]" });
 	m_texts[FILENAME_TEXT] = new FilenameText<true, true>("map.bin");
-	m_texts[EDGE_SUBMODE_TEXT] = new TripleText({ "Current mode:", "", "| [1] [2] [RMB] [Alt] [Esc]" });
+	m_texts[NUMBER_OF_EDGES_TEXT] = new TripleText({ "Number of edges:", "", "| [LMB] [RMB] [Alt] [Esc]" });
 	m_texts[NUMBER_OF_INNER_EDGES_TEXT] = new DoubleText({ "Number of inner edges:" });
 	m_texts[NUMBER_OF_OUTER_EDGES_TEXT] = new DoubleText({ "Number of outer edges:" });
 	m_texts[INNER_EDGES_CHAIN_COMPLETED_TEXT] = new DoubleText({ "Inner edges chain completed:" });
 	m_texts[OUTER_EDGES_CHAIN_COMPLETED_TEXT] = new DoubleText({ "Outer edges chain completed:" });
-	m_texts[VEHICLE_POSITIONED_TEXT] = new TripleText({ "Vehicle positioned:", "", "| [RMB] [Backspace]" });
+	m_texts[VEHICLE_POSITIONED_TEXT] = new TripleText({ "Vehicle positioned:", "", "| [LMB] [Esc]" });
 	m_texts[VEHICLE_ANGLE_TEXT] = new TripleText({ "Vehicle angle:", "", "| [Z] [X]" });
 
 	// Create observers
@@ -496,7 +465,7 @@ bool StateMapEditor::Load()
 	m_textObservers[ZOOM_TEXT] = new FunctionEventObserver<float>([&] { return m_zoom; });
 	m_textObservers[VIEW_OFFSET_TEXT] = new FunctionEventObserver<std::string>([&] { return "(" + std::to_string(int(CoreWindow::GetViewOffset().x)) + ", " + std::to_string(int(CoreWindow::GetViewOffset().y)) + ")"; });
 	m_textObservers[FILENAME_TEXT] = nullptr;
-	m_textObservers[EDGE_SUBMODE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_edgeSubmodeStrings[m_edgeSubmode]; });
+	m_textObservers[NUMBER_OF_EDGES_TEXT] = new FunctionEventObserver<size_t>([&] { return m_mapPrototype.GetNumberOfInnerEdges() + m_mapPrototype.GetNumberOfOuterEdges(); });
 	m_textObservers[NUMBER_OF_INNER_EDGES_TEXT] = new FunctionEventObserver<size_t>([&] { return m_mapPrototype.GetNumberOfInnerEdges(); });
 	m_textObservers[NUMBER_OF_OUTER_EDGES_TEXT] = new FunctionEventObserver<size_t>([&] { return m_mapPrototype.GetNumberOfOuterEdges(); });
 	m_textObservers[INNER_EDGES_CHAIN_COMPLETED_TEXT] = new FunctionEventObserver<bool>([&] { return m_mapPrototype.IsInnerEdgesChainCompleted(); });
@@ -514,7 +483,7 @@ bool StateMapEditor::Load()
 	m_texts[ZOOM_TEXT]->SetPosition({ FontContext::Component(2), {0}, {3}, {7} });
 	m_texts[VIEW_OFFSET_TEXT]->SetPosition({ FontContext::Component(3), {0}, {3}, {7} });
 	m_texts[FILENAME_TEXT]->SetPosition({ FontContext::Component(4), {0}, {3}, {7}, {16} });
-	m_texts[EDGE_SUBMODE_TEXT]->SetPosition({ FontContext::Component(5, true), {0}, {6}, {10} });
+	m_texts[NUMBER_OF_EDGES_TEXT]->SetPosition({ FontContext::Component(5, true), {0}, {6}, {7} });
 	m_texts[NUMBER_OF_INNER_EDGES_TEXT]->SetPosition({ FontContext::Component(4, true), {0}, {6} });
 	m_texts[NUMBER_OF_OUTER_EDGES_TEXT]->SetPosition({ FontContext::Component(3, true), {0}, {6} });
 	m_texts[INNER_EDGES_CHAIN_COMPLETED_TEXT]->SetPosition({ FontContext::Component(2, true), {0}, {6} });
@@ -569,7 +538,7 @@ void StateMapEditor::Draw()
 				CoreWindow::Draw(edgeShape.data(), edgeShape.size(), sf::Lines);
 			}
 
-			m_texts[EDGE_SUBMODE_TEXT]->Draw();
+			m_texts[NUMBER_OF_EDGES_TEXT]->Draw();
 			m_texts[NUMBER_OF_INNER_EDGES_TEXT]->Draw();
 			m_texts[NUMBER_OF_OUTER_EDGES_TEXT]->Draw();
 			m_texts[INNER_EDGES_CHAIN_COMPLETED_TEXT]->Draw();

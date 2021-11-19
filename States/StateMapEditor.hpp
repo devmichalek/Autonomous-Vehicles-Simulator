@@ -49,16 +49,6 @@ private:
 	std::array<std::string, MODES_COUNT> m_modeStrings;
 	size_t m_mode;
 
-	// Edge submodes
-	enum
-	{
-		GLUED_INSERT_EDGE_SUBMODE,
-		REMOVE_EDGE_SUBMODE,
-		EDGE_SUBMODE_COUNT
-	};
-	std::array<std::string, EDGE_SUBMODE_COUNT> m_edgeSubmodeStrings;
-	size_t m_edgeSubmode;
-
 	enum
 	{
 		CHANGE_TO_EDGE_MODE,
@@ -71,13 +61,11 @@ private:
 		MOVE_OFFSET_RIGHT,
 		MOVE_OFFSET_UP,
 		MOVE_OFFSET_DOWN,
-		CHANGE_TO_EDGE_MODE_INSERT_STATE,
-		CHANGE_TO_EDGE_MODE_REMOVE_STATE,
 		FIND_NEAREST_EDGE_POINT,
 		CANCEL_EDGE,
+		REMOVE_VEHICLE = CANCEL_EDGE,
 		INCREASE_VEHICLE_ANGLE,
 		DECREASE_VEHICLE_ANGLE,
-		REMOVE_VEHICLE,
 		CONTROL_KEYS_COUNT
 	};
 	std::map<const size_t, const size_t> m_controlKeys;
@@ -108,7 +96,7 @@ private:
 		ZOOM_TEXT,
 		VIEW_OFFSET_TEXT,
 		FILENAME_TEXT,
-		EDGE_SUBMODE_TEXT,
+		NUMBER_OF_EDGES_TEXT,
 		NUMBER_OF_INNER_EDGES_TEXT,
 		NUMBER_OF_OUTER_EDGES_TEXT,
 		INNER_EDGES_CHAIN_COMPLETED_TEXT,
