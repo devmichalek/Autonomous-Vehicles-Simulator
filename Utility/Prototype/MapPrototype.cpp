@@ -88,16 +88,48 @@ bool MapPrototype::AddOuterEdge(Edge edge)
 	if (IsOuterEdgesChainCompleted())
 		return false;
 
-	// Find end point
-	for (size_t i = 0; i < m_outerEdgesChain.size(); ++i)
+	auto IsIntersection = [&](const Edge& inner, const Edge& outer, const size_t index)
 	{
-		if (m_outerEdgesGaps[i])
+		return false;
+	};
+
+	if (m_numberOfOuterEdges == 0)
+	{
+		// First outer edge
+		if (!IsIntersection(m_innerEdgesChain[0], edge, 0))
 		{
 			++m_numberOfOuterEdges;
-			m_outerEdgesGaps[i] = false;
-			m_outerEdgesChain[i] = edge;
-			m_outerEdgesChainCompleted = MathContext::IsEdgesChain(m_outerEdgesChain);
+			m_outerEdgesGaps[0] = false;
+			m_outerEdgesChain[0] = edge;
+			m_outerEdgesChainCompleted = false;
 			return true;
+		}
+		
+		return false;
+	}
+
+	// Find end point
+	const size_t numberOfOuterEdges = m_outerEdgesChain.size();
+	for (size_t i = 0; i < m_outerEdgesChain.size(); ++i)
+	{
+		const size_t previousIndex = i == 0 ? numberOfOuterEdges - 1 : (i - 1);
+		if (!m_outerEdgesGaps[previousIndex] && m_outerEdgesChain[previousIndex][1] == edge[0])
+		{
+			if (m_outerEdgesGaps[i])
+			{
+				const size_t nextIndex = (i + 1) % numberOfOuterEdges;
+				if (m_outerEdgesGaps[nextIndex] || m_outerEdgesChain[nextIndex][0] == edge[1])
+				{
+					if (!IsIntersection(m_innerEdgesChain[i], edge, i))
+					{
+						++m_numberOfOuterEdges;
+						m_outerEdgesGaps[i] = false;
+						m_outerEdgesChain[i] = edge;
+						m_outerEdgesChainCompleted = m_numberOfOuterEdges == numberOfOuterEdges && MathContext::IsEdgesChain(m_outerEdgesChain);
+						return true;
+					}
+				}
+			}
 		}
 	}
 

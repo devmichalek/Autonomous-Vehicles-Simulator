@@ -111,7 +111,6 @@ void StateMapEditor::Reload()
 void StateMapEditor::Capture()
 {
 	auto* filenameText = static_cast<FilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
-	filenameText->Capture();
 	if (!filenameText->IsRenaming())
 	{
 		if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
@@ -286,18 +285,21 @@ void StateMapEditor::Capture()
 					}
 					case VEHICLE_MODE:
 					{
-						m_vehiclePrototype->SetCenter(correctPosition);
-						m_vehiclePrototype->Update();
-
-						if (!m_vehiclePositioned)
+						if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
 						{
-							m_vehiclePositioned = true;
-							// If vehicle was not previously positioned notify observers
-							m_textObservers[VEHICLE_POSITIONED_TEXT]->Notify();
-							m_textObservers[VEHICLE_ANGLE_TEXT]->Notify();
-						}
+							m_vehiclePrototype->SetCenter(correctPosition);
+							m_vehiclePrototype->Update();
 
-						m_upToDate = false;
+							if (!m_vehiclePositioned)
+							{
+								m_vehiclePositioned = true;
+								// If vehicle was not previously positioned notify observers
+								m_textObservers[VEHICLE_POSITIONED_TEXT]->Notify();
+								m_textObservers[VEHICLE_ANGLE_TEXT]->Notify();
+							}
+
+							m_upToDate = false;
+						}
 						break;
 					}
 					default:
@@ -307,7 +309,13 @@ void StateMapEditor::Capture()
 		}
 	}
 	else
+	{
+		m_insertEdge = false;
+		m_removeEdge = false;
 		m_upToDate = false;
+	}
+
+	filenameText->Capture();
 }
 
 void StateMapEditor::Update()
@@ -587,8 +595,9 @@ void StateMapEditor::InsertEdge(sf::Vector2f edgeEndPoint)
 			}
 		}
 	}
-	else
+	else if (!m_mapPrototype.IsInnerEdgesChainCompleted() || !m_mapPrototype.IsOuterEdgesChainCompleted())
 		m_insertEdge = true;
+		
 
 	m_edgeBeggining = edgeEndPoint;
 }
