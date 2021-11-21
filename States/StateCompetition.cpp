@@ -1,5 +1,5 @@
 #pragma once
-#include "StateTesting.hpp"
+#include "StateCompetition.hpp"
 #include "CoreLogger.hpp"
 #include "FilenameText.hpp"
 #include "ArtificialNeuralNetwork.hpp"
@@ -11,7 +11,7 @@
 #include "FitnessSystem.hpp"
 #include "DrawableCheckpoint.hpp"
 
-StateTesting::StateTesting() :
+StateCompetition::StateCompetition() :
 	m_numberOfVehicles(0),
 	m_currentVehicle(0),
 	m_maxNumberOfVehicles(10),
@@ -83,7 +83,7 @@ StateTesting::StateTesting() :
 	m_textObservers.resize(TEXT_COUNT, nullptr);
 }
 
-StateTesting::~StateTesting()
+StateCompetition::~StateCompetition()
 {
 	delete m_simulatedWorld;
 	delete m_fitnessSystem;
@@ -100,7 +100,7 @@ StateTesting::~StateTesting()
 		delete observer;
 }
 
-void StateTesting::Reload()
+void StateCompetition::Reload()
 {
 	// Reset states
 	m_mode = STOPPED_MODE;
@@ -111,7 +111,7 @@ void StateTesting::Reload()
 	for (size_t i = 0; i < m_pressedKeys.size(); ++i)
 		m_pressedKeys[i] = false;
 
-	// Reset testing parameters
+	// Reset competition parameters
 	m_numberOfVehicles = 0;
 	m_currentVehicle = 0;
 	m_enableUserVehicle.ResetValue();
@@ -158,7 +158,7 @@ void StateTesting::Reload()
 	CoreWindow::Reset();
 }
 
-void StateTesting::Capture()
+void StateCompetition::Capture()
 {
 	auto* filenameText = static_cast<FilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
 	if (!filenameText->IsRenaming())
@@ -549,7 +549,7 @@ void StateTesting::Capture()
 	}
 }
 
-void StateTesting::Update()
+void StateCompetition::Update()
 {
 	switch (m_mode)
 	{
@@ -772,7 +772,7 @@ void StateTesting::Update()
 		text->Update();
 }
 
-bool StateTesting::Load()
+bool StateCompetition::Load()
 {
 	// Create texts
 	m_texts[MODE_TEXT] = new StatusText({ "Mode:", "", "| [M] [P]" });
@@ -816,11 +816,11 @@ bool StateTesting::Load()
 	m_texts[USER_FITNESS_TEXT]->SetPosition({ FontContext::Component(1, true), {7}, {10} });
 	m_texts[ZOOM_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {8} });
 
-	CoreLogger::PrintSuccess("StateTesting dependencies loaded correctly");
+	CoreLogger::PrintSuccess("StateCompetition dependencies loaded correctly");
 	return true;
 }
 
-void StateTesting::Draw()
+void StateCompetition::Draw()
 {
 	switch (m_mode)
 	{
@@ -879,7 +879,7 @@ void StateTesting::Draw()
 	m_texts[ENABLE_USER_VEHICLE_TEXT]->Draw();
 }
 
-void StateTesting::OnAddVehicle()
+void StateCompetition::OnAddVehicle()
 {
 	if (m_numberOfVehicles < m_maxNumberOfVehicles)
 	{
@@ -931,7 +931,7 @@ void StateTesting::OnAddVehicle()
 	}
 }
 
-void StateTesting::OnRemoveVehicle()
+void StateCompetition::OnRemoveVehicle()
 {
 	if (m_numberOfVehicles)
 	{
@@ -960,7 +960,7 @@ void StateTesting::OnRemoveVehicle()
 	}
 }
 
-std::string StateTesting::GetBotVehicleName() const
+std::string StateCompetition::GetBotVehicleName() const
 {
 	if (m_numberOfVehicles == 0)
 		return "None";
@@ -973,7 +973,7 @@ std::string StateTesting::GetBotVehicleName() const
 	return std::string("Bot Vehicle nr. ") + std::to_string(m_currentVehicle) + data;
 }
 
-std::string StateTesting::GetUserVehicleName() const
+std::string StateCompetition::GetUserVehicleName() const
 {
 	if (!m_enableUserVehicle)
 		return "None";

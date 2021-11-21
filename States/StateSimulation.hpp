@@ -14,18 +14,18 @@ class ObserverInterface;
 class SimulatedWorld;
 class FitnessSystem;
 
-class StateTraining final :
+class StateSimulation final :
 	public StateInterface
 {
 public:
 
-	StateTraining(const StateTraining&) = delete;
+	StateSimulation(const StateSimulation&) = delete;
 
-	const StateTraining& operator=(const StateTraining&) = delete;
+	const StateSimulation& operator=(const StateSimulation&) = delete;
 
-	StateTraining();
+	StateSimulation();
 
-	~StateTraining();
+	~StateSimulation();
 
 	void Reload() override;
 

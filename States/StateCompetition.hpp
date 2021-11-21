@@ -12,18 +12,18 @@ class ObserverInterface;
 class SimulatedWorld;
 class FitnessSystem;
 
-class StateTesting final :
+class StateCompetition final :
 	public StateInterface
 {
 public:
 
-	StateTesting(const StateTesting&) = delete;
+	StateCompetition(const StateCompetition&) = delete;
 
-	const StateTesting& operator=(const StateTesting&) = delete;
+	const StateCompetition& operator=(const StateCompetition&) = delete;
 
-	StateTesting();
+	StateCompetition();
 
-	~StateTesting();
+	~StateCompetition();
 
 	void Reload() override;
 
@@ -121,7 +121,7 @@ private:
 	};
 	std::array<std::string, INTERNAL_ERRORS_COUNT> m_internalErrorsStrings;
 
-	// Testing parameters
+	// Competition parameters
 	size_t m_numberOfVehicles;
 	size_t m_currentVehicle;
 	const size_t m_maxNumberOfVehicles;

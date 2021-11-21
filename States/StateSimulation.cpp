@@ -1,5 +1,5 @@
 #pragma once
-#include "StateTraining.hpp"
+#include "StateSimulation.hpp"
 #include "FitnessSystem.hpp"
 #include "GeneticAlgorithm.hpp"
 #include "FunctionEventObserver.hpp"
@@ -10,7 +10,7 @@
 #include "SimulatedWorld.hpp"
 #include "MapPrototype.hpp"
 
-StateTraining::StateTraining() :
+StateSimulation::StateSimulation() :
 	m_population(12, 75, 1, 30),
 	m_generation(1, 300, 1, 60),
 	m_deathOnEdgeContact(false, true, true, true),
@@ -100,7 +100,7 @@ StateTraining::StateTraining() :
 	m_textObservers.resize(TEXT_COUNT, nullptr);
 }
 
-StateTraining::~StateTraining()
+StateSimulation::~StateSimulation()
 {
 	delete m_geneticAlgorithm;
 	for (auto& artificialNeuralNetwork : m_artificialNeuralNetworks)
@@ -116,7 +116,7 @@ StateTraining::~StateTraining()
 		delete observer;
 }
 
-void StateTraining::Reload()
+void StateSimulation::Reload()
 {
 	// Reset states
 	m_mode = STOPPED_MODE;
@@ -187,7 +187,7 @@ void StateTraining::Reload()
 	}
 }
 
-void StateTraining::Capture()
+void StateSimulation::Capture()
 {
 	auto* filenameText = static_cast<FilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
 	if (!filenameText->IsRenaming())
@@ -322,7 +322,7 @@ void StateTraining::Capture()
 							);
 							m_textObservers[CURRENT_GENERATION_TEXT]->Notify();
 
-							// Set first individual in genetic algorithm (this one may be already trained)
+							// Set first individual in genetic algorithm (this one may be already optimized)
 							m_artificialNeuralNetworks[0]->GetRawData(m_geneticAlgorithm->GetIndividualGenes(0));
 
 							// Reset artificial neural networks except first one
@@ -627,7 +627,7 @@ void StateTraining::Capture()
 	}
 }
 
-void StateTraining::Update()
+void StateSimulation::Update()
 {
 	switch (m_mode)
 	{
@@ -906,7 +906,7 @@ void StateTraining::Update()
 		text->Update();
 }
 
-bool StateTraining::Load()
+bool StateSimulation::Load()
 {
 	// Create texts
 	m_texts[MODE_TEXT] = new StatusText({ "Mode:", "", "| [M] [P]" });
@@ -989,11 +989,11 @@ bool StateTraining::Load()
 	m_texts[BEST_TIME_TEXT]->SetPosition({ FontContext::Component(2, true), {27}, {31} });
 	m_texts[BEST_TIME_OVERALL_TEXT]->SetPosition({ FontContext::Component(1, true), {27}, {31} });
 
-	CoreLogger::PrintSuccess("StateTraining dependencies loaded correctly");
+	CoreLogger::PrintSuccess("StateSimulation dependencies loaded correctly");
 	return true;
 }
 
-void StateTraining::Draw()
+void StateSimulation::Draw()
 {
 	switch (m_mode)
 	{
@@ -1008,7 +1008,7 @@ void StateTraining::Draw()
 
 			if (m_mapPrototype)
 			{
-				// We do not draw checkpoints in training state
+				// We do not draw checkpoints in simulation state
 				m_mapPrototype->DrawEdges();
 			}
 

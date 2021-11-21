@@ -310,7 +310,6 @@ namespace TestGeneticAlgorithm
 		const bool runTestGroupCharacters = true;
 		const bool runTestGroupFloatingPoints = true;
 		const bool runTestGroupNeurons = true;
-		const bool runTestGroupIntegers = true;
 		
 		if (runTestGroupCharacters)
 		{

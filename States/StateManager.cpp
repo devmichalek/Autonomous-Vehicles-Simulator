@@ -2,8 +2,8 @@
 #include "StateMapEditor.hpp"
 #include "StateArtificialNeuralNetworkEditor.hpp"
 #include "StateVehicleEditor.hpp"
-#include "StateTraining.hpp"
-#include "StateTesting.hpp"
+#include "StateSimulation.hpp"
+#include "StateCompetition.hpp"
 #include "FunctionEventObserver.hpp"
 #include "FunctionTimerObserver.hpp"
 
@@ -12,8 +12,8 @@ StateManager::StateManager()
 	m_states[MAP_EDITOR_STATE] = new StateMapEditor();
 	m_states[ARTIFICIAL_NEURAL_NETWORK_EDITOR_STATE] = new StateArtificialNeuralNetworkEditor();
 	m_states[VEHICLE_EDITOR_STATE] = new StateVehicleEditor();
-	m_states[TRAINING_STATE] = new StateTraining();
-	m_states[TESTING_STATE] = new StateTesting();
+	m_states[SIMULATION_STATE] = new StateSimulation();
+	m_states[COMPETITION_STATE] = new StateCompetition();
 	m_currentState = MAP_EDITOR_STATE;
 	m_stateText = nullptr;
 	m_stateTextObserver = nullptr;
@@ -24,8 +24,8 @@ StateManager::StateManager()
 	m_statesStrings[MAP_EDITOR_STATE] = "Map Editor";
 	m_statesStrings[ARTIFICIAL_NEURAL_NETWORK_EDITOR_STATE] = "ANN Editor";
 	m_statesStrings[VEHICLE_EDITOR_STATE] = "Vehicle Editor";
-	m_statesStrings[TRAINING_STATE] = "Training";
-	m_statesStrings[TESTING_STATE] = "Testing";
+	m_statesStrings[SIMULATION_STATE] = "Simulation";
+	m_statesStrings[COMPETITION_STATE] = "Competition";
 	m_controlKeys.insert(std::pair(sf::Keyboard::Tilde, CHANGE_STATE));
 	m_controlKeys.insert(std::pair(sf::Keyboard::BackSlash, CHANGE_DISPLAY_MODE));
 	m_pressedKeys[CHANGE_STATE] = false;
