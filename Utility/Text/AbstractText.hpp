@@ -57,7 +57,7 @@ public:
 
 	// Sets positions of texts
 	virtual void SetPosition(std::vector<FontContext::Component> components) = 0;
-	
+
 	// Updates texts positions and calls internal update implementation
 	void Update()
 	{

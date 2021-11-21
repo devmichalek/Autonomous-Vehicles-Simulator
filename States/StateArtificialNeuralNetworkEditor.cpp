@@ -33,6 +33,7 @@ StateArtificialNeuralNetworkEditor::StateArtificialNeuralNetworkEditor() :
 	CalculatePositions();
 
 	m_neuronShape.setRadius(CoreWindow::GetWindowSize().x * 0.008f);
+	m_neuronShape.setOutlineThickness(1.0);
 	m_weightShape[0].color = ColorContext::WeightDefault;
 	m_weightShape[1].color = m_weightShape[0].color;
 
@@ -300,6 +301,7 @@ void StateArtificialNeuralNetworkEditor::Draw()
 	for (size_t layerNr = 0; layerNr < m_layersPositions.size(); ++layerNr)
 	{
 		m_neuronShape.setFillColor(m_currentLayer == layerNr ? ColorContext::NeuronActive : ColorContext::NeuronDefault);
+		m_neuronShape.setOutlineColor(ColorContext::NeuronActive);
 		for (const auto& position : m_layersPositions[layerNr])
 		{
 			m_neuronShape.setPosition(position);

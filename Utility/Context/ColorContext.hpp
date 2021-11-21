@@ -20,8 +20,8 @@ namespace ColorContext
 	const sf::Color EdgeDefault = LightBackground;
 	const sf::Color EdgeMarked = ActiveText;
 	const sf::Color EdgeRemove = ErrorText;
-	const sf::Color NeuronDefault = InactiveText;
-	const sf::Color NeuronActive = ActiveText;
+	const sf::Color NeuronDefault = DarkBackground;
+	const sf::Color NeuronActive = LightBackground;
 	const sf::Color Grid = sf::Color(0, 0, 255, 96);
 	const sf::Color WeightDefault = sf::Color(255, 255, 255, 128);
 	const sf::Uint8 MaxChannelValue = 255;
