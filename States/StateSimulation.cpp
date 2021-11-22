@@ -318,7 +318,7 @@ void StateSimulation::Capture()
 								for (size_t i = 1; i < m_artificialNeuralNetworks.size(); ++i)
 									m_artificialNeuralNetworks[i]->SetFromRawData(m_geneticAlgorithm->GetIndividualGenes(i));
 
-								// Reset require fitness improvement rise timer
+								// Reset required fitness improvement rise timer
 								m_requiredFitnessImprovementRiseTimer.Reset();
 								m_textObservers[RAISING_REQUIRED_FITNESS_IMPROVEMENT_TEXT]->Notify();
 								m_mode = RUNNING_MODE;
