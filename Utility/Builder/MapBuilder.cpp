@@ -451,8 +451,8 @@ void MapBuilder::CreateDummyInternal()
 	m_outerEdgesChain.push_back({ outerPoint4, outerPoint1 });
 
 	m_vehiclePositioned = true;
-	m_vehicleCenter = sf::Vector2f(innerPoint2.x + xOffset * 0.5f, innerPoint2.y + yOffset * 0.5f);
-	m_vehicleAngle = 90.0;
+	m_vehicleCenter = sf::Vector2f(outerPoint1.x + xOffset * 0.5f, innerPoint2.y + yOffset * 0.5f);
+	m_vehicleAngle = 270.0;
 }
 
 MapBuilder::MapBuilder() :

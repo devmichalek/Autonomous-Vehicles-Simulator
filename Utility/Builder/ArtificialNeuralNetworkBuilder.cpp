@@ -1,8 +1,9 @@
 #include "ArtificialNeuralNetworkBuilder.hpp"
+#include "VehicleBuilder.hpp"
 #include "CoreLogger.hpp"
 #include <random>
 
-bool ArtificialNeuralNetworkBuilder::ValidateNumberOfLayers(size_t size)
+bool ArtificialNeuralNetworkBuilder::ValidateNumberOfLayers(const size_t size)
 {
 	if (size < GetMinNumberOfLayers())
 	{
@@ -19,7 +20,7 @@ bool ArtificialNeuralNetworkBuilder::ValidateNumberOfLayers(size_t size)
 	return true;
 }
 
-bool ArtificialNeuralNetworkBuilder::ValidateNumberOfNeurons(size_t size)
+bool ArtificialNeuralNetworkBuilder::ValidateNumberOfNeurons(const size_t size)
 {
 	if (size < GetMinNumberOfNeuronsPerLayer())
 	{
@@ -33,6 +34,17 @@ bool ArtificialNeuralNetworkBuilder::ValidateNumberOfNeurons(size_t size)
 		return false;
 	}
 
+	return true;
+}
+
+bool ArtificialNeuralNetworkBuilder::ValidateNumberOfNeuronsInOutputLayer(const size_t size)
+{
+	if (size != VehicleBuilder::GetDefaultNumberOfInputs())
+	{
+		m_lastOperationStatus = ERROR_DIFFERENT_NUMBER_OF_NEURONS_IN_OUTPUT_LAYER;
+		return false;
+	}
+	
 	return true;
 }
 
@@ -54,7 +66,7 @@ void ArtificialNeuralNetworkBuilder::CalculateNumberOfWeights()
 	}
 }
 
-bool ArtificialNeuralNetworkBuilder::ValidateNumberOfActivationFunctionIndexes(size_t size)
+bool ArtificialNeuralNetworkBuilder::ValidateNumberOfActivationFunctionIndexes(const size_t size)
 {
 	const size_t requiredNumberOfActivationFunctions = m_neuronLayerSizes.size() - 1;
 	if (requiredNumberOfActivationFunctions != size)
@@ -66,7 +78,7 @@ bool ArtificialNeuralNetworkBuilder::ValidateNumberOfActivationFunctionIndexes(s
 	return true;
 }
 
-bool ArtificialNeuralNetworkBuilder::ValidateActivationFunctionIndex(ActivationFunctionIndex activationFunctionIndex)
+bool ArtificialNeuralNetworkBuilder::ValidateActivationFunctionIndex(const ActivationFunctionIndex activationFunctionIndex)
 {
 	if (activationFunctionIndex >= ActivationFunctionContext::GetActivationFunctionsCount())
 	{
@@ -77,7 +89,7 @@ bool ArtificialNeuralNetworkBuilder::ValidateActivationFunctionIndex(ActivationF
 	return true;
 }
 
-bool ArtificialNeuralNetworkBuilder::ValidateBiasVectorLength(size_t length)
+bool ArtificialNeuralNetworkBuilder::ValidateBiasVectorLength(const size_t length)
 {
 	const size_t requiredLengthOfBiasVector = m_neuronLayerSizes.size() - 1;
 	if (requiredLengthOfBiasVector != length)
@@ -89,7 +101,7 @@ bool ArtificialNeuralNetworkBuilder::ValidateBiasVectorLength(size_t length)
 	return true;
 }
 
-bool ArtificialNeuralNetworkBuilder::ValidateBias(Bias bias)
+bool ArtificialNeuralNetworkBuilder::ValidateBias(const Bias bias)
 {
 	if (bias < GetMinBiasValue())
 	{
@@ -127,6 +139,9 @@ bool ArtificialNeuralNetworkBuilder::ValidateInternal()
 		if (!ValidateNumberOfNeurons(neuronLayerSize))
 			return false;
 	}
+
+	if (!ValidateNumberOfNeuronsInOutputLayer(m_neuronLayerSizes.back()))
+		return false;
 
 	CalculateNumberOfNeurons();
 
@@ -186,6 +201,9 @@ bool ArtificialNeuralNetworkBuilder::LoadInternal(std::ifstream& input)
 			return false;
 		m_neuronLayerSizes.push_back(neuronLayerSize);
 	}
+
+	if (!ValidateNumberOfNeuronsInOutputLayer(m_neuronLayerSizes.back()))
+		return false;
 
 	CalculateNumberOfNeurons();
 
@@ -291,8 +309,9 @@ void ArtificialNeuralNetworkBuilder::CreateDummyInternal()
 	// Set dummy data
 	size_t length = ldistribution(engine);
 	m_neuronLayerSizes.resize(length);
-	for (size_t i = 0; i < length; ++i)
+	for (size_t i = 0; i < length - 1; ++i)
 		m_neuronLayerSizes[i] = nlsdistribution(engine);
+	m_neuronLayerSizes.back() = VehicleBuilder::GetDefaultNumberOfInputs();
 	--length;
 	m_activationFunctionIndexes.resize(length);
 	m_biasVector.resize(length, 0.0);
@@ -308,6 +327,7 @@ ArtificialNeuralNetworkBuilder::ArtificialNeuralNetworkBuilder() :
 	m_operationsMap.insert(std::pair(ERROR_TOO_LITTLE_NEURON_LAYERS, "Error: There are too little neuron layers!"));
 	m_operationsMap.insert(std::pair(ERROR_TOO_MANY_NEURON_LAYERS, "Error: There are too many neuron layers!"));
 	m_operationsMap.insert(std::pair(ERROR_TOO_LITTLE_NEURONS_IN_LAYER, "Error: There are too little neurons in a layer!"));
+	m_operationsMap.insert(std::pair(ERROR_DIFFERENT_NUMBER_OF_NEURONS_IN_OUTPUT_LAYER, "Error: Number of neurons in output layer must be equal to three!"));
 	m_operationsMap.insert(std::pair(ERROR_TOO_MANY_NEURONS_IN_LAYER, "Error: There are too many neurons in a layer!"));
 	m_operationsMap.insert(std::pair(ERROR_INCORRECT_NUMBER_OF_ACTIVATION_FUNCTIONS, "Error: Incorrect number of activation functions!"));
 	m_operationsMap.insert(std::pair(ERROR_INCORRECT_LENGTH_OF_BIAS_VECTOR, "Error: Incorrect length of bias vector!"));

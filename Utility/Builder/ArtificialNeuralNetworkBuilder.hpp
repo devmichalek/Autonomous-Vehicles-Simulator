@@ -12,6 +12,7 @@ class ArtificialNeuralNetworkBuilder final :
 		ERROR_TOO_MANY_NEURON_LAYERS,
 		ERROR_TOO_LITTLE_NEURONS_IN_LAYER,
 		ERROR_TOO_MANY_NEURONS_IN_LAYER,
+		ERROR_DIFFERENT_NUMBER_OF_NEURONS_IN_OUTPUT_LAYER,
 		ERROR_INCORRECT_NUMBER_OF_ACTIVATION_FUNCTIONS,
 		ERROR_INCORRECT_LENGTH_OF_BIAS_VECTOR,
 		ERROR_BIAS_IS_LESS_THAN_MINIMUM_ALLOWED,
@@ -29,10 +30,13 @@ class ArtificialNeuralNetworkBuilder final :
 	size_t m_numberOfWeights;
 
 	// Validates number of layers
-	bool ValidateNumberOfLayers(size_t size);
+	bool ValidateNumberOfLayers(const size_t size);
 
 	// Validates number of neurons in a layer
-	bool ValidateNumberOfNeurons(size_t size);
+	bool ValidateNumberOfNeurons(const size_t size);
+
+	// Validates number of neurons in output layer
+	bool ValidateNumberOfNeuronsInOutputLayer(const size_t size);
 
 	// Calculates number of neurons
 	void CalculateNumberOfNeurons();
@@ -41,16 +45,16 @@ class ArtificialNeuralNetworkBuilder final :
 	void CalculateNumberOfWeights();
 
 	// Validates number of activation function indexes
-	bool ValidateNumberOfActivationFunctionIndexes(size_t size);
+	bool ValidateNumberOfActivationFunctionIndexes(const size_t size);
 
 	// Validates activation function index
-	bool ValidateActivationFunctionIndex(ActivationFunctionIndex activationFunctionIndex);
+	bool ValidateActivationFunctionIndex(const ActivationFunctionIndex activationFunctionIndex);
 
 	// Validates bias vector length
-	bool ValidateBiasVectorLength(size_t length);
+	bool ValidateBiasVectorLength(const size_t length);
 
 	// Validates bias
-	bool ValidateBias(Bias bias);
+	bool ValidateBias(const Bias bias);
 
 	// Validates raw data vector
 	bool ValidateRawData();

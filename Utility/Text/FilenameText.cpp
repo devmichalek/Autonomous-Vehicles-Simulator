@@ -185,17 +185,23 @@ void FilenameText<ReadOperations, WriteOperations>::OnControlKeyPressedEvent(sf:
 		{
 			if (m_pressedControlKeys[sf::Keyboard::O])
 			{
-				m_activeActions[READING_ACTION] = true;
-				m_pressedControlKeys[sf::Keyboard::O] = false;
-				m_pressedControlKeys[sf::Keyboard::LControl] = false;
-				m_pressedControlKeys[sf::Keyboard::RControl] = false;
+				if (ReadOperations)
+				{
+					m_activeActions[READING_ACTION] = true;
+					m_pressedControlKeys[sf::Keyboard::O] = false;
+					m_pressedControlKeys[sf::Keyboard::LControl] = false;
+					m_pressedControlKeys[sf::Keyboard::RControl] = false;
+				}
 			}
 			else if (m_pressedControlKeys[sf::Keyboard::S])
 			{
-				m_activeActions[WRITING_ACTION] = true;
-				m_pressedControlKeys[sf::Keyboard::S] = false;
-				m_pressedControlKeys[sf::Keyboard::LControl] = false;
-				m_pressedControlKeys[sf::Keyboard::RControl] = false;
+				if (WriteOperations)
+				{
+					m_activeActions[WRITING_ACTION] = true;
+					m_pressedControlKeys[sf::Keyboard::S] = false;
+					m_pressedControlKeys[sf::Keyboard::LControl] = false;
+					m_pressedControlKeys[sf::Keyboard::RControl] = false;
+				}
 			}
 			else if (m_pressedControlKeys[sf::Keyboard::R])
 			{
@@ -238,4 +244,5 @@ std::string FilenameText<ReadOperations, WriteOperations>::GetInformationString(
 }
 
 template FilenameText<true, false>;
+template FilenameText<false, true>;
 template FilenameText<true, true>;

@@ -57,11 +57,10 @@ StateCompetition::StateCompetition() :
 	m_internalErrorsStrings[ERROR_NO_ARTIFICIAL_NEURAL_NETWORK_SPECIFIED] = "Error: One of artificial neural network is not specified!";
 	m_internalErrorsStrings[ERROR_NO_MAP_SPECIFIED] = "Error: No map is specified!";
 	m_internalErrorsStrings[ERROR_USER_VEHICLE_NOT_SPECIFIED] = "Error: User vehicle is not specified!";
-	m_internalErrorsStrings[ERROR_NO_VEHICLE_SPECIFIED] = "Error: One of vehicles is not fully specified!";
+	m_internalErrorsStrings[ERROR_ONE_OF_BOT_VEHICLES_IS_UNSPECIFIED] = "Error: One of bot vehicles is not fully specified!";
 	m_internalErrorsStrings[ERROR_USER_VEHICLE_IS_IN_A_COLLISION_WITH_EDGES_CHAIN] = "Error: User vehicle is in a collision with edges chain!";
 	m_internalErrorsStrings[ERROR_BOT_VEHICLE_IS_IN_A_COLLISION_WITH_EDGES_CHAIN] = "Error: Bot vehicle is in a collision with edges chain!";
 	m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH] = "Error: One of artificial neural network's number of input neurons mismatches number of vehicle sensors!";
-	m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH] = "Error: One of artificial neural network's number of output neurons mismatches number of vehicle (3) inputs!";
 	m_internalErrorsStrings[ERROR_USER_VEHICLE_NOT_ENABLED] = "Error: User vehicle is not enabled!";
 	m_internalErrorsStrings[ERROR_CANNOT_LOAD_ANN_FOR_USER_VEHICLE] = "Error: Cannot load artificial neural network model for user vehicle!";
 	m_internalErrorsStrings[ERROR_NO_BOT_VEHICLES] = "Error: There are no bot vehicles! Please add first bot vehicle to continue.";
@@ -131,6 +130,8 @@ void StateCompetition::Reload()
 	m_userVehicle = nullptr;
 	delete m_userVehiclePrototype;
 	m_userVehiclePrototype = nullptr;
+	m_defaultUserVehicleTorque = VehicleBuilder::GetDefaultTorque();
+	m_userVehicleFilename.clear();
 	m_simulatedVehicles.clear();
 	for (auto& vehiclePrototype : m_vehiclePrototypes)
 		delete vehiclePrototype;
@@ -140,7 +141,6 @@ void StateCompetition::Reload()
 	m_artificialNeuralNetworks.clear();
 	m_botVehicleFilenames.clear();
 	m_botArtificialNeuralNetworkFilenames.clear();
-	m_defaultUserVehicleTorque = VehicleBuilder::GetDefaultTorque();
 
 	// Clear builders
 	m_mapBuilder.Clear();
@@ -206,7 +206,7 @@ void StateCompetition::Capture()
 								{
 									if (!m_vehiclePrototypes[i])
 									{
-										modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_VEHICLE_SPECIFIED]);
+										modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_ONE_OF_BOT_VEHICLES_IS_UNSPECIFIED]);
 										error = true;
 										break;
 									}
@@ -232,13 +232,6 @@ void StateCompetition::Capture()
 									if (m_artificialNeuralNetworks[i]->GetNumberOfInputNeurons() != m_vehiclePrototypes[i]->GetNumberOfSensors())
 									{
 										modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH]);
-										error = true;
-										break;
-									}
-
-									if (m_artificialNeuralNetworks[i]->GetNumberOfOutputNeurons() != VehicleBuilder::GetDefaultNumberOfInputs())
-									{
-										modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH]);
 										error = true;
 										break;
 									}

@@ -76,9 +76,6 @@ StateSimulation::StateSimulation() :
 	m_internalErrorsStrings[ERROR_NO_VEHICLE_SPECIFIED] = "Error: No vehicle is specified!";
 	m_internalErrorsStrings[ERROR_VEHICLE_IS_IN_A_COLLISION_WITH_EDGES_CHAIN] = "Error: Vehicle is in a collision with edges chain!";
 	m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH] = "Error: Artificial neural network number of input neurons mismatches number of vehicle sensors!";
-	m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH] = "Error: Artificial neural network number of output neurons mismatches number of vehicle (3) inputs!";
-	m_internalErrorsStrings[ERROR_SAVE_MODE_IS_ALLOWED_ONLY_IN_PAUSED_MODE] = "Error: Save mode is allowed only in paused mode!";
-	m_internalErrorsStrings[ERROR_ONLY_SAVE_MODE_IS_ALLOWED_IN_THIS_STATE] = "Error: Only save mode is allowed in this state!";
 
 	// Initialize timers
 	m_pressedKeyTimer.MakeTimeout();
@@ -189,179 +186,172 @@ void StateSimulation::Reload()
 
 void StateSimulation::Capture()
 {
-	auto* filenameText = static_cast<FilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
-	if (!filenameText->IsRenaming())
+	switch (m_mode)
 	{
-		switch (m_mode)
+		case STOPPED_MODE:
 		{
-			case STOPPED_MODE:
+			auto* filenameText = static_cast<FilenameText<true, false>*>(m_texts[FILENAME_STOPPED_TEXT]);
+			if (!filenameText->IsRenaming())
 			{
-				filenameText->Capture();
 				if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
 				{
 					auto eventKey = CoreWindow::GetEvent().key.code;
 					auto iterator = m_controlKeys.find(eventKey);
-					if (iterator == m_controlKeys.end())
-						break;
-					
-					switch (iterator->second)
+					if (iterator != m_controlKeys.end())
 					{
-						case CHANGE_MODE:
+						switch (iterator->second)
 						{
-							if (m_pressedKeys[iterator->second])
-								break;
-
-							StatusText* modeText = static_cast<StatusText*>(m_texts[MODE_TEXT]);
-							if (!m_artificialNeuralNetworkPrototype)
+							case CHANGE_MODE:
 							{
-								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_ARTIFICIAL_NEURAL_NETWORK_SPECIFIED]);
-								break;
-							}
+								if (m_pressedKeys[iterator->second])
+									break;
 
-							if (!m_mapPrototype)
-							{
-								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_MAP_SPECIFIED]);
-								break;
-							}
+								StatusText* modeText = static_cast<StatusText*>(m_texts[MODE_TEXT]);
+								if (!m_artificialNeuralNetworkPrototype)
+								{
+									modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_ARTIFICIAL_NEURAL_NETWORK_SPECIFIED]);
+									break;
+								}
 
-							if (!m_vehiclePrototype)
-							{
-								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_VEHICLE_SPECIFIED]);
-								break;
-							}
+								if (!m_mapPrototype)
+								{
+									modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_MAP_SPECIFIED]);
+									break;
+								}
 
-							if (m_mapPrototype->IsCollision(m_vehiclePrototype))
-							{
-								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_VEHICLE_IS_IN_A_COLLISION_WITH_EDGES_CHAIN]);
-								break;
-							}
+								if (!m_vehiclePrototype)
+								{
+									modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_NO_VEHICLE_SPECIFIED]);
+									break;
+								}
 
-							if (m_artificialNeuralNetworkPrototype->GetNumberOfInputNeurons() != m_vehiclePrototype->GetNumberOfSensors())
-							{
-								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH]);
-								break;
-							}
+								if (m_mapPrototype->IsCollision(m_vehiclePrototype))
+								{
+									modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_VEHICLE_IS_IN_A_COLLISION_WITH_EDGES_CHAIN]);
+									break;
+								}
 
-							if (m_artificialNeuralNetworkPrototype->GetNumberOfOutputNeurons() != VehicleBuilder::GetDefaultNumberOfInputs())
-							{
-								modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH]);
-								break;
-							}
+								if (m_artificialNeuralNetworkPrototype->GetNumberOfInputNeurons() != m_vehiclePrototype->GetNumberOfSensors())
+								{
+									modeText->SetErrorStatusText(m_internalErrorsStrings[ERROR_ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH]);
+									break;
+								}
 
-							// Create artificial neural networks
-							for (auto& artificialNeuralNetwork : m_artificialNeuralNetworks)
-								delete artificialNeuralNetwork;
-							m_artificialNeuralNetworks.resize(m_population);
-							for (auto& artificialNeuralNetwork : m_artificialNeuralNetworks)
-								artificialNeuralNetwork = ArtificialNeuralNetworkBuilder::Copy(m_artificialNeuralNetworkPrototype);
+								// Create artificial neural networks
+								for (auto& artificialNeuralNetwork : m_artificialNeuralNetworks)
+									delete artificialNeuralNetwork;
+								m_artificialNeuralNetworks.resize(m_population);
+								for (auto& artificialNeuralNetwork : m_artificialNeuralNetworks)
+									artificialNeuralNetwork = ArtificialNeuralNetworkBuilder::Copy(m_artificialNeuralNetworkPrototype);
 
-							// Calculate zoom threshold
-							const auto& mapSize = m_mapPrototype->GetSize();
-							const auto& windowSize = CoreWindow::GetWindowSize();
-							if (mapSize.x < windowSize.x && mapSize.y < windowSize.y)
-							{
-								m_zoomThreshold = m_zoom.Min();
-								CoreWindow::SetViewCenter(m_mapPrototype->GetCenter());
-							}
-							else
-							{
-								const float horizontalRatio = mapSize.x / windowSize.x;
-								const float verticalRatio = mapSize.y / windowSize.y;
-								const float highestRatio = horizontalRatio > verticalRatio ? horizontalRatio : verticalRatio;
-								m_zoomThreshold = highestRatio < m_zoom.Max() ? highestRatio : m_zoom.Max();
-							}
+								// Calculate zoom threshold
+								const auto& mapSize = m_mapPrototype->GetSize();
+								const auto& windowSize = CoreWindow::GetWindowSize();
+								if (mapSize.x < windowSize.x && mapSize.y < windowSize.y)
+								{
+									m_zoomThreshold = m_zoom.Min();
+									CoreWindow::SetViewCenter(m_mapPrototype->GetCenter());
+								}
+								else
+								{
+									const float horizontalRatio = mapSize.x / windowSize.x;
+									const float verticalRatio = mapSize.y / windowSize.y;
+									const float highestRatio = horizontalRatio > verticalRatio ? horizontalRatio : verticalRatio;
+									m_zoomThreshold = highestRatio < m_zoom.Max() ? highestRatio : m_zoom.Max();
+								}
 
-							// Create simulated world
-							delete m_simulatedWorld;
-							m_simulatedWorld = new SimulatedWorld;
-							m_simulatedWorld->AddMap(m_mapPrototype);
-							if (m_deathOnEdgeContact)
-								m_simulatedWorld->EnableDeathOnEdgeContact();
-							DrawableCheckpoint::SetVisibility(false);
+								// Create simulated world
+								delete m_simulatedWorld;
+								m_simulatedWorld = new SimulatedWorld;
+								m_simulatedWorld->AddMap(m_mapPrototype);
+								if (m_deathOnEdgeContact)
+									m_simulatedWorld->EnableDeathOnEdgeContact();
+								DrawableCheckpoint::SetVisibility(false);
 
-							// Initialize fitness system
-							delete m_fitnessSystem;
-							m_fitnessSystem = new FitnessSystem(m_population, m_mapPrototype->GetNumberOfCheckpoints(), m_requiredFitnessImprovement);
-							m_textObservers[HIGHEST_FITNESS_TEXT]->Notify();
-							m_textObservers[HIGHEST_FITNESS_OVERALL_TEXT]->Notify();
-							m_textObservers[BEST_TIME_TEXT]->Notify();
-							m_textObservers[BEST_TIME_OVERALL_TEXT]->Notify();
-							m_textObservers[CURRENT_POPULATION_TEXT]->Notify();
-							m_simulatedWorld->AddBeginContactFunction(m_fitnessSystem->GetBeginContactFunction());
+								// Initialize fitness system
+								delete m_fitnessSystem;
+								m_fitnessSystem = new FitnessSystem(m_population, m_mapPrototype->GetNumberOfCheckpoints(), m_requiredFitnessImprovement);
+								m_textObservers[HIGHEST_FITNESS_TEXT]->Notify();
+								m_textObservers[HIGHEST_FITNESS_OVERALL_TEXT]->Notify();
+								m_textObservers[BEST_TIME_TEXT]->Notify();
+								m_textObservers[BEST_TIME_OVERALL_TEXT]->Notify();
+								m_textObservers[CURRENT_POPULATION_TEXT]->Notify();
+								m_simulatedWorld->AddBeginContactFunction(m_fitnessSystem->GetBeginContactFunction());
 
-							// Create vehicles
-							m_simulatedVehicles.resize(m_population, nullptr);
-							for (auto& vehicle : m_simulatedVehicles)
-								vehicle = m_simulatedWorld->AddVehicle(m_vehiclePrototype);
+								// Create vehicles
+								m_simulatedVehicles.resize(m_population, nullptr);
+								for (auto& vehicle : m_simulatedVehicles)
+									vehicle = m_simulatedWorld->AddVehicle(m_vehiclePrototype);
 
-							// Reset filename type
-							m_filenameType = MAP_FILENAME_TYPE;
-							m_textObservers[FILENAME_TYPE_TEXT]->Notify();
-
-							// Reset filename type paused
-							m_filenameTypePaused = ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE_PAUSED;
-							m_textObservers[FILENAME_TYPE_PAUSED_TEXT]->Notify();
-
-							// Reset parameter type
-							m_parameterType = POPULATION_SIZE;
-							m_textObservers[PARAMETER_TYPE_TEXT]->Notify();
-
-							// Create genetic algorithm
-							delete m_geneticAlgorithm;
-							m_geneticAlgorithm = new GeneticAlgorithmNeuron(
-								m_generation,
-								m_artificialNeuralNetworkPrototype->GetNumberOfWeights(),
-								m_population,
-								m_crossoverType,
-								m_repeatCrossoverPerIndividual,
-								m_mutationProbability,
-								m_decreaseMutationProbabilityOverGenerations,
-								m_numberOfParents,
-								1000,
-								std::pair(-ArtificialNeuralNetworkBuilder::GetMaxNeuronValue(), ArtificialNeuralNetworkBuilder::GetMaxNeuronValue())
-							);
-							m_textObservers[CURRENT_GENERATION_TEXT]->Notify();
-
-							// Set first individual in genetic algorithm (this one may be already optimized)
-							m_artificialNeuralNetworks[0]->GetRawData(m_geneticAlgorithm->GetIndividualGenes(0));
-
-							// Reset artificial neural networks except first one
-							for (size_t i = 1; i < m_artificialNeuralNetworks.size(); ++i)
-								m_artificialNeuralNetworks[i]->SetFromRawData(m_geneticAlgorithm->GetIndividualGenes(i));
-
-							// Reset require fitness improvement rise timer
-							m_requiredFitnessImprovementRiseTimer.Reset();
-							m_textObservers[RAISING_REQUIRED_FITNESS_IMPROVEMENT_TEXT]->Notify();
-							m_mode = RUNNING_MODE;
-							m_textObservers[MODE_TEXT]->Notify();
-
-							// Prepare statistics builder
-							m_statisticsBuilder.ExtractStatic(m_geneticAlgorithm,
-															  m_fitnessSystem,
-															  m_deathOnEdgeContact,
-															  m_requiredFitnessImprovementRise);
-							break;
-						}
-						case CHANGE_FILENAME_TYPE:
-							if (m_pressedKeys[iterator->second])
-								break;
-							++m_filenameType;
-							if (m_filenameType >= FILENAME_TYPES_COUNT)
+								// Reset filename type
 								m_filenameType = MAP_FILENAME_TYPE;
-							m_textObservers[FILENAME_TYPE_TEXT]->Notify();
-							break;
-						case CHANGE_SIMULATION_PARAMETER:
-							if (m_pressedKeys[iterator->second])
-								break;
-							++m_parameterType;
-							if (m_parameterType >= PARAMETERS_COUNT)
+								m_textObservers[FILENAME_TYPE_STOPPED_TEXT]->Notify();
+
+								// Reset filename type paused
+								m_filenameTypePaused = ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE_PAUSED;
+								m_textObservers[FILENAME_TYPE_PAUSED_TEXT]->Notify();
+
+								// Reset parameter type
 								m_parameterType = POPULATION_SIZE;
-							m_textObservers[PARAMETER_TYPE_TEXT]->Notify();
-							break;
-						case INCREASE_PARAMETER:
-						{
-							if (m_pressedKeyTimer.Update())
+								m_textObservers[PARAMETER_TYPE_TEXT]->Notify();
+
+								// Create genetic algorithm
+								delete m_geneticAlgorithm;
+								m_geneticAlgorithm = new GeneticAlgorithmNeuron(
+									m_generation,
+									m_artificialNeuralNetworkPrototype->GetNumberOfWeights(),
+									m_population,
+									m_crossoverType,
+									m_repeatCrossoverPerIndividual,
+									m_mutationProbability,
+									m_decreaseMutationProbabilityOverGenerations,
+									m_numberOfParents,
+									1000,
+									std::pair(-ArtificialNeuralNetworkBuilder::GetMaxNeuronValue(), ArtificialNeuralNetworkBuilder::GetMaxNeuronValue())
+								);
+								m_textObservers[CURRENT_GENERATION_TEXT]->Notify();
+
+								// Set first individual in genetic algorithm (this one may be already optimized)
+								m_artificialNeuralNetworks[0]->GetRawData(m_geneticAlgorithm->GetIndividualGenes(0));
+
+								// Reset artificial neural networks except first one
+								for (size_t i = 1; i < m_artificialNeuralNetworks.size(); ++i)
+									m_artificialNeuralNetworks[i]->SetFromRawData(m_geneticAlgorithm->GetIndividualGenes(i));
+
+								// Reset require fitness improvement rise timer
+								m_requiredFitnessImprovementRiseTimer.Reset();
+								m_textObservers[RAISING_REQUIRED_FITNESS_IMPROVEMENT_TEXT]->Notify();
+								m_mode = RUNNING_MODE;
+								m_textObservers[MODE_TEXT]->Notify();
+
+								// Prepare statistics builder
+								m_statisticsBuilder.ExtractStatic(m_geneticAlgorithm,
+									m_fitnessSystem,
+									m_deathOnEdgeContact,
+									m_requiredFitnessImprovementRise);
+								break;
+							}
+							case CHANGE_FILENAME_TYPE:
+								if (m_pressedKeys[iterator->second])
+									break;
+								++m_filenameType;
+								if (m_filenameType >= FILENAME_TYPES_COUNT)
+									m_filenameType = MAP_FILENAME_TYPE;
+								m_textObservers[FILENAME_TYPE_STOPPED_TEXT]->Notify();
+								break;
+							case CHANGE_SIMULATION_PARAMETER:
+								if (m_pressedKeys[iterator->second])
+									break;
+								++m_parameterType;
+								if (m_parameterType >= PARAMETERS_COUNT)
+									m_parameterType = POPULATION_SIZE;
+								m_textObservers[PARAMETER_TYPE_TEXT]->Notify();
+								break;
+							case INCREASE_PARAMETER:
 							{
+								if (!m_pressedKeyTimer.Update())
+									break;
+
 								switch (m_parameterType)
 								{
 									case POPULATION_SIZE:
@@ -406,14 +396,14 @@ void StateSimulation::Capture()
 										m_textObservers[REQUIRED_FITNESS_IMPROVEMENT_RISE_TEXT]->Notify();
 										break;
 								}
+
+								break;
 							}
-								
-							break;
-						}
-						case DECREASE_PARAMETER:
-						{
-							if (m_pressedKeyTimer.Update())
+							case DECREASE_PARAMETER:
 							{
+								if (!m_pressedKeyTimer.Update())
+									break;
+
 								switch (m_parameterType)
 								{
 									case POPULATION_SIZE:
@@ -458,150 +448,159 @@ void StateSimulation::Capture()
 										m_textObservers[REQUIRED_FITNESS_IMPROVEMENT_RISE_TEXT]->Notify();
 										break;
 								}
-							}
 
-							break;
+								break;
+							}
+							case INCREASE_ZOOM:
+							case DECREASE_ZOOM:
+								break;
 						}
-						case INCREASE_ZOOM:
-						case DECREASE_ZOOM:
-							break;
+
+						m_pressedKeys[iterator->second] = true;
 					}
-					
-					m_pressedKeys[iterator->second] = true;
 				}
-				break;
 			}
-			case PAUSED_MODE:
-				filenameText->Capture();
-				if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
-				{
-					auto eventKey = CoreWindow::GetEvent().key.code;
-					auto iterator = m_controlKeys.find(eventKey);
-					if (iterator == m_controlKeys.end())
-						break;
-
-					switch (iterator->second)
-					{
-						case CHANGE_MODE:
-						{
-							if (m_pressedKeys[iterator->second])
-								break;
-							m_mode = STOPPED_MODE;
-							m_textObservers[MODE_TEXT]->Notify();
-
-							// Reset view so that the center is vehicle starting position
-							m_zoom.ResetValue();
-							m_textObservers[ZOOM_TEXT]->Notify();
-							CoreWindow::Reset();
-							CoreWindow::SetViewCenter(m_vehiclePrototype->GetCenter());
-							break;
-						}
-						case CHANGE_FILENAME_TYPE:
-						{
-							if (m_pressedKeys[iterator->second])
-								break;
-
-							++m_filenameTypePaused;
-							if (m_filenameTypePaused >= FILENAME_TYPES_PAUSED_COUNT)
-								m_filenameTypePaused = ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE_PAUSED;
-							m_textObservers[FILENAME_TYPE_PAUSED_TEXT]->Notify();
-							break;
-						}
-						case PAUSED_CHANGE_MODE:
-						{
-							if (!m_geneticAlgorithm)
-								break; // If there are more generations left
-							if (m_pressedKeys[iterator->second])
-								break;
-							m_mode = RUNNING_MODE;
-							m_textObservers[MODE_TEXT]->Notify();
-							m_filenameTypePaused = ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE_PAUSED;
-							m_textObservers[FILENAME_TYPE_PAUSED_TEXT]->Notify();
-							break;
-						}
-						case INCREASE_PARAMETER:
-						case DECREASE_PARAMETER:
-						case INCREASE_ZOOM:
-						case DECREASE_ZOOM:
-						default:
-							break;
-					}
-
-					m_pressedKeys[iterator->second] = true;
-				}
-				break;
-			case RUNNING_MODE:
-				if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
-				{
-					auto eventKey = CoreWindow::GetEvent().key.code;
-					auto iterator = m_controlKeys.find(eventKey);
-					if (iterator == m_controlKeys.end())
-						break;
-
-					switch (iterator->second)
-					{
-						case CHANGE_MODE:
-						{
-							if (m_pressedKeys[iterator->second])
-								break;
-							m_mode = STOPPED_MODE;
-							m_textObservers[MODE_TEXT]->Notify();
-
-							// Reset view so that the center is vehicle starting position
-							m_zoom.ResetValue();
-							m_textObservers[ZOOM_TEXT]->Notify();
-							CoreWindow::Reset();
-							CoreWindow::SetViewCenter(m_vehiclePrototype->GetCenter());
-							break;
-						}
-						case CHANGE_FILENAME_TYPE:
-							break;
-						case PAUSED_CHANGE_MODE:
-						{
-							if (m_pressedKeys[iterator->second])
-								break;
-							m_mode = PAUSED_MODE;
-							m_textObservers[MODE_TEXT]->Notify();
-							break;
-						}
-						case INCREASE_PARAMETER:
-						case DECREASE_PARAMETER:
-							break;
-						case INCREASE_ZOOM:
-							if (m_pressedKeyTimer.Update())
-							{
-								m_zoom.Increase();
-								CoreWindow::SetViewZoom(m_zoom);
-								m_textObservers[ZOOM_TEXT]->Notify();
-
-								if (m_zoom >= m_zoomThreshold)
-								{
-									// Set view center as map center
-									CoreWindow::SetViewCenter(m_mapPrototype->GetCenter());
-								}
-							}
-							break;
-						case DECREASE_ZOOM:
-							if (m_pressedKeyTimer.Update())
-							{
-								m_zoom.Decrease();
-								CoreWindow::SetViewZoom(m_zoom);
-								m_textObservers[ZOOM_TEXT]->Notify();
-							}
-							break;
-						default:
-							break;
-					}
-
-					m_pressedKeys[iterator->second] = true;
-				}
-				break;
-			default:
-				break;
+			
+			filenameText->Capture();
+			break;
 		}
+		case PAUSED_MODE:
+		{
+			auto* filenameText = static_cast<FilenameText<false, true>*>(m_texts[FILENAME_PAUSED_TEXT]);
+			if (!filenameText->IsRenaming())
+			{
+				if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
+				{
+					auto eventKey = CoreWindow::GetEvent().key.code;
+					auto iterator = m_controlKeys.find(eventKey);
+					if (iterator != m_controlKeys.end())
+					{
+						switch (iterator->second)
+						{
+							case CHANGE_MODE:
+							{
+								if (m_pressedKeys[iterator->second])
+									break;
+								m_mode = STOPPED_MODE;
+								m_textObservers[MODE_TEXT]->Notify();
+
+								// Reset view so that the center is vehicle starting position
+								m_zoom.ResetValue();
+								m_textObservers[ZOOM_TEXT]->Notify();
+								CoreWindow::Reset();
+								CoreWindow::SetViewCenter(m_vehiclePrototype->GetCenter());
+								break;
+							}
+							case CHANGE_FILENAME_TYPE:
+							{
+								if (m_pressedKeys[iterator->second])
+									break;
+
+								++m_filenameTypePaused;
+								if (m_filenameTypePaused >= FILENAME_TYPES_PAUSED_COUNT)
+									m_filenameTypePaused = ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE_PAUSED;
+								m_textObservers[FILENAME_TYPE_PAUSED_TEXT]->Notify();
+								break;
+							}
+							case PAUSED_CHANGE_MODE:
+							{
+								if (!m_geneticAlgorithm)
+									break; // If there are more generations left
+								if (m_pressedKeys[iterator->second])
+									break;
+								m_mode = RUNNING_MODE;
+								m_textObservers[MODE_TEXT]->Notify();
+								m_filenameTypePaused = ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE_PAUSED;
+								m_textObservers[FILENAME_TYPE_PAUSED_TEXT]->Notify();
+								break;
+							}
+							case INCREASE_PARAMETER:
+							case DECREASE_PARAMETER:
+							case INCREASE_ZOOM:
+							case DECREASE_ZOOM:
+							default:
+								break;
+						}
+
+						m_pressedKeys[iterator->second] = true;
+					}
+				}
+			}
+
+			filenameText->Capture();
+			break;
+		}
+		case RUNNING_MODE:
+		{
+			if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
+			{
+				auto eventKey = CoreWindow::GetEvent().key.code;
+				auto iterator = m_controlKeys.find(eventKey);
+				if (iterator == m_controlKeys.end())
+					break;
+
+				switch (iterator->second)
+				{
+					case CHANGE_MODE:
+					{
+						if (m_pressedKeys[iterator->second])
+							break;
+						m_mode = STOPPED_MODE;
+						m_textObservers[MODE_TEXT]->Notify();
+
+						// Reset view so that the center is vehicle starting position
+						m_zoom.ResetValue();
+						m_textObservers[ZOOM_TEXT]->Notify();
+						CoreWindow::Reset();
+						CoreWindow::SetViewCenter(m_vehiclePrototype->GetCenter());
+						break;
+					}
+					case CHANGE_FILENAME_TYPE:
+						break;
+					case PAUSED_CHANGE_MODE:
+					{
+						if (m_pressedKeys[iterator->second])
+							break;
+						m_mode = PAUSED_MODE;
+						m_textObservers[MODE_TEXT]->Notify();
+						break;
+					}
+					case INCREASE_PARAMETER:
+					case DECREASE_PARAMETER:
+						break;
+					case INCREASE_ZOOM:
+						if (m_pressedKeyTimer.Update())
+						{
+							m_zoom.Increase();
+							CoreWindow::SetViewZoom(m_zoom);
+							m_textObservers[ZOOM_TEXT]->Notify();
+
+							if (m_zoom >= m_zoomThreshold)
+							{
+								// Set view center as map center
+								CoreWindow::SetViewCenter(m_mapPrototype->GetCenter());
+							}
+						}
+						break;
+					case DECREASE_ZOOM:
+						if (m_pressedKeyTimer.Update())
+						{
+							m_zoom.Decrease();
+							CoreWindow::SetViewZoom(m_zoom);
+							m_textObservers[ZOOM_TEXT]->Notify();
+						}
+						break;
+					default:
+						break;
+				}
+
+				m_pressedKeys[iterator->second] = true;
+			}
+			break;
+		}
+		default:
+			break;
 	}
-	else
-		filenameText->Capture();
 
 	if (CoreWindow::GetEvent().type == sf::Event::KeyReleased)
 	{
@@ -633,7 +632,7 @@ void StateSimulation::Update()
 	{
 		case STOPPED_MODE:
 		{
-			auto* filenameText = static_cast<FilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
+			auto* filenameText = static_cast<FilenameText<true, false>*>(m_texts[FILENAME_STOPPED_TEXT]);
 			if (filenameText->IsReading())
 			{
 				switch (m_filenameType)
@@ -727,19 +726,6 @@ void StateSimulation::Update()
 						CoreWindow::SetViewCenter(m_vehiclePrototype->GetCenter());
 						break;
 					}
-					default:
-						break;
-				}
-			}
-			else if (filenameText->IsWriting())
-			{
-				switch (m_filenameType)
-				{
-					case ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE:
-					case VEHICLE_FILENAME_TYPE:
-					case MAP_FILENAME_TYPE:
-						filenameText->SetErrorStatusText(m_internalErrorsStrings[ERROR_SAVE_MODE_IS_ALLOWED_ONLY_IN_PAUSED_MODE]);
-						break;
 					default:
 						break;
 				}
@@ -843,20 +829,8 @@ void StateSimulation::Update()
 		}
 		case PAUSED_MODE:
 		{
-			auto* filenameText = static_cast<FilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
-			if (filenameText->IsReading())
-			{
-				switch (m_filenameTypePaused)
-				{
-					case ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE_PAUSED:
-					case STATISTICS_FILENAME_TYPE_PAUSED:
-						filenameText->SetErrorStatusText(m_internalErrorsStrings[ERROR_ONLY_SAVE_MODE_IS_ALLOWED_IN_THIS_STATE]);
-						break;
-					default:
-						break;
-				}
-			}
-			else if (filenameText->IsWriting())
+			auto* filenameText = static_cast<FilenameText<false, true>*>(m_texts[FILENAME_PAUSED_TEXT]);
+			if (filenameText->IsWriting())
 			{
 				switch (m_filenameTypePaused)
 				{
@@ -910,9 +884,10 @@ bool StateSimulation::Load()
 {
 	// Create texts
 	m_texts[MODE_TEXT] = new StatusText({ "Mode:", "", "| [M] [P]" });
-	m_texts[FILENAME_TEXT] = new FilenameText<true, true>("map.bin");
-	m_texts[FILENAME_TYPE_TEXT] = new TripleText({ "Filename type:", "", "| [F]"});
+	m_texts[FILENAME_TYPE_STOPPED_TEXT] = new TripleText({ "Filename type:", "", "| [F]"});
 	m_texts[FILENAME_TYPE_PAUSED_TEXT] = new TripleText({ "Filename type:", "", "| [F]" });
+	m_texts[FILENAME_STOPPED_TEXT] = new FilenameText<true, false>("map.bin");
+	m_texts[FILENAME_PAUSED_TEXT] = new FilenameText<false, true>("ann.bin");
 	m_texts[PARAMETER_TYPE_TEXT] = new TripleText({ "Parameter type:", "", "| [P] [+] [-]" });
 	m_texts[POPULATION_SIZE_TEXT] = new DoubleText({ m_parameterTypesStrings[POPULATION_SIZE] + ":" });
 	m_texts[NUMBER_OF_GENERATIONS_TEXT] = new DoubleText({ m_parameterTypesStrings[NUMBER_OF_GENERATIONS] + ":" });
@@ -936,7 +911,7 @@ bool StateSimulation::Load()
 
 	// Create observers
 	m_textObservers[MODE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_modeStrings[m_mode]; });
-	m_textObservers[FILENAME_TYPE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_filenameTypeStrings[m_filenameType]; });
+	m_textObservers[FILENAME_TYPE_STOPPED_TEXT] = new FunctionEventObserver<std::string>([&] { return m_filenameTypeStrings[m_filenameType]; });
 	m_textObservers[FILENAME_TYPE_PAUSED_TEXT] = new FunctionEventObserver<std::string>([&] { return m_filenameTypePausedStrings[m_filenameTypePaused];});
 	m_textObservers[PARAMETER_TYPE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_parameterTypesStrings[m_parameterType]; });
 	m_textObservers[POPULATION_SIZE_TEXT] = new FunctionEventObserver<size_t>([&] { return m_population; });
@@ -965,9 +940,10 @@ bool StateSimulation::Load()
 
 	// Set texts positions
 	m_texts[MODE_TEXT]->SetPosition({ FontContext::Component(0), {0}, {3}, {8}, {17} });
-	m_texts[FILENAME_TYPE_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {8} });
+	m_texts[FILENAME_TYPE_STOPPED_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {8} });
 	m_texts[FILENAME_TYPE_PAUSED_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {8} });
-	m_texts[FILENAME_TEXT]->SetPosition({ FontContext::Component(2), {0}, {3}, {8}, {17} });
+	m_texts[FILENAME_STOPPED_TEXT]->SetPosition({ FontContext::Component(2), {0}, {3}, {8}, {17} });
+	m_texts[FILENAME_PAUSED_TEXT]->SetPosition({ FontContext::Component(2), {0}, {3}, {8}, {17} });
 	m_texts[PARAMETER_TYPE_TEXT]->SetPosition({ FontContext::Component(11, true), {0}, {10}, {20} });
 	m_texts[POPULATION_SIZE_TEXT]->SetPosition({ FontContext::Component(10, true), {0}, {10} });
 	m_texts[NUMBER_OF_GENERATIONS_TEXT]->SetPosition({ FontContext::Component(9, true), {0}, {10} });
@@ -1012,8 +988,8 @@ void StateSimulation::Draw()
 				m_mapPrototype->DrawEdges();
 			}
 
-			m_texts[FILENAME_TYPE_TEXT]->Draw();
-			m_texts[FILENAME_TEXT]->Draw();
+			m_texts[FILENAME_TYPE_STOPPED_TEXT]->Draw();
+			m_texts[FILENAME_STOPPED_TEXT]->Draw();
 			m_texts[PARAMETER_TYPE_TEXT]->Draw();
 			m_texts[POPULATION_SIZE_TEXT]->Draw();
 			m_texts[NUMBER_OF_GENERATIONS_TEXT]->Draw();
@@ -1022,7 +998,7 @@ void StateSimulation::Draw()
 		case PAUSED_MODE:
 			m_simulatedWorld->Draw();
 			m_texts[FILENAME_TYPE_PAUSED_TEXT]->Draw();
-			m_texts[FILENAME_TEXT]->Draw();
+			m_texts[FILENAME_PAUSED_TEXT]->Draw();
 			m_texts[CURRENT_POPULATION_TEXT]->Draw();
 			m_texts[CURRENT_GENERATION_TEXT]->Draw();
 			m_texts[HIGHEST_FITNESS_TEXT]->Draw();

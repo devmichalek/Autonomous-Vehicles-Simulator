@@ -109,11 +109,10 @@ private:
 		ERROR_NO_ARTIFICIAL_NEURAL_NETWORK_SPECIFIED,
 		ERROR_NO_MAP_SPECIFIED,
 		ERROR_USER_VEHICLE_NOT_SPECIFIED,
-		ERROR_NO_VEHICLE_SPECIFIED,
+		ERROR_ONE_OF_BOT_VEHICLES_IS_UNSPECIFIED,
 		ERROR_USER_VEHICLE_IS_IN_A_COLLISION_WITH_EDGES_CHAIN,
 		ERROR_BOT_VEHICLE_IS_IN_A_COLLISION_WITH_EDGES_CHAIN,
 		ERROR_ARTIFICIAL_NEURAL_NETWORK_INPUT_MISMATCH,
-		ERROR_ARTIFICIAL_NEURAL_NETWORK_OUTPUT_MISMATCH,
 		ERROR_USER_VEHICLE_NOT_ENABLED,
 		ERROR_CANNOT_LOAD_ANN_FOR_USER_VEHICLE,
 		ERROR_NO_BOT_VEHICLES,
@@ -141,12 +140,12 @@ private:
 	VehiclePrototype* m_dummyVehiclePrototype;
 	VehiclePrototype* m_userVehiclePrototype;
 	std::string m_userVehicleFilename;
+	double m_defaultUserVehicleTorque;
 	SimulatedVehicles m_simulatedVehicles; // Bot vehicles, pointers are cleared by world
 	VehiclePrototypes m_vehiclePrototypes; // Bot vehicle prototypes
 	ArtificialNeuralNetworks m_artificialNeuralNetworks; // Bot anns
 	std::vector<std::string> m_botVehicleFilenames;
 	std::vector<std::string> m_botArtificialNeuralNetworkFilenames;
-	double m_defaultUserVehicleTorque;
 
 	// Builders
 	MapBuilder m_mapBuilder;
