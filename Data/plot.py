@@ -30,7 +30,7 @@ for file in glob.glob("*.csv"):
 	ax.bar(generations, columns[2], color = columnColors[2], label='Liczba zwycięzców')
 	ax.plot(generations, columns[3], color = columnColors[3], label='Najkrótszy czas przejazdu')
 	ax.plot(generations, columns[4], color = columnColors[4], label='Średni czas życia pojazdu')
-	plt.legend(loc="upper left")
+	plt.legend(loc="best")
 	plt.xlabel('Generacja')
 	plt.savefig(file[:-4] + '.png')
 	#plt.show()

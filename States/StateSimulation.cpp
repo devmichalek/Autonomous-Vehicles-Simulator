@@ -461,7 +461,8 @@ void StateSimulation::Capture()
 				}
 			}
 			
-			filenameText->Capture();
+			if (m_mode == STOPPED_MODE)
+				filenameText->Capture();
 			break;
 		}
 		case PAUSED_MODE:
@@ -527,7 +528,8 @@ void StateSimulation::Capture()
 				}
 			}
 
-			filenameText->Capture();
+			if (m_mode == PAUSED_MODE)
+				filenameText->Capture();
 			break;
 		}
 		case RUNNING_MODE:
