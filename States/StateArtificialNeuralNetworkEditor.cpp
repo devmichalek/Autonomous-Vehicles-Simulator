@@ -43,9 +43,9 @@ StateArtificialNeuralNetworkEditor::StateArtificialNeuralNetworkEditor() :
 
 StateArtificialNeuralNetworkEditor::~StateArtificialNeuralNetworkEditor()
 {
-	for (auto& text : m_texts)
+	for (const auto& text : m_texts)
 		delete text;
-	for (auto& observer : m_textObservers)
+	for (const auto& observer : m_textObservers)
 		delete observer;
 }
 
@@ -83,8 +83,8 @@ void StateArtificialNeuralNetworkEditor::Capture()
 	{
 		if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
 		{
-			auto eventKey = CoreWindow::GetEvent().key.code;
-			auto iterator = m_controlKeys.find(eventKey);
+			const auto eventKey = CoreWindow::GetEvent().key.code;
+			const auto iterator = m_controlKeys.find(eventKey);
 			if (iterator != m_controlKeys.end() && !m_pressedKeys[iterator->second])
 			{
 				m_pressedKeys[iterator->second] = true;
@@ -154,8 +154,8 @@ void StateArtificialNeuralNetworkEditor::Capture()
 		}
 		else if (CoreWindow::GetEvent().type == sf::Event::KeyReleased)
 		{
-			auto eventKey = CoreWindow::GetEvent().key.code;
-			auto iterator = m_controlKeys.find(eventKey);
+			const auto eventKey = CoreWindow::GetEvent().key.code;
+			const auto iterator = m_controlKeys.find(eventKey);
 			if (iterator != m_controlKeys.end())
 				m_pressedKeys[iterator->second] = false;
 		}
@@ -175,8 +175,8 @@ void StateArtificialNeuralNetworkEditor::Update()
 			m_artificialNeuralNetworkBuilder.SetNeuronLayerSizes(m_neuronLayerSizes);
 			m_artificialNeuralNetworkBuilder.SetActivationFunctionIndexes(m_activationFunctionIndexes);
 			m_artificialNeuralNetworkBuilder.SetBiasVector(m_biasVector);
-			bool success = m_artificialNeuralNetworkBuilder.Save(filenameText->GetFilename());
-			auto status = m_artificialNeuralNetworkBuilder.GetLastOperationStatus();
+			const bool success = m_artificialNeuralNetworkBuilder.Save(filenameText->GetFilename());
+			const auto status = m_artificialNeuralNetworkBuilder.GetLastOperationStatus();
 			if (success)
 				filenameText->SetSuccessStatusText(status.second);
 			else
@@ -186,8 +186,8 @@ void StateArtificialNeuralNetworkEditor::Update()
 	}
 	else if (filenameText->IsReading())
 	{
-		bool success = m_artificialNeuralNetworkBuilder.Load(filenameText->GetFilename());
-		auto status = m_artificialNeuralNetworkBuilder.GetLastOperationStatus();
+		const bool success = m_artificialNeuralNetworkBuilder.Load(filenameText->GetFilename());
+		const auto status = m_artificialNeuralNetworkBuilder.GetLastOperationStatus();
 		if (success)
 		{
 			filenameText->SetSuccessStatusText(status.second);
@@ -210,7 +210,7 @@ void StateArtificialNeuralNetworkEditor::Update()
 			// Calculate strengths
 			for (size_t i = 0; i < m_weightStrengths.size(); ++i)
 			{
-				auto alpha = sf::Uint8(ColorContext::MaxChannelValue / 2 * (weights[i] / max));
+				const auto alpha = sf::Uint8(ColorContext::MaxChannelValue / 2 * (weights[i] / max));
 				m_weightStrengths[i] = ColorContext::Create(ColorContext::MaxChannelValue, alpha);
 			}
 
@@ -319,7 +319,7 @@ void StateArtificialNeuralNetworkEditor::CalculatePositions()
 	m_weightPositions.clear();
 	m_weightStrengths.clear();
 
-	auto windowSize = CoreWindow::GetWindowSize();
+	const auto windowSize = CoreWindow::GetWindowSize();
 	const float screenWidth = windowSize.x;
 	const float screenHeight = windowSize.y;
 	const float availableWidth = screenWidth * 0.8f;
@@ -334,7 +334,7 @@ void StateArtificialNeuralNetworkEditor::CalculatePositions()
 	m_totalNumberOfNeurons = 0;
 	for (size_t layerNr = 0; layerNr < numberOfLayers; ++layerNr)
 	{
-		float x = startX + (offsetX * layerNr);
+		const float x = startX + (offsetX * layerNr);
 		const size_t numberOfNeurons = m_neuronLayerSizes[layerNr];
 		const float offsetY = availableHeight / (numberOfNeurons + 1);
 		const float startY = (screenHeight / 2) - (offsetY * (numberOfNeurons - 1)) / 2;

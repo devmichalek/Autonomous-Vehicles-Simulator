@@ -157,7 +157,7 @@ public:
 	// Returns true in case of success and false in case of failure
 	std::pair<bool, std::string> GetLastOperationStatus()
 	{
-		std::string message = m_operationsMap[m_lastOperationStatus];
+		const std::string message = m_operationsMap[m_lastOperationStatus];
 		switch (m_lastOperationStatus)
 		{
 			case SUCCESS_SAVE_COMPLETED:

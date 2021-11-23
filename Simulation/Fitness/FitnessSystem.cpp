@@ -16,13 +16,13 @@ FitnessSystem::FitnessSystem(const size_t populationSize,
 		if (contact->GetFixtureA()->GetFilterData().categoryBits == SimulatedAbstract::CategoryCheckpoint &&
 			contact->GetFixtureB()->GetFilterData().categoryBits == SimulatedAbstract::CategoryVehicle)
 		{
-			auto fitness = ((SimulatedCheckpoint*)contact->GetFixtureA()->GetUserData().pointer)->GetFitness();
+			const auto fitness = ((SimulatedCheckpoint*)contact->GetFixtureA()->GetUserData().pointer)->GetFitness();
 			auto simulatedVehicle = ((SimulatedVehicle*)contact->GetFixtureB()->GetUserData().pointer);
 
 			if (simulatedVehicle->IsActive())
 			{
-				auto currentFitness = simulatedVehicle->GetFitness();
-				int difference = int(currentFitness) - int(fitness);
+				const auto currentFitness = simulatedVehicle->GetFitness();
+				const int difference = int(currentFitness) - int(fitness);
 				if (difference == 1 || difference == -1)
 					simulatedVehicle->SetFitness(fitness);
 			}

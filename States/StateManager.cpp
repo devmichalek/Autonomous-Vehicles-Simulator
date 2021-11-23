@@ -80,8 +80,8 @@ void StateManager::Capture()
 
 	if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
 	{
-		auto eventKey = CoreWindow::GetEvent().key.code;
-		auto iterator = m_controlKeys.find(eventKey);
+		const auto eventKey = CoreWindow::GetEvent().key.code;
+		const auto iterator = m_controlKeys.find(eventKey);
 		if (iterator != m_controlKeys.end() && !m_pressedKeys[iterator->second])
 		{
 			m_pressedKeys[iterator->second] = true;
@@ -109,8 +109,8 @@ void StateManager::Capture()
 	}
 	else if (CoreWindow::GetEvent().type == sf::Event::KeyReleased)
 	{
-		auto eventKey = CoreWindow::GetEvent().key.code;
-		auto iterator = m_controlKeys.find(eventKey);
+		const auto eventKey = CoreWindow::GetEvent().key.code;
+		const auto iterator = m_controlKeys.find(eventKey);
 		if (iterator != m_controlKeys.end())
 			m_pressedKeys[iterator->second] = false;
 	}

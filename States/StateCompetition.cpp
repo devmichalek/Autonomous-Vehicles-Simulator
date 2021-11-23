@@ -89,13 +89,13 @@ StateCompetition::~StateCompetition()
 	delete m_mapPrototype;
 	delete m_dummyVehiclePrototype;
 	delete m_userVehiclePrototype;
-	for (auto& vehiclePrototype : m_vehiclePrototypes)
+	for (const auto& vehiclePrototype : m_vehiclePrototypes)
 		delete vehiclePrototype;
-	for (auto& ann : m_artificialNeuralNetworks)
+	for (const auto& ann : m_artificialNeuralNetworks)
 		delete ann;
-	for (auto& text : m_texts)
+	for (const auto& text : m_texts)
 		delete text;
-	for (auto& observer : m_textObservers)
+	for (const auto& observer : m_textObservers)
 		delete observer;
 }
 
@@ -133,10 +133,10 @@ void StateCompetition::Reload()
 	m_defaultUserVehicleTorque = VehicleBuilder::GetDefaultTorque();
 	m_userVehicleFilename.clear();
 	m_simulatedVehicles.clear();
-	for (auto& vehiclePrototype : m_vehiclePrototypes)
+	for (const auto& vehiclePrototype : m_vehiclePrototypes)
 		delete vehiclePrototype;
 	m_vehiclePrototypes.clear();
-	for (auto& artificialNeuralNetwork : m_artificialNeuralNetworks)
+	for (const auto& artificialNeuralNetwork : m_artificialNeuralNetworks)
 		delete artificialNeuralNetwork;
 	m_artificialNeuralNetworks.clear();
 	m_botVehicleFilenames.clear();
@@ -170,8 +170,8 @@ void StateCompetition::Capture()
 				filenameText->Capture();
 				if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
 				{
-					auto eventKey = CoreWindow::GetEvent().key.code;
-					auto iterator = m_controlKeys.find(eventKey);
+					const auto eventKey = CoreWindow::GetEvent().key.code;
+					const auto iterator = m_controlKeys.find(eventKey);
 					if (iterator != m_controlKeys.end() && !m_pressedKeys[iterator->second])
 					{
 						m_pressedKeys[iterator->second] = true;
@@ -394,8 +394,8 @@ void StateCompetition::Capture()
 			case RUNNING_MODE:
 				if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
 				{
-					auto eventKey = CoreWindow::GetEvent().key.code;
-					auto iterator = m_controlKeys.find(eventKey);
+					const auto eventKey = CoreWindow::GetEvent().key.code;
+					const auto iterator = m_controlKeys.find(eventKey);
 					if (iterator == m_controlKeys.end())
 						break;
 
@@ -465,8 +465,8 @@ void StateCompetition::Capture()
 			case PAUSED_MODE:
 				if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
 				{
-					auto eventKey = CoreWindow::GetEvent().key.code;
-					auto iterator = m_controlKeys.find(eventKey);
+					const auto eventKey = CoreWindow::GetEvent().key.code;
+					const auto iterator = m_controlKeys.find(eventKey);
 					if (iterator == m_controlKeys.end())
 						break;
 
@@ -520,8 +520,8 @@ void StateCompetition::Capture()
 
 	if (CoreWindow::GetEvent().type == sf::Event::KeyReleased)
 	{
-		auto eventKey = CoreWindow::GetEvent().key.code;
-		auto iterator = m_controlKeys.find(eventKey);
+		const auto eventKey = CoreWindow::GetEvent().key.code;
+		const auto iterator = m_controlKeys.find(eventKey);
 		if (iterator != m_controlKeys.end())
 		{
 			m_pressedKeys[iterator->second] = false;
@@ -555,8 +555,8 @@ void StateCompetition::Update()
 				{
 					case MAP_FILENAME_TYPE:
 					{
-						bool success = m_mapBuilder.Load(filenameText->GetFilename());
-						auto status = m_mapBuilder.GetLastOperationStatus();
+						const bool success = m_mapBuilder.Load(filenameText->GetFilename());
+						const auto status = m_mapBuilder.GetLastOperationStatus();
 						if (!success)
 						{
 							filenameText->SetErrorStatusText(status.second);
@@ -612,8 +612,8 @@ void StateCompetition::Update()
 								break;
 							}
 
-							bool success = m_artificialNeuralNetworkBuilder.Load(filenameText->GetFilename());
-							auto status = m_artificialNeuralNetworkBuilder.GetLastOperationStatus();
+							const bool success = m_artificialNeuralNetworkBuilder.Load(filenameText->GetFilename());
+							const auto status = m_artificialNeuralNetworkBuilder.GetLastOperationStatus();
 							if (!success)
 							{
 								filenameText->SetErrorStatusText(status.second);
@@ -640,8 +640,8 @@ void StateCompetition::Update()
 								break;
 							}
 
-							bool success = m_vehicleBuilder.Load(filenameText->GetFilename());
-							auto status = m_vehicleBuilder.GetLastOperationStatus();
+							const bool success = m_vehicleBuilder.Load(filenameText->GetFilename());
+							const auto status = m_vehicleBuilder.GetLastOperationStatus();
 							if (!success)
 							{
 								filenameText->SetErrorStatusText(status.second);
@@ -668,8 +668,8 @@ void StateCompetition::Update()
 								break;
 							}
 
-							bool success = m_vehicleBuilder.Load(filenameText->GetFilename());
-							auto status = m_vehicleBuilder.GetLastOperationStatus();
+							const bool success = m_vehicleBuilder.Load(filenameText->GetFilename());
+							const auto status = m_vehicleBuilder.GetLastOperationStatus();
 							if (!success)
 							{
 								filenameText->SetErrorStatusText(status.second);
@@ -697,7 +697,7 @@ void StateCompetition::Update()
 		}
 		case RUNNING_MODE:
 		{
-			auto currentLeaderindex = m_fitnessSystem->MarkLeader(m_simulatedVehicles);
+			const auto currentLeaderindex = m_fitnessSystem->MarkLeader(m_simulatedVehicles);
 			if (m_userVehicle)
 			{
 				m_userVehicle->Update(m_simulatedWorld->GetEdgesWorld());
@@ -735,8 +735,8 @@ void StateCompetition::Update()
 
 				// Update view
 				auto viewCenter = CoreWindow::GetViewCenter();
-				auto distance = MathContext::Distance(viewCenter, m_viewCenter);
-				auto angle = MathContext::DifferenceVectorAngle(viewCenter, m_viewCenter);
+				const auto distance = MathContext::Distance(viewCenter, m_viewCenter);
+				const auto angle = MathContext::DifferenceVectorAngle(viewCenter, m_viewCenter);
 				viewCenter = MathContext::GetEndPoint(viewCenter, angle, float(-distance * m_viewMovementOffset * CoreWindow::GetElapsedTime()));
 				CoreWindow::SetViewCenter(viewCenter);
 			}

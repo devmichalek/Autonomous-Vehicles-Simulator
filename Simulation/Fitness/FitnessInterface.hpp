@@ -24,7 +24,7 @@ protected:
 	{
 	}
 
-	FitnessInterface(Fitness fitness) :
+	FitnessInterface(const Fitness fitness) :
 		m_fitness(fitness)
 	{
 	}

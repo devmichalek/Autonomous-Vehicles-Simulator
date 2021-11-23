@@ -52,15 +52,15 @@ public:
 		// Update body data
 		for (size_t i = 0; i < m_numberOfBodyPoints; ++i)
 		{
-			auto bodyPoint = m_body->GetWorldPoint(m_bodyPoints[i]);
+			const auto bodyPoint = m_body->GetWorldPoint(m_bodyPoints[i]);
 			m_bodyShape.setPoint(i, MathContext::ToSFMLPosition(bodyPoint));
 		}
 
 		// Update sensor data
 		const float radians = m_body->GetAngle();
 		const sf::Vector2f center = MathContext::ToSFMLPosition(m_body->GetWorldCenter());
-		float cosinus = float(cos(radians));
-		float sinus = float(sin(radians));
+		const float cosinus = float(cos(radians));
+		const float sinus = float(sin(radians));
 		for (size_t i = 0; i < m_sensorPoints.size(); ++i)
 		{
 			// Set sensor max value
@@ -75,8 +75,8 @@ public:
 			m_beams[i][0].position += center;
 
 			// Calculate beam end position
-			auto cosBeam = cos(radians + m_beamAngles[i] + m_motionRanges[i].GetValue());
-			auto sinBeam = sin(radians + m_beamAngles[i] + m_motionRanges[i].GetValue());
+			const auto cosBeam = cos(radians + m_beamAngles[i] + m_motionRanges[i].GetValue());
+			const auto sinBeam = sin(radians + m_beamAngles[i] + m_motionRanges[i].GetValue());
 			m_beams[i][1].position.x = static_cast<float>(m_beams[i][0].position.x + VehicleBuilder::GetDefaultBeamLength() * cosBeam);
 			m_beams[i][1].position.y = static_cast<float>(m_beams[i][0].position.y + VehicleBuilder::GetDefaultBeamLength() * sinBeam);
 
@@ -89,7 +89,7 @@ public:
 		// Lateral linear velocity
 		const float elapsedTime = float(CoreWindow::GetElapsedTime());
 		b2Vec2 impulse = m_body->GetMass() * -GetLateralVelocity();
-		auto impulseLength = impulse.Length();
+		const auto impulseLength = impulse.Length();
 		if (impulseLength > m_maxLateralImpulse)
 		{
 			auto factor = m_maxLateralImpulse / impulseLength;
@@ -103,8 +103,8 @@ public:
 
 		// Forward linear velocity
 		b2Vec2 currentForwardNormal = GetForwardVelocity();
-		float currentForwardSpeed = currentForwardNormal.Normalize();
-		float dragForceMagnitude = -2000 * currentForwardSpeed * elapsedTime;
+		const float currentForwardSpeed = currentForwardNormal.Normalize();
+		const float dragForceMagnitude = -2000 * currentForwardSpeed * elapsedTime;
 		m_body->ApplyForce(dragForceMagnitude * currentForwardNormal, m_body->GetWorldCenter(), true);
 	}
 
@@ -149,7 +149,7 @@ public:
 	inline void SetBody(b2Body* body)
 	{
 		m_body = body;
-		auto fixture = body->GetFixtureList();
+		const auto fixture = body->GetFixtureList();
 		auto* shape = (b2PolygonShape*)fixture->GetShape();
 		m_numberOfBodyPoints = shape->m_count;
 		m_bodyPoints = shape->m_vertices;
@@ -159,8 +159,8 @@ public:
 		// Calculate beam positions
 		const float radians = m_body->GetAngle();
 		const sf::Vector2f center = MathContext::ToSFMLPosition(m_body->GetWorldCenter());
-		float cosinus = float(cos(radians));
-		float sinus = float(sin(radians));
+		const float cosinus = float(cos(radians));
+		const float sinus = float(sin(radians));
 		for (size_t i = 0; i < m_sensorPoints.size(); ++i)
 		{
 			m_beams[i][0].position = sf::Vector2f((m_sensorPoints[i].x * cosinus - m_sensorPoints[i].y * sinus),
@@ -168,8 +168,8 @@ public:
 			m_beams[i][0].position += center;
 
 			// Calculate beam end position
-			auto cosBeam = cos(radians + m_beamAngles[i] + m_motionRanges[i].GetValue());
-			auto sinBeam = sin(radians + m_beamAngles[i] + m_motionRanges[i].GetValue());
+			const auto cosBeam = cos(radians + m_beamAngles[i] + m_motionRanges[i].GetValue());
+			const auto sinBeam = sin(radians + m_beamAngles[i] + m_motionRanges[i].GetValue());
 			m_beams[i][1].position.x = static_cast<float>(m_beams[i][0].position.x + VehicleBuilder::GetDefaultBeamLength() * cosBeam);
 			m_beams[i][1].position.y = static_cast<float>(m_beams[i][0].position.y + VehicleBuilder::GetDefaultBeamLength() * sinBeam);
 			m_beamRaycastCallbacks.emplace_back(m_beams[i], m_sensors[i]);
@@ -179,7 +179,7 @@ public:
 	}
 
 	// Returns true if vehicle is active
-	inline bool IsActive()
+	inline bool IsActive() const
 	{
 		return m_active;
 	}
@@ -193,7 +193,7 @@ public:
 	}
 
 	// Returns vehicle center
-	inline sf::Vector2f GetCenter()
+	inline sf::Vector2f GetCenter() const
 	{
 		return MathContext::ToSFMLPosition(m_body->GetWorldCenter());
 	}
@@ -215,14 +215,14 @@ public:
 private:
 
 	// Calculates lateral velocity
-	b2Vec2 GetLateralVelocity()
+	b2Vec2 GetLateralVelocity() const
 	{
 		b2Vec2 currentRightNormal = m_body->GetWorldVector(b2Vec2(0, 1));
 		return b2Dot(currentRightNormal, m_body->GetLinearVelocity()) * currentRightNormal;
 	}
 
 	// Calculates forward velocitys
-	b2Vec2 GetForwardVelocity()
+	b2Vec2 GetForwardVelocity() const
 	{
 		b2Vec2 currentForwardNormal = m_body->GetWorldVector(b2Vec2(1, 0));
 		return b2Dot(currentForwardNormal, m_body->GetLinearVelocity()) * currentForwardNormal;

@@ -100,16 +100,16 @@ StateSimulation::StateSimulation() :
 StateSimulation::~StateSimulation()
 {
 	delete m_geneticAlgorithm;
-	for (auto& artificialNeuralNetwork : m_artificialNeuralNetworks)
+	for (const auto& artificialNeuralNetwork : m_artificialNeuralNetworks)
 		delete artificialNeuralNetwork;
 	delete m_simulatedWorld;
 	delete m_fitnessSystem;
 	delete m_artificialNeuralNetworkPrototype;
 	delete m_vehiclePrototype;
 	delete m_mapPrototype;
-	for (auto& text : m_texts)
+	for (const auto& text : m_texts)
 		delete text;
-	for (auto& observer : m_textObservers)
+	for (const auto& observer : m_textObservers)
 		delete observer;
 }
 
@@ -195,8 +195,8 @@ void StateSimulation::Capture()
 			{
 				if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
 				{
-					auto eventKey = CoreWindow::GetEvent().key.code;
-					auto iterator = m_controlKeys.find(eventKey);
+					const auto eventKey = CoreWindow::GetEvent().key.code;
+					const auto iterator = m_controlKeys.find(eventKey);
 					if (iterator != m_controlKeys.end())
 					{
 						switch (iterator->second)
@@ -238,7 +238,7 @@ void StateSimulation::Capture()
 								}
 
 								// Create artificial neural networks
-								for (auto& artificialNeuralNetwork : m_artificialNeuralNetworks)
+								for (const auto& artificialNeuralNetwork : m_artificialNeuralNetworks)
 									delete artificialNeuralNetwork;
 								m_artificialNeuralNetworks.resize(m_population);
 								for (auto& artificialNeuralNetwork : m_artificialNeuralNetworks)
@@ -472,8 +472,8 @@ void StateSimulation::Capture()
 			{
 				if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
 				{
-					auto eventKey = CoreWindow::GetEvent().key.code;
-					auto iterator = m_controlKeys.find(eventKey);
+					const auto eventKey = CoreWindow::GetEvent().key.code;
+					const auto iterator = m_controlKeys.find(eventKey);
 					if (iterator != m_controlKeys.end())
 					{
 						switch (iterator->second)
@@ -536,8 +536,8 @@ void StateSimulation::Capture()
 		{
 			if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
 			{
-				auto eventKey = CoreWindow::GetEvent().key.code;
-				auto iterator = m_controlKeys.find(eventKey);
+				const auto eventKey = CoreWindow::GetEvent().key.code;
+				const auto iterator = m_controlKeys.find(eventKey);
 				if (iterator == m_controlKeys.end())
 					break;
 
@@ -606,8 +606,8 @@ void StateSimulation::Capture()
 
 	if (CoreWindow::GetEvent().type == sf::Event::KeyReleased)
 	{
-		auto eventKey = CoreWindow::GetEvent().key.code;
-		auto iterator = m_controlKeys.find(eventKey);
+		const auto eventKey = CoreWindow::GetEvent().key.code;
+		const auto iterator = m_controlKeys.find(eventKey);
 		if (iterator != m_controlKeys.end())
 		{
 			m_pressedKeys[iterator->second] = false;
@@ -799,7 +799,7 @@ void StateSimulation::Update()
 			{
 				if (m_viewTimer.Update())
 				{
-					auto index = m_fitnessSystem->MarkLeader(m_simulatedVehicles);
+					const auto index = m_fitnessSystem->MarkLeader(m_simulatedVehicles);
 					m_viewCenter = m_simulatedVehicles[index]->GetCenter();
 					m_textObservers[HIGHEST_FITNESS_TEXT]->Notify();
 					m_textObservers[BEST_TIME_TEXT]->Notify();
@@ -822,8 +822,8 @@ void StateSimulation::Update()
 			if (m_zoom < m_zoomThreshold)
 			{
 				auto viewCenter = CoreWindow::GetViewCenter();
-				auto distance = MathContext::Distance(viewCenter, m_viewCenter);
-				auto angle = MathContext::DifferenceVectorAngle(viewCenter, m_viewCenter);
+				const auto distance = MathContext::Distance(viewCenter, m_viewCenter);
+				const auto angle = MathContext::DifferenceVectorAngle(viewCenter, m_viewCenter);
 				viewCenter = MathContext::GetEndPoint(viewCenter, angle, float(-distance * m_viewMovementOffset * CoreWindow::GetElapsedTime()));
 				CoreWindow::SetViewCenter(viewCenter);
 			}
@@ -844,8 +844,8 @@ void StateSimulation::Update()
 						// Take the best artificial neural network
 						m_artificialNeuralNetworkBuilder.Set(m_artificialNeuralNetworks[0]);
 
-						bool success = m_artificialNeuralNetworkBuilder.Save(filenameText->GetFilename());
-						auto status = m_artificialNeuralNetworkBuilder.GetLastOperationStatus();
+						const bool success = m_artificialNeuralNetworkBuilder.Save(filenameText->GetFilename());
+						const auto status = m_artificialNeuralNetworkBuilder.GetLastOperationStatus();
 
 						// Set filename text
 						if (!success)
@@ -858,8 +858,8 @@ void StateSimulation::Update()
 					{
 						m_statisticsBuilder.Extract(m_geneticAlgorithm ? m_geneticAlgorithm->GetCurrentGeneration() : m_generation,
 													m_fitnessSystem);
-						bool success = m_statisticsBuilder.Save(filenameText->GetFilename());
-						auto status = m_statisticsBuilder.GetLastOperationStatus();
+						const bool success = m_statisticsBuilder.Save(filenameText->GetFilename());
+						const auto status = m_statisticsBuilder.GetLastOperationStatus();
 
 						// Set filename text
 						if (!success)

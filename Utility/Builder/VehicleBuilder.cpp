@@ -28,9 +28,9 @@ bool VehicleBuilder::ValidateNumberOfBodyPoints(size_t count)
 
 bool VehicleBuilder::ValidateBodyArea()
 {
-	auto minBound = GetMinBodyBound();
-	auto minimumArea = minBound.x * minBound.y;
-	auto totalArea = MathContext::CalculateArea(m_prototype.GetBodyPoints());
+	const auto minBound = GetMinBodyBound();
+	const auto minimumArea = minBound.x * minBound.y;
+	const auto totalArea = MathContext::CalculateArea(m_prototype.GetBodyPoints());
 
 	if (totalArea < minimumArea)
 	{
@@ -64,9 +64,9 @@ bool VehicleBuilder::ValidateRelativePositions(const std::vector<sf::Vector2f>& 
 			down = points[i].y;
 	}
 
-	float x = float(std::fabs(left - right));
-	float y = float(std::fabs(top - down));
-	auto maxSize = GetMaxBodyBound();
+	const float x = float(std::fabs(left - right));
+	const float y = float(std::fabs(top - down));
+	const auto maxSize = GetMaxBodyBound();
 
 	if (x > maxSize.x || y > maxSize.y)
 	{
@@ -202,7 +202,7 @@ void VehicleBuilder::ClearInternal()
 bool VehicleBuilder::LoadInternal(std::ifstream& input)
 {
 	// Get window size
-	auto windowSize = CoreWindow::GetWindowSize();
+	const auto windowSize = CoreWindow::GetWindowSize();
 	
 	// Read number of vehicle body points
 	size_t vehicleBodyNumberOfPoints = 0;
@@ -287,10 +287,10 @@ bool VehicleBuilder::LoadInternal(std::ifstream& input)
 bool VehicleBuilder::SaveInternal(std::ofstream& output)
 {
 	// Get window size
-	auto windowSize = CoreWindow::GetWindowSize();
+	const auto windowSize = CoreWindow::GetWindowSize();
 
 	// Save number of vehicle body points
-	size_t vehicleBodyNumberOfPoints = m_prototype.GetNumberOfBodyPoints();
+	const size_t vehicleBodyNumberOfPoints = m_prototype.GetNumberOfBodyPoints();
 	output.write((const char*)&vehicleBodyNumberOfPoints, sizeof(vehicleBodyNumberOfPoints));
 
 	// Save vehicle body points
@@ -303,7 +303,7 @@ bool VehicleBuilder::SaveInternal(std::ofstream& output)
 	}
 
 	// Save number of vehicle sensors
-	size_t numberOfSensors = m_prototype.GetNumberOfSensors();
+	const size_t numberOfSensors = m_prototype.GetNumberOfSensors();
 	output.write((const char*)&numberOfSensors, sizeof(numberOfSensors));
 
 	// Save vehicle sensor's positions
@@ -450,7 +450,7 @@ bool VehicleBuilder::Initialize()
 
 	// Initialize max vehicle mass field
 	std::vector<sf::Vector2f> bodyPoints;
-	sf::Vector2f size = GetMaxBodyBound();
+	const sf::Vector2f size = GetMaxBodyBound();
 	bodyPoints.push_back(sf::Vector2f(-size.x / 2, -size.y / 2));
 	bodyPoints.push_back(sf::Vector2f(size.x / 2, -size.y / 2));
 	bodyPoints.push_back(sf::Vector2f(size.x / 2, size.y / 2));

@@ -22,8 +22,8 @@ public:
 	virtual void Notify() = 0;
 
 	// Returns true if observer is a timer one
-	virtual bool IsTimerType() = 0;
+	virtual bool IsTimerType() const = 0;
 
 	// Returns true if observer is a event one
-	virtual bool IsEventType() = 0;
+	virtual bool IsEventType() const = 0;
 };

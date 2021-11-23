@@ -190,7 +190,7 @@ public:
 		}
 		else
 		{
-			auto dummy = Crossover();
+			const auto dummy = Crossover();
 			for (size_t i = 0; i < repeatCount; ++i)
 			{
 				auto individual = dummy;
@@ -375,7 +375,7 @@ class GeneticAlgorithmNeuron final :
 			offset = size_t(generationCompleteness * offset);
 		}
 
-		Neuron finalOffset = Neuron(offset) / m_precision;
+		const Neuron finalOffset = Neuron(offset) / m_precision;
 		gene += finalOffset;
 		if (gene > m_range.second)
 			gene = m_range.first + (gene - m_range.second);

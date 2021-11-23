@@ -64,7 +64,7 @@ StateVehicleEditor::StateVehicleEditor() :
 	}
 
 	// Add axes
-	auto windowCenter = CoreWindow::GetWindowCenter();
+	const auto windowCenter = CoreWindow::GetWindowCenter();
 	const auto offset = totalNumberOfGridAxes;
 	m_axes[offset][0].color = m_axes[offset][1].color = ColorContext::Grid;
 	m_axes[offset + 1][0].color = m_axes[offset + 1][1].color = ColorContext::Grid;
@@ -87,9 +87,9 @@ StateVehicleEditor::StateVehicleEditor() :
 StateVehicleEditor::~StateVehicleEditor()
 {
 	delete m_vehiclePrototype;
-	for (auto& text : m_texts)
+	for (const auto& text : m_texts)
 		delete text;
-	for (auto& observer : m_textObservers)
+	for (const auto& observer : m_textObservers)
 		delete observer;
 }
 
@@ -131,8 +131,8 @@ void StateVehicleEditor::Capture()
 	{
 		if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
 		{
-			auto eventKey = CoreWindow::GetEvent().key.code;
-			auto iterator = m_controlKeys.find(eventKey);
+			const auto eventKey = CoreWindow::GetEvent().key.code;
+			const auto iterator = m_controlKeys.find(eventKey);
 			if (iterator != m_controlKeys.end() && !m_pressedKeys[iterator->second])
 			{
 				m_pressedKeys[iterator->second] = true;
@@ -153,7 +153,7 @@ void StateVehicleEditor::Capture()
 					case REMOVE_LAST_VEHICLE_BODY_POINT:
 						if (m_vehiclePrototype->RemoveLastBodyPoint())
 						{
-							auto sensorPoints = m_vehiclePrototype->GetSensorPoints();
+							const auto sensorPoints = m_vehiclePrototype->GetSensorPoints();
 							for (const auto& point : sensorPoints)
 							{
 								if (!MathContext::IsPointInsidePolygon(m_vehiclePrototype->GetBodyPoints(), point))
@@ -239,8 +239,8 @@ void StateVehicleEditor::Capture()
 		}
 		else if (CoreWindow::GetEvent().type == sf::Event::KeyReleased)
 		{
-			auto eventKey = CoreWindow::GetEvent().key.code;
-			auto iterator = m_controlKeys.find(eventKey);
+		const auto eventKey = CoreWindow::GetEvent().key.code;
+		const auto iterator = m_controlKeys.find(eventKey);
 			if (iterator != m_controlKeys.end())
 				m_pressedKeys[iterator->second] = false;
 		}
@@ -311,14 +311,14 @@ void StateVehicleEditor::Update()
 			m_vehicleBuilder.Clear();
 			for (const auto& point : m_vehiclePrototype->GetBodyPoints())
 				m_vehicleBuilder.AddBodyPoint(point);
-			size_t numberOfSensors = m_vehiclePrototype->GetNumberOfSensors();
+			const size_t numberOfSensors = m_vehiclePrototype->GetNumberOfSensors();
 			for (size_t i = 0; i < numberOfSensors; ++i)
 				m_vehicleBuilder.AddSensor(m_vehiclePrototype->GetSensorPoint(i),
 										   m_vehiclePrototype->GetSensorBeamAngle(i),
 										   m_vehiclePrototype->GetSensorMotionRange(i));
 
-			bool success = m_vehicleBuilder.Save(filenameText->GetFilename());
-			auto status = m_vehicleBuilder.GetLastOperationStatus();
+			const bool success = m_vehicleBuilder.Save(filenameText->GetFilename());
+			const auto status = m_vehicleBuilder.GetLastOperationStatus();
 			if (success)
 				filenameText->SetSuccessStatusText(status.second);
 			else
@@ -328,8 +328,8 @@ void StateVehicleEditor::Update()
 	}
 	else if (filenameText->IsReading())
 	{
-		bool success = m_vehicleBuilder.Load(filenameText->GetFilename());
-		auto status = m_vehicleBuilder.GetLastOperationStatus();
+		const bool success = m_vehicleBuilder.Load(filenameText->GetFilename());
+		const auto status = m_vehicleBuilder.GetLastOperationStatus();
 		if (success)
 		{
 			filenameText->SetSuccessStatusText(status.second);
@@ -420,7 +420,7 @@ void StateVehicleEditor::Draw()
 		CoreWindow::Draw(m_triangleShape.data(), m_triangleShape.size(), sf::Triangles);
 	}
 
-	for (auto & axis : m_axes)
+	for (const auto & axis : m_axes)
 		CoreWindow::Draw(axis.data(), axis.size(), sf::Lines);
 
 	CoreWindow::Draw(m_allowedAreaShape);
@@ -479,7 +479,7 @@ void StateVehicleEditor::RemoveSensor(const sf::Vector2f& point)
 		else
 		{
 			// There are at least two sensors
-			size_t currentLastIndex = m_vehiclePrototype->GetNumberOfSensors() - 1;
+			const size_t currentLastIndex = m_vehiclePrototype->GetNumberOfSensors() - 1;
 			if (m_currentSensorIndex == index && m_currentSensorIndex == currentLastIndex)
 			{
 				// If it was last sensor index but not first index then we have decrement it
@@ -522,7 +522,7 @@ void StateVehicleEditor::CalculateSupportiveShapes()
 	m_lineShape[0].position = m_lineShape[1].position = sf::Vector2f(0.f, 0.f);
 	m_triangleShape[0].position = m_triangleShape[1].position = m_triangleShape[2].position = sf::Vector2f(0.f, 0.f);
 
-	size_t numberOfBodyPoints = m_vehiclePrototype->GetNumberOfBodyPoints();
+	const size_t numberOfBodyPoints = m_vehiclePrototype->GetNumberOfBodyPoints();
 	auto relativePosition = CoreWindow::GetMousePosition();
 	if (MathContext::IsPointInsideRectangle(m_allowedAreaShape.getSize(), m_allowedAreaShape.getPosition(), relativePosition))
 	{

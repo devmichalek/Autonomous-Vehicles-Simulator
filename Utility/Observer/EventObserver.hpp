@@ -32,13 +32,13 @@ public:
 	}
 
 	// Returns false since it is a event observer
-	inline bool IsTimerType()
+	inline bool IsTimerType() const
 	{
 		return false;
 	}
 
 	// Returns true since it is a event observer
-	bool IsEventType()
+	inline bool IsEventType() const
 	{
 		return true;
 	}

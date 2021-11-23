@@ -20,7 +20,7 @@ SimulatedWorld::~SimulatedWorld()
 	delete m_world;
 	delete m_edgesWorld;
 
-	for (auto & item : m_simulatedObjects)
+	for (const auto & item : m_simulatedObjects)
 	{
 		switch (((SimulatedAbstract*)item)->GetCategory())
 		{
@@ -67,7 +67,7 @@ SimulatedVehicle* SimulatedWorld::AddVehicle(VehiclePrototype* prototype)
 	m_simulatedObjects.push_back(simulatedVehicle);
 
 	// Create polygon shape
-	auto& description = prototype->GetBodyPoints();
+	const auto& description = prototype->GetBodyPoints();
 	const size_t numberOfPoints = description.size();
 	b2Vec2* vertices = new b2Vec2[numberOfPoints];
 	for (size_t i = 0; i < numberOfPoints; ++i)

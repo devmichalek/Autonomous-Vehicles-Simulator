@@ -41,8 +41,8 @@ StateMapEditor::StateMapEditor() :
 	m_upToDate = false;
 	m_vehiclePositioned = false;
 
-	auto allowedMapArea = m_mapBuilder.GetMaxAllowedMapArea();
-	auto allowedViewArea = m_mapBuilder.GetMaxAllowedViewArea();
+	const auto allowedMapArea = m_mapBuilder.GetMaxAllowedMapArea();
+	const auto allowedViewArea = m_mapBuilder.GetMaxAllowedViewArea();
 	m_allowedMapAreaShape.setFillColor(ColorContext::ClearBackground);
 	m_allowedMapAreaShape.setOutlineColor(ColorContext::Create(ColorContext::ClearBackground, ColorContext::MaxChannelValue / 4));
 	m_allowedMapAreaShape.setOutlineThickness(5);
@@ -68,9 +68,9 @@ StateMapEditor::StateMapEditor() :
 StateMapEditor::~StateMapEditor()
 {
 	delete m_vehiclePrototype;
-	for (auto& text : m_texts)
+	for (const auto& text : m_texts)
 		delete text;
-	for (auto& observer : m_textObservers)
+	for (const auto& observer : m_textObservers)
 		delete observer;
 }
 
@@ -115,8 +115,8 @@ void StateMapEditor::Capture()
 	{
 		if (CoreWindow::GetEvent().type == sf::Event::KeyPressed)
 		{
-			auto eventKey = CoreWindow::GetEvent().key.code;
-			auto iterator = m_controlKeys.find(eventKey);
+			const auto eventKey = CoreWindow::GetEvent().key.code;
+			const auto iterator = m_controlKeys.find(eventKey);
 			if (iterator != m_controlKeys.end() && !m_pressedKeys[iterator->second])
 			{
 				switch (iterator->second)
@@ -251,8 +251,8 @@ void StateMapEditor::Capture()
 		}
 		else if (CoreWindow::GetEvent().type == sf::Event::KeyReleased)
 		{
-			auto eventKey = CoreWindow::GetEvent().key.code;
-			auto iterator = m_controlKeys.find(eventKey);
+			const auto eventKey = CoreWindow::GetEvent().key.code;
+			const auto iterator = m_controlKeys.find(eventKey);
 			if (iterator != m_controlKeys.end())
 			{
 				m_pressedKeys[iterator->second] = false;
@@ -323,8 +323,8 @@ void StateMapEditor::Update()
 	auto* filenameText = static_cast<FilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
 	if (filenameText->IsReading())
 	{
-		bool success = m_mapBuilder.Load(filenameText->GetFilename());
-		auto status = m_mapBuilder.GetLastOperationStatus();
+		const bool success = m_mapBuilder.Load(filenameText->GetFilename());
+		const auto status = m_mapBuilder.GetLastOperationStatus();
 		if (success)
 		{
 			filenameText->SetSuccessStatusText(status.second);
@@ -351,8 +351,8 @@ void StateMapEditor::Update()
 			if (m_vehiclePositioned)
 				m_mapBuilder.AddVehicle(m_vehiclePrototype->GetAngle(), m_vehiclePrototype->GetCenter());
 			m_mapBuilder.AddEdgesChains(m_mapPrototype.GetInnerEdgesChain(), m_mapPrototype.GetOuterEdgesChain());
-			bool success = m_mapBuilder.Save(filenameText->GetFilename());
-			auto status = m_mapBuilder.GetLastOperationStatus();
+			const bool success = m_mapBuilder.Save(filenameText->GetFilename());
+			const auto status = m_mapBuilder.GetLastOperationStatus();
 			if (success)
 				filenameText->SetSuccessStatusText(status.second);
 			else
@@ -362,11 +362,11 @@ void StateMapEditor::Update()
 	}
 	else if (!filenameText->IsRenaming())
 	{
-		bool moveHorizontally = m_allowedViewAreaShape.getSize().x > CoreWindow::GetViewSize().x;
-		bool moveVertically = m_allowedViewAreaShape.getSize().y > CoreWindow::GetViewSize().y;
-		float elapsedTime = float(CoreWindow::GetElapsedTime());
+		const bool moveHorizontally = m_allowedViewAreaShape.getSize().x > CoreWindow::GetViewSize().x;
+		const bool moveVertically = m_allowedViewAreaShape.getSize().y > CoreWindow::GetViewSize().y;
+		const float elapsedTime = float(CoreWindow::GetElapsedTime());
 		auto& view = CoreWindow::GetView();
-		float moveOffset = static_cast<float>(m_viewMovement * elapsedTime);
+		const float moveOffset = static_cast<float>(m_viewMovement * elapsedTime);
 
 		if (moveHorizontally)
 		{
@@ -381,9 +381,9 @@ void StateMapEditor::Update()
 				m_textObservers[VIEW_OFFSET_TEXT]->Notify();
 			}
 
-			auto viewPosition = CoreWindow::GetViewOffset();
-			float left = m_allowedViewAreaShape.getPosition().x;
-			float right = m_allowedViewAreaShape.getPosition().x + m_allowedViewAreaShape.getSize().x;
+			const auto viewPosition = CoreWindow::GetViewOffset();
+			const float left = m_allowedViewAreaShape.getPosition().x;
+			const float right = m_allowedViewAreaShape.getPosition().x + m_allowedViewAreaShape.getSize().x;
 
 			if (viewPosition.x < left)
 			{
@@ -396,7 +396,7 @@ void StateMapEditor::Update()
 			}
 			else if (viewPosition.x + CoreWindow::GetViewSize().x > right)
 			{
-				auto difference = (viewPosition.x + CoreWindow::GetViewSize().x - right);
+				const auto difference = (viewPosition.x + CoreWindow::GetViewSize().x - right);
 				if (difference > 1.f)
 				{
 					view.move(sf::Vector2f(-difference, 0));
@@ -419,9 +419,9 @@ void StateMapEditor::Update()
 				m_textObservers[VIEW_OFFSET_TEXT]->Notify();
 			}
 
-			auto viewPosition = CoreWindow::GetViewOffset();
-			float top = m_allowedViewAreaShape.getPosition().y;
-			float bot = m_allowedViewAreaShape.getPosition().y + m_allowedViewAreaShape.getSize().y;
+			const auto viewPosition = CoreWindow::GetViewOffset();
+			const float top = m_allowedViewAreaShape.getPosition().y;
+			const float bot = m_allowedViewAreaShape.getPosition().y + m_allowedViewAreaShape.getSize().y;
 
 			if (viewPosition.y < top)
 			{
@@ -434,7 +434,7 @@ void StateMapEditor::Update()
 			}
 			else if (viewPosition.y + CoreWindow::GetViewSize().y > bot)
 			{
-				auto difference = viewPosition.y + CoreWindow::GetViewSize().y - bot;
+				const auto difference = viewPosition.y + CoreWindow::GetViewSize().y - bot;
 				if (difference > 1.f)
 				{
 					view.move(sf::Vector2f(0, -difference));
@@ -499,7 +499,6 @@ bool StateMapEditor::Load()
 	m_texts[VEHICLE_POSITIONED_TEXT]->SetPosition({ FontContext::Component(1, true), {0}, {4}, {7} });
 	m_texts[VEHICLE_ANGLE_TEXT]->SetPosition({ FontContext::Component(2, true), {0}, {4}, {7} });
 
-	auto tmp = CoreWindow::GetViewOffset();
 	CoreLogger::PrintSuccess("StateMapEditor dependencies loaded correctly");
 	return true;
 }

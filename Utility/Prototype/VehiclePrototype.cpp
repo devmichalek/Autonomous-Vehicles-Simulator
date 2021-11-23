@@ -54,8 +54,8 @@ bool VehiclePrototype::AddBodyPoint(sf::Vector2f point)
 	m_bodyPoints.shrink_to_fit();
 	m_bodyShape.setPointCount(m_bodyPoints.size());
 	m_bodyShape.setPoint(m_bodyPoints.size() - 1, point);
-	auto mass = VehicleBuilder::CalculateMass(m_bodyPoints);
-	auto color = VehicleBuilder::CalculateDefaultColor(mass);
+	const auto mass = VehicleBuilder::CalculateMass(m_bodyPoints);
+	const auto color = VehicleBuilder::CalculateDefaultColor(mass);
 	m_bodyShape.setFillColor(color);
 	return true;
 }
@@ -72,8 +72,8 @@ bool VehiclePrototype::RemoveLastBodyPoint()
 	{
 		m_bodyPoints.pop_back();
 		m_bodyShape.setPointCount(m_bodyPoints.size());
-		auto mass = VehicleBuilder::CalculateMass(m_bodyPoints);
-		auto color = VehicleBuilder::CalculateDefaultColor(mass);
+		const auto mass = VehicleBuilder::CalculateMass(m_bodyPoints);
+		const auto color = VehicleBuilder::CalculateDefaultColor(mass);
 		m_bodyShape.setFillColor(color);
 		return true;
 	}
@@ -186,23 +186,23 @@ double VehiclePrototype::GenerateMotionRangeValue(double motionRange) const
 {
 	const double multiplier = 1000.0;
 	std::uniform_int_distribution<std::mt19937::result_type> distribution(0, unsigned(motionRange * multiplier));
-	int result = distribution(CoreWindow::GetMersenneTwister()) - static_cast<int>(motionRange * 0.5 * multiplier);
+	const int result = distribution(CoreWindow::GetMersenneTwister()) - static_cast<int>(motionRange * 0.5 * multiplier);
 	return double(result) / multiplier;
 }
 
 void VehiclePrototype::Update()
 {
-	double cosinus = cos(m_angle * M_PI / 180);
-	double sinus = sin(m_angle * M_PI / 180);
+	const double cosinus = cos(m_angle * M_PI / 180);
+	const double sinus = sin(m_angle * M_PI / 180);
 
 	// Update vehicle body
-	size_t count = m_bodyPoints.size();
+	const size_t count = m_bodyPoints.size();
 	for (size_t i = 0; i < count; ++i)
 	{
-		double x = double(m_bodyPoints[i].x);
-		double y = double(m_bodyPoints[i].y);
-		float calculatedX = static_cast<float>(x * cosinus - y * sinus) + m_center.x;
-		float calculatedY = static_cast<float>(x * sinus + y * cosinus) + m_center.y;
+		const double x = double(m_bodyPoints[i].x);
+		const double y = double(m_bodyPoints[i].y);
+		const float calculatedX = static_cast<float>(x * cosinus - y * sinus) + m_center.x;
+		const float calculatedY = static_cast<float>(x * sinus + y * cosinus) + m_center.y;
 		m_bodyShape.setPoint(i, sf::Vector2f(calculatedX, calculatedY));
 	}
 
@@ -216,8 +216,8 @@ void VehiclePrototype::Update()
 		m_motionRanges[i].Update();
 
 		// Set beam start point
-		float x = m_beamVector[i][0].x;
-		float y = m_beamVector[i][0].y;
+		const float x = m_beamVector[i][0].x;
+		const float y = m_beamVector[i][0].y;
 		m_beamVector[i][0].x = static_cast<float>(double(x) * cosinus - double(y) * sinus);
 		m_beamVector[i][0].y = static_cast<float>(double(x) * sinus + double(y) * cosinus);
 		m_beamVector[i][0] += m_center;

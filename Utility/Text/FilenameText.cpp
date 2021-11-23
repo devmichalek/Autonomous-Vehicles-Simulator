@@ -68,7 +68,7 @@ bool FilenameText<ReadOperations, WriteOperations>::IsReading()
 {
 	if (!ReadOperations)
 		return false;
-	bool reading = m_activeActions[READING_ACTION];
+	const bool reading = m_activeActions[READING_ACTION];
 	m_activeActions[READING_ACTION] = false;
 	return reading;
 }
@@ -78,7 +78,7 @@ bool FilenameText<ReadOperations, WriteOperations>::IsWriting()
 {
 	if (!WriteOperations)
 		return false;
-	bool writing = m_activeActions[WRITING_ACTION];
+	const bool writing = m_activeActions[WRITING_ACTION];
 	m_activeActions[WRITING_ACTION] = false;
 	return writing;
 }

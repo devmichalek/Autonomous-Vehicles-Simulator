@@ -26,7 +26,7 @@ EdgeVector MapBuilder::EdgesChainGenerator::Generate(const EdgeVector& edges, bo
 	if (clockwise)
 		return edges;
 
-	size_t numberOfEdges = edges.size();
+	const size_t numberOfEdges = edges.size();
 	EdgeVector result(numberOfEdges);
 	for (size_t i = 0; i < numberOfEdges; ++i)
 	{
@@ -39,7 +39,7 @@ EdgeVector MapBuilder::EdgesChainGenerator::Generate(const EdgeVector& edges, bo
 
 EdgeVector MapBuilder::RectangleCheckpointsGenerator::GenerateInternal(const EdgeVector& innerEdgesChain, const EdgeVector& outerEdgesChain)
 {
-	auto length = innerEdgesChain.size();
+	const auto length = innerEdgesChain.size();
 	EdgeVector result(length);
 	for (size_t i = 0; i < length; ++i)
 	{
@@ -169,7 +169,7 @@ RectangleVector MapBuilder::RectangleCheckpointsGenerator::Generate(const EdgeVe
 
 bool MapBuilder::ValidateMapAreaVehiclePosition()
 {
-	auto allowedMapArea = GetMaxAllowedMapArea();
+	const auto allowedMapArea = GetMaxAllowedMapArea();
 	if (!MathContext::IsPointInsideRectangle(allowedMapArea.second, allowedMapArea.first, m_vehicleCenter))
 	{
 		m_lastOperationStatus = ERROR_VEHICLE_OUTSIDE_MAP_AREA;
@@ -404,7 +404,7 @@ bool MapBuilder::SaveInternal(std::ofstream& output)
 	output.write((const char*)&m_vehicleAngle, sizeof(m_vehicleAngle));
 	
 	// Save number of edges per chain
-	size_t numberOfEdgesPerChain = m_innerEdgesChain.size();
+	const size_t numberOfEdgesPerChain = m_innerEdgesChain.size();
 	output.write((const char*)&numberOfEdgesPerChain, sizeof(numberOfEdgesPerChain));
 
 	// Save inner edges beggining position
@@ -426,19 +426,19 @@ bool MapBuilder::SaveInternal(std::ofstream& output)
 
 void MapBuilder::CreateDummyInternal()
 {
-	auto windowSize = CoreWindow::GetWindowSize();
-	float xOffset = windowSize.x / 5.0f;
-	float yOffset = windowSize.y / 5.0f;
+	const auto windowSize = CoreWindow::GetWindowSize();
+	const float xOffset = windowSize.x / 5.0f;
+	const float yOffset = windowSize.y / 5.0f;
 
-	auto innerPoint1 = sf::Vector2f(xOffset * 2, yOffset * 2);
-	auto innerPoint2 = sf::Vector2f(xOffset * 3, innerPoint1.y);
-	auto innerPoint3 = sf::Vector2f(innerPoint2.x, yOffset * 3);
-	auto innerPoint4 = sf::Vector2f(innerPoint1.x, innerPoint3.y);
+	const auto innerPoint1 = sf::Vector2f(xOffset * 2, yOffset * 2);
+	const auto innerPoint2 = sf::Vector2f(xOffset * 3, innerPoint1.y);
+	const auto innerPoint3 = sf::Vector2f(innerPoint2.x, yOffset * 3);
+	const auto innerPoint4 = sf::Vector2f(innerPoint1.x, innerPoint3.y);
 
-	auto outerPoint1 = sf::Vector2f(xOffset, yOffset);
-	auto outerPoint2 = sf::Vector2f(xOffset * 4, outerPoint1.y);
-	auto outerPoint3 = sf::Vector2f(outerPoint2.x, yOffset * 4 + 10);
-	auto outerPoint4 = sf::Vector2f(outerPoint1.x, outerPoint3.y);
+	const auto outerPoint1 = sf::Vector2f(xOffset, yOffset);
+	const auto outerPoint2 = sf::Vector2f(xOffset * 4, outerPoint1.y);
+	const auto outerPoint3 = sf::Vector2f(outerPoint2.x, yOffset * 4 + 10);
+	const auto outerPoint4 = sf::Vector2f(outerPoint1.x, outerPoint3.y);
 
 	m_innerEdgesChain.push_back({ innerPoint1, innerPoint2 });
 	m_innerEdgesChain.push_back({ innerPoint2, innerPoint3 });
@@ -491,9 +491,9 @@ MapPrototype* MapBuilder::Get()
 	if (!Validate())
 		return nullptr;
 
-	auto innerEdgesChain = EdgesChainGenerator::Generate(m_innerEdgesChain, false);
-	auto outerEdgesChain = EdgesChainGenerator::Generate(m_outerEdgesChain, true);
-	auto checkpoints = RectangleCheckpointsGenerator::Generate(m_innerEdgesChain, m_outerEdgesChain);
+	const auto innerEdgesChain = EdgesChainGenerator::Generate(m_innerEdgesChain, false);
+	const auto outerEdgesChain = EdgesChainGenerator::Generate(m_outerEdgesChain, true);
+	const auto checkpoints = RectangleCheckpointsGenerator::Generate(m_innerEdgesChain, m_outerEdgesChain);
 	return new MapPrototype(innerEdgesChain, outerEdgesChain, checkpoints);
 }
 
@@ -501,16 +501,16 @@ bool MapBuilder::Initialize()
 {
 	// Initialize max allowed map area
 	{
-		auto size = CoreWindow::GetWindowSize() * 3.0f;
-		auto position = sf::Vector2f(size.x / 20.0f, size.y / 20.0f);
+		const auto size = CoreWindow::GetWindowSize() * 3.0f;
+		const auto position = sf::Vector2f(size.x / 20.0f, size.y / 20.0f);
 		m_maxAllowedMapArea = std::make_pair(position, size);
 	}
 
 	// Initialize max allowed view area
 	{
-		auto area = m_maxAllowedMapArea;
-		auto size = area.second * 1.05f;
-		auto position = sf::Vector2f(area.first.x - (size.x - area.second.x) / 2, area.first.y - (size.y - area.second.y) / 2);
+		const auto area = m_maxAllowedMapArea;
+		const auto size = area.second * 1.05f;
+		const auto position = sf::Vector2f(area.first.x - (size.x - area.second.x) / 2, area.first.y - (size.y - area.second.y) / 2);
 		m_maxAllowedViewArea = std::make_pair(position, size);
 	}
 

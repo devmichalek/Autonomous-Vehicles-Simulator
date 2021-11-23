@@ -41,13 +41,13 @@ public:
 	}
 
 	// Returns true since it is a timer observer
-	inline bool IsTimerType()
+	inline bool IsTimerType() const
 	{
 		return true;
 	}
 
 	// Returns false since it is a timer observer
-	bool IsEventType()
+	inline bool IsEventType() const
 	{
 		return false;
 	}

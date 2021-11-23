@@ -12,7 +12,7 @@ public:
 	};
 
 	// Returns category
-	inline size_t GetCategory()
+	inline const size_t GetCategory() const
 	{
 		return m_category;
 	}

@@ -14,7 +14,7 @@ bool FontContext::Initialize()
 		return true;
 	}
 
-	std::string filename = "Data/consola.ttf";
+	const std::string filename = "Data/consola.ttf";
 	if (!m_font.loadFromFile(filename))
 	{
 		CoreLogger::PrintError("Cannot open \"" + filename + "\"");
@@ -46,8 +46,8 @@ unsigned int FontContext::GetCharacterSize(unsigned int multiplier)
 
 float FontContext::CalculateRow(Component component, unsigned int multiplier)
 {
-	float screenWidth = CoreWindow::GetWindowSize().x;
-	float result = screenWidth * (0.003f + float(component.m_component) * 0.022f * float(multiplier));
+	const float screenWidth = CoreWindow::GetWindowSize().x;
+	const float result = screenWidth * (0.003f + float(component.m_component) * 0.022f * float(multiplier));
 
 	if (component.m_revert)
 		return screenWidth - result;
@@ -57,8 +57,8 @@ float FontContext::CalculateRow(Component component, unsigned int multiplier)
 
 float FontContext::CalculateColumn(FontContext::Component component, unsigned int multiplier)
 {
-	float screenHeight = CoreWindow::GetWindowSize().y;
-	float result = screenHeight * (0.003f + float(component.m_component) * 0.022f * float(multiplier));
+	const float screenHeight = CoreWindow::GetWindowSize().y;
+	const float result = screenHeight * (0.003f + float(component.m_component) * 0.022f * float(multiplier));
 
 	if (component.m_revert)
 		return screenHeight - result;

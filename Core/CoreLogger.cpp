@@ -27,7 +27,7 @@ void CoreLogger::PrintMessage(std::string message)
 
 void CoreLogger::Initialize()
 {
-	auto now = std::chrono::system_clock::now();
+	const auto now = std::chrono::system_clock::now();
 	std::time_t cnow = std::chrono::system_clock::to_time_t(now);
 	std::string filename = std::ctime(&cnow);
 	std::replace(filename.begin(), filename.end(), ' ', '_');

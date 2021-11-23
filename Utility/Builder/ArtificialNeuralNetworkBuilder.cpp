@@ -58,7 +58,7 @@ void ArtificialNeuralNetworkBuilder::CalculateNumberOfNeurons()
 void ArtificialNeuralNetworkBuilder::CalculateNumberOfWeights()
 {
 	m_numberOfWeights = 0;
-	size_t numberOfLayers = m_neuronLayerSizes.size();
+	const size_t numberOfLayers = m_neuronLayerSizes.size();
 	for (size_t layerNr = 1; layerNr < numberOfLayers; ++layerNr)
 	{
 		const size_t numberOfWeights = m_neuronLayerSizes[layerNr - 1] * m_neuronLayerSizes[layerNr];
@@ -261,7 +261,7 @@ bool ArtificialNeuralNetworkBuilder::LoadInternal(std::ifstream& input)
 bool ArtificialNeuralNetworkBuilder::SaveInternal(std::ofstream& output)
 {
 	// Save number of neuron layers
-	size_t numberOfLayers = m_neuronLayerSizes.size();
+	const size_t numberOfLayers = m_neuronLayerSizes.size();
 	output.write((const char*)&numberOfLayers, sizeof(numberOfLayers));
 
 	// Save each neuron layer size
@@ -269,7 +269,7 @@ bool ArtificialNeuralNetworkBuilder::SaveInternal(std::ofstream& output)
 		output.write((const char*)&neuronLayerSize, sizeof(neuronLayerSize));
 
 	// Save number of activation function indexes
-	size_t numberOfActivationFunctionIndexes = m_activationFunctionIndexes.size();
+	const size_t numberOfActivationFunctionIndexes = m_activationFunctionIndexes.size();
 	output.write((const char*)&numberOfActivationFunctionIndexes, sizeof(numberOfActivationFunctionIndexes));
 
 	// Save each activation function index
@@ -277,7 +277,7 @@ bool ArtificialNeuralNetworkBuilder::SaveInternal(std::ofstream& output)
 		output.write((const char*)&activationFunctionIndex, sizeof(activationFunctionIndex));
 
 	// Save length of bias vector
-	size_t lengthOfBiasVector = m_biasVector.size();
+	const size_t lengthOfBiasVector = m_biasVector.size();
 	output.write((const char*)&lengthOfBiasVector, sizeof(lengthOfBiasVector));
 
 	// Save each bias
@@ -300,11 +300,11 @@ void ArtificialNeuralNetworkBuilder::CreateDummyInternal()
 	std::random_device device;
 	std::mt19937 engine(device());
 	std::uniform_int_distribution<std::mt19937::result_type> ldistribution((unsigned)GetMinNumberOfLayers(),
-		(unsigned)GetMaxNumberOfLayers());
+																		   (unsigned)GetMaxNumberOfLayers());
 	std::uniform_int_distribution<std::mt19937::result_type> nlsdistribution((unsigned)GetMinNumberOfNeuronsPerLayer(),
-		(unsigned)GetMaxNumberOfNeuronsPerLayer());
+																			 (unsigned)GetMaxNumberOfNeuronsPerLayer());
 	std::uniform_int_distribution<std::mt19937::result_type> afdistribution((unsigned)ActivationFunctionContext::GetMinActivationFunctionIndex(),
-		(unsigned)ActivationFunctionContext::GetActivationFunctionsCount() - 1);
+																			(unsigned)ActivationFunctionContext::GetActivationFunctionsCount() - 1);
 
 	// Set dummy data
 	size_t length = ldistribution(engine);

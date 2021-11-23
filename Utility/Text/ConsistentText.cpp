@@ -22,8 +22,8 @@ void ConsistentText::SetPosition(std::vector<FontContext::Component> components)
 {
 	ValidateNumberOfComponents(components, 2);
 
-	float x = FontContext::CalculateRow(components[1]);
-	float y = FontContext::CalculateColumn(components[0]);
+	const float x = FontContext::CalculateRow(components[1]);
+	const float y = FontContext::CalculateColumn(components[0]);
 	m_textPositions[0] = sf::Vector2f(x, y);
 
 	Update();

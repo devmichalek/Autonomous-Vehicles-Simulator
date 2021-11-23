@@ -10,7 +10,7 @@ class SimulatedCheckpoint final :
 {
 public:
 
-	SimulatedCheckpoint(size_t identity, Rectangle position) :
+	SimulatedCheckpoint(const size_t identity, const Rectangle position) :
 		SimulatedAbstract(SimulatedAbstract::CategoryCheckpoint),
 		FitnessInterface(Fitness(identity + 1)),
 		DrawableCheckpoint(ColorContext::Create(ColorContext::MaxChannelValue * (identity % 3),

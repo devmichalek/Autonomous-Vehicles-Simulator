@@ -20,9 +20,9 @@ bool MapPrototype::GetIntersectionPoint(const Edge& a, const Edge& b, sf::Vector
 	sf::Vector2f intersectionPoint;
 	if (MathContext::GetIntersectionPoint(a, b, intersectionPoint))
 	{
-		auto segment = MathContext::Distance(a[0], intersectionPoint);
-		auto length = MathContext::Distance(a);
-		double percentage = segment / length;
+		const auto segment = MathContext::Distance(a[0], intersectionPoint);
+		const auto length = MathContext::Distance(a);
+		const double percentage = segment / length;
 		if (percentage > 0.01 && percentage < 0.5)
 		{
 			point = a[0];
@@ -58,7 +58,7 @@ bool MapPrototype::AddInnerEdge(Edge edge)
 	{
 		if (m_innerEdgesChain[i][1] == edge[0])
 		{
-			size_t index = i + 1;
+			const size_t index = i + 1;
 			m_innerEdgesChain.insert(m_innerEdgesChain.begin() + index, edge);
 			m_innerEdgesChainCompleted = MathContext::IsEdgesChain(m_innerEdgesChain);
 
@@ -374,9 +374,9 @@ void MapPrototype::DrawCheckpoints()
 {
 	for (size_t i = 0; i < m_checkpoints.size(); ++i)
 	{
-		sf::Uint8 red = ColorContext::MaxChannelValue * (i % 3);
-		sf::Uint8 green = ColorContext::MaxChannelValue * ((i + 1) % 3);
-		sf::Uint8 blue = ColorContext::MaxChannelValue * ((i + 2) % 3);
+		const sf::Uint8 red = ColorContext::MaxChannelValue * (i % 3);
+		const sf::Uint8 green = ColorContext::MaxChannelValue * ((i + 1) % 3);
+		const sf::Uint8 blue = ColorContext::MaxChannelValue * ((i + 2) % 3);
 		m_checkpointShape.setFillColor(ColorContext::Create(red, green, blue, 96));
 		for (size_t j = 0; j < m_checkpointShape.getPointCount(); ++j)
 			m_checkpointShape.setPoint(j, m_checkpoints[i][j]);

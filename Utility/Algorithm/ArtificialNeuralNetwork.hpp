@@ -22,7 +22,7 @@ class ArtificialNeuralNetwork final
 		for (size_t layerNr = 1; layerNr < numberOfLayers; ++layerNr)
 		{
 			// Get proper weight layer
-			WeightLayer& weightLayer = m_weightLayers[layerNr - 1];
+			const WeightLayer& weightLayer = m_weightLayers[layerNr - 1];
 
 			// Get number of neurons
 			const size_t numberOfNeurons = m_neuronLayers[layerNr].size();
@@ -31,7 +31,7 @@ class ArtificialNeuralNetwork final
 			for (size_t neuronNr = 0; neuronNr < numberOfNeurons; ++neuronNr)
 			{
 				// Get proper neuron weights, get proper neuron and reset it
-				Weights& weights = weightLayer[neuronNr];
+				const Weights& weights = weightLayer[neuronNr];
 				Neuron& neuron = m_neuronLayers[layerNr][neuronNr];
 				neuron = 0;
 
@@ -93,16 +93,16 @@ public:
 		}
 	}
 
-	void GetRawData(Neuron* data)
+	void GetRawData(Neuron* data) const
 	{
 		if (data)
 		{
 			size_t index = 0;
-			for (auto& weightLayer : m_weightLayers)
+			for (const auto& weightLayer : m_weightLayers)
 			{
-				for (auto& weights : weightLayer)
+				for (const auto& weights : weightLayer)
 				{
-					for (auto& weight : weights)
+					for (const auto& weight : weights)
 						data[index++] = weight;
 				}
 			}

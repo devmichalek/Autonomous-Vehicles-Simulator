@@ -18,20 +18,20 @@ class MathContext
     // Returns true if three points are making a clockwise order
     inline static bool Clockwise(sf::Vector2f a, sf::Vector2f b, sf::Vector2f c)
     {
-        float x1 = (b.x - a.x);
-        float y1 = (b.y - a.y);
-        float x2 = (c.x - a.x);
-        float y2 = (c.y - a.y);
+        const float x1 = (b.x - a.x);
+        const float y1 = (b.y - a.y);
+        const float x2 = (c.x - a.x);
+        const float y2 = (c.y - a.y);
         return y2 * x1 > y1 * x2;
     }
 
     // Calculates cross product
     inline static int CrossProduct(sf::Vector2f a, sf::Vector2f b, sf::Vector2f c)
     {
-        float x1 = (b.x - a.x);
-        float y1 = (b.y - a.y);
-        float x2 = (c.x - a.x);
-        float y2 = (c.y - a.y);
+        const float x1 = (b.x - a.x);
+        const float y1 = (b.y - a.y);
+        const float x2 = (c.x - a.x);
+        const float y2 = (c.y - a.y);
         return int(x1 * y2 - y1 * x2);
     }
 
@@ -67,8 +67,8 @@ public:
     // Calculates end point
     inline static sf::Vector2f GetEndPoint(sf::Vector2f point, double angle, float length)
     {
-        float x = point.x + length * float(cos(angle * M_PI / 180));
-        float y = point.y - length * float(sin(angle * M_PI / 180));
+        const float x = point.x + length * float(cos(angle * M_PI / 180));
+        const float y = point.y - length * float(sin(angle * M_PI / 180));
         return sf::Vector2f(x, y);
     }
 
@@ -81,8 +81,8 @@ public:
         s2_x = b[1].x - b[0].x;
         s2_y = b[1].y - b[0].y;
 
-        float s = (-s1_y * (a[0].x - b[0].x) + s1_x * (a[0].y - b[0].y)) / (-s2_x * s1_y + s1_x * s2_y);
-        float t = (s2_x * (a[0].y - b[0].y) - s2_y * (a[0].x - b[0].x)) / (-s2_x * s1_y + s1_x * s2_y);
+        const float s = (-s1_y * (a[0].x - b[0].x) + s1_x * (a[0].y - b[0].y)) / (-s2_x * s1_y + s1_x * s2_y);
+        const float t = (s2_x * (a[0].y - b[0].y) - s2_y * (a[0].x - b[0].x)) / (-s2_x * s1_y + s1_x * s2_y);
 
         if (s >= 0 && s <= 1 && t >= 0 && t <= 1)
         {
@@ -128,8 +128,8 @@ public:
     // Calculate angle between the line defined by two points and the horizontal axis
     inline static double DifferenceVectorAngle(sf::Vector2f a, sf::Vector2f b)
     {
-        auto deltaY = b.y - a.y; // y axis is upside down
-        auto deltaX = a.x - b.x;
+        const auto deltaY = b.y - a.y; // y axis is upside down
+        const auto deltaX = a.x - b.x;
         return atan2(deltaY, deltaX) * 180.0 / M_PI;
     }
 
@@ -148,8 +148,8 @@ public:
     // Returns true if point is inside circle
     inline static bool IsPointInsideCircle(const sf::Vector2f& center, double radius, const sf::Vector2f& point)
     {
-        auto x = std::pow(double(point.x) - center.x, 2.0);
-        auto y = std::pow(double(point.y) - center.y, 2.0);
+        const auto x = std::pow(double(point.x) - center.x, 2.0);
+        const auto y = std::pow(double(point.y) - center.y, 2.0);
         if (x + y < std::pow(radius, 2.0))
             return true;
         return false;
@@ -177,7 +177,7 @@ public:
     inline static bool IsPointInsidePolygon(const std::vector<sf::Vector2f>& points, const sf::Vector2f point)
     {
         size_t c = 0;
-        size_t numberOfPoints = points.size();
+        const size_t numberOfPoints = points.size();
         for (size_t i = 0, j = numberOfPoints - 1; i < numberOfPoints; j = i++)
         {
             if (((points[i].y > point.y) != (points[j].y > point.y)) &&
@@ -193,7 +193,7 @@ public:
     inline static float CalculateArea(const std::vector<sf::Vector2f>& points)
     {
         float area = 0.0f;
-        size_t count = points.size();
+        const size_t count = points.size();
         for (size_t i = 0; i < count; ++i)
         {
             size_t j = (i + 1) % count;
@@ -267,8 +267,7 @@ public:
         if (edges.empty())
             return false;
 
-        Edge edge = edges.front();
-        std::vector<size_t> result;
+        const Edge edge = edges.front();
         for (size_t i = 1; i < edges.size(); ++i)
         {
             if (edges[i - 1][1] != edges[i][0])
