@@ -5,9 +5,9 @@ class AbstractTimer
 protected:
 
 	double m_value;
-	const double m_resetValue;
+	double m_resetValue;
 	double m_timeout;
-	const double m_multiplier;
+	double m_multiplier;
 
 	explicit AbstractTimer(double resetValue, double timeout, double multiplier = 1) :
 		m_value(resetValue),
@@ -53,5 +53,11 @@ public:
 	inline double GetValue() const
 	{
 		return m_value;
+	}
+
+	// Returns multiplier
+	inline double GetMultiplier() const
+	{
+		return m_multiplier;
 	}
 };

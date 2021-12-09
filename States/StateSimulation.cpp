@@ -713,6 +713,7 @@ void StateSimulation::Update()
 							// Map hasn't been created yet, create dummy
 							m_mapBuilder.CreateDummy();
 							m_mapPrototype = m_mapBuilder.Get();
+							m_mapPrototype->CalculateProperties();
 						}
 
 						// Remove old vehicle prototype and prepare new one

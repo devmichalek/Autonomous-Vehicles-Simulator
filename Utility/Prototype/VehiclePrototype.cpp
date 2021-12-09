@@ -113,8 +113,7 @@ void VehiclePrototype::AddSensor(sf::Vector2f point, double angle, double motion
 	m_beamVector.push_back(Edge());
 	m_sensorPoints.push_back(point);
 	m_beamAngles.push_back(angle);
-	m_motionRanges.emplace_back(motionRange * 0.5, VehicleBuilder::GetSensorMotionRangeMultiplier());
-	m_motionRanges.back().SetValue(GenerateMotionRangeValue(motionRange));
+	m_motionRanges.emplace_back(GenerateMotionRangeValue(motionRange), motionRange * 0.5, VehicleBuilder::GetSensorMotionRangeMultiplier());
 
 	// Shrink to fit
 	m_beamVector.shrink_to_fit();
@@ -164,10 +163,9 @@ void VehiclePrototype::SetSensorMotionRange(size_t index, double motionRange)
 {
 	if (index < m_motionRanges.size())
 	{
-		auto& element = m_motionRanges[index];
-		element.SetBoundaryValue(motionRange * 0.5);
-		element.SetMultiplier(VehicleBuilder::GetSensorMotionRangeMultiplier());
-		element.SetValue(GenerateMotionRangeValue(motionRange));
+		m_motionRanges[index] = PeriodicTimer(GenerateMotionRangeValue(motionRange),
+											  motionRange * 0.5,
+											  VehicleBuilder::GetSensorMotionRangeMultiplier());
 	}
 	else
 		CoreLogger::PrintError("Requested sensor motion range index is outside of array bound!");

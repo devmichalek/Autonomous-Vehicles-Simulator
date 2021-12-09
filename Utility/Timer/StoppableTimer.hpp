@@ -17,7 +17,7 @@ public:
 	}
 
 	// Updates value, in case of timeout calculation is stopped (value does not change)
-	bool Update() override
+	inline bool Update() override
 	{
 		const double elapsedTime = CoreWindow::GetElapsedTime() * m_multiplier;
 

@@ -25,7 +25,6 @@ public:
 		m_bodyPoints(nullptr),
 		m_sensorPoints(sensorPoints),
 		m_beamAngles(beamAngles),
-		m_motionRanges(motionRanges),
 		m_sensors(sensorPoints.size(), ArtificialNeuralNetworkBuilder::GetMaxNeuronValue()),
 		m_active(true)
 	{
@@ -34,12 +33,13 @@ public:
 			beamAngle = MathContext::ToRadians(beamAngle);
 
 		// Converts motion ranges deegres values to radians values
-		for (auto& motionRange : m_motionRanges)
+		for (auto& motionRange : motionRanges)
 		{
-			motionRange.SetBoundaryValue(MathContext::ToRadians(motionRange.GetBoundaryValue()));
-			motionRange.SetMultiplier(MathContext::ToRadians(motionRange.GetMultiplier()));
-			motionRange.SetValue(MathContext::ToRadians(motionRange.GetValue()));
+			m_motionRanges.push_back(PeriodicTimer(MathContext::ToRadians(motionRange.GetValue()),
+												   MathContext::ToRadians(motionRange.GetTimeout()),
+												   MathContext::ToRadians(motionRange.GetMultiplier())));
 		}
+		m_motionRanges.shrink_to_fit();
 	}
 
 	~SimulatedVehicle()
