@@ -1,2 +1,4 @@
-# ANN-Cars
-Simulation of self-driving cars using ANN
+# Autonomous Vehicles Simulator
+Implementation of application that allows user to run simulations optimizing agents.
+
+# User Manual 
