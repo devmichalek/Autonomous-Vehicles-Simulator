@@ -12,7 +12,7 @@ CoreWindow::CoreWindow()
 	auto windowSize = sf::VideoMode(unsigned(screenWidth), unsigned(screenHeight));
 
 	// Create window
-	auto windowTitle = "Artificial Neural Network Self Driving Vehicles Simulator";
+	auto windowTitle = "Autonomous Vehicles Simulator";
 	m_renderWindow.create(windowSize, windowTitle, sf::Style::Close);
 	m_view.setSize(sf::Vector2f(screenWidth, screenHeight));
 	m_view.setCenter(sf::Vector2f(screenWidth / 2.f, screenHeight / 2.f));
@@ -34,7 +34,7 @@ CoreWindow::CoreWindow()
 
 	// Load window icon
 	sf::Image icon;
-	std::string filename = "Data/icon.png";
+	std::string filename = "icon.png";
 	if (icon.loadFromFile(filename))
 		m_renderWindow.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
 	else

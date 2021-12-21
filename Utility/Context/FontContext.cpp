@@ -14,7 +14,7 @@ bool FontContext::Initialize()
 		return true;
 	}
 
-	const std::string filename = "Data/consola.ttf";
+	const std::string filename = "consola.ttf";
 	if (!m_font.loadFromFile(filename))
 	{
 		CoreLogger::PrintError("Cannot open \"" + filename + "\"");
