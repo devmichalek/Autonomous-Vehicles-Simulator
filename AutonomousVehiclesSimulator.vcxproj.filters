@@ -1,0 +1,989 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Core">
+      <UniqueIdentifier>{98a9ac05-7731-4c37-bdfa-e1e3620ade99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Simulation">
+      <UniqueIdentifier>{02075534-ed63-43c4-9b7f-edbce9eb2cf0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="States">
+      <UniqueIdentifier>{f2e687dc-508f-4789-b082-430f2f9e9224}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tests">
+      <UniqueIdentifier>{61b9c019-cba5-47f6-88ff-844cb9913382}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utility">
+      <UniqueIdentifier>{3ac7938c-e042-4dda-aaef-cecd5cdec73c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utility\Algorithm">
+      <UniqueIdentifier>{d8e56fa7-8cb8-444a-a28b-5c557fb3243c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utility\Builder">
+      <UniqueIdentifier>{8918fc81-2caa-40dc-9eb6-a1c0c4ec9028}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utility\Context">
+      <UniqueIdentifier>{564ba11e-e90c-456f-a84e-c282620fc3e1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utility\Miscellaneous">
+      <UniqueIdentifier>{5883c0e4-40ab-45b4-85c3-a060ad445f0b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utility\Observer">
+      <UniqueIdentifier>{d22f540b-f802-4947-a61c-62b5996c8490}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utility\Timer">
+      <UniqueIdentifier>{27fb6e15-9126-4082-ba88-5a0ffbec45ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utility\Text">
+      <UniqueIdentifier>{df787168-b923-4a48-8f40-e1cf0ce58668}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utility\Prototype">
+      <UniqueIdentifier>{5cd5ed8e-0624-47ce-ae16-6969e8e6bedb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Simulation\Drawable">
+      <UniqueIdentifier>{84f579d0-285d-43fd-965a-196423c28e77}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Simulation\Fitness">
+      <UniqueIdentifier>{51b86166-ff39-454c-8cce-31482c867e91}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Simulation\Simulated">
+      <UniqueIdentifier>{5fe96b56-8529-464d-b5cd-fcb8ef4b2b37}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External">
+      <UniqueIdentifier>{839f782b-2c84-41ce-9950-1d56921eac51}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\SFML">
+      <UniqueIdentifier>{fe303879-e616-4257-8747-bab16ccef6c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\Box2D">
+      <UniqueIdentifier>{41f174b0-d3b3-4663-a16b-7d8e90e79f47}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Executable">
+      <UniqueIdentifier>{59b80868-83a0-4d06-8079-aeebaab9fd89}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\Box2D\Include">
+      <UniqueIdentifier>{e22171d5-36ad-439d-a597-f393d0f831d0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\Box2D\Lib">
+      <UniqueIdentifier>{f8220fff-3de3-441f-a008-52b10d943d64}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\Box2D\Include\Box2D">
+      <UniqueIdentifier>{230ecec8-e8db-4b2b-90b6-29810433ff26}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\Box2D\Lib\Debug">
+      <UniqueIdentifier>{1e8ac804-1e1c-4b20-96dc-9ffd4c7eaeb8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\Box2D\Lib\Release">
+      <UniqueIdentifier>{2bcc8e4c-074e-4d40-9c68-dbbd8a13324f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\SFML\Include">
+      <UniqueIdentifier>{e779e6a2-27cf-4d51-936f-09950497154c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\SFML\Lib">
+      <UniqueIdentifier>{28c8d8d6-7df8-40fb-95a7-ca947cbec744}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\SFML\Lib\cmake">
+      <UniqueIdentifier>{77fb1fdc-e93b-44e4-9bcb-ab857c783d93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\SFML\Lib\cmake\SFML">
+      <UniqueIdentifier>{a62eff12-bd4c-44a7-b998-89aaf97483f9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\SFML\Include\SFML">
+      <UniqueIdentifier>{db98a89f-8477-4014-86aa-1b0e70101d29}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\SFML\Include\SFML\Audio">
+      <UniqueIdentifier>{efc211d5-e4c3-47f7-b688-44169c8f7297}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\SFML\Include\SFML\Graphics">
+      <UniqueIdentifier>{313ceb40-4d89-46a6-989d-89b5cdb2e94b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\SFML\Include\SFML\Network">
+      <UniqueIdentifier>{82ad284a-29e5-4b8d-a85a-017efd8496b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\SFML\Include\SFML\System">
+      <UniqueIdentifier>{b3746ea1-c34b-47fb-bef5-fbfc44a8d958}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\SFML\Include\SFML\Window">
+      <UniqueIdentifier>{e4cec960-a8ab-4cc6-a984-4d96e4125bd1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Core\CoreEngine.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\CoreLogger.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\CoreWindow.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="States\StateArtificialNeuralNetworkEditor.cpp">
+      <Filter>States</Filter>
+    </ClCompile>
+    <ClCompile Include="States\StateCompetition.cpp">
+      <Filter>States</Filter>
+    </ClCompile>
+    <ClCompile Include="States\StateManager.cpp">
+      <Filter>States</Filter>
+    </ClCompile>
+    <ClCompile Include="States\StateMapEditor.cpp">
+      <Filter>States</Filter>
+    </ClCompile>
+    <ClCompile Include="States\StateSimulation.cpp">
+      <Filter>States</Filter>
+    </ClCompile>
+    <ClCompile Include="States\StateVehicleEditor.cpp">
+      <Filter>States</Filter>
+    </ClCompile>
+    <ClCompile Include="Simulation\Fitness\FitnessSystem.cpp">
+      <Filter>Simulation\Fitness</Filter>
+    </ClCompile>
+    <ClCompile Include="Simulation\Simulated\SimulatedWorld.cpp">
+      <Filter>Simulation\Simulated</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility\Builder\ArtificialNeuralNetworkBuilder.cpp">
+      <Filter>Utility\Builder</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility\Builder\MapBuilder.cpp">
+      <Filter>Utility\Builder</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility\Builder\StatisticsBuilder.cpp">
+      <Filter>Utility\Builder</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility\Builder\VehicleBuilder.cpp">
+      <Filter>Utility\Builder</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility\Context\ActivationFunctionContext.cpp">
+      <Filter>Utility\Context</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility\Context\FontContext.cpp">
+      <Filter>Utility\Context</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility\Prototype\MapPrototype.cpp">
+      <Filter>Utility\Prototype</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility\Prototype\VehiclePrototype.cpp">
+      <Filter>Utility\Prototype</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility\Text\ConsistentText.cpp">
+      <Filter>Utility\Text</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility\Text\DoubleText.cpp">
+      <Filter>Utility\Text</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility\Text\FilenameText.cpp">
+      <Filter>Utility\Text</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility\Text\StatusText.cpp">
+      <Filter>Utility\Text</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility\Text\TripleText.cpp">
+      <Filter>Utility\Text</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Core\CoreEngine.hpp">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\CoreLogger.hpp">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\CoreWindow.hpp">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Tests\TestEngine.hpp">
+      <Filter>Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="Tests\TestGeneticAlgorithm.hpp">
+      <Filter>Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="States\StateArtificialNeuralNetworkEditor.hpp">
+      <Filter>States</Filter>
+    </ClInclude>
+    <ClInclude Include="States\StateCompetition.hpp">
+      <Filter>States</Filter>
+    </ClInclude>
+    <ClInclude Include="States\StateInterface.hpp">
+      <Filter>States</Filter>
+    </ClInclude>
+    <ClInclude Include="States\StateManager.hpp">
+      <Filter>States</Filter>
+    </ClInclude>
+    <ClInclude Include="States\StateMapEditor.hpp">
+      <Filter>States</Filter>
+    </ClInclude>
+    <ClInclude Include="States\StateSimulation.hpp">
+      <Filter>States</Filter>
+    </ClInclude>
+    <ClInclude Include="States\StateVehicleEditor.hpp">
+      <Filter>States</Filter>
+    </ClInclude>
+    <ClInclude Include="Simulation\Drawable\DrawableCheckpoint.hpp">
+      <Filter>Simulation\Drawable</Filter>
+    </ClInclude>
+    <ClInclude Include="Simulation\Drawable\DrawableEdge.hpp">
+      <Filter>Simulation\Drawable</Filter>
+    </ClInclude>
+    <ClInclude Include="Simulation\Drawable\DrawableInterface.hpp">
+      <Filter>Simulation\Drawable</Filter>
+    </ClInclude>
+    <ClInclude Include="Simulation\Drawable\DrawableVehicle.hpp">
+      <Filter>Simulation\Drawable</Filter>
+    </ClInclude>
+    <ClInclude Include="Simulation\Fitness\FitnessInterface.hpp">
+      <Filter>Simulation\Fitness</Filter>
+    </ClInclude>
+    <ClInclude Include="Simulation\Fitness\FitnessSystem.hpp">
+      <Filter>Simulation\Fitness</Filter>
+    </ClInclude>
+    <ClInclude Include="Simulation\Simulated\SimulatedAbstract.hpp">
+      <Filter>Simulation\Simulated</Filter>
+    </ClInclude>
+    <ClInclude Include="Simulation\Simulated\SimulatedCheckpoint.hpp">
+      <Filter>Simulation\Simulated</Filter>
+    </ClInclude>
+    <ClInclude Include="Simulation\Simulated\SimulatedEdge.hpp">
+      <Filter>Simulation\Simulated</Filter>
+    </ClInclude>
+    <ClInclude Include="Simulation\Simulated\SimulatedVehicle.hpp">
+      <Filter>Simulation\Simulated</Filter>
+    </ClInclude>
+    <ClInclude Include="Simulation\Simulated\SimulatedWorld.hpp">
+      <Filter>Simulation\Simulated</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Algorithm\ArtificialNeuralNetwork.hpp">
+      <Filter>Utility\Algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Algorithm\Genetic.hpp">
+      <Filter>Utility\Algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Algorithm\GeneticAlgorithm.hpp">
+      <Filter>Utility\Algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Algorithm\Neural.hpp">
+      <Filter>Utility\Algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Builder\AbstractBuilder.hpp">
+      <Filter>Utility\Builder</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Builder\ArtificialNeuralNetworkBuilder.hpp">
+      <Filter>Utility\Builder</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Builder\MapBuilder.hpp">
+      <Filter>Utility\Builder</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Builder\StatisticsBuilder.hpp">
+      <Filter>Utility\Builder</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Builder\VehicleBuilder.hpp">
+      <Filter>Utility\Builder</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Context\ActivationFunctionContext.hpp">
+      <Filter>Utility\Context</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Context\ColorContext.hpp">
+      <Filter>Utility\Context</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Context\FontContext.hpp">
+      <Filter>Utility\Context</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Context\MathContext.hpp">
+      <Filter>Utility\Context</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Miscellaneous\Property.hpp">
+      <Filter>Utility\Miscellaneous</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Observer\EventObserver.hpp">
+      <Filter>Utility\Observer</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Observer\FunctionEventObserver.hpp">
+      <Filter>Utility\Observer</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Observer\FunctionTimerObserver.hpp">
+      <Filter>Utility\Observer</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Observer\ObserverInterface.hpp">
+      <Filter>Utility\Observer</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Observer\TimerObserver.hpp">
+      <Filter>Utility\Observer</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Observer\TypeEventObserver.hpp">
+      <Filter>Utility\Observer</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Observer\TypeTimerObserver.hpp">
+      <Filter>Utility\Observer</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Prototype\MapPrototype.hpp">
+      <Filter>Utility\Prototype</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Prototype\VehiclePrototype.hpp">
+      <Filter>Utility\Prototype</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Text\AbstractText.hpp">
+      <Filter>Utility\Text</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Text\ConsistentText.hpp">
+      <Filter>Utility\Text</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Text\DoubleText.hpp">
+      <Filter>Utility\Text</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Text\FilenameText.hpp">
+      <Filter>Utility\Text</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Text\StatusText.hpp">
+      <Filter>Utility\Text</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Text\TripleText.hpp">
+      <Filter>Utility\Text</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Timer\AbstractTimer.hpp">
+      <Filter>Utility\Timer</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Timer\ContinuousTimer.hpp">
+      <Filter>Utility\Timer</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Timer\PeriodicTimer.hpp">
+      <Filter>Utility\Timer</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Timer\StoppableTimer.hpp">
+      <Filter>Utility\Timer</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_api.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_block_allocator.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_body.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_broad_phase.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_chain_shape.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_circle_shape.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_collision.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_common.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_contact.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_contact_manager.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_distance.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_distance_joint.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_draw.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_dynamic_tree.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_edge_shape.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_fixture.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_friction_joint.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_gear_joint.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_growable_stack.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_joint.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_math.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_motor_joint.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_mouse_joint.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_polygon_shape.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_prismatic_joint.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_pulley_joint.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_revolute_joint.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_rope.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_settings.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_shape.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_stack_allocator.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_time_of_impact.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_time_step.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_timer.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_types.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_weld_joint.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_wheel_joint.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_world.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\b2_world_callbacks.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Box2D\Include\Box2D\box2d.h">
+      <Filter>External\Box2D\Include\Box2D</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Audio.hpp">
+      <Filter>External\SFML\Include\SFML</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Config.hpp">
+      <Filter>External\SFML\Include\SFML</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\GpuPreference.hpp">
+      <Filter>External\SFML\Include\SFML</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics.hpp">
+      <Filter>External\SFML\Include\SFML</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Main.hpp">
+      <Filter>External\SFML\Include\SFML</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Network.hpp">
+      <Filter>External\SFML\Include\SFML</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\OpenGL.hpp">
+      <Filter>External\SFML\Include\SFML</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\System.hpp">
+      <Filter>External\SFML\Include\SFML</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Window.hpp">
+      <Filter>External\SFML\Include\SFML</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Audio\AlResource.hpp">
+      <Filter>External\SFML\Include\SFML\Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Audio\Export.hpp">
+      <Filter>External\SFML\Include\SFML\Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Audio\InputSoundFile.hpp">
+      <Filter>External\SFML\Include\SFML\Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Audio\Listener.hpp">
+      <Filter>External\SFML\Include\SFML\Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Audio\Music.hpp">
+      <Filter>External\SFML\Include\SFML\Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Audio\OutputSoundFile.hpp">
+      <Filter>External\SFML\Include\SFML\Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Audio\Sound.hpp">
+      <Filter>External\SFML\Include\SFML\Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Audio\SoundBuffer.hpp">
+      <Filter>External\SFML\Include\SFML\Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Audio\SoundBufferRecorder.hpp">
+      <Filter>External\SFML\Include\SFML\Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Audio\SoundFileFactory.hpp">
+      <Filter>External\SFML\Include\SFML\Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Audio\SoundFileReader.hpp">
+      <Filter>External\SFML\Include\SFML\Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Audio\SoundFileWriter.hpp">
+      <Filter>External\SFML\Include\SFML\Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Audio\SoundRecorder.hpp">
+      <Filter>External\SFML\Include\SFML\Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Audio\SoundSource.hpp">
+      <Filter>External\SFML\Include\SFML\Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Audio\SoundStream.hpp">
+      <Filter>External\SFML\Include\SFML\Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\BlendMode.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\CircleShape.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\Color.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\ConvexShape.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\Drawable.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\Export.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\Font.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\Glsl.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\Glyph.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\Image.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\PrimitiveType.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\Rect.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\RectangleShape.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\RenderStates.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\RenderTarget.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\RenderTexture.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\RenderWindow.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\Shader.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\Shape.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\Sprite.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\Text.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\Texture.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\Transform.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\Transformable.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\Vertex.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\VertexArray.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\VertexBuffer.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Graphics\View.hpp">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Network\Export.hpp">
+      <Filter>External\SFML\Include\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Network\Ftp.hpp">
+      <Filter>External\SFML\Include\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Network\Http.hpp">
+      <Filter>External\SFML\Include\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Network\IpAddress.hpp">
+      <Filter>External\SFML\Include\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Network\Packet.hpp">
+      <Filter>External\SFML\Include\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Network\Socket.hpp">
+      <Filter>External\SFML\Include\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Network\SocketHandle.hpp">
+      <Filter>External\SFML\Include\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Network\SocketSelector.hpp">
+      <Filter>External\SFML\Include\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Network\TcpListener.hpp">
+      <Filter>External\SFML\Include\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Network\TcpSocket.hpp">
+      <Filter>External\SFML\Include\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Network\UdpSocket.hpp">
+      <Filter>External\SFML\Include\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Window\Clipboard.hpp">
+      <Filter>External\SFML\Include\SFML\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Window\Context.hpp">
+      <Filter>External\SFML\Include\SFML\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Window\ContextSettings.hpp">
+      <Filter>External\SFML\Include\SFML\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Window\Cursor.hpp">
+      <Filter>External\SFML\Include\SFML\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Window\Event.hpp">
+      <Filter>External\SFML\Include\SFML\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Window\Export.hpp">
+      <Filter>External\SFML\Include\SFML\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Window\GlResource.hpp">
+      <Filter>External\SFML\Include\SFML\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Window\Joystick.hpp">
+      <Filter>External\SFML\Include\SFML\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Window\Keyboard.hpp">
+      <Filter>External\SFML\Include\SFML\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Window\Mouse.hpp">
+      <Filter>External\SFML\Include\SFML\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Window\Sensor.hpp">
+      <Filter>External\SFML\Include\SFML\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Window\Touch.hpp">
+      <Filter>External\SFML\Include\SFML\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Window\VideoMode.hpp">
+      <Filter>External\SFML\Include\SFML\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Window\Window.hpp">
+      <Filter>External\SFML\Include\SFML\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Window\WindowHandle.hpp">
+      <Filter>External\SFML\Include\SFML\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\Window\WindowStyle.hpp">
+      <Filter>External\SFML\Include\SFML\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\System\Clock.hpp">
+      <Filter>External\SFML\Include\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\System\Err.hpp">
+      <Filter>External\SFML\Include\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\System\Export.hpp">
+      <Filter>External\SFML\Include\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\System\FileInputStream.hpp">
+      <Filter>External\SFML\Include\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\System\InputStream.hpp">
+      <Filter>External\SFML\Include\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\System\Lock.hpp">
+      <Filter>External\SFML\Include\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\System\MemoryInputStream.hpp">
+      <Filter>External\SFML\Include\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\System\Mutex.hpp">
+      <Filter>External\SFML\Include\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\System\NativeActivity.hpp">
+      <Filter>External\SFML\Include\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\System\NonCopyable.hpp">
+      <Filter>External\SFML\Include\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\System\Sleep.hpp">
+      <Filter>External\SFML\Include\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\System\String.hpp">
+      <Filter>External\SFML\Include\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\System\Thread.hpp">
+      <Filter>External\SFML\Include\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\System\ThreadLocal.hpp">
+      <Filter>External\SFML\Include\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\System\ThreadLocalPtr.hpp">
+      <Filter>External\SFML\Include\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\System\Time.hpp">
+      <Filter>External\SFML\Include\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\System\Utf.hpp">
+      <Filter>External\SFML\Include\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\System\Vector2.hpp">
+      <Filter>External\SFML\Include\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\Include\SFML\System\Vector3.hpp">
+      <Filter>External\SFML\Include\SFML\System</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="Executable\consola.ttf">
+      <Filter>Executable</Filter>
+    </Font>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Executable\icon.png">
+      <Filter>Executable</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Executable\plot.py">
+      <Filter>Executable</Filter>
+    </None>
+    <None Include="Executable\sfml-graphics-2.dll">
+      <Filter>Executable</Filter>
+    </None>
+    <None Include="Executable\sfml-graphics-d-2.dll">
+      <Filter>Executable</Filter>
+    </None>
+    <None Include="Executable\sfml-system-2.dll">
+      <Filter>Executable</Filter>
+    </None>
+    <None Include="Executable\sfml-system-d-2.dll">
+      <Filter>Executable</Filter>
+    </None>
+    <None Include="Executable\sfml-window-2.dll">
+      <Filter>Executable</Filter>
+    </None>
+    <None Include="Executable\sfml-window-d-2.dll">
+      <Filter>Executable</Filter>
+    </None>
+    <None Include="External\SFML\Lib\cmake\SFML\SFMLConfig.cmake">
+      <Filter>External\SFML\Lib\cmake\SFML</Filter>
+    </None>
+    <None Include="External\SFML\Lib\cmake\SFML\SFMLConfigDependencies.cmake">
+      <Filter>External\SFML\Lib\cmake\SFML</Filter>
+    </None>
+    <None Include="External\SFML\Lib\cmake\SFML\SFMLConfigVersion.cmake">
+      <Filter>External\SFML\Lib\cmake\SFML</Filter>
+    </None>
+    <None Include="External\SFML\Lib\cmake\SFML\SFMLSharedTargets.cmake">
+      <Filter>External\SFML\Lib\cmake\SFML</Filter>
+    </None>
+    <None Include="External\SFML\Lib\cmake\SFML\SFMLSharedTargets-debug.cmake">
+      <Filter>External\SFML\Lib\cmake\SFML</Filter>
+    </None>
+    <None Include="External\SFML\Lib\cmake\SFML\SFMLSharedTargets-release.cmake">
+      <Filter>External\SFML\Lib\cmake\SFML</Filter>
+    </None>
+    <None Include="External\SFML\Lib\cmake\SFML\SFMLStaticTargets.cmake">
+      <Filter>External\SFML\Lib\cmake\SFML</Filter>
+    </None>
+    <None Include="External\SFML\Lib\cmake\SFML\SFMLStaticTargets-debug.cmake">
+      <Filter>External\SFML\Lib\cmake\SFML</Filter>
+    </None>
+    <None Include="External\SFML\Lib\cmake\SFML\SFMLStaticTargets-release.cmake">
+      <Filter>External\SFML\Lib\cmake\SFML</Filter>
+    </None>
+    <None Include="External\SFML\Lib\sfml-audio-d.pdb">
+      <Filter>External\SFML\Lib</Filter>
+    </None>
+    <None Include="External\SFML\Lib\sfml-audio-s-d.pdb">
+      <Filter>External\SFML\Lib</Filter>
+    </None>
+    <None Include="External\SFML\Lib\sfml-graphics-d.pdb">
+      <Filter>External\SFML\Lib</Filter>
+    </None>
+    <None Include="External\SFML\Lib\sfml-graphics-s-d.pdb">
+      <Filter>External\SFML\Lib</Filter>
+    </None>
+    <None Include="External\SFML\Lib\sfml-main-s-d.pdb">
+      <Filter>External\SFML\Lib</Filter>
+    </None>
+    <None Include="External\SFML\Lib\sfml-network-d.pdb">
+      <Filter>External\SFML\Lib</Filter>
+    </None>
+    <None Include="External\SFML\Lib\sfml-network-s-d.pdb">
+      <Filter>External\SFML\Lib</Filter>
+    </None>
+    <None Include="External\SFML\Lib\sfml-system-d.pdb">
+      <Filter>External\SFML\Lib</Filter>
+    </None>
+    <None Include="External\SFML\Lib\sfml-system-s-d.pdb">
+      <Filter>External\SFML\Lib</Filter>
+    </None>
+    <None Include="External\SFML\Lib\sfml-window-d.pdb">
+      <Filter>External\SFML\Lib</Filter>
+    </None>
+    <None Include="External\SFML\Lib\sfml-window-s-d.pdb">
+      <Filter>External\SFML\Lib</Filter>
+    </None>
+    <None Include="External\SFML\Include\SFML\Audio\SoundFileFactory.inl">
+      <Filter>External\SFML\Include\SFML\Audio</Filter>
+    </None>
+    <None Include="External\SFML\Include\SFML\Graphics\Glsl.inl">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </None>
+    <None Include="External\SFML\Include\SFML\Graphics\Rect.inl">
+      <Filter>External\SFML\Include\SFML\Graphics</Filter>
+    </None>
+    <None Include="External\SFML\Include\SFML\System\String.inl">
+      <Filter>External\SFML\Include\SFML\System</Filter>
+    </None>
+    <None Include="External\SFML\Include\SFML\System\Thread.inl">
+      <Filter>External\SFML\Include\SFML\System</Filter>
+    </None>
+    <None Include="External\SFML\Include\SFML\System\ThreadLocalPtr.inl">
+      <Filter>External\SFML\Include\SFML\System</Filter>
+    </None>
+    <None Include="External\SFML\Include\SFML\System\Utf.inl">
+      <Filter>External\SFML\Include\SFML\System</Filter>
+    </None>
+    <None Include="External\SFML\Include\SFML\System\Vector2.inl">
+      <Filter>External\SFML\Include\SFML\System</Filter>
+    </None>
+    <None Include="External\SFML\Include\SFML\System\Vector3.inl">
+      <Filter>External\SFML\Include\SFML\System</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Executable\Sources.txt">
+      <Filter>Executable</Filter>
+    </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="External\Box2D\Lib\Debug\box2d.lib">
+      <Filter>External\Box2D\Lib\Debug</Filter>
+    </Library>
+    <Library Include="External\Box2D\Lib\Release\box2d.lib">
+      <Filter>External\Box2D\Lib\Release</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\flac.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\freetype.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\ogg.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\openal32.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\sfml-audio.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\sfml-audio-d.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\sfml-audio-s.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\sfml-audio-s-d.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\sfml-graphics.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\sfml-graphics-d.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\sfml-graphics-s.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\sfml-graphics-s-d.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\sfml-main.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\sfml-main-d.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\sfml-network.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\sfml-network-d.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\sfml-network-s.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\sfml-network-s-d.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\sfml-system.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\sfml-system-d.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\sfml-system-s.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\sfml-system-s-d.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\sfml-window.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\sfml-window-d.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\sfml-window-s.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\sfml-window-s-d.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\vorbis.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\vorbisenc.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+    <Library Include="External\SFML\Lib\vorbisfile.lib">
+      <Filter>External\SFML\Lib</Filter>
+    </Library>
+  </ItemGroup>
+</Project>
