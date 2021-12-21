@@ -318,6 +318,7 @@ bool MapPrototype::RemoveEdgesOnIntersection(const Edge& edge)
 		}
 	}
 	
+	size = m_outerEdgesGaps.size();
 	for (size_t i = 0; i < m_outerEdgesGaps.size(); ++i)
 	{
 		if (m_outerEdgesGaps[i])
@@ -332,6 +333,9 @@ bool MapPrototype::RemoveEdgesOnIntersection(const Edge& edge)
 			// Continue removing outer edges
 			for (++i; i < size; ++i)
 			{
+				if (m_outerEdgesGaps[i])
+					continue;
+
 				if (MathContext::Intersect(m_outerEdgesChain[i], edge))
 				{
 					--m_numberOfOuterEdges;
