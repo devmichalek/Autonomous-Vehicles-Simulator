@@ -34,16 +34,16 @@ StateSimulation::StateSimulation() :
 	m_modeStrings[PAUSED_MODE] = "Paused";
 	m_mode = STOPPED_MODE;
 
-	// Initialize filename types
-	m_filenameTypeStrings[MAP_FILENAME_TYPE] = "Map";
-	m_filenameTypeStrings[ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE] = "Artificial Neural Network";
-	m_filenameTypeStrings[VEHICLE_FILENAME_TYPE] = "Vehicle";
-	m_filenameType = MAP_FILENAME_TYPE;
+	// Initialize file formats
+	m_fileFormatStrings[MAP_FILE_FORMAT] = "Map";
+	m_fileFormatStrings[ARTIFICIAL_NEURAL_NETWORK_FILE_FORMAT] = "Artificial Neural Network";
+	m_fileFormatStrings[VEHICLE_FILE_FORMAT] = "Vehicle";
+	m_fileFormat = MAP_FILE_FORMAT;
 
-	// Initialize filename types in paused mode
-	m_filenameTypePausedStrings[ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE_PAUSED] = "Artificial Neural Network";
-	m_filenameTypePausedStrings[STATISTICS_FILENAME_TYPE_PAUSED] = "Statistics";
-	m_filenameTypePaused = ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE_PAUSED;
+	// Initialize file formats in paused mode
+	m_fileFormatPausedStrings[ARTIFICIAL_NEURAL_NETWORK_FILE_FORMAT_PAUSED] = "Artificial Neural Network";
+	m_fileFormatPausedStrings[STATISTICS_FILE_FORMAT_PAUSED] = "Statistics";
+	m_fileFormatPaused = ARTIFICIAL_NEURAL_NETWORK_FILE_FORMAT_PAUSED;
 
 	// Initialize parameter types
 	m_parameterTypesStrings[POPULATION_SIZE] = "Population size";
@@ -117,8 +117,8 @@ void StateSimulation::Reload()
 {
 	// Reset states
 	m_mode = STOPPED_MODE;
-	m_filenameType = MAP_FILENAME_TYPE;
-	m_filenameTypePaused = ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE_PAUSED;
+	m_fileFormat = MAP_FILE_FORMAT;
+	m_fileFormatPaused = ARTIFICIAL_NEURAL_NETWORK_FILE_FORMAT_PAUSED;
 	m_parameterType = POPULATION_SIZE;
 
 	// Reset pressed keys
@@ -283,13 +283,13 @@ void StateSimulation::Capture()
 								for (auto& vehicle : m_simulatedVehicles)
 									vehicle = m_simulatedWorld->AddVehicle(m_vehiclePrototype);
 
-								// Reset filename type
-								m_filenameType = MAP_FILENAME_TYPE;
-								m_textObservers[FILENAME_TYPE_STOPPED_TEXT]->Notify();
+								// Reset file format
+								m_fileFormat = MAP_FILE_FORMAT;
+								m_textObservers[FILE_FORMAT_STOPPED_TEXT]->Notify();
 
-								// Reset filename type paused
-								m_filenameTypePaused = ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE_PAUSED;
-								m_textObservers[FILENAME_TYPE_PAUSED_TEXT]->Notify();
+								// Reset file format paused
+								m_fileFormatPaused = ARTIFICIAL_NEURAL_NETWORK_FILE_FORMAT_PAUSED;
+								m_textObservers[FILE_FORMAT_PAUSED_TEXT]->Notify();
 
 								// Reset parameter type
 								m_parameterType = POPULATION_SIZE;
@@ -334,10 +334,10 @@ void StateSimulation::Capture()
 							case CHANGE_FILENAME_TYPE:
 								if (m_pressedKeys[iterator->second])
 									break;
-								++m_filenameType;
-								if (m_filenameType >= FILENAME_TYPES_COUNT)
-									m_filenameType = MAP_FILENAME_TYPE;
-								m_textObservers[FILENAME_TYPE_STOPPED_TEXT]->Notify();
+								++m_fileFormat;
+								if (m_fileFormat >= FILE_FORMATS_COUNT)
+									m_fileFormat = MAP_FILE_FORMAT;
+								m_textObservers[FILE_FORMAT_STOPPED_TEXT]->Notify();
 								break;
 							case CHANGE_SIMULATION_PARAMETER:
 								if (m_pressedKeys[iterator->second])
@@ -497,10 +497,10 @@ void StateSimulation::Capture()
 								if (m_pressedKeys[iterator->second])
 									break;
 
-								++m_filenameTypePaused;
-								if (m_filenameTypePaused >= FILENAME_TYPES_PAUSED_COUNT)
-									m_filenameTypePaused = ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE_PAUSED;
-								m_textObservers[FILENAME_TYPE_PAUSED_TEXT]->Notify();
+								++m_fileFormatPaused;
+								if (m_fileFormatPaused >= FILE_FORMATS_PAUSED_COUNT)
+									m_fileFormatPaused = ARTIFICIAL_NEURAL_NETWORK_FILE_FORMAT_PAUSED;
+								m_textObservers[FILE_FORMAT_PAUSED_TEXT]->Notify();
 								break;
 							}
 							case PAUSED_CHANGE_MODE:
@@ -511,8 +511,8 @@ void StateSimulation::Capture()
 									break;
 								m_mode = RUNNING_MODE;
 								m_textObservers[MODE_TEXT]->Notify();
-								m_filenameTypePaused = ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE_PAUSED;
-								m_textObservers[FILENAME_TYPE_PAUSED_TEXT]->Notify();
+								m_fileFormatPaused = ARTIFICIAL_NEURAL_NETWORK_FILE_FORMAT_PAUSED;
+								m_textObservers[FILE_FORMAT_PAUSED_TEXT]->Notify();
 								break;
 							}
 							case INCREASE_PARAMETER:
@@ -637,9 +637,9 @@ void StateSimulation::Update()
 			auto* filenameText = static_cast<FilenameText<true, false>*>(m_texts[FILENAME_STOPPED_TEXT]);
 			if (filenameText->IsReading())
 			{
-				switch (m_filenameType)
+				switch (m_fileFormat)
 				{
-					case MAP_FILENAME_TYPE:
+					case MAP_FILE_FORMAT:
 					{
 						bool success = m_mapBuilder.Load(filenameText->GetFilename());
 						auto status = m_mapBuilder.GetLastOperationStatus();
@@ -675,7 +675,7 @@ void StateSimulation::Update()
 						CoreWindow::SetViewCenter(m_vehiclePrototype->GetCenter());
 						break;
 					}
-					case ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE:
+					case ARTIFICIAL_NEURAL_NETWORK_FILE_FORMAT:
 					{
 						bool success = m_artificialNeuralNetworkBuilder.Load(filenameText->GetFilename());
 						auto status = m_artificialNeuralNetworkBuilder.GetLastOperationStatus();
@@ -693,7 +693,7 @@ void StateSimulation::Update()
 						m_artificialNeuralNetworkPrototype->SetFromRawData(m_artificialNeuralNetworkBuilder.GetRawNeuronData());
 						break;
 					}
-					case VEHICLE_FILENAME_TYPE:
+					case VEHICLE_FILE_FORMAT:
 					{
 						bool success = m_vehicleBuilder.Load(filenameText->GetFilename());
 						auto status = m_vehicleBuilder.GetLastOperationStatus();
@@ -835,9 +835,9 @@ void StateSimulation::Update()
 			auto* filenameText = static_cast<FilenameText<false, true>*>(m_texts[FILENAME_PAUSED_TEXT]);
 			if (filenameText->IsWriting())
 			{
-				switch (m_filenameTypePaused)
+				switch (m_fileFormatPaused)
 				{
-					case ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE_PAUSED:
+					case ARTIFICIAL_NEURAL_NETWORK_FILE_FORMAT_PAUSED:
 					{
 						// Clear builder
 						m_artificialNeuralNetworkBuilder.Clear();
@@ -855,7 +855,7 @@ void StateSimulation::Update()
 							filenameText->SetSuccessStatusText(status.second);
 						break;
 					}
-					case STATISTICS_FILENAME_TYPE_PAUSED:
+					case STATISTICS_FILE_FORMAT_PAUSED:
 					{
 						m_statisticsBuilder.Extract(m_geneticAlgorithm ? m_geneticAlgorithm->GetCurrentGeneration() : m_generation,
 													m_fitnessSystem);
@@ -887,8 +887,8 @@ bool StateSimulation::Load()
 {
 	// Create texts
 	m_texts[MODE_TEXT] = new StatusText({ "Mode:", "", "| [M] [P]" });
-	m_texts[FILENAME_TYPE_STOPPED_TEXT] = new TripleText({ "Filename type:", "", "| [F]"});
-	m_texts[FILENAME_TYPE_PAUSED_TEXT] = new TripleText({ "Filename type:", "", "| [F]" });
+	m_texts[FILE_FORMAT_STOPPED_TEXT] = new TripleText({ "File format:", "", "| [F]"});
+	m_texts[FILE_FORMAT_PAUSED_TEXT] = new TripleText({ "File format:", "", "| [F]" });
 	m_texts[FILENAME_STOPPED_TEXT] = new FilenameText<true, false>("map.bin");
 	m_texts[FILENAME_PAUSED_TEXT] = new FilenameText<false, true>("ann.bin");
 	m_texts[PARAMETER_TYPE_TEXT] = new TripleText({ "Parameter type:", "", "| [P] [+] [-]" });
@@ -914,8 +914,8 @@ bool StateSimulation::Load()
 
 	// Create observers
 	m_textObservers[MODE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_modeStrings[m_mode]; });
-	m_textObservers[FILENAME_TYPE_STOPPED_TEXT] = new FunctionEventObserver<std::string>([&] { return m_filenameTypeStrings[m_filenameType]; });
-	m_textObservers[FILENAME_TYPE_PAUSED_TEXT] = new FunctionEventObserver<std::string>([&] { return m_filenameTypePausedStrings[m_filenameTypePaused];});
+	m_textObservers[FILE_FORMAT_STOPPED_TEXT] = new FunctionEventObserver<std::string>([&] { return m_fileFormatStrings[m_fileFormat]; });
+	m_textObservers[FILE_FORMAT_PAUSED_TEXT] = new FunctionEventObserver<std::string>([&] { return m_fileFormatPausedStrings[m_fileFormatPaused];});
 	m_textObservers[PARAMETER_TYPE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_parameterTypesStrings[m_parameterType]; });
 	m_textObservers[POPULATION_SIZE_TEXT] = new FunctionEventObserver<size_t>([&] { return m_population; });
 	m_textObservers[NUMBER_OF_GENERATIONS_TEXT] = new FunctionEventObserver<size_t>([&] { return m_generation; });
@@ -942,11 +942,11 @@ bool StateSimulation::Load()
 		((DoubleText*)m_texts[i])->SetObserver(m_textObservers[i]);
 
 	// Set texts positions
-	m_texts[MODE_TEXT]->SetPosition({ FontContext::Component(0), {0}, {3}, {8}, {17} });
-	m_texts[FILENAME_TYPE_STOPPED_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {8} });
-	m_texts[FILENAME_TYPE_PAUSED_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {8} });
-	m_texts[FILENAME_STOPPED_TEXT]->SetPosition({ FontContext::Component(2), {0}, {3}, {8}, {17} });
-	m_texts[FILENAME_PAUSED_TEXT]->SetPosition({ FontContext::Component(2), {0}, {3}, {8}, {17} });
+	m_texts[MODE_TEXT]->SetPosition({ FontContext::Component(0), {0}, {3}, {8}, {14} });
+	m_texts[FILE_FORMAT_STOPPED_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {8} });
+	m_texts[FILE_FORMAT_PAUSED_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {8} });
+	m_texts[FILENAME_STOPPED_TEXT]->SetPosition({ FontContext::Component(2), {0}, {3}, {8}, {14} });
+	m_texts[FILENAME_PAUSED_TEXT]->SetPosition({ FontContext::Component(2), {0}, {3}, {8}, {14} });
 	m_texts[PARAMETER_TYPE_TEXT]->SetPosition({ FontContext::Component(11, true), {0}, {10}, {20} });
 	m_texts[POPULATION_SIZE_TEXT]->SetPosition({ FontContext::Component(10, true), {0}, {10} });
 	m_texts[NUMBER_OF_GENERATIONS_TEXT]->SetPosition({ FontContext::Component(9, true), {0}, {10} });
@@ -991,7 +991,7 @@ void StateSimulation::Draw()
 				m_mapPrototype->DrawEdges();
 			}
 
-			m_texts[FILENAME_TYPE_STOPPED_TEXT]->Draw();
+			m_texts[FILE_FORMAT_STOPPED_TEXT]->Draw();
 			m_texts[FILENAME_STOPPED_TEXT]->Draw();
 			m_texts[PARAMETER_TYPE_TEXT]->Draw();
 			m_texts[POPULATION_SIZE_TEXT]->Draw();
@@ -1000,7 +1000,7 @@ void StateSimulation::Draw()
 			break;
 		case PAUSED_MODE:
 			m_simulatedWorld->Draw();
-			m_texts[FILENAME_TYPE_PAUSED_TEXT]->Draw();
+			m_texts[FILE_FORMAT_PAUSED_TEXT]->Draw();
 			m_texts[FILENAME_PAUSED_TEXT]->Draw();
 			m_texts[CURRENT_POPULATION_TEXT]->Draw();
 			m_texts[CURRENT_GENERATION_TEXT]->Draw();

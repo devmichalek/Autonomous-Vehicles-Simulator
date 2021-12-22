@@ -28,10 +28,10 @@ StateCompetition::StateCompetition() :
 	m_modeStrings[PAUSED_MODE] = "Paused";
 	m_mode = STOPPED_MODE;
 
-	m_filenameTypeStrings[MAP_FILENAME_TYPE] = "Map";
-	m_filenameTypeStrings[ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE] = "Artificial Neural Network";
-	m_filenameTypeStrings[VEHICLE_FILENAME_TYPE] = "Vehicle";
-	m_filenameType = MAP_FILENAME_TYPE;
+	m_fileFormatStrings[MAP_FILE_FORMAT] = "Map";
+	m_fileFormatStrings[ARTIFICIAL_NEURAL_NETWORK_FILE_FORMAT] = "Artificial Neural Network";
+	m_fileFormatStrings[VEHICLE_FILE_FORMAT] = "Vehicle";
+	m_fileFormat = MAP_FILE_FORMAT;
 
 	m_parameterTypesStrings[SWITCH_VEHICLE] = "Switch vehicle";
 	m_parameterTypesStrings[NUMBER_OF_BOT_VEHICLES] = "Number of bot vehicles";
@@ -103,7 +103,7 @@ void StateCompetition::Reload()
 {
 	// Reset states
 	m_mode = STOPPED_MODE;
-	m_filenameType = MAP_FILENAME_TYPE;
+	m_fileFormat = MAP_FILE_FORMAT;
 	m_parameterType = SWITCH_VEHICLE;
 
 	// Reset pressed keys
@@ -289,10 +289,10 @@ void StateCompetition::Capture()
 							}
 							case CHANGE_FILENAME_TYPE:
 							{
-								++m_filenameType;
-								if (m_filenameType >= FILENAME_TYPES_COUNT)
-									m_filenameType = MAP_FILENAME_TYPE;
-								m_textObservers[FILENAME_TYPE_TEXT]->Notify();
+								++m_fileFormat;
+								if (m_fileFormat >= FILE_FORMATS_COUNT)
+									m_fileFormat = MAP_FILE_FORMAT;
+								m_textObservers[FILE_FORMAT_TEXT]->Notify();
 								break;
 							}
 							case CHANGE_PARAMETER:
@@ -551,9 +551,9 @@ void StateCompetition::Update()
 			auto* filenameText = static_cast<FilenameText<true, true>*>(m_texts[FILENAME_TEXT]);
 			if (filenameText->IsReading())
 			{
-				switch (m_filenameType)
+				switch (m_fileFormat)
 				{
-					case MAP_FILENAME_TYPE:
+					case MAP_FILE_FORMAT:
 					{
 						const bool success = m_mapBuilder.Load(filenameText->GetFilename());
 						const auto status = m_mapBuilder.GetLastOperationStatus();
@@ -597,7 +597,7 @@ void StateCompetition::Update()
 						CoreWindow::SetViewCenter(m_dummyVehiclePrototype->GetCenter());
 						break;
 					}
-					case ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE:
+					case ARTIFICIAL_NEURAL_NETWORK_FILE_FORMAT:
 					{
 						if (m_parameterType == ENABLE_USER_VEHICLE)
 						{
@@ -630,7 +630,7 @@ void StateCompetition::Update()
 						}
 						break;
 					}
-					case VEHICLE_FILENAME_TYPE:
+					case VEHICLE_FILE_FORMAT:
 					{
 						if (m_parameterType == ENABLE_USER_VEHICLE)
 						{
@@ -769,7 +769,7 @@ bool StateCompetition::Load()
 {
 	// Create texts
 	m_texts[MODE_TEXT] = new StatusText({ "Mode:", "", "| [M] [P]" });
-	m_texts[FILENAME_TYPE_TEXT] = new TripleText({ "Filename type:", "", "| [F]" });
+	m_texts[FILE_FORMAT_TEXT] = new TripleText({ "File format:", "", "| [F]" });
 	m_texts[FILENAME_TEXT] = new FilenameText<true, false>("map.bin");
 	m_texts[PARAMETER_TYPE_TEXT] = new TripleText({ "Parameter type:", "", "| [P] [+] [-]" });
 	m_texts[USER_VEHICLE_TEXT] = new DoubleText({ "User vehicle:" });
@@ -782,7 +782,7 @@ bool StateCompetition::Load()
 
 	// Create observers
 	m_textObservers[MODE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_modeStrings[m_mode]; });
-	m_textObservers[FILENAME_TYPE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_filenameTypeStrings[m_filenameType]; });
+	m_textObservers[FILE_FORMAT_TEXT] = new FunctionEventObserver<std::string>([&] { return m_fileFormatStrings[m_fileFormat]; });
 	m_textObservers[PARAMETER_TYPE_TEXT] = new FunctionEventObserver<std::string>([&] { return m_parameterTypesStrings[m_parameterType]; });
 	m_textObservers[USER_VEHICLE_TEXT] = new FunctionEventObserver<std::string>([&] { return GetUserVehicleName(); });
 	m_textObservers[BOT_VEHICLE_TEXT] = new FunctionEventObserver<std::string>([&] { return GetBotVehicleName(); });
@@ -797,9 +797,9 @@ bool StateCompetition::Load()
 		((DoubleText*)m_texts[i])->SetObserver(m_textObservers[i]);
 
 	// Set texts positions
-	m_texts[MODE_TEXT]->SetPosition({ FontContext::Component(0), {0}, {3}, {8}, {15} });
-	m_texts[FILENAME_TYPE_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {8} });
-	m_texts[FILENAME_TEXT]->SetPosition({ FontContext::Component(2), {0}, {3}, {8}, {15} });
+	m_texts[MODE_TEXT]->SetPosition({ FontContext::Component(0), {0}, {3}, {8}, {14} });
+	m_texts[FILE_FORMAT_TEXT]->SetPosition({ FontContext::Component(1), {0}, {3}, {8} });
+	m_texts[FILENAME_TEXT]->SetPosition({ FontContext::Component(2), {0}, {3}, {8}, {14} });
 	m_texts[PARAMETER_TYPE_TEXT]->SetPosition({ FontContext::Component(4, true), {0}, {5}, {10} });
 	m_texts[USER_VEHICLE_TEXT]->SetPosition({ FontContext::Component(2, true), {14}, {17} });
 	m_texts[BOT_VEHICLE_TEXT]->SetPosition({ FontContext::Component(1, true), {14}, {17} });
@@ -845,7 +845,7 @@ void StateCompetition::Draw()
 				}
 			}
 
-			m_texts[FILENAME_TYPE_TEXT]->Draw();
+			m_texts[FILE_FORMAT_TEXT]->Draw();
 			m_texts[FILENAME_TEXT]->Draw();
 			m_texts[PARAMETER_TYPE_TEXT]->Draw();
 			m_texts[USER_VEHICLE_TEXT]->Draw();

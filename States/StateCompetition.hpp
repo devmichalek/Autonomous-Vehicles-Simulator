@@ -60,16 +60,16 @@ private:
 	std::array<std::string, MODES_COUNT> m_modeStrings;
 	size_t m_mode;
 	
-	// Filename types
+	// File formats
 	enum
 	{
-		MAP_FILENAME_TYPE,
-		ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE,
-		VEHICLE_FILENAME_TYPE,
-		FILENAME_TYPES_COUNT
+		MAP_FILE_FORMAT,
+		ARTIFICIAL_NEURAL_NETWORK_FILE_FORMAT,
+		VEHICLE_FILE_FORMAT,
+		FILE_FORMATS_COUNT
 	};
-	std::array<std::string, FILENAME_TYPES_COUNT> m_filenameTypeStrings;
-	size_t m_filenameType;
+	std::array<std::string, FILE_FORMATS_COUNT> m_fileFormatStrings;
+	size_t m_fileFormat;
 
 	// Parameter types
 	enum
@@ -156,7 +156,7 @@ private:
 	enum
 	{
 		MODE_TEXT,
-		FILENAME_TYPE_TEXT,
+		FILE_FORMAT_TEXT,
 		FILENAME_TEXT,
 		PARAMETER_TYPE_TEXT,
 		USER_VEHICLE_TEXT,

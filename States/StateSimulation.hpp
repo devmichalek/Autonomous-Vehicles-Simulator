@@ -50,26 +50,26 @@ private:
 	std::array<std::string, MODES_COUNT> m_modeStrings;
 	size_t m_mode;
 
-	// Filename types
+	// File formats
 	enum
 	{
-		MAP_FILENAME_TYPE,
-		ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE,
-		VEHICLE_FILENAME_TYPE,
-		FILENAME_TYPES_COUNT
+		MAP_FILE_FORMAT,
+		ARTIFICIAL_NEURAL_NETWORK_FILE_FORMAT,
+		VEHICLE_FILE_FORMAT,
+		FILE_FORMATS_COUNT
 	};
-	std::array<std::string, FILENAME_TYPES_COUNT> m_filenameTypeStrings;
-	size_t m_filenameType;
+	std::array<std::string, FILE_FORMATS_COUNT> m_fileFormatStrings;
+	size_t m_fileFormat;
 
-	// Filename types in paused mode
+	// File formats in paused mode
 	enum
 	{
-		ARTIFICIAL_NEURAL_NETWORK_FILENAME_TYPE_PAUSED,
-		STATISTICS_FILENAME_TYPE_PAUSED,
-		FILENAME_TYPES_PAUSED_COUNT
+		ARTIFICIAL_NEURAL_NETWORK_FILE_FORMAT_PAUSED,
+		STATISTICS_FILE_FORMAT_PAUSED,
+		FILE_FORMATS_PAUSED_COUNT
 	};
-	std::array<std::string, FILENAME_TYPES_PAUSED_COUNT> m_filenameTypePausedStrings;
-	size_t m_filenameTypePaused;
+	std::array<std::string, FILE_FORMATS_PAUSED_COUNT> m_fileFormatPausedStrings;
+	size_t m_fileFormatPaused;
 
 	// Parameter types
 	enum
@@ -159,8 +159,8 @@ private:
 	enum
 	{
 		MODE_TEXT,
-		FILENAME_TYPE_STOPPED_TEXT,
-		FILENAME_TYPE_PAUSED_TEXT,
+		FILE_FORMAT_STOPPED_TEXT,
+		FILE_FORMAT_PAUSED_TEXT,
 		FILENAME_STOPPED_TEXT,
 		FILENAME_PAUSED_TEXT,
 		PARAMETER_TYPE_TEXT,
