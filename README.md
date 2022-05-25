@@ -16,7 +16,7 @@ Visual Studio 2019 (Desktop development with C++ workload is required)
 Autonomous Vehicles Simulator project can be easily built locally. If you already have Visual Studio 2019 installed all you have to do is clone the repository and its submodules then open Visual Studio project file. You should be able to compile project based on x64 architecture in Debug and Release mode. Project uses SFML and Box2D libraries that are already present in the repository which means that no further actions are required.
 
 # License
-License is not yet specified.
+This project is licensed under the terms of the MIT license. Implementation started in June 16 of 2021 as my [BSc Thesis](https://drive.google.com/file/d/1nHb0Com5CFcY_DPzC4TYqjYaWZBo_aSu/view?usp=sharing) written in Polish.
 
 # Contact
 If you have any feedback or issues with the project you can always contact me through my email: devmichalek@gmail.com
